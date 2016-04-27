@@ -16,9 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import raises
-from venture.test.config import get_ripl, broken_in, on_inf_prim
-from venture.test.errors import assert_ripl_annotation_succeeds
+
 from venture.exception import VentureException
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.errors import assert_ripl_annotation_succeeds
 
 @broken_in('puma', "Puma does not report error addresses")
 @on_inf_prim("none")

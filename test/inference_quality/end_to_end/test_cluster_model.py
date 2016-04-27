@@ -16,9 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.plugins.attrib import attr
-from nose.tools import assert_less, assert_greater
+from nose.tools import assert_greater
+from nose.tools import assert_less
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 def mean(xs): return sum(xs) / float(len(xs))
 

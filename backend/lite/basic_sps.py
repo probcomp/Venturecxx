@@ -49,10 +49,11 @@ registerBuiltinSP("lte", binaryPred(lambda x,y: x.compare(y) <= 0,
     descr="lte returns true if its first argument compares less than or " \
           "equal to its second"))
 
-# Only makes sense with VentureAtom/VentureNumber distinction
+# If you are wondering about the type signature, this function
+# bootstraps the implicit coersion to numbers into an explicit one.
 registerBuiltinSP("real", deterministic_typed(lambda x:x,
-    [t.AtomType()], t.NumberType(),
-    descr="real returns the identity of its argument atom as a number"))
+    [t.NumberType()], t.NumberType(),
+    descr="real explicitly coerces its argument to a number"))
 
 registerBuiltinSP("atom", deterministic_typed(lambda x:x,
     [t.IntegerType()], t.AtomType(),
@@ -66,11 +67,6 @@ registerBuiltinSP("integer", deterministic_typed(int,
     [t.NumberType()], t.IntegerType(),
     descr="integer returns the floor of its argument number as an integer"))
 
-# If you are wondering about the type signature, this function
-# bootstraps the implicit coersion from numbers to probabilities into
-# an explicit one.  That means that the valid arguments to it are
-# exactly the ones that happen to fall into the range of
-# probabilities.
 registerBuiltinSP("probability", deterministic_typed(lambda x:x,
     [t.ProbabilityType()], t.ProbabilityType(),
     descr="probability converts its argument to a probability " \

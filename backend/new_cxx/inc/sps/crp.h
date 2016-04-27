@@ -32,7 +32,7 @@ struct CRPSPAux : SPAux
   uint32_t nextIndex;
   uint32_t numCustomers;
   uint32_t numTables;
-  map<uint32_t,uint32_t> tableCounts;
+  map<uint32_t, uint32_t> tableCounts;
 };
 
 struct MakeCRPOutputPSP : PSP
@@ -52,12 +52,12 @@ struct CRPSP : SP
 
 struct CRPOutputPSP : RandomPSP
 {
-  CRPOutputPSP(double alpha,double d) : alpha(alpha), d(d) {}
+  CRPOutputPSP(double alpha, double d) : alpha(alpha), d(d) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
   double logDensityOfData(shared_ptr<SPAux> spAux) const;
 

@@ -40,31 +40,31 @@ struct Particle : Trace
   /* Registering metadata */
   void registerAEKernel(Node * node);
   void registerUnconstrainedChoice(Node * node);
-  void registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node);
+  void registerUnconstrainedChoiceInScope(ScopeID scope, BlockID block, Node * node);
   void registerConstrainedChoice(Node * node);
 
   /* Unregistering metadata */
   void unregisterAEKernel(Node * node);
   void unregisterUnconstrainedChoice(Node * node);
-  void unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node);
+  void unregisterUnconstrainedChoiceInScope(ScopeID scope, BlockID block, Node * node);
   void unregisterConstrainedChoice(Node * node);
 
   /* Regen mutations */
-  void addESREdge(RootOfFamily esrRoot,OutputNode * outputNode);
+  void addESREdge(RootOfFamily esrRoot, OutputNode * outputNode);
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(RootOfFamily root);
-  void incRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  void incRegenCount(shared_ptr<Scaffold> scaffold, Node * node);
 
   bool hasLKernel(shared_ptr<Scaffold> scaffold, Node * node);
-  void registerLKernel(shared_ptr<Scaffold> scaffold,Node * node,shared_ptr<LKernel> lkernel);
-  shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold,Node * node);
+  void registerLKernel(shared_ptr<Scaffold> scaffold, Node * node, shared_ptr<LKernel> lkernel);
+  shared_ptr<LKernel> getLKernel(shared_ptr<Scaffold> scaffold, Node * node);
   void addChild(Node * node, Node * child);
 
-  /* Detach mutations */  
+  /* Detach mutations */
   RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
   void decNumRequests(RootOfFamily root);
-  void decRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  void decRegenCount(shared_ptr<Scaffold> scaffold, Node * node);
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
@@ -75,7 +75,7 @@ struct Particle : Trace
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
-  int getRegenCount(shared_ptr<Scaffold> scaffold,Node * node);
+  int getRegenCount(shared_ptr<Scaffold> scaffold, Node * node);
 
   VentureValuePtr getObservedValue(Node * node);
 
@@ -88,20 +88,20 @@ struct Particle : Trace
   void clearValue(Node * node);
 
 
-  void setMadeSPRecord(Node * makerNode,shared_ptr<VentureSPRecord> spRecord);
+  void setMadeSPRecord(Node * makerNode, shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
 
-  void setMadeSP(Node * makerNode,shared_ptr<SP> sp);
-  void setMadeSPAux(Node * makerNode,shared_ptr<SPAux> spaux);
+  void setMadeSP(Node * makerNode, shared_ptr<SP> sp);
+  void setMadeSPAux(Node * makerNode, shared_ptr<SPAux> spaux);
 
-  void setChildren(Node * node,set<Node*> children);
-  void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots);
+  void setChildren(Node * node, set<Node*> children);
+  void setESRParents(Node * node, const vector<RootOfFamily> & esrRoots);
 
-  void setNumRequests(RootOfFamily node,int num);
+  void setNumRequests(RootOfFamily node, int num);
 
   /* SPFamily operations */
-  void registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot);
-  void unregisterMadeSPFamily(Node * makerNode,FamilyID id);
+  void registerMadeSPFamily(Node * makerNode, FamilyID id, RootOfFamily esrRoot);
+  void unregisterMadeSPFamily(Node * makerNode, FamilyID id);
 
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
@@ -115,9 +115,9 @@ struct Particle : Trace
 
   bool hasAAAMadeSPAux(OutputNode * makerNode);
   void discardAAAMadeSPAux(OutputNode * makerNode);
-  void registerAAAMadeSPAux(OutputNode * makerNode,shared_ptr<SPAux> spAux);
+  void registerAAAMadeSPAux(OutputNode * makerNode, shared_ptr<SPAux> spAux);
   shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
-  
+
 /* END methods */
 
 
@@ -134,29 +134,29 @@ struct Particle : Trace
 /* Members */
 
   ConcreteTrace * baseTrace;
-  
+
   /* Persistent data structures, with non-persistent analogs in ConcreteTrace */
   PSet<Node*> unconstrainedChoices;
   PSet<Node*> constrainedChoices;
   PSet<Node*> arbitraryErgodicKernels;
 
-  PMap<DirectiveID,RootOfFamily,VentureValuePtrsLess> families;
+  PMap<DirectiveID, RootOfFamily, VentureValuePtrsLess> families;
 
-  PMap<ScopeID,PMap<BlockID,PSet<Node*>,VentureValuePtrsLess>,VentureValuePtrsLess> scopes;
+  PMap<ScopeID, PMap<BlockID, PSet<Node*>, VentureValuePtrsLess>, VentureValuePtrsLess> scopes;
 
   PMap<Node*, vector<RootOfFamily> > esrRoots;
   PMap<RootOfFamily, int> numRequests;
 
-  PMap<Node*,VentureValuePtr> values;
-  PMap<Node*,shared_ptr<SP> > madeSPs;
+  PMap<Node*, VentureValuePtr> values;
+  PMap<Node*, shared_ptr<SP> > madeSPs;
 
   /* persistent, not stored in concrete trace */
   PMap<Node*, int> regenCounts;
   PMap<Node*, shared_ptr<LKernel> > lkernels;
 
   /* persistent additions */
-  PMap<Node*, PMap<FamilyID,RootOfFamily,VentureValuePtrsLess> > newMadeSPFamilies;
-  PMap<Node*,PSet<Node*> > newChildren;
+  PMap<Node*, PMap<FamilyID, RootOfFamily, VentureValuePtrsLess> > newMadeSPFamilies;
+  PMap<Node*, PSet<Node*> > newChildren;
 
   /* Persistent subtractions */
   PSet<OutputNode*> discardedAAAMakerNodes;

@@ -17,7 +17,8 @@
 
 from nose.plugins.attrib import attr
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.test.timing as timing
 
 @attr('slow')

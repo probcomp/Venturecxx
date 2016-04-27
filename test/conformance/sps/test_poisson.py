@@ -16,8 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats
-from venture.test.stats import statisticalTest, reportKnownMean, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testPoisson1():

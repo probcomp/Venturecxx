@@ -17,7 +17,9 @@
 
 from nose.tools import assert_equal
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @broken_in('lite', "numFamilies is only implemented in puma")
 @on_inf_prim("none")

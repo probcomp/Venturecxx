@@ -18,7 +18,9 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
+@on_inf_prim("unquote")
 def testUnquoteWorksAtToplevel():
   r = get_ripl()
   r.set_mode('venture_script')

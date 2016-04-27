@@ -33,7 +33,7 @@ double regenAndAttach(Trace * trace,
 		      shared_ptr<Scaffold> scaffold,
 		      bool shouldRestore,
 		      shared_ptr<DB> db,
-		      shared_ptr<map<Node*,Gradient> > gradients);
+		      shared_ptr<map<Node*, Gradient> > gradients);
 
 double constrain(Trace * trace,
 		 OutputNode * node,
@@ -50,36 +50,36 @@ double attach(Trace * trace,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 double regen(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 double regenParents(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 double regenESRParents(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
-pair<double,Node*> evalFamily(Trace * trace,
+pair<double, Node*> evalFamily(Trace * trace,
 			      VentureValuePtr exp,
 			      shared_ptr<VentureEnvironment> env,
 			      shared_ptr<Scaffold> scaffold,
 			      bool shouldRestore,
 			      shared_ptr<DB> db,
-			      shared_ptr<map<Node*,Gradient> > gradients);
+			      shared_ptr<map<Node*, Gradient> > gradients);
 
 
 double apply(Trace * trace,
@@ -88,30 +88,30 @@ double apply(Trace * trace,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 
-void processMadeSP(Trace * trace, Node * node, bool isAAA,bool shouldRestore,shared_ptr<DB> db);
+void processMadeSP(Trace * trace, Node * node, bool isAAA, bool shouldRestore, shared_ptr<DB> db);
 
 double applyPSP(Trace * trace,
 	      ApplicationNode * node,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 double evalRequests(Trace * trace,
 	      RequestNode * requestNode,
 	      shared_ptr<Scaffold> scaffold,
 	      bool shouldRestore,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 double restore(Trace * trace,
 	      Node * node,
 	      shared_ptr<Scaffold> scaffold,
 	      shared_ptr<DB> db,
-	      shared_ptr<map<Node*,Gradient> > gradients);
+	      shared_ptr<map<Node*, Gradient> > gradients);
 
 
 #endif

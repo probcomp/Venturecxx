@@ -18,7 +18,9 @@
 from scipy import stats
 
 from venture.test.config import in_backend
-from venture.test.stats import statisticalTest, reportSameContinuous, reportSameDiscrete
+from venture.test.stats import reportSameContinuous
+from venture.test.stats import reportSameDiscrete
+from venture.test.stats import statisticalTest
 
 @in_backend("none")
 @statisticalTest

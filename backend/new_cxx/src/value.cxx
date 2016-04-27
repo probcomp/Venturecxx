@@ -44,17 +44,14 @@ long VentureValue::getInt() const
 double VentureValue::getProbability() const
 {
   double x;
-  if (hasDouble())
-  {
+  if (hasDouble()) {
     x = getDouble();
-  }
-  else {
+  } else {
     cannotConvertType(this,"probability"); assert(false); throw "no return";
   }
   if (0 <= x && x <= 1) {
     return x;
-  }
-  else {
+  } else {
     throw "Probability out of range " + toString();
   }
 }
@@ -124,8 +121,7 @@ MatrixXd VentureValue::getSymmetricMatrix() const
   MatrixXd m = getMatrix();
   if (m.isApprox(m.transpose())) {
     return m;
-  }
-  else {
+  } else {
     throw "Matrix is not symmetric " + toString();
   }
 }
@@ -142,8 +138,7 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 
 bool VentureValue::operator<(const VentureValuePtr & rhs) const
 {
-  if (hasDouble() && rhs->hasDouble())
-  {
+  if (hasDouble() && rhs->hasDouble()) {
     return getDouble() < rhs->getDouble();
   }
   int t1 = getValueTypeRank();
@@ -166,8 +161,7 @@ bool VentureValue::ltSameType(const VentureValuePtr & rhs) const
 
 bool VentureValue::equals(const VentureValuePtr & other) const
 {
-  if (hasDouble() && other->hasDouble())
-  {
+  if (hasDouble() && other->hasDouble()) {
     return getDouble() == other->getDouble();
   }
   int t1 = getValueTypeRank();

@@ -157,6 +157,8 @@ def testMakeDirCat1():
   for maker in ["make_dir_cat", "make_uc_dir_cat"]:
     yield checkMakeDirCat1, maker
 
+@skipWhenRejectionSampling(
+  "Too slow.  Tightening the rejection bound is Issue #468.")
 @statisticalTest
 def checkMakeDirCat1(maker):
   ripl = get_ripl()

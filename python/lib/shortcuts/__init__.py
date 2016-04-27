@@ -104,22 +104,10 @@ See `Lite` and `Puma`."""
         entropy = _entropy(entropy)
         return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace,
                                                     entropy))
-    def make_church_prime_ripl(self, persistent_inference_trace=True, **kwargs):
-        entropy = _kwentropy(kwargs)
-        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace,
-                                             entropy),
-                      {"church_prime":parser.ChurchPrimeParser.instance()},
-                      **kwargs)
-        r.backend_name = self.name()
-        return r
-    def make_venture_script_ripl(self, persistent_inference_trace=True, **kwargs):
-        entropy = _kwentropy(kwargs)
-        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace,
-                                             entropy),
-                      {"venture_script":parser.VentureScriptParser.instance()},
-                      **kwargs)
-        r.backend_name = self.name()
-        return r
+    def make_church_prime_ripl(self, **kwargs):
+        return self.make_ripl(init_mode="church_prime", **kwargs)
+    def make_venture_script_ripl(self, **kwargs):
+        return self.make_ripl(init_mode="venture_script", **kwargs)
     def make_combined_ripl(self, persistent_inference_trace=True, entropy=None,
                            **kwargs):
         entropy = _entropy(entropy)

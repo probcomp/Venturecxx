@@ -18,10 +18,13 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
+@on_inf_prim("none")
 def testCommentCharactersInStrings():
   eq_(get_ripl().execute_program('[assume s ";"]', type=False), [";"])
 
+@on_inf_prim("none")
 def testCommentCharactersInStringsVS():
   r = get_ripl()
   r.set_mode('venture_script')

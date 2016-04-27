@@ -20,7 +20,7 @@ on the 'state' output.  The arrangement can also be modeled as
                      , args -> state -> out -> state))
 
 where I have demanded the incorporator function be deterministic,
-as is typical.  My RandomDB effectively demands this factoring
+as is typical.  Venture effectively demands this factoring
 from assessable coupled procedures, but takes care of the state
 threading automatically.
 

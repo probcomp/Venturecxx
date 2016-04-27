@@ -17,12 +17,13 @@
 
 from scipy import stats
 
-from venture.test.config import get_ripl, broken_in
-from venture.test.config import on_inf_prim
 from venture.exception import underline
-from venture.lite.psp import LikelihoodFreePSP
 from venture.lite import types as t
+from venture.lite.psp import LikelihoodFreePSP
 from venture.lite.sp_help import typed_nr
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @broken_in('puma', "Profiler only implemented for Lite")
 @on_inf_prim("none") # Does not test inference quality of anything

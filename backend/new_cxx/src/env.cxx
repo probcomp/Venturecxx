@@ -30,33 +30,26 @@ VentureEnvironment::VentureEnvironment(boost::shared_ptr<VentureEnvironment> out
   outerEnv(outerEnv)
 {
   assert(syms.size() == nodes.size());
-  for (size_t i = 0; i < syms.size(); ++i)
-  {
+  for (size_t i = 0; i < syms.size(); ++i) {
     frame[syms[i]->s] = nodes[i];
   }
 }
 
 void VentureEnvironment::addBinding(const string& sym, Node * node)
 {
-  if (frame.count(sym))
-  {
+  if (frame.count(sym)) {
     throw sym + " already defined.";
   }
-
   frame[sym] = node;
 }
 
 void VentureEnvironment::removeBinding(const string& sym)
 {
-  if (frame.count(sym))
-  {
+  if (frame.count(sym)) {
     frame.erase(sym);
-  } else if (outerEnv.get() == NULL)
-  {
+  } else if (outerEnv.get() == NULL) {
     throw "Cannot unbind unbound symbol '" + sym + "'";
-  }
-  else
-  {
+  } else {
     return outerEnv->removeBinding(sym);
   }
 }
@@ -76,29 +69,20 @@ Node * VentureEnvironment::lookupSymbol(boost::shared_ptr<VentureSymbol> sym)
 Node * VentureEnvironment::lookupSymbol(const string& sym)
 {
   Node* answer = safeLookupSymbol(sym);
-  if (answer == NULL)
-  {
+  if (answer == NULL) {
     throw "Cannot find symbol '" + sym + "'";
-  }
-  else
-  {
+  } else {
     return answer;
   }
 }
 
 Node * VentureEnvironment::safeLookupSymbol(const string& sym)
 {
-  if (frame.count(sym))
-  {
+  if (frame.count(sym)) {
     return frame[sym];
-  }
-  else if (outerEnv.get() == NULL)
-  {
+  } else if (outerEnv.get() == NULL) {
     return NULL;
-  }
-  else
-  {
+  } else {
     return outerEnv->safeLookupSymbol(sym);
   }
 }
-

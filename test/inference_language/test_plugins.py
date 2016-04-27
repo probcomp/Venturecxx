@@ -18,8 +18,10 @@
 from nose.tools import assert_raises
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.exception import VentureException
 
+@on_inf_prim("call_back")
 def test_timer1():
   ripl = get_ripl()
   ripl.infer('(call_back timer_start)')
@@ -27,6 +29,7 @@ def test_timer1():
   with assert_raises(VentureException):
     ripl.infer('(call_back timer_pause)')
 
+@on_inf_prim("call_back")
 def test_timer2():
   ripl = get_ripl()
   ripl.infer('(call_back timer_start)')
@@ -35,11 +38,13 @@ def test_timer2():
   with assert_raises(VentureException):
     ripl.infer('(call_back timer_resume)')
 
+@on_inf_prim("call_back")
 def test_timer3():
   ripl = get_ripl()
   with assert_raises(VentureException):
     ripl.infer('(call_back timer_time)')
 
+@on_inf_prim("call_back")
 def test_timer4():
   ripl = get_ripl()
   ripl.infer('(call_back timer_start)')

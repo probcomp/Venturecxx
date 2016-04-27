@@ -53,17 +53,17 @@ struct PGibbsWorker
 
   boost::shared_ptr<Scaffold> scaffold;
 
-  boost::shared_ptr<map<Node*,Gradient> > nullGradients;
+  boost::shared_ptr<map<Node*, Gradient> > nullGradients;
 
   boost::shared_ptr<Particle> particle;
   double weight;
 };
 
 
-pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
+pair<Trace*, double> PGibbsGKernel::propose(ConcreteTrace * trace,
                                            boost::shared_ptr<Scaffold> scaffold)
 {
-  // assertTrace(self.trace,self.scaffold)
+  // assertTrace(self.trace, self.scaffold)
   this->scaffold = scaffold;
 
   size_t numBorderGroups = scaffold->border.size();
@@ -71,10 +71,9 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
   vector<double> rhoWeights(numBorderGroups);
   vector<boost::shared_ptr<DB> > rhoDBs(numBorderGroups);
 
-  for (long borderGroup = numBorderGroups; --borderGroup >= 0;)
-  {
-    pair<double,boost::shared_ptr<DB> > weightAndDB =
-      detachAndExtract(trace,scaffold->border[borderGroup],scaffold);
+  for (long borderGroup = numBorderGroups; --borderGroup >= 0;) {
+    pair<double, boost::shared_ptr<DB> > weightAndDB =
+      detachAndExtract(trace, scaffold->border[borderGroup], scaffold);
     rhoWeights[borderGroup] = weightAndDB.first;
     rhoDBs[borderGroup] = weightAndDB.second;
   }
@@ -82,35 +81,29 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
   assertTorus(scaffold);
   // Simulate and calculate initial xiWeights
 
-  boost::shared_ptr<map<Node*,Gradient> > nullGradients;
+  boost::shared_ptr<map<Node*, Gradient> > nullGradients;
 
   vector<double> particleWeights(numNewParticles + 1);
   vector<boost::shared_ptr<Particle> > particles(numNewParticles + 1);
   vector<boost::shared_ptr<PGibbsWorker> > workers(numNewParticles);
-  if (inParallel)
-  {
+  if (inParallel) {
     vector<boost::thread*> threads(numNewParticles);
-    for (size_t p = 0; p < numNewParticles; ++p)
-    {
+    for (size_t p = 0; p < numNewParticles; ++p) {
       workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
       const unsigned long seed = gsl_rng_get(trace->getRNG());
       boost::function<void()> th_func =
         boost::bind(&PGibbsWorker::doPGibbsInitial, workers[p], trace, seed);
       threads[p] = new boost::thread(th_func);
     }
-    for (size_t p = 0; p < numNewParticles; ++p)
-    {
+    for (size_t p = 0; p < numNewParticles; ++p) {
       threads[p]->join();
       particles[p] = workers[p]->particle;
       particleWeights[p] = workers[p]->weight;
 
       delete threads[p];
     }
-  }
-  else
-  {
-    for (size_t p = 0; p < numNewParticles; ++p)
-    {
+  } else {
+    for (size_t p = 0; p < numNewParticles; ++p) {
       workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
       workers[p]->doPGibbsInitial(trace, gsl_rng_get(trace->getRNG()));
       particles[p] = workers[p]->particle;
@@ -121,24 +114,21 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
   particles[numNewParticles] = boost::shared_ptr<Particle>(
     new Particle(trace, gsl_rng_get(trace->getRNG())));
   particleWeights[numNewParticles] =
-    regenAndAttach(particles[numNewParticles].get(),scaffold->border[0],
-                   scaffold,true,rhoDBs[0],nullGradients);
+    regenAndAttach(particles[numNewParticles].get(), scaffold->border[0],
+                   scaffold, true, rhoDBs[0], nullGradients);
 
-  // assert_almost_equal(particleWeights[P],rhoWeights[0])
+  // assert_almost_equal(particleWeights[P], rhoWeights[0])
 
-  for (size_t borderGroup = 1; borderGroup < numBorderGroups; ++borderGroup)
-  {
+  for (size_t borderGroup = 1; borderGroup < numBorderGroups; ++borderGroup) {
     vector<boost::shared_ptr<Particle> > newParticles(numNewParticles + 1);
     vector<double> newParticleWeights(numNewParticles + 1);
 
     // create partial sums in order to efficiently sample from ALL particles
     vector<double> sums = computePartialSums(mapExpUptoMultConstant(particleWeights));
 
-    if (inParallel)
-    {
+    if (inParallel) {
       vector<boost::thread*> threads(numNewParticles);
-      for (size_t p = 0; p < numNewParticles; ++p)
-      {
+      for (size_t p = 0; p < numNewParticles; ++p) {
         workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
         boost::function<void()> th_func = boost::bind(
           &PGibbsWorker::doPGibbsPropagate, workers[p], particles, sums,
@@ -154,18 +144,14 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
                        scaffold->border[borderGroup], scaffold, true,
                        rhoDBs[borderGroup], nullGradients);
 
-      for (size_t p = 0; p < numNewParticles; ++p)
-      {
+      for (size_t p = 0; p < numNewParticles; ++p) {
         threads[p]->join();
         newParticles[p] = workers[p]->particle;
         newParticleWeights[p] = workers[p]->weight;
         delete threads[p];
       }
-    }
-    else
-    {
-      for (size_t p = 0; p < numNewParticles; ++p)
-      {
+    } else {
+      for (size_t p = 0; p < numNewParticles; ++p) {
         workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
         workers[p]->doPGibbsPropagate(
           particles, sums, gsl_rng_get(trace->getRNG()),
@@ -182,7 +168,7 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
                        scaffold->border[borderGroup], scaffold, true,
                        rhoDBs[borderGroup], nullGradients);
     }
-    // assert_almost_equal(newParticleWeights[P],rhoWeights[t])
+    // assert_almost_equal(newParticleWeights[P], rhoWeights[t])
 
     particles = newParticles;
     particleWeights = newParticleWeights;
@@ -209,19 +195,19 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
   double weightMinusRho = logSumExp(particleWeightsNoRho);
   double alpha = weightMinusRho - weightMinusXi;
 
-  return make_pair(finalParticle.get(),alpha);
+  return make_pair(finalParticle.get(), alpha);
 }
 
 int PGibbsGKernel::accept()
 {
   finalParticle->commit();
-  // assertTrace(self.trace,self.scaffold)
+  // assertTrace(self.trace, self.scaffold)
   return this->scaffold->numAffectedNodes();
 }
 
 int PGibbsGKernel::reject()
 {
   oldParticle->commit();
-  // assertTrace(self.trace,self.scaffold)
+  // assertTrace(self.trace, self.scaffold)
   return this->scaffold->numAffectedNodes();
 }

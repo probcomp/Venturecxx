@@ -39,7 +39,7 @@ class DefaultRandomVentureValue(object):
   def positive(self, **_kwargs):
     return v.VentureNumber(npr.uniform(0, 10)) # TODO Prevent zero
   def probability(self, **_kwargs):
-    return v.VentureProbability(npr.uniform(0, 1))
+    return v.VentureNumber(npr.uniform(0, 1))
   def atom(self, **_kwargs):
     return v.VentureAtom(npr.randint(0, 11)) # Open at the top
   def bool(self, **_kwargs):

@@ -143,8 +143,8 @@ the Indian GPA problem:
 
 (define (gpa talent_bound grade_cutoff)
   (let ((talent (uniform_continuous 0 talent_bound)))
-    (if (> talent cutoff)
-        cutoff
+    (if (> talent grade_cutoff)
+        grade_cutoff
         talent)))
 
 Taken as a whole, this thing induces a conditional measure on its

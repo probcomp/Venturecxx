@@ -20,14 +20,13 @@ from nose import SkipTest
 from nose.tools import eq_
 import numpy as np
 import numpy.random as npr
-import numpy.linalg as la
-import scipy.stats as stats
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
 from venture.test.config import in_backend
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import reportPearsonIndependence
@@ -44,6 +43,7 @@ def array(xs):
   return v.VentureArrayUnboxed(np.array(xs), gp.xType)
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
 def testGP1():
   ripl = get_ripl()
   prep_ripl(ripl)
@@ -85,6 +85,7 @@ def testGPMean2():
   return reportKnownMean(0, xs)
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('mh')
 def testHyperparameterInferenceSmoke():
   ripl = get_ripl()
   ripl.execute_program("""\
@@ -98,6 +99,7 @@ def testHyperparameterInferenceSmoke():
   ripl.infer("(mh (quote hypers) one 1)")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
 def testGPLogscore1():
   """Is this actually a valid test? The real solution to this problem
   (and to the corresponding bug with unincorporate) is to wrap the gp
@@ -114,6 +116,7 @@ def testGPLogscore1():
   ripl.get_global_logscore()
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
 def testGPAux():
   """Make sure the GP's aux is properly maintained.  It should be an array of
   all pairs (x,y) such that the GP has been called with input x and returned

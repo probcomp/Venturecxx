@@ -34,18 +34,18 @@
 #include "sps/mvn.h"
 #include "sps/scope.h"
 
-map<string,VentureValuePtr> initBuiltInValues()
+map<string, VentureValuePtr> initBuiltInValues()
 {
-  map<string,VentureValuePtr> m;
+  map<string, VentureValuePtr> m;
   m["true"] = boost::shared_ptr<VentureBool>(new VentureBool(true));
   m["false"] = boost::shared_ptr<VentureBool>(new VentureBool(false));
   m["nil"] = boost::shared_ptr<VentureNil>(new VentureNil());
   return m;
 }
 
-map<string,SP*> initBuiltInSPs()
+map<string, SP*> initBuiltInSPs()
 {
-  map<string,SP*> m;
+  map<string, SP*> m;
 
   /* Deterministic SPs */
   m["add"] = new SP(new NullRequestPSP(), new AddOutputPSP());
@@ -69,7 +69,10 @@ map<string,SP*> initBuiltInSPs()
   m["pow"] = new SP(new NullRequestPSP(), new PowOutputPSP());
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
+
+  m["real"] = new SP(new NullRequestPSP(), new RealOutputPSP());
   m["is_number"] = new SP(new NullRequestPSP(), new IsNumberOutputPSP());
+
   m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
 

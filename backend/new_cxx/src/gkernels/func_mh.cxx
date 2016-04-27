@@ -24,12 +24,12 @@
 #include "detach.h"
 #include "consistency.h"
 
-pair<Trace*,double> FuncMHGKernel::propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> FuncMHGKernel::propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
 
-  pair<double,boost::shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
+  pair<double, boost::shared_ptr<DB> > p = detachAndExtract(trace, scaffold->border[0], scaffold);
   double rhoWeight = p.first;
   rhoDB = p.second;
 
@@ -37,9 +37,9 @@ pair<Trace*,double> FuncMHGKernel::propose(ConcreteTrace * trace,boost::shared_p
   particle = boost::shared_ptr<Particle>(
     new Particle(trace, gsl_rng_get(trace->getRNG())));
 
-  double xiWeight = regenAndAttach(particle.get(),scaffold->border[0],scaffold,false,rhoDB,boost::shared_ptr<map<Node*,Gradient> >());
+  double xiWeight = regenAndAttach(particle.get(), scaffold->border[0], scaffold, false, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
 
-  return make_pair(particle.get(),xiWeight - rhoWeight);
+  return make_pair(particle.get(), xiWeight - rhoWeight);
 }
 
 int FuncMHGKernel::accept()

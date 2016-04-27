@@ -15,18 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_, assert_raises
+from nose.tools import assert_raises
+from nose.tools import eq_
 
-from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim
-from venture.test.config import on_inf_prim, broken_in
+from venture.test.config import broken_in
+from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
-from venture.test.stats import statisticalTest
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportPassage
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("for_each_particle")
 def testForEachParticleSmoke():
   ripl = get_ripl()
   eq_([5], ripl.infer("(for_each_particle (return 5))"))
+  eq_(5, ripl.infer("(on_particle 0 (return 5))"))
 
 @gen_on_inf_prim("for_each_particle")
 def testForEachParticleSmoke2():
@@ -38,6 +44,7 @@ def checkForEachParticleSmoke2(mode):
   ripl = get_ripl()
   ripl.infer("(resample%s %s)" % (mode, n))
   eq_([5 for _ in range(n)], ripl.infer("(for_each_particle (return 5))"))
+  eq_(5, ripl.infer("(on_particle 1 (return 5))"))
 
 @gen_on_inf_prim("for_each_particle")
 def testForEachParticleIsIndependent():
@@ -45,17 +52,18 @@ def testForEachParticleIsIndependent():
     for prop in [propNotAllEqual, propDistributedNormally]:
       yield checkForEachParticleIsIndependent, mode, prop
 
+@statisticalTest
 def checkForEachParticleIsIndependent(mode, prop):
   n = max(2, default_num_samples())
   ripl = get_ripl()
   ripl.infer("(resample%s %s)" % (mode, n))
   predictions = ripl.infer("(for_each_particle (sample (normal 0 1)))")
-  prop(predictions)
+  return prop(predictions)
 
 def propNotAllEqual(predictions):
   assert len(set(predictions)) > 1
+  return reportPassage()
 
-@statisticalTest
 def propDistributedNormally(predictions):
   return reportKnownGaussian(0, 1, predictions)
 
@@ -84,9 +92,20 @@ def checkForEachParticleCustomMH(mode):
   predictions = ripl.infer("(for_each_particle (sample x))")
   return reportKnownGaussian(1, 0.5**0.5, predictions)
 
+@on_inf_prim("for_each_particle")
 def testForEachParticleNoModeling():
   ripl = get_ripl()
   with assert_raises(Exception):
     ripl.infer("(for_each_particle (assume x (normal 0 1)))")
   ripl.assume("x", 0)
   eq_(0, ripl.sample("x"))
+
+@on_inf_prim("on_particle")
+def testHitsOneParticle():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (resample 2)
+    (assume x (normal 0 1))
+    (on_particle 0 (force x 0))
+    (on_particle 1 (force x 1)))""")
+  eq_([0, 1], ripl.sample_all("x"))

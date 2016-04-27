@@ -16,9 +16,14 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from venture.test.stats import statisticalTest, reportKnownDiscrete
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import skipWhenSubSampling
+from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, skipWhenSubSampling
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testVentureNormalHMM1():

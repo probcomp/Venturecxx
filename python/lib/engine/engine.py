@@ -209,7 +209,8 @@ class Engine(object):
       self.model = current_model
       self.swapped_model = current_swapped_status
 
-  def for_each_particle(self, action):
+  @contextmanager
+  def _particle_swapping(self, action):
     ripl = self.ripl
     # disallow the ripl.
     class NoRipl(object):
@@ -227,9 +228,17 @@ class Engine(object):
         self.infer_trace.uneval(did) # TODO This becomes "forget" after the engine.Trace wrapper
         return ans
     try:
-      return self.model.for_each_trace_sequential(do_action)
+      yield do_action
     finally:
       self.ripl = ripl
+
+  def for_each_particle(self, action):
+    with self._particle_swapping(action) as do_action:
+      return self.model.for_each_trace_sequential(do_action)
+
+  def on_particle(self, i, action):
+    with self._particle_swapping(action) as do_action:
+      return self.model.on_trace(i, do_action)
 
   def infer(self, program):
     if self.is_infer_loop_program(program):

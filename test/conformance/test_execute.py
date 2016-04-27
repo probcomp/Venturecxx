@@ -16,11 +16,16 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+
 from nose.tools import eq_
 
+from venture.test.config import default_num_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 import venture.value.dicts as v
-from venture.test.config import get_ripl, default_num_samples, default_num_transitions_per_sample, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownGaussian
 
 @on_inf_prim("mh")
 @statisticalTest
@@ -36,6 +41,7 @@ def testExecuteSmoke():
     predictions.append(ripl.sample("x"))
   return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
+@on_inf_prim("forget")
 def testForgetSmoke():
   '''Check that execute_program does not break on labels and forgets'''
   ripl = get_ripl()
@@ -44,6 +50,7 @@ def testForgetSmoke():
   (forget 'label)'''
   ripl.execute_program(prog)
 
+@on_inf_prim("resample")
 def testInferReturn():
   '''Make sure that execute_program returns results from infer commands'''
   ripl = get_ripl()
@@ -52,6 +59,7 @@ def testInferReturn():
   res = ripl.execute_program(prog)[-1]['value']
   eq_(res, v.number(8.0))
 
+@on_inf_prim("mh")
 def testCollectFunction():
   '''
   Make sure that calling collect on a function evaluation doesn't break

@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.wttree import PMap
+from venture.lite.wttree import PSet
 from venture.test.config import in_backend
-from venture.lite.wttree import PMap, PSet
 
 @in_backend("none")
 def testPMapInsertContainsDelete():

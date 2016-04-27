@@ -20,8 +20,10 @@ from nose.tools import eq_
 
 import venture.lite.value as v
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.engine.inference import Infer
 
+@on_inf_prim("callback")
 def testCallbackSmoke():
   class MyCallback(object):
     def __init__(self):
@@ -46,16 +48,19 @@ def testCallbackSmoke():
 [infer (repeat 3 (call_back foo x (gamma 1 1)))]""")
   eq_(my_callback.call_ct, 3)
 
+@on_inf_prim("callback")
 def testCallbackReturns():
   ripl = get_ripl()
   ripl.bind_callback("three", lambda _inferrer: v.VentureNumber(3))
   ripl.infer("(do (x <- (call_back three)) (assert (eq 3 x)))")
 
+@on_inf_prim("pyeval")
 def testDropIntoPythonSmoke():
   ripl = get_ripl()
   ripl.infer("(pyexec 'symbol<\"import venture.lite.value as vv\">)")
   eq_(3, ripl.infer("(pyeval 'symbol<\"vv.VentureNumber(3)\">)"))
 
+@on_inf_prim("pyexec")
 def testDropIntoPythonSmoke2():
   ripl = get_ripl()
   ripl.infer("(pyexec 'symbol<\"ripl.assume('x', 3)\">)")

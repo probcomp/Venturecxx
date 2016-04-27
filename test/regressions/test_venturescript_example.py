@@ -15,13 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy as np
-from nose.tools import eq_, assert_almost_equal
 from nose.plugins.attrib import attr
+from nose.tools import assert_almost_equal
+from nose.tools import eq_
+import numpy as np
 
-from venture.test.config import get_ripl, on_inf_prim
-import venture.lite.continuous as cont
 from venture.lite.sp_help import typed_nr
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+import venture.lite.continuous as cont
 import venture.lite.types as t
 
 @attr("slow")

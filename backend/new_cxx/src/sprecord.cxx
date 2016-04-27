@@ -24,8 +24,8 @@ bool VentureSPRecord::equals(const VentureValuePtr & other) const
   return other_v && (other_v->sp.get() == sp.get());
 }
 
-size_t VentureSPRecord::hash() const 
-{ 
+size_t VentureSPRecord::hash() const
+{
   boost::hash<long> long_hash;
   return long_hash(reinterpret_cast<long>(sp.get()));
 }

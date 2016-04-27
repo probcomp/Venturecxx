@@ -25,7 +25,7 @@ VentureValuePtr DB::getValue(Node * node)
   return values[node];
 }
 
-void DB::registerValue(Node * node,VentureValuePtr value)
+void DB::registerValue(Node * node, VentureValuePtr value)
 {
   assert(!values.count(node));
   values[node] = value;
@@ -48,18 +48,18 @@ void DB::registerLatentDB(Node * makerNode, boost::shared_ptr<LatentDB> latentDB
   latentDBs[makerNode] = latentDB;
 }
 
-bool DB::hasESRParent(boost::shared_ptr<SP> sp,FamilyID id)
+bool DB::hasESRParent(boost::shared_ptr<SP> sp, FamilyID id)
 {
   return spFamilyDBs[sp].count(id);
 }
 
-RootOfFamily DB::getESRParent(boost::shared_ptr<SP> sp,FamilyID id)
+RootOfFamily DB::getESRParent(boost::shared_ptr<SP> sp, FamilyID id)
 {
   assert(spFamilyDBs[sp].count(id));
   return spFamilyDBs[sp][id];
 }
 
-void DB::registerSPFamily(boost::shared_ptr<SP> sp,FamilyID id,RootOfFamily esrParent)
+void DB::registerSPFamily(boost::shared_ptr<SP> sp, FamilyID id, RootOfFamily esrParent)
 {
   assert(!spFamilyDBs[sp].count(id));
   spFamilyDBs[sp][id] = esrParent;

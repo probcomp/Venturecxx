@@ -18,7 +18,9 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
+@on_inf_prim("none")
 def testRequestArrays():
   # ESRs should work even if the expressions being requested include
   # things like arrays (which are otherwise at risk of being treated

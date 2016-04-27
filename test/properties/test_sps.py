@@ -18,18 +18,19 @@
 # Testing the (Python) SP objects standalone
 
 import math
-import random
 import numpy.random as npr
-from testconfig import config
-from nose.tools import eq_, assert_almost_equal
-from flaky import flaky
+import random
 
-from venture.test.config import gen_in_backend
-from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
+from flaky import flaky
+from nose.tools import eq_
+from testconfig import config
+
 from venture.lite.builtin import builtInSPsIter
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.utils import FixedRandomness
+from venture.test.config import gen_in_backend
+from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 
 blacklist = ['make_csp', 'apply_function', 'make_gp',
              # TODO Appropriately construct random inputs to test
