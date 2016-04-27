@@ -50,6 +50,7 @@ def testBasicCDFs():
   yield checkCDF, "(beta 1 1)", scipy.stats.beta(1, 1).cdf
   yield checkCDF, "(gamma 1 2)", scipy.stats.gamma(1, scale=1/2.0).cdf
   yield checkCDF, "(student_t 1)", scipy.stats.t(1).cdf
+  yield checkCDF, "(inv_gamma 1 2)", scipy.stats.invgamma(1, scale=2.0).cdf
 
 @statisticalTest
 def checkCDF(expr, cdf):
