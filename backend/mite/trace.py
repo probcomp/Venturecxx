@@ -116,20 +116,59 @@ class Trace(LiteTrace):
     return None
 
   def select(self, scope, block):
+    if scope.getSymbol() == 'default' and block.getSymbol() == 'all':
+      return 'all'
     print 'select', scope, block
     return None
 
   def just_detach(self, scaffold):
+    if scaffold == 'all':
+      return self.detach_all()
     print 'detach', scaffold
     return 0, None
 
   def just_regen(self, scaffold):
+    if scaffold == 'all':
+      return self.regen_all()
     print 'regen', scaffold
     return 0
 
   def just_restore(self, scaffold, rhoDB):
+    if scaffold == 'all':
+      return self.restore_all(rhoDB)
     print 'restore', scaffold, rhoDB
     return 0
+
+  ## Global detach/regen by replaying all directives (as in serialize)
+
+  def detach_all(self):
+    weight = 0
+    rhoDB = OmegaDB()
+    for id in reversed(sorted(self.families)):
+      node = self.families[id]
+      if node.isObservation:
+        weight += RestoreContext(self, rhoDB).unconstrain(self.families[id])
+      RestoreContext(self, rhoDB).unevalFamily(node)
+    return weight, rhoDB
+
+  def regen_all(self):
+    weight = 0
+    rhoDB = OmegaDB()
+    for id in sorted(self.families):
+      node = self.families[id]
+      EvalContext(self).restore(node)
+      if node.isObservation:
+        weight += RestoreContext(self, rhoDB).constrain(node, node.observedValue)
+    return weight
+
+  def restore_all(self, rhoDB):
+    weight = 0
+    for id in sorted(self.families):
+      node = self.families[id]
+      RestoreContext(self, rhoDB).restore(node)
+      if node.isObservation:
+        weight += RestoreContext(self, rhoDB).constrain(node, node.observedValue)
+    return weight
 
   ## Serialization interface
 
