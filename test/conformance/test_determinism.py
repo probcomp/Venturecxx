@@ -172,17 +172,26 @@ def testDeterministicUnderChunking():
 @on_inf_prim("none")
 def testFuturesDiverge1():
   r = get_ripl(entropy=1)
-  [x1, x2] = r.evaluate("""
-(do (resample 2)
+  [x1, x2, x3] = r.evaluate("""
+(do (resample 3)
     (sample_all (normal 0 1)))""")
+  print x1, x2, x3
   assert x1 != x2
+  assert x1 != x3
+  assert x2 != x3
 
 @on_inf_prim("none")
 @broken_in("puma", "Puma does not support enumerative diversify")
 def testFuturesDiverge2():
   r = get_ripl(entropy=1)
-  [x1, x2] = r.evaluate("""
+  [x1, x2, x3, x4] = r.evaluate("""
 (do (assume frob (flip))
+    (assume nozzle (flip))
     (enumerative_diversify default all)
     (sample_all (normal 0 1)))""")
   assert x1 != x2
+  assert x1 != x3
+  assert x1 != x4
+  assert x2 != x3
+  assert x2 != x4
+  assert x3 != x4
