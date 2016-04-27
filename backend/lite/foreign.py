@@ -178,7 +178,8 @@ class ForeignLiteSP(object):
 
     def hasAEKernel(self):
         return self.sp.hasAEKernel()
-    def AEInfer(self, aux, np_rng):
+    def AEInfer(self, aux, seed):
+        np_rng = numpy.random.RandomState(seed)
         return self.sp.AEInfer(aux, np_rng)
 
     def show(self, spaux):
