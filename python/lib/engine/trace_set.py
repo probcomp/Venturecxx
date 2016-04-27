@@ -30,7 +30,7 @@ import venture.engine.trace as tr
 
 class TraceSet(object):
 
-  def __init__(self, engine, backend, entropy=None):
+  def __init__(self, engine, backend, entropy):
     self.engine = engine # Because it contains the foreign sp registry and other misc stuff for restoring traces
     self.backend = backend
     self.mode = 'sequential'
