@@ -77,6 +77,7 @@ def gaussian_drift_mh_ripl():
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
+@broken_in("mite", "Does not support regen_with_proposal yet")
 def testCustomProposalSmoke():
   ripl = gaussian_drift_mh_ripl()
   ripl.assume("x", "(normal 0 1)")
@@ -86,6 +87,7 @@ def testCustomProposalSmoke():
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
+@broken_in("mite", "Does not support regen_with_proposal yet")
 @statisticalTest
 def testCustomProposalInference():
   ripl = gaussian_drift_mh_ripl()
@@ -96,6 +98,7 @@ def testCustomProposalInference():
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
+@broken_in("mite", "Does not support regen_with_proposal yet")
 def testDetachForProposalDoesNotMutateScaffold():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.assume("x", "(normal 0 1)")

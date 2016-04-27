@@ -36,6 +36,7 @@ def testObserveAVar1a():
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3.0)
 
+@broken_in("mite", "Mite doesn't know how to propagate observes downstream")
 @on_inf_prim("none")
 def testObserveAVar1b():
   ripl = get_ripl()
@@ -59,6 +60,7 @@ def testObserveAMem1a():
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 3)
 
+@broken_in("mite", "Mite doesn't know how to propagate observes downstream")
 @on_inf_prim("none")
 def testObserveAMem1b():
   ripl = get_ripl()
@@ -82,6 +84,7 @@ def testObserveThenProcessDeterministically1a():
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 15)
 
+@broken_in("mite", "Mite doesn't know how to propagate observes downstream")
 @on_inf_prim("none")
 def testObserveThenProcessDeterministically1b():
   ripl = get_ripl()
@@ -107,6 +110,7 @@ def testObserveThenProcessStochastically1a():
   assert_greater(ripl.report("pid"), 2.99)
   assert_less(ripl.report("pid"), 3.01)
 
+@broken_in("mite", "Mite doesn't know how to propagate observes downstream")
 @on_inf_prim("mh")
 def testObserveThenProcessStochastically1b():
   ripl = get_ripl()
@@ -139,6 +143,7 @@ def testObserveOutputOfIf1():
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
 
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+@broken_in("mite", "Mite doesn't know how to propagate observes downstream")
 @statisticalTest
 def testObserveThroughRef():
   ripl = get_ripl()

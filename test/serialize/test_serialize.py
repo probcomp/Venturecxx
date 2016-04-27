@@ -22,8 +22,10 @@ from nose.tools import eq_
 from testconfig import config
 
 from venture.lite import builtin
+from venture.test.config import broken_in
 from venture.test.config import collectStateSequence
 from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_broken_in
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -34,6 +36,9 @@ from venture.test.stats import statisticalTest
 @statisticalTest
 def _test_serialize_program(v, label, action):
     engine = v.sivm.core_sivm.engine
+
+    if config['get_ripl'] == 'mite' and action != 'copy':
+        raise SkipTest("Stack dict conversion doesn't work in mite yet")
 
     if action == 'serialize':
         trace1 = engine.getDistinguishedTrace()
@@ -93,7 +98,7 @@ def test_serialize_smoke():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
-@gen_on_inf_prim("mh")
+@gen_on_inf_prim("none")
 def test_serialize_identical():
     def check(expr):
         v = get_ripl()
@@ -211,6 +216,7 @@ def test_serialize_latents():
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
+@gen_broken_in("mite", "Stack dict conversion doesn't work in mite yet")
 @gen_on_inf_prim("mh")
 def test_serialize_ripl():
     def check(mode):
@@ -247,6 +253,7 @@ def test_serialize_ripl():
     for mode in ['ripl', 'inference_language']:
         yield check, mode
 
+@broken_in("mite", "Stack dict conversion doesn't work in mite yet")
 @on_inf_prim("mh") # Easy to generalize but little testing value
 @statisticalTest
 def test_serialize_forget():
@@ -274,6 +281,7 @@ def test_serialize_forget():
         ans = [(False, 0.8), (True, 0.2)]
         return reportKnownDiscrete(ans, samples)
 
+@broken_in("mite", "Stack dict conversion doesn't work in mite yet")
 @on_inf_prim("none")
 def test_serialize_recursion():
     v = get_ripl()
@@ -294,6 +302,7 @@ def test_serialize_recursion():
         assert 'maximum recursion depth exceeded' not in e.message
         raise
 
+@broken_in("mite", "Stack dict conversion doesn't work in mite yet")
 @on_inf_prim("none")
 def test_serialize_repeatedly():
     v = get_ripl()
@@ -305,6 +314,7 @@ def test_serialize_repeatedly():
         v.save(f.name)
         v.load(f.name)
 
+@gen_broken_in("mite", "Foreign lite SPs not supported in mite yet")
 def test_foreign_sp():
     # make sure that foreign SP's are retained through serialization
     for mode in ['', '_serializing', '_threaded', '_thread_ser', '_multiprocess']:
