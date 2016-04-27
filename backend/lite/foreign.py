@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy.random
+import random
+
 from venture.lite.request import Request
 from venture.lite.sp import VentureSPRecord
 from venture.lite.value import VentureValue
@@ -53,6 +56,9 @@ class ForeignArgs(object):
     def __init__(self, args, _output=True):
         self.node = None
         self.args = args
+        prng = random.Random(args['seed'])
+        self.py_rng = random.Random(prng.randint(1, 2**31 - 1))
+        self.np_rng = numpy.random.RandomState(prng.randint(1, 2**31 - 1))
         self._operandValues = map(fromStackDict, args.get('operandValues'))
         self.operandNodes = [None for _ in self._operandValues]
         self.env = None

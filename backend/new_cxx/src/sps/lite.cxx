@@ -78,6 +78,9 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
     foreignArgs["madeSPAux"] = foreignMadeSPAux;
   }
 
+  boost::python::long_ seed(gsl_rng_get(args->_trace->getRNG()));
+  foreignArgs["seed"] = seed;
+
   // TODO: nodes, env, requests
 
   return foreignArgs;
