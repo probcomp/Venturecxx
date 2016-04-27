@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import numpy.random
+import random
+
 from venture.lite.sp import VentureSPRecord
 from venture.lite.trace import Trace
 from venture.lite.wttree import PMap
@@ -49,8 +52,9 @@ class Particle(Trace):
     self.newChildren = particle.newChildren
     self.discardedAAAMakerNodes = particle.discardedAAAMakerNodes
 
-    self.np_rng = particle.np_rng
-    self.py_rng = particle.py_rng
+    prng = particle.py_rng
+    self.py_rng = random.Random(prng.randint(1, 2**31 - 1))
+    self.np_rng = numpy.random.RandomState(prng.randint(1, 2**31 - 1))
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = { node : spaux.copy() for node,spaux in particle.madeSPAuxs.iteritems() }
@@ -74,8 +78,9 @@ class Particle(Trace):
     self.newChildren = PMap() # PMap Node (PSet Node)
     self.discardedAAAMakerNodes = PSet() # PSet Node
 
-    self.np_rng = trace.np_rng
-    self.py_rng = trace.py_rng
+    prng = trace.py_rng
+    self.py_rng = random.Random(prng.randint(1, 2**31 - 1))
+    self.np_rng = numpy.random.RandomState(prng.randint(1, 2**31 - 1))
 
     # (2) Maps to things that change outside of particle methods
     self.madeSPAuxs = {}

@@ -36,11 +36,8 @@ double SliceGKernel::computeLogDensity(double x)
   trace->registerLKernel(scaffold, node, boost::shared_ptr<LKernel>(lk));
 
   /* The density is with respect to fixed entropy */
-  boost::shared_ptr<RNGbox> rng(new RNGbox(gsl_rng_mt19937));
-  rng->set_seed(seed);
-
   boost::shared_ptr<Particle> p =
-    boost::shared_ptr<Particle>(new Particle(trace, rng));
+    boost::shared_ptr<Particle>(new Particle(trace, seed));
 
   return regenAndAttach(p.get(), scaffold->border[0], scaffold, false,
                         boost::shared_ptr<DB>(new DB()),

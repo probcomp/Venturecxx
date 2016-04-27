@@ -32,9 +32,9 @@ struct PGibbsWorker
 {
   PGibbsWorker(boost::shared_ptr<Scaffold> scaffold): scaffold(scaffold) {}
 
-  void doPGibbsInitial(ConcreteTrace * trace)
+  void doPGibbsInitial(ConcreteTrace * trace, unsigned long seed)
   {
-    particle = boost::shared_ptr<Particle>(new Particle(trace));
+    particle = boost::shared_ptr<Particle>(new Particle(trace, seed));
     weight = regenAndAttach(particle.get(), scaffold->border[0], scaffold,
                             false, boost::shared_ptr<DB>(new DB()), nullGradients);
   }
@@ -45,7 +45,8 @@ struct PGibbsWorker
     RNGbox rng(gsl_rng_mt19937);
     rng.set_seed(seed);
     size_t parentIndex = samplePartialSums(sums, rng.get_rng());
-    particle = boost::shared_ptr<Particle>(new Particle(oldParticles[parentIndex]));
+    particle = boost::shared_ptr<Particle>(
+      new Particle(oldParticles[parentIndex], gsl_rng_get(rng.get_rng())));
     weight = regenAndAttach(particle.get(), scaffold->border[t], scaffold,
                             false, boost::shared_ptr<DB>(new DB()), nullGradients);
   }
@@ -92,8 +93,9 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
     for (size_t p = 0; p < numNewParticles; ++p)
     {
       workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
+      const unsigned long seed = gsl_rng_get(trace->getRNG());
       boost::function<void()> th_func =
-        boost::bind(&PGibbsWorker::doPGibbsInitial, workers[p],trace);
+        boost::bind(&PGibbsWorker::doPGibbsInitial, workers[p], trace, seed);
       threads[p] = new boost::thread(th_func);
     }
     for (size_t p = 0; p < numNewParticles; ++p)
@@ -110,13 +112,14 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
     for (size_t p = 0; p < numNewParticles; ++p)
     {
       workers[p] = boost::shared_ptr<PGibbsWorker>(new PGibbsWorker(scaffold));
-      workers[p]->doPGibbsInitial(trace);
+      workers[p]->doPGibbsInitial(trace, gsl_rng_get(trace->getRNG()));
       particles[p] = workers[p]->particle;
       particleWeights[p] = workers[p]->weight;
 
     }
   }
-  particles[numNewParticles] = boost::shared_ptr<Particle>(new Particle(trace));
+  particles[numNewParticles] = boost::shared_ptr<Particle>(
+    new Particle(trace, gsl_rng_get(trace->getRNG())));
   particleWeights[numNewParticles] =
     regenAndAttach(particles[numNewParticles].get(),scaffold->border[0],
                    scaffold,true,rhoDBs[0],nullGradients);
@@ -144,7 +147,8 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
       }
 
       newParticles[numNewParticles] = boost::shared_ptr<Particle>(
-        new Particle(particles[numNewParticles]));
+        new Particle(particles[numNewParticles],
+		     gsl_rng_get(trace->getRNG())));
       newParticleWeights[numNewParticles] =
         regenAndAttach(newParticles[numNewParticles].get(),
                        scaffold->border[borderGroup], scaffold, true,
@@ -171,7 +175,8 @@ pair<Trace*,double> PGibbsGKernel::propose(ConcreteTrace * trace,
       }
 
       newParticles[numNewParticles] = boost::shared_ptr<Particle>(
-        new Particle(particles[numNewParticles]));
+        new Particle(particles[numNewParticles],
+		     gsl_rng_get(trace->getRNG())));
       newParticleWeights[numNewParticles] =
         regenAndAttach(newParticles[numNewParticles].get(),
                        scaffold->border[borderGroup], scaffold, true,
