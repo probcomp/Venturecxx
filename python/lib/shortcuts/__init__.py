@@ -82,7 +82,10 @@ def make_ripl_rest_client(base_url):
 def _entropy(entropy):
     return random.randint(1, 2**31 - 1) if entropy is None else entropy
 def _kwentropy(kwargs):
-    return _entropy(kwargs.pop('entropy') if 'entropy' in kwargs else entropy)
+    if 'entropy' in kwargs:
+        return kwargs.pop('entropy')
+    else:
+        return random.randint(1, 2**31 - 1)
 
 class Backend(object):
     """Base class representing a model backend.
