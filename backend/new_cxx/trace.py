@@ -67,11 +67,9 @@ class Trace(object):
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
-      # XXX We could copy the Python random state in stop_and_copy.
-      # However, we do not currently copy the C++ GSL random state.
-      # self.py_rng.setstate(entropy[0])
-      # self.np_rng.set_state(entropy[1])
-      assert entropy is None
+      py_state, np_state = entropy
+      self.py_rng.setstate(py_state)
+      self.np_rng.set_state(np_state)
 
   def __getattr__(self, attrname):
     # Forward all other trace methods without modification
@@ -88,7 +86,10 @@ class Trace(object):
     self.trace.set_seed(prng.randint(1, 2**31 - 1))
 
   def stop_and_copy(self):
-    return Trace(entropy=None, trace=self.trace.stop_and_copy())
+    py_state = self.py_rng.getstate()
+    np_state = self.np_rng.get_state()
+    state = (py_state, np_state)
+    return Trace(entropy=state, trace=self.trace.stop_and_copy())
 
   def short_circuit_copyable(self): return True
 
