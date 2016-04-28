@@ -18,8 +18,10 @@
 import numpy
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.value.dicts as v
 
+@on_inf_prim("none")
 def testVector():
   """Test that array-like objects don't get interpreted as expressions."""
   ripl = get_ripl()

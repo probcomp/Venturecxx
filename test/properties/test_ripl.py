@@ -19,12 +19,14 @@ from nose import SkipTest
 from nose.tools import eq_
 from testconfig import config
 
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
-from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
-from venture.lite.value import VentureValue
 from venture.lite.types import AnyType
+from venture.lite.value import VentureValue
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 import venture.value.dicts as v
 
 from test_sps import relevantSPs
@@ -114,6 +116,7 @@ through a ripl (applied fully uncurried)."""
     expr = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
     eq_(answer, carefully(eval_in_ripl, expr))
 
+@on_inf_prim("none")
 def testVectorArrayExample():
   from venture.lite.sp_registry import builtInSPs
   from venture.lite.value import VentureArray

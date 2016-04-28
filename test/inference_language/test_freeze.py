@@ -17,7 +17,14 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+import venture.lite.value as vv
+
+def count_nodes(engine):
+  scope = vv.VentureNumber(0)
+  block = vv.VentureNumber(0)
+  return engine.getDistinguishedTrace().numNodesInBlock(scope, block)
 
 @on_inf_prim("none")
 def testFreezeSanityCheck1():
@@ -41,10 +48,10 @@ def testFreezeSanityCheck2():
   ripl.assume("ringer", "(tag 0 0 (normal 0.0 1.0))")
 
   engine = ripl.sivm.core_sivm.engine
-  eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),6)
+  eq_(count_nodes(engine), 6)
 
   ripl.freeze("y")
-  eq_(engine.getDistinguishedTrace().numNodesInBlock(0,0),1)
+  eq_(count_nodes(engine), 1)
 
 @on_inf_prim("mh")
 def testFreezeSanityCheck3():

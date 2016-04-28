@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import math
+
+from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
 from venture.lite.address import Address
@@ -129,12 +132,13 @@ class Trace(object):
     if len(self.scopes[scope]) == 0 and (scope != "default"): del self.scopes[scope]
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
-    if isinstance(val, VentureNumber):
-      return val.getNumber()
-    elif isinstance(val, VentureSymbol):
-      return val.getSymbol()
-    elif isinstance(val, VenturePair): # I hope this means it's an ordered range
-      return ExpressionType().asPython(val)
+    if isinstance(val, VentureSymbol):
+      if val.getSymbol() in ["default", "none", "one", "all", "ordered"]:
+        return val.getSymbol()
+    elif isinstance(val, VenturePair):
+      if isinstance(val.first, VentureSymbol) and \
+         val.first.getSymbol() == 'ordered_range':
+        return ['ordered_range', val.rest.first, val.rest.rest.first]
     return val
 
   # [FIXME] repetitive, but not sure why these exist at all
@@ -295,15 +299,17 @@ class Trace(object):
   def isConstrainedAt(self, node): return node in self.ccs
 
   #### For kernels
-  def getScope(self, scope): return self.scopes[self._normalizeEvaluatedScopeOrBlock(scope)]
+  def getScope(self, scope):
+    scope = self._normalizeEvaluatedScopeOrBlock(scope)
+    if scope in self.scopes:
+      return self.scopes[scope]
+    else:
+      return SamplableMap()
 
   def sampleBlock(self, scope): return self.getScope(scope).sample()[0]
   def logDensityOfBlock(self, scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self, scope): return self.getScope(scope).keys()
-  def numBlocksInScope(self, scope):
-    scope = self._normalizeEvaluatedScopeOrBlock(scope)
-    if scope in self.scopes: return len(self.getScope(scope).keys())
-    else: return 0
+  def numBlocksInScope(self, scope): return len(self.getScope(scope).keys())
 
   def getAllNodesInScope(self, scope):
     blocks = [self.getNodesInBlock(scope, block) for block in self.getScope(scope).keys()]
@@ -684,14 +690,13 @@ function.
     (operator, scope, block) = exp[0:3]
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if not self.scopeHasEntropy(scope):
-      return [self, 0.0]
+      return ([self], [0.0])
     if operator == "enumerative":
       return infer.EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
   def select(self, scope, block):
     scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    assert block != "one", "Accounting for stochastic subproblem selection not supported"
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     return scaffold
 
@@ -722,6 +727,53 @@ function.
     # de-mutate the scaffold in case it is used for subsequent operations
     unregisterDeterministicLKernels(self, scaffold, pnodes)
     return xiWeight
+
+  def checkInvariants(self):
+    # print "Begin invariant check"
+    assert len(self.unpropagatedObservations) == 0, \
+      "Don't checkInvariants with unpropagated observations"
+    rcs = copy.copy(self.rcs)
+    ccs = copy.copy(self.ccs)
+    aes = copy.copy(self.aes)
+    scopes = {}
+    for (scope_name, scope) in self.scopes.iteritems():
+      new_scope = SamplableMap()
+      for (block_name, block) in scope.iteritems():
+        new_scope[block_name] = copy.copy(block)
+      scopes[scope_name] = new_scope
+
+    scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
+    rhoWeight, rhoDB = detachAndExtract(self, scaffold)
+
+    assert len(self.rcs) == 0, "Global detach left random choices registered"
+    # TODO What if an observed random choice had registered an
+    # AEKernel?  Will that be left here?
+    assert len(self.aes) == 0, "Global detach left AEKernels registered"
+    assert len(self.scopes) == 1, "Global detach left random choices in non-default scope %s" % self.scopes
+    assert len(self.scopes['default']) == 0, "Global detach left random choices in default scope %s" % self.scopes['default']
+
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+
+    assert rcs == self.rcs, "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
+    assert ccs == self.ccs, "Global detach/restore changed the registered constrained choices from %s to %s" % (ccs, self.ccs)
+    assert aes == self.aes, "Global detach/restore changed the registered AEKernels from %s to %s" % (aes, self.aes)
+
+    for scope_name in set(scopes.keys()).union(self.scopes.keys()):
+      if scope_name in scopes and scope_name not in self.scopes:
+        assert False, "Global detach/restore destroyed scope %s with blocks %s" % (scope_name, scopes[scope_name])
+      if scope_name not in scopes and scope_name in self.scopes:
+        assert False, "Global detach/restore created scope %s with blocks %s" % (scope_name, self.scopes[scope_name])
+      scope = scopes[scope_name]
+      new_scope = self.scopes[scope_name]
+      for block_name in set(scope.keys()).union(new_scope.keys()):
+        if block_name in scope and block_name not in new_scope:
+          assert False, "Global detach/restore destroyed block %s, %s with nodes %s" % (scope_name, block_name, scope[block_name])
+        if block_name not in scope and block_name in new_scope:
+          assert False, "Global detach/restore created block %s, %s with nodes %s" % (scope_name, block_name, new_scope[block_name])
+        assert scope[block_name] == new_scope[block_name], "Global detach/restore changed the addresses in block %s, %s from %s to %s" %(scope_name, block_name, scope[block_name], new_scope[block_name])
+
+    assert_allclose(rhoWeight, xiWeight, err_msg="Global restore gave different weight from detach")
+    # print "End invariant check"
 
   def get_current_values(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()

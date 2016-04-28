@@ -58,3 +58,5 @@ class SamplableMap(object):
   def keys(self): return self.d.keys()
 
   def values(self): return [v for (_,v) in self.a]
+
+  def iteritems(self): return self.a

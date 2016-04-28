@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-# Venture lexical scanner (`VentureScript', Lisp-style notation).
+# Venture lexical scanner (`VentureScript', JavaScript-style notation).
 
 import StringIO
 

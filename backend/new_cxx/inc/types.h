@@ -54,7 +54,7 @@ typedef vector<double> Gradient;
 /* TODO I keep oscillating on these.
    One convention could be to only use this shortcut for VentureValuePtr.
    Another could be to only use it for all VentureValues, which would include
-   SP,Environment,SPRef,and others. */
+   SP, Environment, SPRef, and others. */
 
 //typedef shared_ptr<VentureSP> VentureSPPtr;
 //typedef shared_ptr<VentureEnvironment> VentureEnvironmentPtr;

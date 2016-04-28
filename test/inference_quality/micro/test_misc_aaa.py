@@ -18,12 +18,19 @@
 from nose import SkipTest
 from testconfig import config
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, inParallel, gen_on_inf_prim
+from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import inParallel
 from venture.test.config import on_inf_prim
+from venture.test.config import rejectionSampling
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import skipWhenSubSampling
+from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportSameContinuous
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("any")
 def testMakeBetaBernoulli1():

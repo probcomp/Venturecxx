@@ -223,6 +223,23 @@ if freeze has been used.
       self.mode = mode
       self.create_trace_pool(traces, weights)
 
+  def on_trace(self, i, f):
+    mode = self.mode
+    self.mode = 'sequential'
+    traces = self.retrieve_traces()
+    weights = self.log_weights
+    try:
+      self.create_trace_pool([traces[i]], [weights[i]])
+      ans = f(traces[i])
+      new_trace = self.retrieve_traces()[0]
+      new_weight = self.log_weights[0]
+      traces = traces[0:i] + [new_trace] + traces[i+1:]
+      weights = weights[0:i] + [new_weight] + weights[i+1:]
+      return ans
+    finally:
+      self.mode = mode
+      self.create_trace_pool(traces, weights)
+
   def primitive_infer(self, exp):
     return self.traces.map('primitive_infer', exp)
 

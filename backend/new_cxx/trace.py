@@ -23,6 +23,7 @@ from venture.lite.value import VentureValue
 from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
 import venture.value.dicts as v
+import venture.lite.value as vv
 
 class WarningPSP(object):
   warned = {}
@@ -53,8 +54,8 @@ class Trace(object):
     if trace is None:
       self.trace = puma.Trace()
       # Poor Puma defaults its local RNG seed to the system time
-      self.trace.set_seed(random.randint(1,2**31-1))
-      for name,sp in builtInSPs().iteritems():
+      self.trace.set_seed(random.randint(1, 2**31-1))
+      for name, sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there
           pass
@@ -105,14 +106,11 @@ class Trace(object):
                                    _ensure_stack_dict(block))
 
   def numNodesInBlock(self, scope, block):
-    # This is kooky for compatibility with the Lite numNodesInBlock method.
-    def guess_type(obj):
-      if isinstance(obj, int):
-        return v.number(obj)
-      if isinstance(obj, basestring):
-        return v.symbol(obj)
-      raise Exception("numNodesInBlock can't handle %s" % obj)
-    return self.trace.numNodesInBlock(guess_type(scope), guess_type(block))
+    return self.trace.numNodesInBlock(_coerce_to_stack_dict(scope),
+                                      _coerce_to_stack_dict(block))
+
+  def numBlocksInScope(self, scope):
+    return self.trace.numBlocksInScope(_coerce_to_stack_dict(scope))
 
   def set_profiling(self, _enabled):
     pass # Puma can't be internally profiled (currently)
@@ -127,6 +125,12 @@ def _unwrapVentureValue(val):
 def _ensure_stack_dict(val):
   assert isinstance(val, VentureValue)
   return val.asStackDict(None)
+
+def _coerce_to_stack_dict(val):
+  if isinstance(val, VentureValue):
+    return val.asStackDict(None)
+  else:
+    return val
 
 def _expToDict(exp):
   if isinstance(exp, int):

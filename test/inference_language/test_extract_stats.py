@@ -17,7 +17,8 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, gen_on_inf_prim
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
 import venture.ripl.utils as u
 
 @gen_on_inf_prim("extract_stats")

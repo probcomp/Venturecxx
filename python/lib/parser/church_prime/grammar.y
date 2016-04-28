@@ -66,6 +66,7 @@ instruction(error)	::= T_LSQUARE(open) error T_RSQUARE(close).
 
 directive(define)	::= K_DEFINE(k) L_NAME(n) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
+directive(assume_values) ::= K_ASSUME_VALUES(k) namelist(nl) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
@@ -78,12 +79,20 @@ expression(literal)	::= literal(value).
 expression(quote)       ::= T_QUOTE(quote) expression(e).
 expression(qquote)      ::= T_BACKTICK(qquote) expression(e).
 expression(unquote)     ::= T_COMMA(unquote) expression(e).
-expression(combination)	::= T_LROUND(open) expressions(es) T_RROUND(close).
-expression(comb_error)	::= T_LROUND(open) expressions(es) error
+expression(comb0)	::= T_LROUND(open) T_RROUND(close).
+expression(comb1)	::= T_LROUND(open) expression(op) arguments(args) T_RROUND(close).
+expression(comb_error)	::= T_LROUND(open) expression(op) arguments(args) error
 				T_RROUND(close).
 
-expressions(none)	::= .
-expressions(some)	::= expressions(es) expression(e).
+arguments(none)		::= .
+arguments(some)		::= arguments(args) expression(e).
+arguments(some_kw)	::= arguments(args) L_NAME(name) T_COLON(colon) expression(e).
+arguments(kw_error)	::= arguments(args) L_NAME(name) T_COLON(colon) error.
+
+namelist(nl)    	::= T_LROUND(open) names(ns) T_RROUND(close).
+
+names(none)		::= .
+names(some)		::= names(ns) L_NAME(n).
 
 literal(true)		::= T_TRUE(t).
 literal(false)		::= T_FALSE(f).
@@ -133,6 +142,7 @@ json_dict_entry(error)	::= error T_COLON json(value).
  */
 %fallback L_NAME
 	K_ASSUME
+	K_ASSUME_VALUES
 	K_CHOICES
 	K_INFER
 	K_LOAD

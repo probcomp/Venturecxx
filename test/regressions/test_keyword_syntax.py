@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -18,13 +18,17 @@
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 
-@on_inf_prim("mh")
-def testIf2():
-  """This caused an earlier CXX implementation to crash because of a
-  corner case of operators changing during inference."""
-  ripl = get_ripl()
-  ripl.assume('if1', '(if (bernoulli 0.5) biplex biplex)')
-  ripl.assume('if2', '(if (bernoulli 0.5) if1 if1)')
-  ripl.assume('if3', '(if (bernoulli 0.5) if2 if2)')
-  ripl.assume('if4', '(if (bernoulli 0.5) if3 if3)')
-  ripl.infer(20)
+@on_inf_prim("none")
+def testKeywordSmoke():
+  r = get_ripl()
+  r.execute_program("""
+(assume x (normal loc: 0 scale: 1))
+(mh scope: default block: one 10)""")
+
+@on_inf_prim("none")
+def testKeywordSmokeVS():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.execute_program("""
+assume x = normal(loc: 0, scale: 1);
+mh(scope: default, block: one, 10);""")

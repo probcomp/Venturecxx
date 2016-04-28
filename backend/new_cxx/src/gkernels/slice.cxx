@@ -63,8 +63,7 @@ double SliceGKernel::sliceSample(double x0, double w, int m,
   int J = floor(gsl_ran_flat(trace->getRNG(), 0.0, m));
   int K = (m - 1) - J;
 
-  while (J > 0)
-  {
+  while (J > 0) {
     if (L <= lower) { break; }
     double logd = computeLogDensity(L);
     // cout << "Expanding down from L " << L << " logd " << logd
@@ -75,8 +74,7 @@ double SliceGKernel::sliceSample(double x0, double w, int m,
     J -= 1;
   }
 
-  while (K > 0)
-  {
+  while (K > 0) {
     if (R >= upper) { break; }
     double logd = computeLogDensity(R);
     // cout << "Expanding up from R " << R << " logd " << logd
@@ -92,8 +90,7 @@ double SliceGKernel::sliceSample(double x0, double w, int m,
   if (R > upper) { R = upper; }
 
   /* Sample from the interval, shrinking on rejections */
-  while (true)
-  {
+  while (true) {
     double x1 = gsl_ran_flat(trace->getRNG(), L, R);
     double gx1 = computeLogDensity(x1);
     // cout << "Slicing at x1 " << x1 << " gx1 " << gx1 << " logy " << logy
@@ -165,6 +162,7 @@ int SliceGKernel::reject()
 {
   detachAndExtract(trace, scaffold->border[0], scaffold);
   assertTorus(scaffold);
-  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
+  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB,
+                 boost::shared_ptr<map<Node*, Gradient> >());
   return this->scaffold->numAffectedNodes();
 }

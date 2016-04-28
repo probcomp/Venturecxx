@@ -29,13 +29,13 @@ struct ApplicationNode;
 
 struct PSP
 {
-  virtual VentureValuePtr simulate(boost::shared_ptr<Args> args,gsl_rng * rng) const =0;
-  virtual double logDensity(VentureValuePtr value,boost::shared_ptr<Args> args) const { return 0; }
-  virtual void incorporate(VentureValuePtr value,boost::shared_ptr<Args> args) const {}
-  virtual void unincorporate(VentureValuePtr value,boost::shared_ptr<Args> args) const {}
+  virtual VentureValuePtr simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const =0;
+  virtual double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args) const { return 0; }
+  virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const {}
+  virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const {}
 
   virtual bool isRandom() const { return false; }
-  virtual bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return false; }
+  virtual bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return false; }
 
   virtual bool childrenCanAAA() const { return false; }
   virtual boost::shared_ptr<LKernel> const getAAALKernel();
@@ -46,7 +46,7 @@ struct PSP
   virtual double logDensityOfData(boost::shared_ptr<SPAux> spAux) const { assert(false); }
   // TODO variational is punted for now
   // virtual bool hasVariationalLKernel() const { return false; }
-  // virtual boost::shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace,Node * node) const;
+  // virtual boost::shared_ptr<LKernel> getVariationalLKernel(ConcreteTrace * trace, Node * node) const;
 
   // TODO special psp-specific lkernels are punted for now
   virtual bool hasDeltaKernel() const { return false; }
@@ -64,20 +64,20 @@ struct PSP
 
 struct NullRequestPSP : PSP
 {
-  VentureValuePtr simulate(boost::shared_ptr<Args> args,gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return true; }
+  VentureValuePtr simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
 };
 
 struct ESRRefOutputPSP : PSP
 {
-  VentureValuePtr simulate(boost::shared_ptr<Args> args,gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
+  VentureValuePtr simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
 };
 
 struct RandomPSP : PSP
 {
   bool isRandom() const { return true; }
-  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const { return true; }
+  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
 };
 
 #endif

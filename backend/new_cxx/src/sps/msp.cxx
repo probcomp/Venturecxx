@@ -40,17 +40,16 @@ VentureValuePtr MSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
 {
   vector<VentureValuePtr> exp;
   exp.push_back(shared_ptr<VentureSymbol>(new VentureSymbol("memoizedSP")));
-  
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     exp.push_back(quote(args->operandValues[i]));
   }
-  
+
   shared_ptr<VentureEnvironment> empty(new VentureEnvironment());
-  empty->addBinding("memoizedSP",sharedOperatorNode);
-  
+  empty->addBinding("memoizedSP", sharedOperatorNode);
+
   vector<ESR> esrs;
-  esrs.push_back(ESR(VentureValuePtr(new VentureArray(args->operandValues)),VentureValuePtr(new VentureArray(exp)),empty));
-  
+  esrs.push_back(ESR(VentureValuePtr(new VentureArray(args->operandValues)), VentureValuePtr(new VentureArray(exp)), empty));
+
   return VentureValuePtr(new VentureRequest(esrs, vector<shared_ptr<LSR> >()));
 }

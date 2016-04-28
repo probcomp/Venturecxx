@@ -117,6 +117,7 @@ def checkPlotfToFileBadArgs(basenames, specs):
     ripl.infer(infer)
   assert "stack_trace" in cm.exception.data # I.e., error annotation succeeded.
 
+@on_inf_prim("collect")
 def testIteration():
   'Check that the iteration counter prints correctly'
   ripl = get_ripl()

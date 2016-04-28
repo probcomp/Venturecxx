@@ -240,7 +240,7 @@ class PSP(object):
     number for the probability of every value returned from this
     method, given the same arguments.
     """
-    raise VentureBuiltinSPMethodError("Cannot enumerate.")
+    raise VentureBuiltinSPMethodError("Cannot enumerate %s.", type(self))
 
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the

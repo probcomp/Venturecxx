@@ -16,13 +16,20 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats as stats
-from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from nose.tools import eq_
+# Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from nose.tools import assert_greater
+from nose.tools import assert_less
 
-from venture.test.config import get_ripl, collectSamples
-from venture.test.config import skipWhenRejectionSampling, on_inf_prim
-from venture.test.config import broken_in, default_num_samples
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownContinuous
 from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testObserveAVar1a():

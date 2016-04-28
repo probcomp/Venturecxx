@@ -315,6 +315,7 @@ def test_serialize_repeatedly():
         v.load(f.name)
 
 @gen_broken_in("mite", "Foreign lite SPs not supported in mite yet")
+@gen_on_inf_prim("resample")
 def test_foreign_sp():
     # make sure that foreign SP's are retained through serialization
     for mode in ['', '_serializing', '_threaded', '_thread_ser', '_multiprocess']:

@@ -17,7 +17,8 @@
 
 import scipy.stats
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 # TODO Rewrite this to use mem like one normally would.  Right now
 # it's metaprogrammed because freeze is only known to work on

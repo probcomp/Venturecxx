@@ -47,9 +47,9 @@ struct DirCatOutputPSP : RandomPSP
     alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
@@ -81,7 +81,7 @@ struct SymDirCatSP : SP
 // Uncollapsed SPAux
 struct UCDirCatSPAux : DirCatSPAux
 {
-  UCDirCatSPAux(int n): DirCatSPAux(n), theta(n,0) {}
+  UCDirCatSPAux(int n): DirCatSPAux(n), theta(n, 0) {}
   UCDirCatSPAux* copy_help(ForwardingMap* m) const;
   vector<double> theta;
 };
@@ -95,7 +95,7 @@ struct MakeUCDirCatOutputPSP : RandomPSP
 
 struct UCDirCatSP : SP
 {
-  UCDirCatSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP,outputPSP) {}
+  UCDirCatSP(PSP * requestPSP, PSP * outputPSP): SP(requestPSP, outputPSP) {}
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
@@ -108,9 +108,9 @@ struct UCDirCatOutputPSP : RandomPSP
   UCDirCatOutputPSP(size_t n) : n(n) {}
 
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
@@ -129,7 +129,7 @@ struct MakeUCSymDirCatOutputPSP : RandomPSP
 struct UCSymDirCatSP : SP
 {
   UCSymDirCatSP(PSP * requestPSP, PSP * outputPSP):
-    SP(requestPSP,outputPSP) {}
+    SP(requestPSP, outputPSP) {}
 
   bool hasAEKernel() const { return true; }
   void AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,

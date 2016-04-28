@@ -16,12 +16,20 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.stats import reportKnownGaussian, reportSameContinuous
-from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
+from nose import SkipTest
+import scipy.stats as stats
+
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import gen_broken_in
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportSameContinuous
+from venture.test.stats import statisticalTest
 import venture.value.dicts as val
 
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")

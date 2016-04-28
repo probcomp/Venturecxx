@@ -15,10 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import assert_almost_equal
 from nose import SkipTest
+from nose.tools import assert_almost_equal
 
-from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import gen_broken_in
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
 @gen_on_inf_prim("grad_ascent")

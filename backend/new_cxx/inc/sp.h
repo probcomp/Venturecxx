@@ -56,7 +56,7 @@ struct SPFamilies
   MapVVPtrRootOfFamily families;
   bool containsFamily(FamilyID id);
   RootOfFamily getRootOfFamily(FamilyID id);
-  void registerFamily(FamilyID id,RootOfFamily root);
+  void registerFamily(FamilyID id, RootOfFamily root);
   void unregisterFamily(FamilyID id);
   SPFamilies* copy_help(ForwardingMap* m) const;
 };

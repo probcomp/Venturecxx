@@ -18,7 +18,9 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
+@on_inf_prim("define")
 def testVariableShadowing():
   """Prior to the patch in which we implemented Trace.sealEnvironment(), we were
   able to destructively redefine symbols from the inference prelude, and things

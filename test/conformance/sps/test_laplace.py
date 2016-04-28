@@ -17,7 +17,8 @@
 
 from scipy.stats import laplace
 
-from venture.test.config import collectSamples, broken_in
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest

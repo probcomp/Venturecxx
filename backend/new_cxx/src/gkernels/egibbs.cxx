@@ -52,26 +52,25 @@ struct EGibbsWorker
     }
   }
   ConcreteTrace * trace;
-  boost::shared_ptr<map<Node*,Gradient> > nullGradients;
+  boost::shared_ptr<map<Node*, Gradient> > nullGradients;
   boost::shared_ptr<Particle> particle;
   double weight;
 };
 
-pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
+pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
     boost::shared_ptr<Scaffold> scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
 
-  assertTrace(trace,scaffold);
+  assertTrace(trace, scaffold);
   assert(scaffold->border.size() == 1);
 
   // principal nodes should be ApplicationNodes
   set<Node*> pNodes = scaffold->getPrincipalNodes();
   vector<ApplicationNode*> applicationNodes;
   vector<VentureValuePtr> currentValues;
-  BOOST_FOREACH(Node * node, pNodes)
-  {
+  BOOST_FOREACH(Node * node, pNodes) {
     ApplicationNode * applicationNode = dynamic_cast<ApplicationNode*>(node);
     assert(applicationNode);
     assert(!scaffold->isResampling(applicationNode->operatorNode));
@@ -81,8 +80,7 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
 
   // compute the cartesian product of all possible values
   vector<vector<VentureValuePtr> > possibleValues;
-  BOOST_FOREACH(ApplicationNode * node, applicationNodes)
-  {
+  BOOST_FOREACH(ApplicationNode * node, applicationNodes) {
     boost::shared_ptr<PSP> psp = trace->getPSP(node);
     boost::shared_ptr<Args> args = trace->getArgs(node);
     assert(psp->canEnumerateValues(args));
@@ -96,17 +94,16 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
   //registerDeterministicLKernels(trace, scaffold, applicationNodes, currentValues);
   pair<double, boost::shared_ptr<DB> > weightAndRhoDB =
     detachAndExtract(trace, scaffold->border[0], scaffold);
+  rhoDB = weightAndRhoDB.second;
   assertTorus(scaffold);
 
   // regen all possible values
   vector<boost::shared_ptr<Particle> > particles(numValues);
   vector<double> particleWeights(numValues);
   vector<boost::shared_ptr<EGibbsWorker> > workers(numValues);
-  if (inParallel)
-  {
+  if (inParallel) {
     vector<boost::thread*> threads(numValues);
-    for (size_t p = 0; p < numValues; ++p)
-    {
+    for (size_t p = 0; p < numValues; ++p) {
       workers[p] = boost::shared_ptr<EGibbsWorker>(new EGibbsWorker(trace));
       boost::function<void()> th_func =
         boost::bind(&EGibbsWorker::doEGibbs, workers[p], scaffold,
@@ -114,16 +111,14 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
                     weightAndRhoDB.second);
       threads[p] = new boost::thread(th_func);
     }
-    for (size_t p = 0; p < numValues; ++p)
-    {
+    for (size_t p = 0; p < numValues; ++p) {
       threads[p]->join();
       particles[p] = workers[p]->particle;
       particleWeights[p] = workers[p]->weight;
       delete threads[p];
     }
   } else {
-    for (size_t p = 0; p < numValues; ++p)
-    {
+    for (size_t p = 0; p < numValues; ++p) {
       workers[p] = boost::shared_ptr<EGibbsWorker>(new EGibbsWorker(trace));
       workers[p]->doEGibbs(scaffold, applicationNodes, valueTuples[p],
                            currentValues, weightAndRhoDB.second);
@@ -139,16 +134,15 @@ pair<Trace*,double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
 int EnumerativeGibbsGKernel::accept()
 {
   finalParticle->commit();
-  // assertTrace(self.trace,self.scaffold)
+  // assertTrace(self.trace, self.scaffold)
   return this->scaffold->numAffectedNodes();
 }
 
 int EnumerativeGibbsGKernel::reject()
 {
-  assert(false); // should never reject
   regenAndAttach(trace, scaffold->border[0], scaffold, true,
-                 rhoDB, boost::shared_ptr<map<Node*,Gradient> >());
-  // assertTrace(self.trace,self.scaffold)
+                 rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
+  // assertTrace(self.trace, self.scaffold)
   return this->scaffold->numAffectedNodes();
 }
 
@@ -171,8 +165,7 @@ boost::shared_ptr<Particle> EnumerativeMAPGKernel::selectParticle(
   // Deterministically choose the posterior maximum
   int max_i = -1;
   double max = -FLT_MAX;
-  for (size_t i = 0; i < particleWeights.size(); i++)
-  {
+  for (size_t i = 0; i < particleWeights.size(); i++) {
     if (particleWeights[i] > max) { max_i = i; max = particleWeights[i]; }
   }
   return particles[max_i];

@@ -1060,26 +1060,8 @@ x #213 (model prelude)
   - Therefore, it probably is not in the list of candidate AnyType
     values, either
   - Would need to update that list in Puma, as well.
-- #216 Should make sure that strings work as scope and block ids, (also in
++ #216 Should make sure that strings work as scope and block ids, (also in
   Puma)
-  - Puma has a separate code path for parsing scopes and blocks, named
-    fromPython, that doesn't appear to be used for anything else (?).
-    - As opposed to parseValue, which interprets stack dicts.
-  - This seems to be compensated for on the python side with
-    _expToDict and _unwrapVentureValue (applied to scopes and blocks)!
-  - Candidate resolution: Make sure that all the parameters Puma sees
-    are uniformly stack dicts, parse them as such, and flush the
-    "fromPython" code path.
-    - Difficulty: On entry to _expToDict, some of the arguments were
-      unwrapped to bare Python by specific types given in
-      inference_sps.py, and some (notably the scope and block ids)
-      were left as-is by AnyType instances therein.
-    - enumerative_diversify, collapse_equal, collapse_equal_map, use
-      expressiontype for the scope and block
-    - Actually, the scope and block are the only general values in any
-      of these.
-    - numNodesInBlock breaks because somebody passes raw ints instead
-      of stack dicts.
 - #217 Make there be one standard satisfactory gp implementation
   - Did we ever get good results for gradients through GPs, or is
     there reason to believe that's broken?
