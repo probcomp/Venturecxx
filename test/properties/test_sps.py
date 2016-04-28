@@ -18,8 +18,9 @@
 # Testing the (Python) SP objects standalone
 
 import math
-import numpy.random as npr
 import random
+
+import numpy.random as npr
 
 from flaky import flaky
 from nose.tools import eq_
