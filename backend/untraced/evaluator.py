@@ -89,8 +89,8 @@ class RequestArgs(object):
     self.operandNodes = nodes
     self.env = env
     rng = random.Random(seed)
-    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
-    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self._py_rng = random.Random(rng.randint(1, 2**31 - 1))
+    self._np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
     # TODO Theoretically need spaux and madeSPAux fields
 
   def operandValues(self):
@@ -98,6 +98,9 @@ class RequestArgs(object):
     for v in ans:
       assert v is None or isinstance(v, vv.VentureValue)
     return ans
+
+  def py_prng(self): return self._py_rng
+  def np_prng(self): return self._np_rng
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"

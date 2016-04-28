@@ -121,8 +121,6 @@ class Args(object):
     self.node = node
     self.operandNodes = node.operandNodes
     self.env = node.env
-    self.np_rng = self.trace.np_rng
-    self.py_rng = self.trace.py_rng
 
   def operandValues(self):
     ans = [self.trace.valueAt(operandNode) for operandNode in self.operandNodes]
@@ -142,6 +140,11 @@ class Args(object):
     return [self.trace.valueAt(esrParent) for esrParent in self.trace.esrParentsAt(self.node)]
   def madeSPAux(self):
     return self.trace.getAAAMadeSPAuxAt(self.node)
+
+  def py_prng(self):
+    return self.trace.py_rng
+  def np_prng(self):
+    return self.trace.np_rng
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
@@ -171,6 +174,9 @@ class FixedValueArgs(object):
   def esrNodes(self): return self.args.esrNodes()
   def esrValues(self): return self.args.esrValues()
   def madeSPAux(self): return self.args.madeSPAux()
+
+  def py_prng(self): return self.args.py_prng()
+  def np_prng(self): return self.args.np_prng()
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)

@@ -57,8 +57,8 @@ class ForeignArgs(object):
         self.node = None
         self.args = args
         prng = random.Random(args['seed'])
-        self.py_rng = random.Random(prng.randint(1, 2**31 - 1))
-        self.np_rng = numpy.random.RandomState(prng.randint(1, 2**31 - 1))
+        self._py_rng = random.Random(prng.randint(1, 2**31 - 1))
+        self._np_rng = numpy.random.RandomState(prng.randint(1, 2**31 - 1))
         self._operandValues = map(fromStackDict, args.get('operandValues'))
         self.operandNodes = [None for _ in self._operandValues]
         self.env = None
@@ -69,6 +69,8 @@ class ForeignArgs(object):
     def esrNodes(self): return []
     def estValues(self): return []
     def madeSPAux(self): return self.args.get('madeSPAux')
+    def py_prng(self): return self._py_rng
+    def np_prng(self): return self._np_rng
 
 class ForeignLitePSP(object):
     """A wrapper around a Lite PSP that can be called by other backends."""
