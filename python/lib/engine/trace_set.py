@@ -18,6 +18,8 @@
 import cPickle as pickle
 import random
 
+import numpy.random as npr
+
 from ..multiprocess import MultiprocessingMaster
 from ..multiprocess import SynchronousMaster
 from ..multiprocess import SynchronousSerializingMaster
@@ -123,8 +125,10 @@ if freeze has been used.
     P = int(P)
     newTraces = [None for p in range(P)]
     used_parents = {}
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    np_rng = npr.RandomState(seed)
     for p in range(P):
-      parent = sampleLogCategorical(self.log_weights, self.traces.retrieve(0).trace.np_rng) # will need to include or rewrite
+      parent = sampleLogCategorical(self.log_weights, np_rng) # will need to include or rewrite
       newTrace = self._use_parent(used_parents, parent)
       newTraces[p] = newTrace
     return newTraces
