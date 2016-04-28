@@ -57,7 +57,7 @@ class NormalDriftKernel(DeltaLKernel):
 
   def forwardSimulate(self, _trace, oldValue, args):
     mu,sigma = args.operandValues()
-    nu = args.args.np_rng.normal(loc=0, scale=sigma)
+    nu = args.np_prng().normal(loc=0, scale=sigma)
     term1 = mu
     term2 = math.sqrt(1 - (self.epsilon * self.epsilon)) * (oldValue - mu)
     term3 = self.epsilon * nu
@@ -76,7 +76,7 @@ class MVNormalRandomWalkKernel(DeltaLKernel):
 
   def simulate(self, _trace, oldValue, args):
     (mu, _) = MVNormalOutputPSP.__parse_args__(args)
-    nu = args.args.np_rng.normal(loc=0, scale=self.epsilon, size=mu.shape)
+    nu = args.np_prng().normal(loc=0, scale=self.epsilon, size=mu.shape)
     return oldValue + nu
 
   @override(DeltaLKernel)
@@ -89,7 +89,7 @@ class MVNormalRandomWalkKernel(DeltaLKernel):
 
 class MVNormalOutputPSP(RandomPSP):
   def simulate(self, args):
-    return args.args.np_rng.multivariate_normal(*self.__parse_args__(args))
+    return args.np_prng().multivariate_normal(*self.__parse_args__(args))
 
   def logDensity(self, x, args):
     (mu, sigma) = self.__parse_args__(args)
@@ -155,11 +155,11 @@ class InverseWishartOutputPSP(RandomPSP):
     # use matlab's heuristic for choosing between the two different sampling schemes
     if (dof <= 81+p) and (dof == int(dof)):
       # direct
-      A = args.args.np_rng.normal(size=(p, dof))
+      A = args.np_prng().normal(size=(p, dof))
     else:
       # https://en.wikipedia.org/wiki/Wishart_distribution#Bartlett_decomposition
-      A = np.diag(np.sqrt(args.args.np_rng.chisquare(dof - np.arange(p), size=p)))
-      A[np.tril_indices_from(A,-1)] = args.args.np_rng.normal(size=(p*(p-1)//2))
+      A = np.diag(np.sqrt(args.np_prng().chisquare(dof - np.arange(p), size=p)))
+      A[np.tril_indices_from(A,-1)] = args.np_prng().normal(size=(p*(p-1)//2))
     # inv(A * A.T) = inv(R.T * Q.T * Q * R) = inv(R.T * I * R) = inv(R) * inv(R.T)
     # inv(X * X.T) = chol * inv(A * A.T) * chol.T = chol * inv(R) * inv(R.T) * chol.T
     # TODO why do the QR decomposition here? it seems slower than solving directly
@@ -230,11 +230,11 @@ class WishartOutputPSP(RandomPSP):
     # Use Matlab's heuristic for choosing between the two different sampling schemes.
     if (dof <= 81+p) and (dof == int(dof)):
       # direct
-      A = args.args.np_rng.normal(size=(p, dof))
+      A = args.np_prng().normal(size=(p, dof))
     else:
       # https://en.wikipedia.org/wiki/Wishart_distribution#Bartlett_decomposition
-      A = np.diag(np.sqrt(args.args.np_rng.chisquare(dof - np.arange(p), size=p)))
-      A[np.tril_indices_from(A,-1)] = args.args.np_rng.normal(size=(p*(p-1)//2))
+      A = np.diag(np.sqrt(args.np_prng().chisquare(dof - np.arange(p), size=p)))
+      A[np.tril_indices_from(A,-1)] = args.np_prng().normal(size=(p*(p-1)//2))
     X = np.dot(chol, A)
     return np.dot(X, X.T)
 
@@ -303,7 +303,7 @@ class NormalOutputPSP(RandomPSP):
       raise Exception("Cannot rejection sample psp with unbounded likelihood")
 
   def simulate(self, args):
-    return self.simulateNumeric(args.operandValues(), args.args.np_rng)
+    return self.simulateNumeric(args.operandValues(), args.np_prng())
 
   def gradientOfSimulate(self, args, value, direction):
     # Reverse engineering the behavior of scipy.stats.norm.rvs
@@ -346,7 +346,7 @@ class NormalOutputPSP(RandomPSP):
 
 class NormalvvOutputPSP(RandomPSP):
   def simulate(self, args):
-    return args.args.np_rng.normal(*args.operandValues())
+    return args.np_prng().normal(*args.operandValues())
 
   def logDensity(self, x, args):
     return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
@@ -362,7 +362,7 @@ class NormalvvOutputPSP(RandomPSP):
 # These two only differ because the gradients need to account for broadcasting
 class NormalsvOutputPSP(RandomPSP):
   def simulate(self, args):
-    return args.args.np_rng.normal(*args.operandValues())
+    return args.np_prng().normal(*args.operandValues())
 
   def logDensity(self, x, args):
     return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
@@ -377,7 +377,7 @@ class NormalsvOutputPSP(RandomPSP):
 
 class NormalvsOutputPSP(RandomPSP):
   def simulate(self, args):
-    return args.args.np_rng.normal(*args.operandValues())
+    return args.np_prng().normal(*args.operandValues())
 
   def logDensity(self, x, args):
     return sum(scipy.stats.norm.logpdf(x, *args.operandValues()))
@@ -407,7 +407,7 @@ registerBuiltinSP("normal", no_request(generic_normal))
 class VonMisesOutputPSP(RandomPSP):
   def simulate(self, args):
     (mu, kappa) = args.operandValues()
-    return args.args.np_rng.vonmises(mu=mu, kappa=kappa)
+    return args.np_prng().vonmises(mu=mu, kappa=kappa)
 
   def logDensity(self, x, args):
     (mu, kappa) = args.operandValues()
@@ -458,7 +458,7 @@ class UniformOutputPSP(RandomPSP):
 
   def simulate(self, args):
     return self.simulateNumeric(*(args.operandValues() +
-                                [args.args.np_rng]))
+                                  [args.np_prng()]))
 
   def logDensity(self, x, args):
     return self.logDensityNumeric(x,*args.operandValues())
@@ -492,7 +492,7 @@ class BetaOutputPSP(RandomPSP):
     return scipy.stats.beta.logpdf(x,*params)
 
   def simulate(self, args):
-    return self.simulateNumeric(args.operandValues(), args.args.np_rng)
+    return self.simulateNumeric(args.operandValues(), args.np_prng())
 
   def logDensity(self, x, args):
     return self.logDensityNumeric(x,args.operandValues())
@@ -525,7 +525,7 @@ class ExponOutputPSP(RandomPSP):
 
   def simulate(self,args):
     return self.simulateNumeric(*(args.operandValues() +
-                                [args.args.np_rng]))
+                                  [args.np_prng()]))
 
   def logDensity(self,x,args):
     return self.logDensityNumeric(x,*args.operandValues())
@@ -555,7 +555,7 @@ class GammaOutputPSP(RandomPSP):
 
   def simulate(self, args):
     return self.simulateNumeric(*(args.operandValues() +
-                                [args.args.np_rng]))
+                                  [args.np_prng()]))
 
   def gradientOfSimulate(self, args, value, direction):
     # These gradients were computed by Sympy; the script to get them is
@@ -623,7 +623,7 @@ class StudentTOutputPSP(RandomPSP):
     vals = args.operandValues()
     loc = vals[1] if len(vals) > 1 else 0
     shape = vals[2] if len(vals) > 1 else 1
-    return self.simulateNumeric(vals[0],loc,shape,args.args.np_rng)
+    return self.simulateNumeric(vals[0],loc,shape,args.np_prng())
 
   def logDensity(self, x, args):
     vals = args.operandValues()
@@ -677,7 +677,7 @@ class InvGammaOutputPSP(RandomPSP):
 
   def simulate(self, args):
     return self.simulateNumeric(*(args.operandValues() +
-                                [args.args.np_rng]))
+                                  [args.np_prng()]))
 
   def logDensity(self, x, args):
     return self.logDensityNumeric(x, *args.operandValues())
@@ -710,7 +710,7 @@ class LaplaceOutputPSP(RandomPSP):
 
   def simulate(self, args):
     return self.simulateNumeric(*(args.operandValues() +
-                                  [args.args.np_rng]))
+                                  [args.np_prng()]))
 
   def logDensity(self, x, args):
     return self.logDensityNumeric(x,*args.operandValues())
@@ -800,7 +800,7 @@ class SuffNormalOutputPSP(RandomPSP):
     args.spaux().unincorporate(value)
 
   def simulate(self, args):
-    return args.args.np_rng.normal(loc=self.mu, scale=self.sigma)
+    return args.np_prng().normal(loc=self.mu, scale=self.sigma)
 
   def logDensity(self, value, _args):
     return scipy.stats.norm.logpdf(value, loc=self.mu, scale=self.sigma)
@@ -855,7 +855,7 @@ class CNigNormalOutputPSP(RandomPSP):
     loc = mn
     scale = math.sqrt(bn/an*(1 + Vn))
     df = 2*an
-    return loc + scale*args.args.np_rng.standard_t(df=df)
+    return loc + scale*args.np_prng().standard_t(df=df)
 
   def logDensity(self, value, args):
     (mn, Vn, an, bn) = self.updatedParams(args.spaux())
@@ -911,7 +911,7 @@ class MakerUNigNormalOutputPSP(RandomPSP):
     return UNigNormalAAALKernel(self)
 
   def simulate(self, args):
-    return MakerUNigNormalOutputPSP.simulateStatic(args.args.np_rng,
+    return MakerUNigNormalOutputPSP.simulateStatic(args.np_prng(),
                                                    args.operandValues())
 
   @staticmethod
@@ -948,7 +948,7 @@ class UNigNormalAAALKernel(PosteriorAAALKernel):
     madeaux = args.madeSPAux()
     post_hypers = CNigNormalOutputPSP.posteriorHypersNumeric \
       (args.operandValues(), madeaux.cts())
-    return MakerUNigNormalOutputPSP.simulateStatic(args.args.np_rng,
+    return MakerUNigNormalOutputPSP.simulateStatic(args.np_prng(),
                                                    post_hypers, spaux=madeaux)
 
 

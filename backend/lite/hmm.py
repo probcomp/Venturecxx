@@ -89,12 +89,12 @@ class UncollapsedHMMSP(SP):
     aux = args.spaux()
     if not aux.xs:
       if shouldRestore: aux.xs.append(latentDB[0])
-      else: aux.xs.append(npSampleVector(self.p0, args.np_rng))
+      else: aux.xs.append(npSampleVector(self.p0, args.np_prng()))
 
     for i in range(len(aux.xs), lsr + 1):
       if shouldRestore: aux.xs.append(latentDB[i])
       else: aux.xs.append(npSampleVector(np.dot(aux.xs[-1], self.T),
-        args.np_rng))
+                                         args.np_prng()))
 
     assert len(aux.xs) > lsr
     return 0
@@ -147,7 +147,7 @@ class UncollapsedHMMOutputPSP(RandomPSP):
     xs = args.spaux().xs
     if 0 <= n and n < len(xs):
       return npIndexOfOne(npSampleVector(np.dot(xs[n], self.O),
-                          args.args.np_rng))
+                                         args.np_prng()))
     else:
       raise VentureValueError("Index out of bounds %s" % n)
 

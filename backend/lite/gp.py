@@ -86,7 +86,7 @@ class GPOutputPSP(RandomPSP):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
     return _gp_sample(self.mean, self.covariance, samples, xs,
-                      args.args.np_rng)
+                      args.np_prng())
 
   def logDensity(self,os,args):
     samples = args.spaux().samples
@@ -116,7 +116,7 @@ class GPOutputPSP1(GPOutputPSP):
     samples = args.spaux().samples
     x = args.operandValues()[0]
     return _gp_sample(self.mean, self.covariance, samples, [x],
-                      args.args.np_rng)[0]
+                      args.np_prng())[0]
 
   def logDensity(self,o,args):
     samples = args.spaux().samples

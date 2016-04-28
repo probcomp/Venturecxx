@@ -135,7 +135,7 @@ class CMVNOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (mu, Sigma, N) = self.getMVTParams(args.spaux())
-    x = mvtSample(mu, Sigma, N, args.args.np_rng)
+    x = mvtSample(mu, Sigma, N, args.np_prng())
     return x.A1
 
   def logDensity(self,x,args):
