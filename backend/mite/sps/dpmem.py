@@ -89,6 +89,11 @@ class DPSP(RequestReferenceSP):
     return logaddexp(weights) - math.log(self.alpha + len(self.counts))
 
   def unconstrain(self, args):
+    from venture.mite.evaluator import EvalContext
+    from copy import copy
+    eargs = copy(args)
+    eargs.context = EvalContext(args.trace)
+
     value = args.outputValue()
     raddr = self.request_map.pop(args.node)
     self.counts[raddr] -= 1
@@ -98,11 +103,12 @@ class DPSP(RequestReferenceSP):
       newTable = getNextTable(self.counts)
       exp = ["sp"]
       env = VentureEnvironment(None, ["sp"], [self.baseSpNode])
-      args.newRequest(newTable, exp, env)
-      args.constrain(newTable, value)
+      eargs.newRequest(newTable, exp, env)
+      eargs.constrain(newTable, value)
       newWeight = args.unconstrain(newTable)
-      args.decRequest(newTable)
+      eargs.decRequest(newTable)
     args.decRequest(raddr)
+    args.setState(args.node, raddr, ext="constrained raddr")
 
     weights = []
     for table, count in self.counts.items():
@@ -110,8 +116,24 @@ class DPSP(RequestReferenceSP):
         weights.append(count)
     weights.append(newWeight)
     weight = logaddexp(weights) - math.log(self.alpha + len(self.counts))
+    args.setState(args.node, weight, ext="constrained weight")
 
-    return weight, self.apply(args)
+    return weight, self.apply(eargs)
+
+  def reconstrain(self, value, args):
+    raddr = args.getState(args.node, ext="constrained raddr")
+    if args.hasRequest(raddr):
+      args.incRequest(raddr)
+    else:
+      exp = ["sp"]
+      env = VentureEnvironment(None, ["sp"], [self.baseSpNode])
+      args.newRequest(raddr, exp, env)
+      args.constrain(raddr, value)
+      self.counts[raddr] = 0
+    self.counts[raddr] += 1
+    self.request_map[args.node] = raddr
+    assert value == args.requestedValue(raddr), (value, args.requestedValue(raddr))
+    return args.getState(args.node, ext="constrained weight")
 
 class DPMemSP(SimulationSP):
   def simulate(self, args):
