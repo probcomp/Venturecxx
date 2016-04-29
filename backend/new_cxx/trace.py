@@ -51,13 +51,13 @@ class WarningSP(object):
     return getattr(self.sp, attrname)
 
 class Trace(object):
-  def __init__(self, entropy, trace=None):
+  def __init__(self, seed, trace=None):
     assert trace is None or isinstance(trace, puma.Trace)
     self.py_rng = random.Random(None)
     self.np_rng = npr.RandomState(None)
     if trace is None:
       self.trace = puma.Trace()
-      self.set_seed(entropy)
+      self.set_seed(seed)
       for name, sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there
@@ -68,7 +68,7 @@ class Trace(object):
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
-      py_state, np_state = entropy
+      py_state, np_state = seed
       self.py_rng.setstate(py_state)
       self.np_rng.set_state(np_state)
 
@@ -90,7 +90,7 @@ class Trace(object):
     py_state = self.py_rng.getstate()
     np_state = self.np_rng.get_state()
     state = (py_state, np_state)
-    return Trace(entropy=state, trace=self.trace.stop_and_copy())
+    return Trace(seed=state, trace=self.trace.stop_and_copy())
 
   def short_circuit_copyable(self): return True
 

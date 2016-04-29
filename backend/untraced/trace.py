@@ -32,7 +32,7 @@ import evaluator
 
 class Trace(object):
 
-  def __init__(self, entropy):
+  def __init__(self, seed):
     self.results = {}
     self.env = env.VentureEnvironment()
     for name, val in builtin.builtInValues().iteritems():
@@ -41,7 +41,7 @@ class Trace(object):
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
 
-    rng = random.Random(entropy)
+    rng = random.Random(seed)
     self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
     self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 

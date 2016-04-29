@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Test that fixing Venture's initial entropy makes it deterministic.
+"""Test that fixing Venture's initial seed makes it deterministic.
 
 Also independent of the global randomness.
 
@@ -78,12 +78,12 @@ def testDeterminismSmoke():
     yield checkDeterminismSmoke, prog, False, 1, list
 
 def checkDeterminismSmoke(prog, repeatable=False, trials=1, tp=numbers.Number):
-  r1 = get_ripl(entropy=1)
+  r1 = get_ripl(seed=1)
   ans = r1.evaluate(prog)
   print ans
   assert isinstance(ans, tp)
   for _ in range(trials):
-    eq_(ans, get_ripl(entropy=1).evaluate(prog))
+    eq_(ans, get_ripl(seed=1).evaluate(prog))
   if repeatable:
     assert ans != r1.evaluate(prog)
 
@@ -142,8 +142,8 @@ def testModelForkDeterminism2():
 def testForeignDeterminismSmoke():
   get_ripl() # Build the SP registry (TODO !?)
   lite_normal_sp = builtInSPs()["normal"]
-  def doit(entropy):
-    r = get_ripl(entropy=entropy)
+  def doit(seed):
+    r = get_ripl(seed=seed)
     r.bind_foreign_sp("my_normal", lite_normal_sp)
     r.assume("x", "(my_normal 0 1)")
     r.infer("(default_markov_chain 3)")
@@ -165,13 +165,13 @@ def testDeterministicUnderChunking():
   prog3 = """
 (do (resample_multiprocess 3 2)
     (sample_all (normal 0 1)))"""
-  ans = get_ripl(entropy=1).evaluate(prog1)
-  eq_(ans, get_ripl(entropy=1).evaluate(prog2))
-  eq_(ans, get_ripl(entropy=1).evaluate(prog3))
+  ans = get_ripl(seed=1).evaluate(prog1)
+  eq_(ans, get_ripl(seed=1).evaluate(prog2))
+  eq_(ans, get_ripl(seed=1).evaluate(prog3))
 
 @on_inf_prim("none")
 def testFuturesDiverge1():
-  r = get_ripl(entropy=1)
+  r = get_ripl(seed=1)
   [x1, x2, x3] = r.evaluate("""
 (do (resample 3)
     (sample_all (normal 0 1)))""")
@@ -183,7 +183,7 @@ def testFuturesDiverge1():
 @on_inf_prim("none")
 @broken_in("puma", "Puma does not support enumerative diversify")
 def testFuturesDiverge2():
-  r = get_ripl(entropy=1)
+  r = get_ripl(seed=1)
   [x1, x2, x3, x4] = r.evaluate("""
 (do (assume frob (flip))
     (assume nozzle (flip))

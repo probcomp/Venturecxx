@@ -68,7 +68,7 @@ from venture.lite.value import VentureValue
 import venture.lite.infer as infer
 
 class Trace(object):
-  def __init__(self, entropy):
+  def __init__(self, seed):
 
     self.globalEnv = VentureEnvironment()
     for name, val in builtInValues().iteritems():
@@ -87,7 +87,7 @@ class Trace(object):
     self.profiling_enabled = False
     self.stats = []
 
-    rng = random.Random(entropy)
+    rng = random.Random(seed)
     self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
     self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 

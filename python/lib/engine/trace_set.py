@@ -32,13 +32,13 @@ import venture.engine.trace as tr
 
 class TraceSet(object):
 
-  def __init__(self, engine, backend, entropy):
+  def __init__(self, engine, backend, seed):
     self.engine = engine # Because it contains the foreign sp registry and other misc stuff for restoring traces
     self.backend = backend
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self._py_rng = random.Random(entropy)
+    self._py_rng = random.Random(seed)
     seed = self._py_rng.randint(1, 2**31 - 1)
     trace = tr.Trace(self.backend.trace_constructor()(seed))
     self.create_trace_pool([trace])

@@ -79,11 +79,11 @@ def make_ripl_rest_client(base_url):
     """Return a VentureScript REST client object pointed at the given URL."""
     return ripl.RiplRestClient(base_url)
 
-def _entropy(entropy):
-    return random.randint(1, 2**31 - 1) if entropy is None else entropy
-def _kwentropy(kwargs):
-    if 'entropy' in kwargs:
-        return kwargs.pop('entropy')
+def _seed(seed):
+    return random.randint(1, 2**31 - 1) if seed is None else seed
+def _kwseed(kwargs):
+    if 'seed' in kwargs:
+        return kwargs.pop('seed')
     else:
         return random.randint(1, 2**31 - 1)
 
@@ -92,26 +92,26 @@ class Backend(object):
 
 See `Lite` and `Puma`."""
     def trace_constructor(self): pass
-    def make_engine(self, persistent_inference_trace=True, entropy=None):
+    def make_engine(self, persistent_inference_trace=True, seed=None):
         from venture.engine import engine
-        entropy = _entropy(entropy)
-        return engine.Engine(self, entropy, persistent_inference_trace)
-    def make_core_sivm(self, persistent_inference_trace=True, entropy=None):
-        entropy = _entropy(entropy)
+        seed = _seed(seed)
+        return engine.Engine(self, seed, persistent_inference_trace)
+    def make_core_sivm(self, persistent_inference_trace=True, seed=None):
+        seed = _seed(seed)
         return sivm.CoreSivm(self.make_engine(persistent_inference_trace,
-                                              entropy))
-    def make_venture_sivm(self, persistent_inference_trace=True, entropy=None):
-        entropy = _entropy(entropy)
+                                              seed))
+    def make_venture_sivm(self, persistent_inference_trace=True, seed=None):
+        seed = _seed(seed)
         return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace,
-                                                    entropy))
+                                                    seed))
     def make_church_prime_ripl(self, **kwargs):
         return self.make_ripl(init_mode="church_prime", **kwargs)
     def make_venture_script_ripl(self, **kwargs):
         return self.make_ripl(init_mode="venture_script", **kwargs)
-    def make_combined_ripl(self, persistent_inference_trace=True, entropy=None,
+    def make_combined_ripl(self, persistent_inference_trace=True, seed=None,
                            **kwargs):
-        entropy = _entropy(entropy)
-        v = self.make_venture_sivm(persistent_inference_trace, entropy)
+        seed = _seed(seed)
+        v = self.make_venture_sivm(persistent_inference_trace, seed)
         parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser.instance()
         modes = {"church_prime": parser1, "venture_script": parser2}
