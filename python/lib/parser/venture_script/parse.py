@@ -314,7 +314,8 @@ class Semantics(object):
     def p_primary_qquote(self, o, b, c):
         return locbracket(o, c, val.quasiquote(b))
     def p_primary_unquote(self, o, b, c):
-        return locbracket(o, c, val.quote(val.unquote(b)))
+        return locbracket(o, c,
+            val.quote(locbracket(o, c, val.unquote(b))))
     def p_primary_literal(self, l):
         assert isloc(l)
         return l
