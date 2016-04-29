@@ -80,7 +80,6 @@ def testDeterminismSmoke():
 def checkDeterminismSmoke(prog, repeatable=False, trials=1, tp=numbers.Number):
   r1 = get_ripl(seed=1)
   ans = r1.evaluate(prog)
-  print ans
   assert isinstance(ans, tp)
   for _ in range(trials):
     eq_(ans, get_ripl(seed=1).evaluate(prog))
@@ -149,7 +148,6 @@ def testForeignDeterminismSmoke():
     r.infer("(default_markov_chain 3)")
     return r.sample("x")
   ans = doit(1)
-  print ans
   assert isinstance(ans, numbers.Number)
   eq_(ans, doit(1))
   assert ans != doit(2)
@@ -175,7 +173,6 @@ def testFuturesDiverge1():
   [x1, x2, x3] = r.evaluate("""
 (do (resample 3)
     (sample_all (normal 0 1)))""")
-  print x1, x2, x3
   assert x1 != x2
   assert x1 != x3
   assert x2 != x3
