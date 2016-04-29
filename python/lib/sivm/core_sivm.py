@@ -136,11 +136,12 @@ class CoreSivm(object):
     def _do_report(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
+        val = self.engine.report_value(did)
+        result = {"value": val}
         if did in self.observe_dict:
-            return {"value":copy.deepcopy(self.observe_dict[did]['value'])}
-        else:
-            val = self.engine.report_value(did)
-            return {"value":val}
+            assert result == \
+                {"value":copy.deepcopy(self.observe_dict[did]['value'])}
+        return result
 
     def _do_evaluate(self,instruction):
         e = utils.validate_arg(instruction,'expression',
