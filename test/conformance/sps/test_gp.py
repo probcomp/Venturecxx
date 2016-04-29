@@ -19,6 +19,7 @@ from collections import OrderedDict
 from nose import SkipTest
 from nose.tools import eq_
 import numpy as np
+import numpy.random as npr
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
@@ -176,7 +177,8 @@ def testOneSample():
   # mean expect_mu.
   n = default_num_samples(4)
   def sample():
-    return gp._gp_sample(mean, covariance, observations, [test_input])[0]
+    return gp._gp_sample(mean, covariance, observations, [test_input],
+                         npr.RandomState())[0]
   samples = np.array([sample() for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
@@ -205,7 +207,8 @@ def testTwoSamples_low_covariance():
   lo_cov_x = []
   lo_cov_y = []
   for i in range(n):
-    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov)
+    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov,
+                         npr.RandomState())
     lo_cov_x.append(x)
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)

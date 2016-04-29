@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
 import time
 from ..regen import regenAndAttach
@@ -77,7 +76,7 @@ def mixMH(trace, indexer, operator):
     proposed = [trace.valueAt(node) for node in nodes]
 
   alpha = xiMix + logAlpha - rhoMix
-  logU = math.log(random.random())
+  logU = math.log(trace.py_rng.random())
   # print "Alpha", alpha, "= xiMix", xiMix, "+ proposal alpha", \
   #   logAlpha, "- rhoMix", rhoMix, "; logU", logU
   if logU < alpha:

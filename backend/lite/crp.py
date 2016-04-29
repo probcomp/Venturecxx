@@ -119,7 +119,7 @@ class CRPOutputPSP(RandomPSP):
     nextTable = aux.nextTable if len(aux.freeTables) == 0 \
         else iter(aux.freeTables).next()
     allTables = oldTables + [nextTable]
-    return simulateCategorical(counts, allTables)
+    return simulateCategorical(counts, args.np_prng(), allTables)
 
   def logDensity(self, table, args):
     aux = args.spaux()

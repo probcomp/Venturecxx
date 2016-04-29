@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import random
+import numpy.random as npr
+
 from ..lite.exception import VentureError
 from venture.exception import VentureException
 from ..lite import types as t
@@ -29,7 +32,7 @@ import evaluator
 
 class Trace(object):
 
-  def __init__(self):
+  def __init__(self, seed):
     self.results = {}
     self.env = env.VentureEnvironment()
     for name, val in builtin.builtInValues().iteritems():
@@ -37,6 +40,10 @@ class Trace(object):
     for name, sp in builtin.builtInSPs().iteritems():
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
+
+    rng = random.Random(seed)
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 
   def sealEnvironment(self):
     self.env = env.VentureEnvironment(self.env)
@@ -50,7 +57,8 @@ class Trace(object):
   def eval(self, id, exp):
     assert id not in self.results
     py_exp = t.ExpressionType().asPython(vv.VentureValue.fromStackDict(exp))
-    val = evaluator.eval(addr.Address(addr.List(id)), py_exp, self.env)
+    rng = self.py_rng
+    val = evaluator.eval(addr.Address(addr.List(id)), py_exp, self.env, rng)
     assert isinstance(val, vv.VentureValue)
     self.results[id] = val
 

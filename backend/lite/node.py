@@ -141,6 +141,11 @@ class Args(object):
   def madeSPAux(self):
     return self.trace.getAAAMadeSPAuxAt(self.node)
 
+  def py_prng(self):
+    return self.trace.py_rng
+  def np_prng(self):
+    return self.trace.np_rng
+
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
 
@@ -169,6 +174,9 @@ class FixedValueArgs(object):
   def esrNodes(self): return self.args.esrNodes()
   def esrValues(self): return self.args.esrValues()
   def madeSPAux(self): return self.args.madeSPAux()
+
+  def py_prng(self): return self.args.py_prng()
+  def np_prng(self): return self.args.np_prng()
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)

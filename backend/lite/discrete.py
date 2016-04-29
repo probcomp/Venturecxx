@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
 
 import scipy
@@ -49,7 +48,7 @@ class BernoulliOutputPSP(DiscretePSP):
   def simulate(self, args):
     vals = args.operandValues()
     p = vals[0] if vals else 0.5
-    return random.random() < p
+    return args.py_prng().random() < p
 
   def logDensity(self, val, args):
     vals = args.operandValues()
@@ -93,7 +92,7 @@ registerBuiltinSP("bernoulli", typed_nr(BernoulliOutputPSP(),
 class LogBernoulliOutputPSP(DiscretePSP):
   def simulate(self, args):
     logp = args.operandValues()[0]
-    return math.log(random.random()) < logp
+    return math.log(args.py_prng().random()) < logp
 
   def logDensity(self, val, args):
     logp = args.operandValues()[0]
@@ -126,8 +125,8 @@ registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(),
 
 class BinomialOutputPSP(DiscretePSP):
   def simulate(self, args):
-    (n,p) = args.operandValues()
-    return scipy.stats.binom.rvs(n,p)
+    (n, p) = args.operandValues()
+    return args.np_prng().binomial(n, p)
 
   def logDensity(self, val, args):
     (n,p) = args.operandValues()
@@ -156,12 +155,13 @@ class CategoricalOutputPSP(DiscretePSP):
   def simulate(self, args):
     vals = args.operandValues()
     if len(vals) == 1: # Default values to choose from
-      return simulateCategorical(vals[0],
+      return simulateCategorical(vals[0], args.np_prng(),
         [VentureInteger(i) for i in range(len(vals[0]))])
     else:
       if len(vals[0]) != len(vals[1]):
         raise VentureValueError("Categorical passed different length arguments.")
-      return simulateCategorical(*vals)
+      ps, os = vals
+      return simulateCategorical(ps, args.np_prng(), os)
 
   def logDensity(self, val, args):
     vals = args.operandValues()
@@ -197,7 +197,7 @@ class UniformDiscreteOutputPSP(DiscretePSP):
     if vals[1] <= vals[0]:
       raise VentureValueError("uniform_discrete called on invalid range "\
         "(%d,%d)" % (vals[0],vals[1]))
-    return random.randrange(*vals)
+    return args.py_prng().randrange(*vals)
 
   def logDensity(self, val, args):
     a,b = args.operandValues()
@@ -220,7 +220,8 @@ registerBuiltinSP("uniform_discrete", typed_nr(UniformDiscreteOutputPSP(),
 
 class PoissonOutputPSP(DiscretePSP):
   def simulate(self, args):
-    return scipy.stats.poisson.rvs(args.operandValues()[0])
+    (lam,) = args.operandValues()
+    return args.np_prng().poisson(lam=lam)
 
   def logDensity(self, val, args):
     return scipy.stats.poisson.logpmf(val, args.operandValues()[0])
@@ -319,7 +320,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
   def simulate(self,args):
     [ctY,ctN] = args.spaux().cts()
     weight = (self.alpha + ctY) / (self.alpha + ctY + self.beta + ctN)
-    return random.random() < weight
+    return args.py_prng().random() < weight
 
   def logDensity(self,value,args):
     [ctY,ctN] = args.spaux().cts()
@@ -353,7 +354,7 @@ class MakerUBetaBernoulliOutputPSP(RandomPSP):
 
   def simulate(self,args):
     (alpha, beta) = args.operandValues()
-    weight = scipy.stats.beta.rvs(alpha, beta)
+    weight = args.np_prng().beta(a=alpha, b=beta)
     output = TypedPSP(SuffBernoulliOutputPSP(weight), SPType([], t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output))
 
@@ -384,7 +385,7 @@ class UBetaBernoulliAAALKernel(PosteriorAAALKernel):
     (alpha, beta) = args.operandValues()
     madeaux = args.madeSPAux()
     [ctY,ctN] = madeaux.cts()
-    new_weight = scipy.stats.beta.rvs(alpha + ctY, beta + ctN)
+    new_weight = args.np_prng().beta(a=(alpha + ctY), b=(beta + ctN))
     output = TypedPSP(SuffBernoulliOutputPSP(new_weight), SPType([],
       t.BoolType()))
     return VentureSPRecord(SuffBernoulliSP(NullRequestPSP(), output), madeaux)
@@ -408,8 +409,8 @@ class SuffBernoulliOutputPSP(DiscretePSP):
     else: # I produced false
       spaux.no -= 1
 
-  def simulate(self, _args):
-    return random.random() < self.weight
+  def simulate(self, args):
+    return args.py_prng().random() < self.weight
 
   def logDensity(self, value, _args):
     if value is True:
@@ -546,8 +547,8 @@ class SuffPoissonOutputPSP(DiscretePSP):
     spaux.xsum -= value
     spaux.ctN -= 1
 
-  def simulate(self, _args):
-    return scipy.stats.poisson.rvs(mu=self.mu)
+  def simulate(self, args):
+    return args.np_prng().poisson(lam=self.mu)
 
   def logDensity(self, value, _args):
     return scipy.stats.poisson.logpmf(value, mu=self.mu)
@@ -617,7 +618,7 @@ class CGammaPoissonOutputPSP(DiscretePSP):
     # Posterior predictive is Negative Binomial.
     # http://www.stat.wisc.edu/courses/st692-newton/notes.pdf#page=50
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
-    return scipy.stats.nbinom.rvs(n=alpha_n, p=(beta_n)/(beta_n+1))
+    return args.np_prng().negative_binomial(n=alpha_n, p=(beta_n)/(beta_n+1))
 
   def logDensity(self, value, args):
     (alpha_n, beta_n) = self.updatedParams(args.spaux())
@@ -674,7 +675,7 @@ class MakerUGammaPoissonOutputPSP(DiscretePSP):
 
   def simulate(self, args):
     (alpha, beta) = args.operandValues()
-    mu = scipy.stats.gamma.rvs(a=alpha, scale=1./beta)
+    mu = args.np_prng().gamma(shape=alpha, scale=1./beta)
     output = TypedPSP(UGammaPoissonOutputPSP(mu, alpha, beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output))
@@ -701,7 +702,7 @@ class UGammaPoissonAAALKernel(PosteriorAAALKernel):
     (alpha, beta) = args.operandValues()
     new_alpha = alpha + xsum
     new_beta = beta + ctN
-    new_mu = scipy.stats.gamma.rvs(a=alpha + xsum, scale = 1./new_beta)
+    new_mu = args.np_prng().gamma(shape=(alpha + xsum), scale=1./new_beta)
     output = TypedPSP(UGammaPoissonOutputPSP(new_mu, new_alpha, new_beta),
       SPType([], t.CountType()))
     return VentureSPRecord(SuffPoissonSP(NullRequestPSP(), output), madeaux)

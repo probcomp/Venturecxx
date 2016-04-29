@@ -17,6 +17,7 @@
 
 from contextlib import contextmanager
 import cStringIO as StringIO
+import random
 import threading
 import time
 
@@ -30,8 +31,9 @@ import venture.value.dicts as v
 
 class Engine(object):
 
-  def __init__(self, backend, persistent_inference_trace=True):
-    self.model = TraceSet(self, backend)
+  def __init__(self, backend, seed, persistent_inference_trace=True):
+    self._py_rng = random.Random(seed)
+    self.model = self.new_model(backend)
     self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
@@ -261,7 +263,7 @@ class Engine(object):
 
   def init_inference_trace(self):
     import venture.untraced.trace as trace
-    ans = trace.Trace()
+    ans = trace.Trace(self._py_rng.randint(1, 2**31 - 1))
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
     import venture.lite.inference_sps as inf
@@ -361,7 +363,10 @@ class Engine(object):
     return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
-    engine = backend.make_engine(self.persistent_inference_trace)
+    engine = backend.make_engine(
+      persistent_inference_trace=self.persistent_inference_trace,
+      seed=self._py_rng.randint(1, 2**31 - 1),
+    )
     if self.persistent_inference_trace:
       engine.infer_trace = self.infer_trace # TODO Copy?
     engine.directiveCounter = self.directiveCounter
@@ -387,6 +392,11 @@ class Engine(object):
         rows.append(dict(stat, particle = pid))
 
     return rows
+
+  def new_model(self, backend=None):
+    if backend is None:
+      backend = self.model.backend
+    return TraceSet(self, backend, self._py_rng.randint(1, 2**31 - 1))
 
 # Support for continuous inference
 

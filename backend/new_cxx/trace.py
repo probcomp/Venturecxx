@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
+import numpy.random as npr
 
 import libpumatrace as puma
 
@@ -50,11 +51,13 @@ class WarningSP(object):
     return getattr(self.sp, attrname)
 
 class Trace(object):
-  def __init__(self, trace=None):
+  def __init__(self, seed, trace=None):
+    assert trace is None or isinstance(trace, puma.Trace)
+    self.py_rng = random.Random(None)
+    self.np_rng = npr.RandomState(None)
     if trace is None:
       self.trace = puma.Trace()
-      # Poor Puma defaults its local RNG seed to the system time
-      self.trace.set_seed(random.randint(1, 2**31-1))
+      self.set_seed(seed)
       for name, sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there
@@ -65,15 +68,29 @@ class Trace(object):
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
+      py_state, np_state = seed
+      self.py_rng.setstate(py_state)
+      self.np_rng.set_state(np_state)
 
   def __getattr__(self, attrname):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
   def has_own_prng(self): return True
+  def set_seed(self, seed):
+    prng = random.Random(seed)
+    # XXX It is unclear why 0 and >=2^31 are not allowed here, but it
+    # will be better to fix this when we replace all seeds by 32-byte
+    # strings and all PRNGs by cryptographic ones.
+    self.np_rng.seed(prng.randint(1, 2**31 - 1))
+    self.py_rng.seed(prng.randint(1, 2**31 - 1))
+    self.trace.set_seed(prng.randint(1, 2**31 - 1))
 
   def stop_and_copy(self):
-    return Trace(self.trace.stop_and_copy())
+    py_state = self.py_rng.getstate()
+    np_state = self.np_rng.get_state()
+    state = (py_state, np_state)
+    return Trace(seed=state, trace=self.trace.stop_and_copy())
 
   def short_circuit_copyable(self): return True
 

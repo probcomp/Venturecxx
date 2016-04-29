@@ -244,7 +244,7 @@ class VenStanSP(SP):
 
   def hasAEKernel(self): return True
 
-  def AEInfer(self, aux):
+  def AEInfer(self, aux, np_rng):
     for lsr, (inputs, params, output) in aux.applications.iteritems():
       new_params = self.update_parameters(inputs, params, [output])
       aux.applications[lsr] = (inputs, new_params, output)

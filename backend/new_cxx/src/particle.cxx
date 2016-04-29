@@ -19,13 +19,15 @@
 #include "concrete_trace.h"
 #include <boost/foreach.hpp>
 
-Particle::Particle(ConcreteTrace * outerTrace): baseTrace(outerTrace) {  }
-Particle::Particle(ConcreteTrace * outerTrace, boost::shared_ptr<RNGbox> rng):
+Particle::Particle(ConcreteTrace * outerTrace, unsigned long seed):
   baseTrace(outerTrace),
-  rng(rng) { }
+  rng(new RNGbox(gsl_rng_mt19937))
+{
+  rng->set_seed(seed);
+}
 
-
-Particle::Particle(boost::shared_ptr<Particle> outerParticle):
+Particle::Particle(boost::shared_ptr<Particle> outerParticle,
+		   unsigned long seed):
   baseTrace(outerParticle->baseTrace),
   unconstrainedChoices(outerParticle->unconstrainedChoices),
   constrainedChoices(outerParticle->constrainedChoices),
@@ -46,8 +48,9 @@ Particle::Particle(boost::shared_ptr<Particle> outerParticle):
   newMadeSPFamilies(outerParticle->newMadeSPFamilies),
   newChildren(outerParticle->newChildren),
 
-  discardedAAAMakerNodes(outerParticle->discardedAAAMakerNodes)
+  discardedAAAMakerNodes(outerParticle->discardedAAAMakerNodes),
 
+  rng(new RNGbox(gsl_rng_mt19937))
   {
     for (map<Node*, boost::shared_ptr<SPAux> >::iterator iter =
            outerParticle->madeSPAuxs.begin();
@@ -56,6 +59,7 @@ Particle::Particle(boost::shared_ptr<Particle> outerParticle):
       if (iter->second) { madeSPAuxs[iter->first] = iter->second->clone(); }
       else { madeSPAuxs[iter->first] = boost::shared_ptr<SPAux>(); }
     }
+    rng->set_seed(seed);
   }
 
 /* Methods */
@@ -188,8 +192,7 @@ void Particle::addChild(Node * node, Node * child)
 /* Primitive getters */
 gsl_rng * Particle::getRNG()
 {
-  if (rng) { return rng->get_rng(); }
-  else { return baseTrace->getRNG(); }
+  return rng->get_rng();
 }
 
 VentureValuePtr Particle::getValue(Node * node)

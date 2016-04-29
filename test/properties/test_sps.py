@@ -18,6 +18,9 @@
 # Testing the (Python) SP objects standalone
 
 import math
+import random
+
+import numpy.random as npr
 
 from flaky import flaky
 from nose.tools import eq_
@@ -122,9 +125,13 @@ def testRandom():
         yield checkRandom, name, sp
 
 def checkRandom(name, sp):
+  py_rng = random.Random()
+  np_rng = npr.RandomState()
+
   # Generate five approprite input/output pairs for the sp
   args_type = fully_uncurried_sp_type(sp.venture_type())
-  def f(args_lists): return simulate_fully_uncurried(name, sp, args_lists)
+  def f(args_lists):
+    return simulate_fully_uncurried(name, sp, args_lists, py_rng, np_rng)
   answers = [findAppropriateArguments(f, args_type, 30) for _ in range(5)]
 
   # Check that it returns different results on repeat applications to
@@ -133,7 +140,7 @@ def checkRandom(name, sp):
     if answer is None: continue # Appropriate input was not found; skip
     [args, ans, _] = answer
     for _ in range(10):
-      ans2 = simulate_fully_uncurried(name, sp, args)
+      ans2 = simulate_fully_uncurried(name, sp, args, py_rng, np_rng)
       if not ans2 == ans:
         return True # Output differed on some input: pass
 
@@ -143,19 +150,20 @@ def checkRandom(name, sp):
 def checkFlakyRandom(name, sp):
   checkRandom(name, sp)
 
-def simulate_fully_uncurried(name, sp, args_lists):
+def simulate_fully_uncurried(name, sp, args_lists, py_rng, np_rng):
   if isinstance(sp, VentureSPRecord):
     sp, aux = sp.sp, sp.spAux
   else:
     aux = carefully(sp.constructSPAux)
   if not isinstance(sp.requestPSP, NullRequestPSP):
     raise SkipTest("SP %s returned a requesting SP" % name)
-  args = BogusArgs(args_lists[0], aux)
+  args = BogusArgs(args_lists[0], aux, py_rng, np_rng)
   answer = carefully(sp.outputPSP.simulate, args)
   if len(args_lists) == 1:
     return answer
   else:
-    return simulate_fully_uncurried(name, answer, args_lists[1:])
+    return simulate_fully_uncurried(name, answer, args_lists[1:], py_rng,
+      np_rng)
 
 def log_density_fully_uncurried(name, sp, args_lists, value):
   if isinstance(sp, VentureSPRecord):
@@ -207,9 +215,12 @@ def checkFixingRandomness(name, sp):
   checkTypedProperty(propDeterministicWhenFixed, fully_uncurried_sp_type(sp.venture_type()), name, sp)
 
 def propDeterministicWhenFixed(args_lists, name, sp):
-  randomness = FixedRandomness()
+  py_rng = random.Random()
+  np_rng = npr.RandomState()
+  randomness = FixedRandomness(py_rng, np_rng)
   with randomness:
-    answer = simulate_fully_uncurried(name, sp, args_lists)
+    answer = simulate_fully_uncurried(name, sp, args_lists, py_rng, np_rng)
   for _ in range(5):
     with randomness:
-      eq_(answer, simulate_fully_uncurried(name, sp, args_lists))
+      answer_ = simulate_fully_uncurried(name, sp, args_lists, py_rng, np_rng)
+      eq_(answer, answer_)
