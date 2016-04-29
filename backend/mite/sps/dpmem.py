@@ -66,7 +66,7 @@ class DPSP(RequestReferenceSP):
     weights = []
     tables = []
     for table, count in self.counts.items():
-      if args.hasRequest(raddr) and args.requestedValue(table) == value:
+      if args.hasRequest(table) and args.requestedValue(table) == value:
         weights.append(count)
         tables.append(table)
     newTable = getNextTable(self.counts)
@@ -106,7 +106,7 @@ class DPSP(RequestReferenceSP):
 
     weights = []
     for table, count in self.counts.items():
-      if args.hasRequest(raddr) and args.requestedValue(table) == value:
+      if args.hasRequest(table) and args.requestedValue(table) == value:
         weights.append(count)
     weights.append(newWeight)
     weight = logaddexp(weights) - math.log(self.alpha + len(self.counts))
