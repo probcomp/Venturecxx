@@ -156,8 +156,8 @@ class Args(LiteArgs):
   def unconstrain(self, raddr):
     return self.context.unconstrainRequest(self.node, raddr)
 
-  def setState(self, node, value):
-    return self.context.setState(node, value)
+  def setState(self, node, value, ext=None):
+    return self.context.setState(node, value, ext)
 
-  def getState(self, node):
-    return self.context.getState(node)
+  def getState(self, node, ext=None):
+    return self.context.getState(node, ext)

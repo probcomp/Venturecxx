@@ -261,17 +261,17 @@ class EvalContext(object):
     requested = self.trace.spFamilyAt(requester, raddr)
     return self.trace.valueAt(requested)
 
-  def setState(self, node, value):
+  def setState(self, node, value, ext=None):
     pass
 
-  def getState(self, node):
+  def getState(self, node, ext=None):
     raise VentureException("evaluation",
       "Cannot restore outside a regeneration context",
       address=node.address)
 
 from collections import Iterable
 def normalize(address):
-  if isinstance(address, Iterable):
+  if isinstance(address, Iterable) and not isinstance(address, basestring):
     return tuple(normalize(part) for part in address)
   else:
     return address
@@ -287,5 +287,14 @@ class RestoreContext(EvalContext):
   def constrainCall(self, sp, value, args):
     return sp.reconstrain(value, args)
 
-  def getState(self, node):
-    return self.omegaDB.getValue(normalize(node.address.last))
+  def setState(self, node, value, ext=None):
+    address = node.address.last
+    if ext is not None:
+      address = (address, ext)
+    self.omegaDB.extractValue(normalize(address), value)
+
+  def getState(self, node, ext=None):
+    address = node.address.last
+    if ext is not None:
+      address = (address, ext)
+    return self.omegaDB.getValue(normalize(address))
