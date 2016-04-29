@@ -127,11 +127,13 @@ def default_num_data(desired=None):
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl(**kwargs):
+def get_ripl(init_mode="church_prime", **kwargs):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
+  r = s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
+  r.set_mode(init_mode)
+  return r
 
 
 def get_core_sivm():
