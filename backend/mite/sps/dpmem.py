@@ -50,7 +50,6 @@ class DPSP(RequestReferenceSP):
     if args.hasRequest(raddr):
       args.incRequest(raddr)
     else:
-      raddr = getNextTable(self.counts)
       exp = ["sp"]
       env = VentureEnvironment(None, ["sp"], [self.baseSpNode])
       args.newRequest(raddr, exp, env)
