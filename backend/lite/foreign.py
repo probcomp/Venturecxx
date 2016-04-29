@@ -67,7 +67,7 @@ class ForeignArgs(object):
     def spaux(self): return self.args.get('spaux')
     def requestValue(self): return None
     def esrNodes(self): return []
-    def estValues(self): return []
+    def esrValues(self): return []
     def madeSPAux(self): return self.args.get('madeSPAux')
     def py_prng(self): return self._py_rng
     def np_prng(self): return self._np_rng
