@@ -36,6 +36,12 @@ class EvalContext(object):
   def unapplyCall(self, sp, args):
     return sp.unapply(args)
 
+  def constrainCall(self, sp, value, args):
+    return sp.constrain(value, args)
+
+  def unconstrainCall(self, sp, args):
+    return sp.unconstrain(args)
+
   ## evaluation
 
   def evalFamily(self, address, exp, env):
@@ -116,7 +122,7 @@ class EvalContext(object):
       sp = self.trace.spAt(node)
       args = self.trace.argsAt(node, context=self)
       with annotation(node.address):
-        weight = sp.constrain(value, args)
+        weight = self.constrainCall(sp, value, args)
       self.trace.setValueAt(node, value)
       # trace.registerConstrainedChoice(node)
       assert isinstance(weight, numbers.Number)
@@ -181,7 +187,7 @@ class EvalContext(object):
       sp = self.trace.spAt(node)
       args = self.trace.argsAt(node, context=self)
       with annotation(node.address):
-        weight, value = sp.unconstrain(args)
+        weight, value = self.unconstrainCall(sp, args)
       self.trace.setValueAt(node, value)
       # trace.unregisterConstrainedChoice(node)
       assert isinstance(weight, numbers.Number)
@@ -278,8 +284,8 @@ class RestoreContext(EvalContext):
   def applyCall(self, sp, args):
     return sp.restore(args)
 
-  def setState(self, node, value):
-    self.omegaDB.extractValue(normalize(node.address.last), value)
+  def constrainCall(self, sp, value, args):
+    return sp.reconstrain(value, args)
 
   def getState(self, node):
     return self.omegaDB.getValue(normalize(node.address.last))

@@ -25,6 +25,9 @@ class VentureSP(VentureValue):
   def unconstrain(self, _args):
     raise VentureBuiltinSPMethodError("Cannot unconstrain")
 
+  def reconstrain(self, _value, _args):
+    raise VentureBuiltinSPMethodError("Cannot unconstrain")
+
   def show(self):
     return "<procedure>"
 
@@ -66,6 +69,10 @@ class SimulationSP(VentureSP):
     newValue = self.simulate(args)
     self.incorporate(newValue, args)
     return weight, newValue
+
+  @override(VentureSP)
+  def reconstrain(self, value, args):
+    return self.constrain(value, args)
 
   def simulate(self, _args):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
@@ -109,6 +116,10 @@ class RequestReferenceSP(VentureSP):
     raddr = self.request_map[args.node]
     weight = args.unconstrain(raddr)
     return weight, args.requestedValue(raddr)
+
+  @override(VentureSP)
+  def reconstrain(self, value, args):
+    return self.constrain(value, args)
 
   def request(self, _args):
     raise VentureBuiltinSPMethodError("Request not implemented!")
