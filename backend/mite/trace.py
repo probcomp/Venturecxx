@@ -153,12 +153,11 @@ class Trace(LiteTrace):
 
   def regen_all(self):
     weight = 0
-    rhoDB = OmegaDB()
     for id in sorted(self.families):
       node = self.families[id]
       EvalContext(self).restore(node)
       if node.isObservation:
-        weight += RestoreContext(self, rhoDB).constrain(node, node.observedValue)
+        weight += EvalContext(self).constrain(node, node.observedValue)
     return weight
 
   def restore_all(self, rhoDB):
