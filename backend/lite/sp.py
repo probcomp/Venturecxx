@@ -153,6 +153,9 @@ class UnwrappingArgs(object):
   def madeSPAux(self):
     return self.args.madeSPAux()
 
+  def py_prng(self): return self.args.py_prng()
+  def np_prng(self): return self.args.np_prng()
+
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)
 

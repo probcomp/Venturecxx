@@ -127,7 +127,7 @@ class MasterBase(object):
   sequential modes.
 
   '''
-  def __init__(self, objects, process_cap):
+  def __init__(self, objects, process_cap, seed):
     """A Master maintains:
 
     - An array of objects representing the worker processes.
@@ -151,7 +151,7 @@ class MasterBase(object):
     self.chunk_indexes = [] # One per object
     self.chunk_offsets = [] # Parallel to chunk_indexes
     self._create_processes(objects)
-    self.reset_seeds()
+    self.reset_seeds(seed)
 
   def __del__(self):
     # stop child processes
@@ -184,9 +184,10 @@ class MasterBase(object):
         self.chunk_indexes.append(chunk)
         self.chunk_offsets.append(i)
 
-  def reset_seeds(self):
+  def reset_seeds(self, seed):
+    rng = random.Random(seed)
     for i in range(len(self.processes)):
-      seeds = [random.randint(1,2**31-1) for _ in range(self.chunk_sizes[i])]
+      seeds = [rng.randint(1, 2**31 - 1) for _ in range(self.chunk_sizes[i])]
       self.map_chunk(i, 'set_seeds', seeds)
 
   def map(self, cmd, *args, **kwargs):

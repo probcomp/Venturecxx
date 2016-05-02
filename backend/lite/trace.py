@@ -17,6 +17,8 @@
 
 import copy
 import math
+import numpy.random as npr
+import random
 
 from numpy.testing import assert_allclose
 
@@ -66,7 +68,7 @@ from venture.lite.value import VentureValue
 import venture.lite.infer as infer
 
 class Trace(object):
-  def __init__(self):
+  def __init__(self, seed):
 
     self.globalEnv = VentureEnvironment()
     for name, val in builtInValues().iteritems():
@@ -84,6 +86,10 @@ class Trace(object):
 
     self.profiling_enabled = False
     self.stats = []
+
+    rng = random.Random(seed)
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 
   def scope_keys(self):
     # A hack for allowing scope names not to be quoted in inference
@@ -306,7 +312,7 @@ class Trace(object):
     else:
       return SamplableMap()
 
-  def sampleBlock(self, scope): return self.getScope(scope).sample()[0]
+  def sampleBlock(self, scope): return self.getScope(scope).sample(self.py_rng)[0]
   def logDensityOfBlock(self, scope): return -1 * math.log(self.numBlocksInScope(scope))
   def blocksInScope(self, scope): return self.getScope(scope).keys()
   def numBlocksInScope(self, scope): return len(self.getScope(scope).keys())
@@ -612,7 +618,7 @@ class Trace(object):
       else: raise Exception("INFER %s is not implemented" % operator)
 
       for node in self.aes:
-        self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node))
+        self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node), self.np_rng)
       ct += len(self.aes)
 
     if transitions > 0:
@@ -843,7 +849,11 @@ the scaffold determined by the given expression."""
       self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
       Scaffold(), True, db, {})
 
-  def has_own_prng(self): return False
+  def has_own_prng(self): return True
+  def set_seed(self, seed):
+    prng = random.Random(seed)
+    self.np_prng.seed(prng.random())
+    self.py_prng.seed(prng.random())
 
   def short_circuit_copyable(self): return False
 

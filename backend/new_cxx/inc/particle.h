@@ -32,9 +32,8 @@ using persistent::PSet;
 
 struct Particle : Trace
 {
-  Particle(ConcreteTrace * outerTrace);
-  Particle(ConcreteTrace * outerTrace, shared_ptr<RNGbox> rng);
-  Particle(shared_ptr<Particle> outerParticle);
+  Particle(ConcreteTrace * outerTrace, unsigned long seed);
+  Particle(shared_ptr<Particle> outerParticle, unsigned long seed);
 
 /* Methods */
 

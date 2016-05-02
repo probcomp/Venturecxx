@@ -69,6 +69,9 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
     foreignArgs["madeSPAux"] = foreignMadeSPAux;
   }
 
+  boost::python::long_ seed(gsl_rng_get(args->_trace->getRNG()));
+  foreignArgs["seed"] = seed;
+
   // TODO: nodes, env, requests
 
   return foreignArgs;
@@ -254,7 +257,8 @@ void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
                             gsl_rng * rng) const
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
-  sp.attr("AEInfer")(foreignAux);
+  boost::python::long_ seed(gsl_rng_get(rng));
+  sp.attr("AEInfer")(foreignAux, seed);
 }
 
 ForeignLiteSP* ForeignLiteSP::copy_help(ForwardingMap* forward) const

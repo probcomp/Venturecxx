@@ -34,7 +34,8 @@ pair<Trace*, double> FuncMHGKernel::propose(ConcreteTrace * trace, boost::shared
   rhoDB = p.second;
 
   assertTorus(scaffold);
-  particle = boost::shared_ptr<Particle>(new Particle(trace));
+  particle = boost::shared_ptr<Particle>(
+    new Particle(trace, gsl_rng_get(trace->getRNG())));
 
   double xiWeight = regenAndAttach(particle.get(), scaffold->border[0], scaffold, false, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
 

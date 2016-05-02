@@ -118,6 +118,8 @@ primary(if)		::= K_IF(k) T_LROUND(po) body(p) T_RROUND(pc)
 				T_LCURLY(co) body(c) T_RCURLY(cc)
 				K_ELSE(ke)
 				T_LCURLY(ao) body(a) T_RCURLY(ac).
+primary(qquote)		::= T_LOXFORD(o) body(b) T_ROXFORD(c).
+primary(unquote)	::= T_LDOLLAR_CURLY(o) body(b) T_RCURLY(c).
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
 

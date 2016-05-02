@@ -33,6 +33,7 @@ property fails stochastically or deterministically, or combinators for
 deciding whether "sporadic fail" should be treated as "fail" or
 "pass"."""
 
+import random
 import numpy.random as npr
 from nose import SkipTest
 
@@ -161,18 +162,26 @@ class BogusArgs(object):
   to Nodes in a Trace and all sorts of things.  Mock that for testing
   purposes, since most SPs do not read the hairy stuff."""
 
-  def __init__(self, args, aux):
+  def __init__(self, args, aux, py_rng=None, np_rng=None):
     # TODO Do I want to try to synthesize an actual real random valid Args object?
+    if py_rng is None:
+      py_rng = random.Random()
+    if np_rng is None:
+      np_rng = npr.RandomState()
     self.args = args
     self.aux = aux
     self.node = None
     self.operandNodes = [None for _ in args]
     self.env = env.VentureEnvironment()
+    self._np_rng = np_rng
+    self._py_rng = py_rng
 
   def operandValues(self): return self.args
   def spaux(self): return self.aux
   def esrNodes(self): return []
   def esrValues(self): return []
+  def py_prng(self): return self._py_rng
+  def np_prng(self): return self._np_rng
 
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP

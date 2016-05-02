@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
 
 from ..regen import regenAndAttach
@@ -80,7 +79,7 @@ class RejectionOperator(InPlaceOperator):
       xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
       assert xiWeight <= logBound, \
         "Detected regen weight %s not at most weight bound %s" % (xiWeight, logBound)
-      accept = random.random() < math.exp(xiWeight - logBound)
+      accept = trace.py_rng.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold)
         attempt += 1

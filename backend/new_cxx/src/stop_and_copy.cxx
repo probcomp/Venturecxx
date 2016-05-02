@@ -288,6 +288,7 @@ map<K*, vector<boost::shared_ptr<V> > > copy_map_k_vectorv(const map<K*, vector<
 boost::shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward) const
 {
   boost::shared_ptr<ConcreteTrace> answer = boost::shared_ptr<ConcreteTrace>(new ConcreteTrace);
+  gsl_rng_memcpy(answer->getRNG(), this->getRNG());
   answer->globalEnvironment = copy_shared(this->globalEnvironment, forward);
   answer->unconstrainedChoices = copy_set(this->unconstrainedChoices, forward);
   answer->constrainedChoices = copy_set(this->constrainedChoices, forward);
