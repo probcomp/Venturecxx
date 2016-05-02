@@ -22,6 +22,7 @@ import numpy.random as npr
 
 from venture.lite.psp import IArgs
 from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import TypedPSP
 from venture.lite import env as env
 
 class MockArgs(IArgs):
@@ -51,7 +52,7 @@ class MockArgs(IArgs):
   def py_prng(self): return self._py_rng
   def np_prng(self): return self._np_rng
 
-def simulate(sp):
+def simulate(sp, no_wrapper=False):
   """Extract the given SP's simulate method as a Python function.
 
   Assumes the SP doesn't need much trace context, and in particular
@@ -60,11 +61,45 @@ def simulate(sp):
   The resulting function accepts the arguments as a list, and a
   keyword argument for the spaux to use.  If not given, ask the SP to
   synthesize an empty one.
+
+  If no_wrapper is given and True, expect the output PSP to be wrapped
+  by TypedPSP, and circumvent that wrapper (accepting Python values
+  directly).
   """
   assert isinstance(sp.requestPSP, NullRequestPSP)
   def doit(args, spaux=None):
     if spaux is None:
       spaux = sp.constructSPAux()
     args = MockArgs(args, spaux)
-    return sp.outputPSP.simulate(args)
+    target = sp.outputPSP
+    if no_wrapper:
+      assert isinstance(target, TypedPSP)
+      target = target.psp
+    return target.simulate(args)
+  return doit
+
+def logDensity(sp, no_wrapper=False):
+  """Extract the given SP's logDensity method as a Python function.
+
+  Assumes the SP doesn't need much trace context, and in particular
+  does not need to make requests.
+
+  The resulting function accepts the arguments as a list, and a
+  keyword argument for the spaux to use.  If not given, ask the SP to
+  synthesize an empty one.
+
+  If no_wrapper is given and True, expect the output PSP to be wrapped
+  by TypedPSP, and circumvent that wrapper (accepting Python values
+  directly).
+  """
+  assert isinstance(sp.requestPSP, NullRequestPSP)
+  def doit(value, args, spaux=None):
+    if spaux is None:
+      spaux = sp.constructSPAux()
+    args = MockArgs(args, spaux)
+    target = sp.outputPSP
+    if no_wrapper:
+      assert isinstance(target, TypedPSP)
+      target = target.psp
+    return target.logDensity(value, args)
   return doit

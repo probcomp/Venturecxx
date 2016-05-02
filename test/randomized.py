@@ -182,25 +182,3 @@ class BogusArgs(object):
   def esrValues(self): return []
   def py_prng(self): return self._py_rng
   def np_prng(self): return self._np_rng
-
-from venture.lite.psp import NullRequestPSP
-from venture.lite.psp import TypedPSP
-
-def log_density_output(sp, value, args, spaux=None, no_wrapper=False):
-  """Assess the given SP's logDensity on the given arguments and value.
-
-  Assumes the SP doesn't need much trace context, and in particular
-  does not need to make requests.
-
-  If no spaux is given, ask the SP for an empty one.
-
-  """
-  assert isinstance(sp.requestPSP, NullRequestPSP)
-  if spaux is None:
-    spaux = sp.constructSPAux()
-  args = BogusArgs(args, spaux)
-  target = sp.outputPSP
-  if no_wrapper:
-    assert isinstance(target, TypedPSP)
-    target = target.psp
-  return target.logDensity(value, args)
