@@ -30,22 +30,22 @@ class MockArgs(IArgs):
 
   (Which is most of them)."""
 
-  def __init__(self, args, aux, py_rng=None, np_rng=None, madeSPAux=None):
+  def __init__(self, vals, aux, py_rng=None, np_rng=None, madeSPAux=None):
     super(MockArgs, self).__init__()
     # TODO Do I want to try to synthesize an actual real random valid Args object?
     if py_rng is None:
       py_rng = random.Random()
     if np_rng is None:
       np_rng = npr.RandomState()
-    self.args = args
+    self.vals = vals
     self.aux = aux
     self._madeSPAux = madeSPAux
-    self.operandNodes = [None for _ in args]
+    self.operandNodes = [None for _ in vals]
     self.env = env.VentureEnvironment()
     self._np_rng = np_rng
     self._py_rng = py_rng
 
-  def operandValues(self): return self.args
+  def operandValues(self): return self.vals
   def spaux(self): return self.aux
   def madeSPAux(self): return self.madeSPAux
   def esrNodes(self): return []
@@ -69,10 +69,10 @@ def simulate(sp, no_wrapper=False):
   directly).
   """
   assert isinstance(sp.requestPSP, NullRequestPSP)
-  def doit(args, spaux=None):
+  def doit(vals, spaux=None):
     if spaux is None:
       spaux = sp.constructSPAux()
-    args = MockArgs(args, spaux)
+    args = MockArgs(vals, spaux)
     target = sp.outputPSP
     if no_wrapper:
       assert isinstance(target, TypedPSP)
@@ -95,10 +95,10 @@ def logDensity(sp, no_wrapper=False):
   directly).
   """
   assert isinstance(sp.requestPSP, NullRequestPSP)
-  def doit(value, args, spaux=None):
+  def doit(value, vals, spaux=None):
     if spaux is None:
       spaux = sp.constructSPAux()
-    args = MockArgs(args, spaux)
+    args = MockArgs(vals, spaux)
     target = sp.outputPSP
     if no_wrapper:
       assert isinstance(target, TypedPSP)
@@ -121,10 +121,10 @@ def gradientOfLogDensity(sp, no_wrapper=False):
   directly).
   """
   assert isinstance(sp.requestPSP, NullRequestPSP)
-  def doit(value, args, spaux=None):
+  def doit(value, vals, spaux=None):
     if spaux is None:
       spaux = sp.constructSPAux()
-    args = MockArgs(args, spaux)
+    args = MockArgs(vals, spaux)
     target = sp.outputPSP
     if no_wrapper:
       assert isinstance(target, TypedPSP)
