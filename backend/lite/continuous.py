@@ -139,6 +139,10 @@ registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
 
 
 class InverseWishartOutputPSP(RandomPSP):
+  # Parameterization follows Wikipedia
+  # https://en.wikipedia.org/wiki/Inverse-Wishart_distribution, namely
+  # - lmbda is a p by p positive definite scale matrix
+  # - dof > p - 1 is the degrees of freedom
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
@@ -168,13 +172,26 @@ class InverseWishartOutputPSP(RandomPSP):
     T = scipy.linalg.solve_triangular(R.T, chol.T, lower=True)
     return np.dot(T.T, T)
 
+  # PDF formula from Wikipedia cross-checked against Murphy [1, Sec
+  # 4.5.1, p.127].  They agree with the following translation
+  # dictionary:
+  # Murphy | Wiki
+  # S^-1   | Psi
+  # Sigma  | X
+  # D      | p
+  # nu     | nu
+  # and the published erratum to eq. 4.166 in [1] "In the
+  # normalization of inverse Wishart, the exponent of |S| shouldn't be
+  # negated."  See derivation of logarithm in sp-math.tex.
   def logDensity(self, x, args):
-    (lmbda, dof) = self.__parse_args__(args)
-    p = len(lmbda)
-    log_density =  dof/2*(np.log(npla.det(lmbda)) - p*np.log(2)) \
-      - spsp.multigammaln(dof*.5, p) \
-      + (-.5*(dof+p+1))*np.log(npla.det(x)) \
-      - .5*np.trace(np.dot(lmbda, npla.inv(x)))
+    def logdet(m):
+      return np.log(npla.det(m))
+    (psi, dof) = self.__parse_args__(args)
+    p = len(psi)
+    log_density = 0.5 * dof * (logdet(psi) - p * np.log(2)) \
+      - spsp.multigammaln(0.5 * dof, p) \
+      - 0.5 * (dof + p + 1) * logdet(x) \
+      - 0.5 * np.trace(np.dot(psi, npla.inv(x)))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
@@ -993,3 +1010,9 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
+
+### References
+
+# [1] Murphy, Kevin P. "Machine Learning, A Probabilistic
+# Perspective", MIT Press, 2012. Third printing. ISBN
+# 978-0-262-01802-9
