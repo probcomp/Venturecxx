@@ -586,9 +586,9 @@ class GammaOutputPSP(RandomPSP):
       gradBeta = -value / math.pow(beta, 2.0)
     elif alpha > 1:
       x0 = value / (3.0 * alpha - 1)
-      gradAlpha = (-3.0 * x0 / 2 + 3 * 3 ** (2.0 / 3) *
-                   (beta * x0) ** (2.0 / 3) / (2.0 * beta))
-      gradBeta = -value/beta
+      gradAlpha = (-3. * x0 / 2. + 3. * 3. ** (2. / 3.) *
+                   (beta * x0) ** (2. / 3.) / (2. * beta))
+      gradBeta = -value / beta
     else:
       if value <= (1.0 / beta) * math.pow(1 - alpha, 1.0 / alpha):
         x0 = (beta * value) ** alpha
@@ -662,7 +662,7 @@ class StudentTOutputPSP(RandomPSP):
     x4 = x2 + x3
     x5 = nu / 2.0
     gradNu = (x0 * (nu * x4 * (-math.log(x0 * x4 / x1) - spsp.digamma(x5)
-              + spsp.digamma(x5 + 1.0 / 2)) - x2
+                               + spsp.digamma(x5 + 1. / 2.)) - x2
               + x3 * (nu + 1) - x3) / (2.0 * x4))
     if len(vals) == 1:
       return (gradX,[gradNu])

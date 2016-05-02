@@ -1039,7 +1039,7 @@ class VentureSymmetricMatrix(VentureMatrix):
     # Do I seriously have to special-case this?
     if self.matrix.size == 0: return self
     candidate = np.vectorize(f)(self.matrix)
-    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
+    return VentureSymmetricMatrix( (candidate + candidate.T) / 2. )
 
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
