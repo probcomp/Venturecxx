@@ -30,7 +30,7 @@ class MockArgs(IArgs):
 
   (Which is most of them)."""
 
-  def __init__(self, args, aux, py_rng=None, np_rng=None):
+  def __init__(self, args, aux, py_rng=None, np_rng=None, madeSPAux=None):
     super(MockArgs, self).__init__()
     # TODO Do I want to try to synthesize an actual real random valid Args object?
     if py_rng is None:
@@ -39,6 +39,7 @@ class MockArgs(IArgs):
       np_rng = npr.RandomState()
     self.args = args
     self.aux = aux
+    self._madeSPAux = madeSPAux
     self.operandNodes = [None for _ in args]
     self.env = env.VentureEnvironment()
     self._np_rng = np_rng
@@ -46,9 +47,10 @@ class MockArgs(IArgs):
 
   def operandValues(self): return self.args
   def spaux(self): return self.aux
-  def madeSPAux(self): raise NotImplementedError
+  def madeSPAux(self): return self.madeSPAux
   def esrNodes(self): return []
   def esrValues(self): return []
+  def requestValue(self): return None
   def py_prng(self): return self._py_rng
   def np_prng(self): return self._np_rng
 
