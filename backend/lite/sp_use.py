@@ -103,3 +103,29 @@ def logDensity(sp, no_wrapper=False):
       target = target.psp
     return target.logDensity(value, args)
   return doit
+
+def gradientOfLogDensity(sp, no_wrapper=False):
+  """Extract the given SP's gradientOfLogDensity method as a Python function.
+
+  Assumes the SP doesn't need much trace context, and in particular
+  does not need to make requests.
+
+  The resulting function accepts the arguments as a list, and a
+  keyword argument for the spaux to use.  If not given, ask the SP to
+  synthesize an empty one.
+
+  If no_wrapper is given and True, expect the output PSP to be wrapped
+  by TypedPSP, and circumvent that wrapper (accepting Python values
+  directly).
+  """
+  assert isinstance(sp.requestPSP, NullRequestPSP)
+  def doit(value, args, spaux=None):
+    if spaux is None:
+      spaux = sp.constructSPAux()
+    args = MockArgs(args, spaux)
+    target = sp.outputPSP
+    if no_wrapper:
+      assert isinstance(target, TypedPSP)
+      target = target.psp
+    return target.gradientOfLogDensity(value, args)
+  return doit
