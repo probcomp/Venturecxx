@@ -305,6 +305,70 @@ class PSP(object):
     raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure "
       "with unbounded log density of data.")
 
+class IArgs(object):
+  """The evaluation context against which a (P)SP is executed.
+
+  This class serves as a container for documentation about the
+  evaluation context interface Lite (P)SPs expect.
+
+  """
+  def __init__(self):
+    self.operandNodes = None
+    """The identities of the arguments passed to the PSP.
+
+    These are used primarily by parametrically polymorphic PSPs, like
+    the RequestPSP in the implementation of lambda and the maker
+    corresponding to mem.
+    """
+    self.node = None
+    """The identity of the current application itself.
+
+    This is used mainly as a unique key to prevent auto-caching of
+    requests that are supposed to be generative.
+    """
+    self.env = None
+    """The lexical environment of the application.
+
+    This is only used by SPs that need to access it, like the
+    implementation of lambda, and get_current_environment.
+    """
+
+  def operandValues(self):
+    """The actual arguments this SP is called with."""
+    raise NotImplementedError
+
+  def spaux(self):
+    """The SP's saved auxiliary state."""
+    raise NotImplementedError
+
+  def madeSPAux(self):
+    """The made SP's saved auxiliary state, if this is an AAA maker application."""
+    raise NotImplementedError
+
+  def esrValues(self):
+    """The results of evaluation of requests the request stage made, if any."""
+    raise NotImplementedError
+
+  def esrNodes(self):
+    """The identities of the evaluations of requests the request stage made, if any."""
+    raise NotImplementedError
+
+  def requestValue(self):
+    """The request the requesting stage made, if any.  Rarely used."""
+    raise NotImplementedError
+
+  def py_prng(self):
+    """PRNG with Python's standard `random.Random` interface that may be used.
+
+    Mutable refence."""
+    raise NotImplementedError
+
+  def np_prng(self):
+    """PRNG with Numpy's `RandomState` interface that may be used.
+
+    Mutable reference."""
+    raise NotImplementedError
+
 class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic
   PSPs."""
