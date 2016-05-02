@@ -186,24 +186,6 @@ class BogusArgs(object):
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
 
-def simulate_output(sp, args, spaux=None):
-  """Simulate the given SP's output PSP on the given arguments.
-
-  Assumes the SP doesn't need much trace context, and in particular
-  does not need to make requests.
-
-  If no spaux is given, ask the SP for an empty one.
-
-  TODO Could implement this one level more completely by using the
-  untraced interpreter to evaluate a synthetic application expression.
-
-  """
-  assert isinstance(sp.requestPSP, NullRequestPSP)
-  if spaux is None:
-    spaux = sp.constructSPAux()
-  args = BogusArgs(args, spaux)
-  return sp.outputPSP.simulate(args)
-
 def log_density_output(sp, value, args, spaux=None, no_wrapper=False):
   """Assess the given SP's logDensity on the given arguments and value.
 

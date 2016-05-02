@@ -21,6 +21,7 @@ import random
 import numpy.random as npr
 
 from venture.lite.psp import IArgs
+from venture.lite.psp import NullRequestPSP
 from venture.lite import env as env
 
 class MockArgs(IArgs):
@@ -49,3 +50,21 @@ class MockArgs(IArgs):
   def esrValues(self): return []
   def py_prng(self): return self._py_rng
   def np_prng(self): return self._np_rng
+
+def simulate(sp):
+  """Extract the given SP's simulate method as a Python function.
+
+  Assumes the SP doesn't need much trace context, and in particular
+  does not need to make requests.
+
+  The resulting function accepts the arguments as a list, and a
+  keyword argument for the spaux to use.  If not given, ask the SP to
+  synthesize an empty one.
+  """
+  assert isinstance(sp.requestPSP, NullRequestPSP)
+  def doit(args, spaux=None):
+    if spaux is None:
+      spaux = sp.constructSPAux()
+    args = MockArgs(args, spaux)
+    return sp.outputPSP.simulate(args)
+  return doit
