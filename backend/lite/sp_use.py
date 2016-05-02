@@ -131,3 +131,38 @@ def gradientOfLogDensity(sp, no_wrapper=False):
       target = target.psp
     return target.gradientOfLogDensity(value, args)
   return doit
+
+class RemappingArgs(IArgs):
+  """An implementation of IArgs for remapping the argument values by a given function.
+
+  Accepts said function and another IArgs instance to delegate other methods to."""
+  def __init__(self, f, args):
+    super(RemappingArgs, self).__init__()
+    self.f = f
+    self.args = args
+    self.node = args.node
+    self.operandNodes = args.operandNodes
+    self.env = args.env
+
+  def operandValues(self):
+    return self.f(self.args.operandValues())
+
+  def spaux(self): return self.args.spaux()
+
+  def requestValue(self):
+    return self.args.requestValue()
+
+  def esrNodes(self):
+    return self.args.esrNodes()
+
+  def esrValues(self):
+    return self.args.esrValues()
+
+  def madeSPAux(self):
+    return self.args.madeSPAux()
+
+  def py_prng(self): return self.args.py_prng()
+  def np_prng(self): return self.args.np_prng()
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
