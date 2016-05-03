@@ -16,6 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import random
+
 from numpy.testing import assert_allclose
 from flaky import flaky
 
