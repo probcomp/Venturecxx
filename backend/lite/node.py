@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.psp import IArgs
 from venture.lite.request import Request
 from venture.lite.types import ExpressionType
 from venture.lite.value import VentureValue
@@ -115,8 +116,9 @@ def isRequestNode(thing):
 def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
 
-class TraceNodeArgs(object):
+class TraceNodeArgs(IArgs):
   def __init__(self, trace, node):
+    super(TraceNodeArgs, self).__init__()
     self.trace = trace
     self.node = node
     self.operandNodes = node.operandNodes
