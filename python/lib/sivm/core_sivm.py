@@ -32,8 +32,6 @@ class CoreSivm(object):
 
     def __init__(self, engine):
         self.engine = engine
-        # the engine doesn't support reporting "observe" directives
-        self.observe_dict = {}
         self.profiler_enabled = False
 
     _implemented_instructions = {'define','assume','observe','predict',
@@ -54,13 +52,10 @@ class CoreSivm(object):
     def save_io(self, stream, extra=None):
         if extra is None:
             extra = {}
-        extra['observe_dict'] = self.observe_dict
         return self.engine.save_io(stream, extra)
 
     def load_io(self, stream):
-        extra = self.engine.load_io(stream)
-        self.observe_dict = extra['observe_dict']
-        return extra
+        return self.engine.load_io(stream)
 
     def save(self, fname, extra=None):
         with open(fname, 'w') as fp:
@@ -105,7 +100,6 @@ class CoreSivm(object):
         val = utils.validate_arg(instruction,'value',
                 utils.validate_value,modifier=_modify_value)
         did, weights = self.engine.observe(exp,val)
-        self.observe_dict[did] = instruction
         return {"directive_id":did, "value":weights}
 
     def _do_predict(self,instruction):
@@ -119,8 +113,6 @@ class CoreSivm(object):
                 utils.validate_nonnegative_integer)
         try:
             weights = self.engine.forget(did)
-            if did in self.observe_dict:
-                del self.observe_dict[did]
         except Exception as e:
             if e.message == 'There is no such directive.':
                 raise VentureException('invalid_argument',e.message,argument='directive_id')
@@ -136,12 +128,7 @@ class CoreSivm(object):
     def _do_report(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
-        val = self.engine.report_value(did)
-        result = {"value": val}
-        if did in self.observe_dict:
-            assert result == \
-                {"value":copy.deepcopy(self.observe_dict[did]['value'])}
-        return result
+        return {"value": self.engine.report_value(did)}
 
     def _do_evaluate(self,instruction):
         e = utils.validate_arg(instruction,'expression',
@@ -157,7 +144,6 @@ class CoreSivm(object):
 
     def _do_clear(self,_):
         self.engine.clear()
-        self.observe_dict = {}
         return {}
 
     ###########################
