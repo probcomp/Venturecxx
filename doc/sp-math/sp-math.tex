@@ -4,6 +4,9 @@
 \usepackage{hyperref}
 \usepackage{parskip}
 
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\tr}{\mathrm{tr}}
+
 \title{Mathematical Derivations For Stochastic Procedures}
 
 \begin{document}
@@ -71,6 +74,40 @@ Setting the above to zero and solving for $\mu$, $\sigma$ gives (for $n > 0$)
  \hat\sigma^2 & = & \frac{1}{n}\left(n\hat\mu^2 + \xsumsq -2\hat\mu\xsum\right) \\
   & = & \frac{\xsum^2}{n^2} + \frac{\xsumsq}{n} - 2\frac{\xsum^2}{n^2} \\
   & = & \frac{\xsumsq}{n} - \frac{\xsum^2}{n^2}
+\end{eqnarray*}
+
+\subsection{Inverse Wishart}
+
+\subsubsection{Log Density}
+
+From the
+\href{https://en.wikipedia.org/wiki/Inverse-Wishart_distribution}{Inverse-Wishart}
+Wikipedia page, (retreived April 20, 2016), the PDF of the inverse
+Wishart distribution on a $p$-dimensional positive definite matrix $X$
+with parameters scale matrix $\Psi$ and degrees of freedom $\nu$ is
+given by
+
+\[ p_{\W^{-1}}(X|\Psi, \nu) =
+ \frac{|\Psi|^{\frac{\nu}{2}}}{2^{\frac{\nu p}{2}} \Gamma_p\left(\frac{\nu}{2}\right)}
+ |X|^{-\frac{\nu + p + 1}{2}} e^{-\frac{1}{2} \tr(\Psi X^{-1})}, \]
+
+where $\Gamma_p(\cdot)$ is the multivariate gamma function of
+dimension $p$, and $\tr$ is the matrix trace function.  This agrees
+with \cite{murphy}, Section 4.5.1, p.\ 127, with the substitutions
+$\Psi = S^{-1}$, $p = D$, and $X = \Sigma$, taking into account the
+published erratum to \cite{murphy} that the minus sign in equation
+4.166 should not be present.
+
+The logarithm of this is given by
+
+\begin{eqnarray*}
+ \log p_{\W^{-1}}(X|\Psi, \nu) & = &
+ \frac{\nu}{2} \log |\Psi| - \frac{\nu p}{2} \log 2 - \log \Gamma_p \left(\frac{\nu}{2}\right) \\
+ & & -\frac{\nu + p + 1}{2} \log |X| - \frac{1}{2}\tr(\Psi X^{-1}) \\
+ & = & 0.5\ \nu\left( \log |\Psi| - p \log 2 \right) \\
+ & & -\log \Gamma_p(0.5\ \nu) \\
+ & & -0.5\ (\nu + p + 1) \log |X| \\
+ & & -0.5\ \tr(\Psi X^{-1}).
 \end{eqnarray*}
 
 \section{Chinese Restaurant Process}
@@ -178,4 +215,8 @@ where $\psi(x) = \partial_x\ln\Gamma(x)$ is the digamma function, the logarithmi
 derivative of the gamma function.
 
 \textbf{Case 2} $\theta = 0$ TODO
+
+\bibliographystyle{plain}
+\bibliography{sp-math}
+
 \end{document}

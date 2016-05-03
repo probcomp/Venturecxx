@@ -87,7 +87,8 @@ class PGibbsOperator(object):
       # Sample new particle and propagate
       for p in range(P):
         extendedWeights = xiWeights + [rhoWeights[t-1]]
-        ancestorIndices[t][p] = sampleLogCategorical(extendedWeights)
+        ancestorIndices[t][p] = sampleLogCategorical(extendedWeights,
+                                                     self.trace.np_rng)
         path = constructAncestorPath(ancestorIndices,t,p)
         restoreAncestorPath(trace,self.scaffold.border,self.scaffold,omegaDBs,t,path)
         regenAndAttachAtBorder(trace,self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
@@ -96,7 +97,7 @@ class PGibbsOperator(object):
       xiWeights = newWeights
 
     # Now sample a NEW particle in proportion to its weight
-    finalIndex = sampleLogCategorical(xiWeights)
+    finalIndex = sampleLogCategorical(xiWeights, self.trace.np_rng)
 
     path = constructAncestorPath(ancestorIndices,T-1,finalIndex) + [finalIndex]
     assert len(path) == T
@@ -183,7 +184,7 @@ class ParticlePGibbsOperator(object):
       newParticleWeights = [None for p in range(P+1)]
       # Sample new particle and propagate
       for p in range(P):
-        parent = sampleLogCategorical(particleWeights)
+        parent = sampleLogCategorical(particleWeights, self.trace.np_rng)
         newParticles[p] = Particle(particles[parent])
         newParticleWeights[p] = regenAndAttachAtBorder(newParticles[p],self.scaffold.border[t],self.scaffold,False,OmegaDB(),{})
       newParticles[P] = Particle(particles[P])
@@ -214,7 +215,7 @@ class ParticlePGibbsOperator(object):
 
   def select_final_particle_index(self, particleWeights):
     # Sample a new particle in proportion to its weight
-    return sampleLogCategorical(particleWeights[0:-1])
+    return sampleLogCategorical(particleWeights[0:-1], self.trace.np_rng)
 
   def accept(self):
     self.particles[self.finalIndex].commit()

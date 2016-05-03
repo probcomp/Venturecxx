@@ -39,7 +39,8 @@ struct EGibbsWorker
                 vector<VentureValuePtr> & origValues,
                 boost::shared_ptr<DB> origDB)
   {
-    particle = boost::shared_ptr<Particle>(new Particle(trace));
+    const unsigned long seed = gsl_rng_get(trace->getRNG());
+    particle = boost::shared_ptr<Particle>(new Particle(trace, seed));
     registerDeterministicLKernels(particle.get(), scaffold,
                                   applicationNodes, valueTuple);
     if (valueTuple == origValues) {

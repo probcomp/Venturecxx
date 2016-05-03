@@ -42,3 +42,19 @@ def testQuoteIf():
   "Quote should suppress macroexpansion"
   raise SkipTest("This fails because the stack's \"desugaring\" is applied even to quoted expressions.  Oops.  Issue: https://app.asana.com/0/9277419963067/10442847514597")
   eq_(get_ripl().predict("(lookup (quote (if (flip) 0 1)) 0)"), "if")
+
+@on_inf_prim("none")
+def testQuoteSmokeVS1():
+  eq_(get_ripl(init_mode="venture_script").evaluate("[| foo |]"), "foo")
+
+@on_inf_prim("none")
+def testQuoteSmokeVS2():
+  eq_(get_ripl(init_mode="venture_script").evaluate("assume x = lookup(${list(1, 2, 3)}, 2)"), 3)
+
+@on_inf_prim("none")
+def testQuoteSmokeVS3():
+  r = get_ripl(init_mode="venture_script")
+  r.execute_program("""
+define frob = [| lookup(${list(1, 2, 3)}, 2) |];
+assume x = unquote(frob)""")
+  eq_(r.sample("x"), 3)

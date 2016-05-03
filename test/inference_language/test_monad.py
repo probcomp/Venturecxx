@@ -225,6 +225,45 @@ foo : [assume x (+ 1 2)]
 """)
   eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))
 
+@on_inf_prim("report")
+def testReportObserveActionSmoke():
+  vals = get_ripl().execute_program("""\
+foo : [observe (normal 0 1) 0.2]
+(report 'foo)
+""")
+  eq_(0.2, u.strip_types(vals[1]['value']))
+
+@on_inf_prim("report")
+def testReportObserveListActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume m (array 0. 0.)]
+[assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
+foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
+(report 'foo)
+""")
+  eq_([0.1, -0.1], u.strip_types(vals[3]['value']))
+
+@on_inf_prim("report")
+def testReportObserveInferActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume x (normal 0 1)]
+foo : [observe (normal x 1) 0.2]
+[infer (mh default one 1)]
+(report 'foo)
+""")
+  eq_(0.2, u.strip_types(vals[3]['value']))
+
+@on_inf_prim("report")
+def testReportObserveListInferActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume m (array 0. 0.)]
+[assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
+foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
+[infer (mh default one 1)]
+(report 'foo)
+""")
+  eq_([0.1, -0.1], u.strip_types(vals[4]['value']))
+
 @on_inf_prim("force")
 def testForceSugar():
   r = get_ripl()

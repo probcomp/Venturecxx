@@ -32,20 +32,20 @@ from venture.lite.sp_registry import registerBuiltinSP
 import venture.lite.types as t
 
 def logGenGamma(d,x):
-  term1 = float(d * (d - 1)) / 4 * math.log(math.pi)
-  term2 = sum([gammaln(float(2 * x - i) / 2) for i in range(d)])
+  term1 = math.log(math.pi) * d * (d - 1) / 4.
+  term2 = sum([gammaln((2 * x - i) / 2.) for i in range(d)])
   return term1 + term2
 
 def mvtLogDensity(x,mu,Sigma,v):
   p = np.size(x)
-  pterm1 = gammaln(float(v + p) / 2)
-  nterm1 = gammaln(float(v) / 2)
-  nterm2 = (float(p)/2) * math.log(v * math.pi)
-  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1]
-  nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
+  pterm1 = gammaln((v + p) / 2.)
+  nterm1 = gammaln(v / 2.)
+  nterm2 = (p / 2.) * math.log(v * math.pi)
+  nterm3 = 0.5 * np.linalg.slogdet(Sigma)[1]
+  nterm4 = ((v + p) / 2.) * math.log(1 + (1. / v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
-def mvtSample(mu,Sigma,N):
+def mvtSample(mu,Sigma,N,rng):
   # TODO at some point this code was copied from the Internet, though it has since been modified
   # enough to make search non trivial
   '''
@@ -59,8 +59,8 @@ def mvtSample(mu,Sigma,N):
   '''
 
   d = len(Sigma)
-  g = np.tile(np.random.gamma(N/2.,2./N,1),(d,1))
-  Z = np.random.multivariate_normal(np.zeros(d),Sigma,1)
+  g = np.tile(rng.gamma(N/2., 2./N, 1), (d, 1))
+  Z = rng.multivariate_normal(np.zeros(d), Sigma, 1)
 
   return mu + (Z.T)/np.sqrt(g)
 
@@ -129,13 +129,13 @@ class CMVNOutputPSP(RandomPSP):
     SArg = (float(kN + 1) / (kN * (vN - self.d + 1))) * SN
     vArg = vN - self.d + 1
     return mArg,SArg,vArg
-  
+
   def getMVTParams(self, spaux):
     return self.mvtParams(*self.updatedParams(spaux))
-  
+
   def simulate(self,args):
-    params = self.getMVTParams(args.spaux())
-    x = mvtSample(*params)
+    (mu, Sigma, N) = self.getMVTParams(args.spaux())
+    x = mvtSample(mu, Sigma, N, args.np_prng())
     return x.A1
 
   def logDensity(self,x,args):
@@ -158,12 +158,12 @@ class CMVNOutputPSP(RandomPSP):
 
   def logDensityOfData(self,aux):
     (mN,kN,vN,SN) = self.updatedParams(aux)
-    term1 = - (aux.N * self.d * math.log(math.pi)) / 2
-    term2 = logGenGamma(self.d,float(vN) / 2)
-    term3 = - logGenGamma(self.d,float(self.v0) / 2)
-    term4 = (float(self.v0) / 2) * np.linalg.slogdet(self.S0)[1] # first is sign
-    term5 = -(float(vN) / 2) * np.linalg.slogdet(SN)[1]
-    term6 = (float(self.d) / 2) * math.log(float(self.k0) / kN)
+    term1 = - (aux.N * self.d * math.log(math.pi)) / 2.
+    term2 = logGenGamma(self.d, vN / 2.)
+    term3 = - logGenGamma(self.d, self.v0 / 2.)
+    term4 = (self.v0 / 2.) * np.linalg.slogdet(self.S0)[1] # first is sign
+    term5 = -(vN / 2.) * np.linalg.slogdet(SN)[1]
+    term6 = (self.d / 2.) * math.log(float(self.k0) / kN)
     return term1 + term2 + term3 + term4 + term5 + term6
 
 

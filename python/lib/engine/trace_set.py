@@ -16,6 +16,9 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import cPickle as pickle
+import random
+
+import numpy.random as npr
 
 from ..multiprocess import MultiprocessingMaster
 from ..multiprocess import SynchronousMaster
@@ -29,13 +32,16 @@ import venture.engine.trace as tr
 
 class TraceSet(object):
 
-  def __init__(self, engine, backend):
+  def __init__(self, engine, backend, seed):
     self.engine = engine # Because it contains the foreign sp registry and other misc stuff for restoring traces
     self.backend = backend
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
+    self._py_rng = random.Random(seed)
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    trace = tr.Trace(self.backend.trace_constructor()(seed))
+    self.create_trace_pool([trace])
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':
@@ -51,7 +57,8 @@ class TraceSet(object):
 
   def create_trace_pool(self, traces, weights=None):
     del self.traces # To (try and) force reaping any worker processes
-    self.traces = self._trace_master(self.mode)(traces, self.process_cap)
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    self.traces = self._trace_master(self.mode)(traces, self.process_cap, seed)
     if weights is not None:
       self.log_weights = weights
     else:
@@ -89,7 +96,9 @@ class TraceSet(object):
     self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    trace = tr.Trace(self.backend.trace_constructor()(seed))
+    self.create_trace_pool([trace])
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -116,8 +125,10 @@ if freeze has been used.
     P = int(P)
     newTraces = [None for p in range(P)]
     used_parents = {}
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    np_rng = npr.RandomState(seed)
     for p in range(P):
-      parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.log_weights, np_rng) # will need to include or rewrite
       newTrace = self._use_parent(used_parents, parent)
       newTraces[p] = newTrace
     return newTraces
@@ -270,7 +281,9 @@ if freeze has been used.
       return [self.restore_trace(dumped) for dumped in dumped_all]
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return tr.Trace.restore(self.backend.trace_constructor(), values, self.engine.foreign_sps, skipStackDictConversion)
+    mktrace_seed = self.backend.trace_constructor()
+    mktrace = lambda: mktrace_seed(self._py_rng.randint(1, 2**31 - 1))
+    return tr.Trace.restore(mktrace, values, self.engine.foreign_sps, skipStackDictConversion)
 
   def copy_trace(self, trace):
     if trace.short_circuit_copyable():

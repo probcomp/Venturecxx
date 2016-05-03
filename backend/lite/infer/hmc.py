@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy.random as npr
-import scipy.stats
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
@@ -50,7 +48,7 @@ class GradientOfRegen(object):
     # Pass and store the pnodes because their order matters, and the
     # scaffold has them as a set
     self.pnodes = pnodes
-    self.fixed_randomness = FixedRandomness()
+    self.fixed_randomness = FixedRandomness(trace.py_rng, trace.np_rng)
 
   def __call__(self, values):
     """Returns the gradient of the weight of regenerating along
@@ -107,7 +105,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    momenta = self.sampleMomenta(currentValues)
+    momenta = self.sampleMomenta(currentValues, trace.np_rng)
     start_K = self.kinetic(momenta)
 
     grad = GradientOfRegen(trace, scaffold, pnodes)
@@ -128,9 +126,9 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)
 
-  def sampleMomenta(self, currentValues):
+  def sampleMomenta(self, currentValues, np_rng):
     def sample_normal(_):
-      return scipy.stats.norm.rvs(loc=0, scale=1)
+      return np_rng.standard_normal()
     return [v.map_real(sample_normal) for v in currentValues]
   def kinetic(self, momenta):
     # This is the log density of sampling these momenta, up to an
@@ -139,7 +137,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p):
     epsilon = self.epsilon
-    num_steps = npr.randint(int(self.num_steps))+1
+    num_steps = self.trace.np_rng.randint(int(self.num_steps))+1
     q = start_q
     # The initial momentum half-step
     dpdt = start_grad_q
