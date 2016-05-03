@@ -115,7 +115,7 @@ def isRequestNode(thing):
 def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
 
-class Args(object):
+class TraceNodeArgs(object):
   def __init__(self, trace, node):
     self.trace = trace
     self.node = node

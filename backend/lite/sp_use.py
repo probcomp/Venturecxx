@@ -32,7 +32,6 @@ class MockArgs(IArgs):
 
   def __init__(self, vals, aux, py_rng=None, np_rng=None, madeSPAux=None):
     super(MockArgs, self).__init__()
-    # TODO Do I want to try to synthesize an actual real random valid Args object?
     if py_rng is None:
       py_rng = random.Random()
     if np_rng is None:
