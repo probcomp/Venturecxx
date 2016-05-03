@@ -19,7 +19,8 @@ from venture.lite.infer.mh import MHOperator
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..node import isApplicationNode, Args
+from ..node import isApplicationNode
+from ..node import TraceNodeArgs
 from ..lkernel import VariationalLKernel
 
 def registerVariationalLKernels(trace,scaffold):
@@ -29,7 +30,8 @@ def registerVariationalLKernels(trace,scaffold):
        not trace.isConstrainedAt(node) and \
        trace.pspAt(node).hasVariationalLKernel() and \
        not scaffold.isResampling(node.operatorNode):
-      scaffold.lkernels[node] = trace.pspAt(node).getVariationalLKernel(Args(trace,node))
+      scaffold.lkernels[node] = \
+          trace.pspAt(node).getVariationalLKernel(TraceNodeArgs(trace,node))
       hasVariational = True
   return hasVariational
 

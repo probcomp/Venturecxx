@@ -33,7 +33,6 @@ property fails stochastically or deterministically, or combinators for
 deciding whether "sporadic fail" should be treated as "fail" or
 "pass"."""
 
-import random
 import numpy.random as npr
 from nose import SkipTest
 
@@ -41,7 +40,6 @@ from venture.test import random_values as r
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
 from venture.lite.types import VentureType
-from venture.lite import env as env
 
 def checkTypedProperty(prop, type_, *args, **kwargs):
   """Checks a property, given a description of the arguments to pass it.
@@ -156,69 +154,3 @@ def final_return_type(sp_type):
     return sp_type
   else:
     return final_return_type(sp_type.return_type)
-
-class BogusArgs(object):
-  """Calling an SP requires an Args object, which is supposed to point
-  to Nodes in a Trace and all sorts of things.  Mock that for testing
-  purposes, since most SPs do not read the hairy stuff."""
-
-  def __init__(self, args, aux, py_rng=None, np_rng=None):
-    # TODO Do I want to try to synthesize an actual real random valid Args object?
-    if py_rng is None:
-      py_rng = random.Random()
-    if np_rng is None:
-      np_rng = npr.RandomState()
-    self.args = args
-    self.aux = aux
-    self.node = None
-    self.operandNodes = [None for _ in args]
-    self.env = env.VentureEnvironment()
-    self._np_rng = np_rng
-    self._py_rng = py_rng
-
-  def operandValues(self): return self.args
-  def spaux(self): return self.aux
-  def esrNodes(self): return []
-  def esrValues(self): return []
-  def py_prng(self): return self._py_rng
-  def np_prng(self): return self._np_rng
-
-from venture.lite.psp import NullRequestPSP
-from venture.lite.psp import TypedPSP
-
-def simulate_output(sp, args, spaux=None):
-  """Simulate the given SP's output PSP on the given arguments.
-
-  Assumes the SP doesn't need much trace context, and in particular
-  does not need to make requests.
-
-  If no spaux is given, ask the SP for an empty one.
-
-  TODO Could implement this one level more completely by using the
-  untraced interpreter to evaluate a synthetic application expression.
-
-  """
-  assert isinstance(sp.requestPSP, NullRequestPSP)
-  if spaux is None:
-    spaux = sp.constructSPAux()
-  args = BogusArgs(args, spaux)
-  return sp.outputPSP.simulate(args)
-
-def log_density_output(sp, value, args, spaux=None, no_wrapper=False):
-  """Assess the given SP's logDensity on the given arguments and value.
-
-  Assumes the SP doesn't need much trace context, and in particular
-  does not need to make requests.
-
-  If no spaux is given, ask the SP for an empty one.
-
-  """
-  assert isinstance(sp.requestPSP, NullRequestPSP)
-  if spaux is None:
-    spaux = sp.constructSPAux()
-  args = BogusArgs(args, spaux)
-  target = sp.outputPSP
-  if no_wrapper:
-    assert isinstance(target, TypedPSP)
-    target = target.psp
-  return target.logDensity(value, args)

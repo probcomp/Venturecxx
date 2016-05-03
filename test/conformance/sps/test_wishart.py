@@ -24,12 +24,12 @@ import scipy.stats
 
 from venture.lite.utils import logaddexp
 from venture.lite.sp_registry import builtInSPs
+from venture.lite.sp_use import logDensity
 from venture.test.config import SkipTest
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import inParallel
 from venture.test.config import on_inf_prim
-from venture.test.randomized import log_density_output
 from venture.test.stats import reportKnownContinuous
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
@@ -180,7 +180,7 @@ def testInvWishartAssess():
   inv_wishart_sp = builtInSPs()["inv_wishart"]
   scale_matrix = [[psi]]
   def inv_wishart(x):
-    return log_density_output(inv_wishart_sp, [[x]], [scale_matrix, dof], no_wrapper=True)
+    return logDensity(inv_wishart_sp, no_wrapper=True)([[x]], [scale_matrix, dof])
   inv_wisharts = np.vectorize(inv_wishart)(np.linspace(low, high, n))
   inv_gamma = scipy.stats.invgamma(dof*0.5, scale=psi*0.5).logpdf
   inv_gammas = np.vectorize(inv_gamma)(np.linspace(low, high, n))
