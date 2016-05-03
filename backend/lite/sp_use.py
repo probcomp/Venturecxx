@@ -147,6 +147,7 @@ class ReplacingArgs(IArgs):
       self.operandNodes = operandNodes
     self._spaux = spaux
     self.env = args.env
+    assert isinstance(args, IArgs)
 
   def operandValues(self): return self._operandValues
   def spaux(self):
@@ -177,6 +178,7 @@ class RemappingArgs(IArgs):
     self.node = args.node
     self.operandNodes = args.operandNodes
     self.env = args.env
+    assert isinstance(args, IArgs)
 
   def operandValues(self):
     return self.f(self.args.operandValues())
