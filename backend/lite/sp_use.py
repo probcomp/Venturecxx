@@ -132,6 +132,41 @@ def gradientOfLogDensity(sp, no_wrapper=False):
     return target.gradientOfLogDensity(value, args)
   return doit
 
+class ReplacingArgs(IArgs):
+  """An implementation of IArgs for replacing the argument values preseving the rest of the context.
+
+  """
+  def __init__(self, args, operandValues, operandNodes = None,
+               spaux = None):
+    super(ReplacingArgs, self).__init__()
+    self.args = args
+    self._operandValues = operandValues
+    self.node = args.node
+    if operandNodes is None:
+      self.operandNodes = args.operandNodes
+    else:
+      self.operandNodes = operandNodes
+    self._spaux = spaux
+    self.env = args.env
+
+  def operandValues(self): return self._operandValues
+  def spaux(self):
+    if self._spaux is None:
+      return self.args.spaux()
+    else:
+      return self._spaux
+
+  def requestValue(self): return self.args.requestValue()
+  def esrNodes(self): return self.args.esrNodes()
+  def esrValues(self): return self.args.esrValues()
+  def madeSPAux(self): return self.args.madeSPAux()
+
+  def py_prng(self): return self.args.py_prng()
+  def np_prng(self): return self.args.np_prng()
+
+  def __repr__(self):
+    return "%s(%r)" % (self.__class__, self.__dict__)
+
 class RemappingArgs(IArgs):
   """An implementation of IArgs for remapping the argument values by a given function.
 
