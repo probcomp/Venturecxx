@@ -257,12 +257,6 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 gsl_rng * ConcreteTrace::getRNG() { return rng->get_rng(); }
 const gsl_rng * ConcreteTrace::getRNG() const { return rng->get_rng(); }
 
-VentureValuePtr ConcreteTrace::getValue(Node * node)
-{
-  assert(values[node]);
-  return values[node];
-}
-
 boost::shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
   boost::shared_ptr<VentureSPRecord> spRecord = getMadeSPRecord(makerNode);
