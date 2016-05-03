@@ -46,7 +46,7 @@ class MockArgs(IArgs):
 
   def operandValues(self): return self.vals
   def spaux(self): return self.aux
-  def madeSPAux(self): return self.madeSPAux
+  def madeSPAux(self): return self._madeSPAux
   def esrNodes(self): return []
   def esrValues(self): return []
   def requestValue(self): return None
