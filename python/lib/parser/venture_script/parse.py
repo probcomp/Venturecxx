@@ -316,6 +316,10 @@ class Semantics(object):
     def p_primary_unquote(self, o, b, c):
         return locbracket(o, c,
             val.quote(locbracket(o, c, val.unquote(b))))
+    def p_primary_array(self, o, a, c):
+        assert isinstance(a, list)
+        construction = [locmap(loctoken1(o, 'array'), val.symbol)] + a
+        return locbracket(o, c, construction)
     def p_primary_literal(self, l):
         assert isloc(l)
         return l
@@ -330,6 +334,12 @@ class Semantics(object):
     def p_params_many(self, params, c, param):
         params.append(locmap(loctoken(param), val.symbol))
         return params
+
+    # arraybody, arrayelts: Return list of located expressions.
+    def p_arraybody_none(self):                 return []
+    def p_arraybody_some(self, es):             return es
+    def p_arrayelts_one(self, e):               return [e]
+    def p_arrayelts_many(self, es, c, e):       es.append(e); return es
 
     # literal: Return located `val'.
     def p_literal_true(self, t):

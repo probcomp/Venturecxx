@@ -120,6 +120,7 @@ primary(if)		::= K_IF(k) T_LROUND(po) body(p) T_RROUND(pc)
 				T_LCURLY(ao) body(a) T_RCURLY(ac).
 primary(qquote)		::= T_LOXFORD(o) body(b) T_ROXFORD(c).
 primary(unquote)	::= T_LDOLLAR_CURLY(o) body(b) T_RCURLY(c).
+primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
 
@@ -127,6 +128,11 @@ paramlist(none)		::= .
 paramlist(some)		::= params(params).
 params(one)		::= L_NAME(param).
 params(many)		::= params(params) T_COMMA(c) L_NAME(param).
+
+arraybody(none)		::= .
+arraybody(some)		::= arrayelts(es).
+arrayelts(one)		::= body(e).
+arrayelts(many)		::= arrayelts(es) T_COMMA(c) body(e).
 
 literal(true)		::= T_TRUE(t).
 literal(false)		::= T_FALSE(f).
