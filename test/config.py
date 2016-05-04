@@ -484,6 +484,9 @@ general-purpose inference programs except sub-sampled MH.
     return wrapped
   return wrap
 
+def subSampling():
+  return config["infer"].startswith("(subsampled_mh")
+
 # TODO Abstract commonalities with the rejection skipper
 def skipWhenDoingParticleGibbs(reason):
   """Annotate a test function as being suitable for testing all
