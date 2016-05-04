@@ -575,8 +575,10 @@ class GammaOutputPSP(RandomPSP):
                                   [args.np_prng()]))
 
   def gradientOfSimulate(self, args, value, direction):
-    # These gradients were computed by Sympy; the script to get them is
-    # in doc/gradients.py
+    # These gradients were computed by Sympy; the script to get them
+    # is in doc/gradients.py.  Subsequently modified to convert
+    # math.log(math.exp(foo)) to (foo), because apparently Sympy's
+    # simplifier is not up to that.
     alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
@@ -597,14 +599,14 @@ class GammaOutputPSP(RandomPSP):
       else:
         x0 = -alpha + 1
         x1 = 1.0 / alpha
-        x2 = alpha * math.log(math.exp(x1 * (x0 - (beta * value) ** alpha)))
+        x2 = alpha * (x1 * (x0 - (beta * value) ** alpha))
         x3 = -x2
         x4 = x0 + x3
         gradAlpha = (x4 ** (x0 * x1) * (x3 + (alpha + x2 - 1) *
                      math.log(x4)) / (alpha ** 2.0 * beta))
         x0 = 1.0 / alpha
-        gradBeta = ( -(-alpha * math.log(math.exp(-x0 * (alpha +
-          (beta * value) ** alpha - 1))) - alpha + 1) ** x0 / beta ** 2.0 )
+        gradBeta = ( -(-alpha * (-x0 * (alpha +
+          (beta * value) ** alpha - 1)) - alpha + 1) ** x0 / beta ** 2.0 )
     return [direction * gradAlpha, direction * gradBeta]
 
   def logDensity(self, x, args):
