@@ -102,7 +102,8 @@ class LogBernoulliOutputPSP(DiscretePSP):
 
   def gradientOfLogDensity(self, val, args):
     logp = args.operandValues()[0]
-    deriv = 1 if val else 1 / (1 - math.exp(-logp))
+    # If val is false, deriv = 1 / (1 - e^(-logp)), computed here with expm1.
+    deriv = 1 if val else 1. / -math.expm1(-logp)
     return (0, [deriv])
 
   def enumerateValues(self, args):
