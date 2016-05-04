@@ -484,8 +484,25 @@ general-purpose inference programs except sub-sampled MH.
     return wrapped
   return wrap
 
-def subSampling():
-  return config["infer"].startswith("(subsampled_mh")
+# TODO Abstract commonalities with the rejection skipper
+def skipWhenDoingParticleGibbs(reason):
+  """Annotate a test function as being suitable for testing all
+general-purpose inference programs except particle Gibbs.
+
+  """
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      if not doingParticleGibbs():
+        return f(*args)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_doing_particle_gibbs = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def doingParticleGibbs():
+  return config["infer"].startswith("(pgibbs")
 
 def skipWhenInParallel(reason):
   def wrap(f):

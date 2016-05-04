@@ -23,6 +23,7 @@ from venture.test.config import collectSamples
 from venture.test.config import default_num_data
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenDoingParticleGibbs
 from venture.test.config import skipWhenRejectionSampling
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
@@ -132,6 +133,7 @@ def test_compound_assume_inf_happening():
 
 @broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
+@skipWhenDoingParticleGibbs("Issue #531")
 def test_compound_assume_inf_first_element():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -156,6 +158,7 @@ def test_compound_assume_inf_first_element():
 @broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
 @skipWhenRejectionSampling("Rejection takes too long to solve this")
+@skipWhenDoingParticleGibbs("Issue #531")
 def test_compound_assume_inf_second_element():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -181,6 +184,7 @@ def test_compound_assume_inf_second_element():
     return reportKnownGaussian(-15, 1, post_samples)
 
 @statisticalTest
+@skipWhenDoingParticleGibbs("Issue #531")
 def test_model_without_compound_assume():
     inf_test_prog ="""
     [assume a (tag (quote a_scope) 0 (normal 0 10))]
