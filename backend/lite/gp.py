@@ -206,14 +206,16 @@ covarianceFunctionType = t.AnyType
 def _mean_maker(f, argtypes):
   return deterministic_typed(
     lambda *x: VentureFunction(f(*x), sp_type=meanType),
-        argtypes, meanFunctionType("mean function"),
-        descr=f.__doc__)
+    argtypes,
+    meanFunctionType("mean function"),
+    descr=f.__doc__)
 
 def _cov_maker(f, argtypes):
   return deterministic_typed(
     lambda *x: VentureFunction(f(*x), sp_type=covarianceType),
-        argtypes, covarianceFunctionType("covariance kernel"),
-        descr=f.__doc__)
+    argtypes,
+    covarianceFunctionType("covariance kernel"),
+    descr=f.__doc__)
 
 def mean_const(c):
   "Constant mean function, everywhere equal to c."
