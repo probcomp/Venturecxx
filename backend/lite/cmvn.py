@@ -42,7 +42,7 @@ def mvtLogDensity(x,mu,Sigma,v):
   nterm1 = gammaln(v / 2.)
   nterm2 = (p / 2.) * math.log(v * math.pi)
   nterm3 = 0.5 * np.linalg.slogdet(Sigma)[1]
-  nterm4 = ((v + p) / 2.) * math.log(1 + (1. / v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
+  nterm4 = ((v + p) / 2.) * math.log1p((1. / v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
 def mvtSample(mu,Sigma,N,rng):

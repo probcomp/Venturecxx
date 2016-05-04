@@ -518,7 +518,7 @@ class BetaOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
-    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
+    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log1p(-x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self, name):

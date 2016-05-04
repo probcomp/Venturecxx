@@ -47,7 +47,7 @@ double FlipOutputPSP::logDensity(VentureValuePtr value,
   }
 
   if (value->getBool()) { return log(p); }
-  else { return log(1 - p); }
+  else { return log1p(-p); }
 }
 
 vector<VentureValuePtr> FlipOutputPSP::enumerateValues(
@@ -87,7 +87,7 @@ double BernoulliOutputPSP::logDensity(VentureValuePtr value,
   }
 
   if (value->getBool()) { return log(p); }
-  else { return log(1 - p); }
+  else { return log1p(-p); }
 }
 
 vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(

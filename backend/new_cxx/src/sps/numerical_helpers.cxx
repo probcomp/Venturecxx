@@ -72,7 +72,7 @@ double BetaDistributionLogLikelihood(double sampled_value, double alpha, double 
   //x^{a-1} * (1-x)^{b-1} / Beta(a, b)
   double loglikelihood = 0.0;
   loglikelihood += (alpha - 1.0) * log(sampled_value);
-  loglikelihood += (beta - 1.0) * log(1.0 - sampled_value);
+  loglikelihood += (beta - 1.0) * log1p(-sampled_value);
   loglikelihood -= gsl_sf_lnbeta(alpha, beta);
   if (!isfinite(loglikelihood)) { loglikelihood = -DBL_MAX; }
   return loglikelihood;
