@@ -39,7 +39,7 @@ class VentureSivm(object):
             'labeled_predict','labeled_forget','labeled_freeze',
             'labeled_report',
             'list_directives','get_directive','labeled_get_directive',
-            'force','sample',
+            'force','sample','sample_all',
     }
     _core_instructions = {'define','assume','observe','predict',
             'forget','freeze','report','evaluate','infer',
@@ -456,6 +456,21 @@ class VentureSivm(object):
                 utils.validate_expression, wrap_exception=False)
         inst1 = {
                 'instruction' : 'predict',
+                'expression' : exp,
+                }
+        o1 = self._call_core_sivm_instruction(inst1)
+        inst2 = {
+                'instruction' : 'forget',
+                'directive_id' : o1['directive_id'],
+                }
+        self._call_core_sivm_instruction(inst2)
+        return {'value':o1['value']}
+
+    def _do_sample_all(self, instruction):
+        exp = utils.validate_arg(instruction,'expression',
+                utils.validate_expression, wrap_exception=False)
+        inst1 = {
+                'instruction' : 'predict_all',
                 'expression' : exp,
                 }
         o1 = self._call_core_sivm_instruction(inst1)
