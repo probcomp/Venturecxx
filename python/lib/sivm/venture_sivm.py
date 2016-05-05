@@ -35,21 +35,40 @@ class VentureSivm(object):
     dicts = [s + '_dict' for s in ['label', 'did', 'syntax', 'directive']]
 
     # list of all instructions supported by venture sivm
-    _extra_instructions = {'labeled_assume','labeled_observe',
-            'labeled_predict','labeled_forget','labeled_freeze',
-            'labeled_report',
-            'list_directives','get_directive','labeled_get_directive',
-            'force','sample',
+    _extra_instructions = {
+        'force',
+        'get_directive',
+        'labeled_assume',
+        'labeled_forget',
+        'labeled_freeze',
+        'labeled_get_directive',
+        'labeled_observe',
+        'labeled_predict',
+        'labeled_report',
+        'list_directives',
+        'sample',
     }
-    _core_instructions = {'define','assume','observe','predict',
-            'forget','freeze','report','evaluate','infer',
-            'start_continuous_inference',
-            'stop_continuous_inference','continuous_inference_status',
-            'clear',
+    _core_instructions = {
+        'assume',
+        'clear',
+        'continuous_inference_status',
+        'define',
+        'evaluate',
+        'forget',
+        'freeze',
+        'infer',
+        'observe',
+        'predict',
+        'report',
+        'start_continuous_inference',
+        'stop_continuous_inference',
     }
 
-    _dont_pause_continuous_inference = {'start_continuous_inference',
-            'stop_continuous_inference', 'continuous_inference_status'}
+    _dont_pause_continuous_inference = {
+        'continuous_inference_status',
+        'start_continuous_inference',
+        'stop_continuous_inference',
+    }
 
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction, self._core_instructions |

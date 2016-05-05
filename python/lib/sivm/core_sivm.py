@@ -34,11 +34,21 @@ class CoreSivm(object):
         self.engine = engine
         self.profiler_enabled = False
 
-    _implemented_instructions = {'define','assume','observe','predict',
-            'forget','freeze','report','evaluate','infer',
-            'clear',
-            'start_continuous_inference','stop_continuous_inference',
-            'continuous_inference_status'}
+    _implemented_instructions = {
+        'assume',
+        'clear',
+        'continuous_inference_status',
+        'define',
+        'evaluate',
+        'forget',
+        'freeze',
+        'infer',
+        'observe',
+        'predict',
+        'report',
+        'start_continuous_inference',
+        'stop_continuous_inference',
+    }
 
     def execute_instruction(self, instruction):
         utils.validate_instruction(instruction,self._implemented_instructions)
