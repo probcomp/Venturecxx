@@ -43,6 +43,12 @@ class CoreSivm(object):
         'forget',
         'freeze',
         'infer',
+        'labeled_assume',
+        'labeled_forget',
+        'labeled_freeze',
+        'labeled_observe',
+        'labeled_predict',
+        'labeled_report',
         'observe',
         'predict',
         'report',
@@ -104,6 +110,15 @@ class CoreSivm(object):
         did, val = self.engine.assume(sym,exp)
         return {"directive_id":did, "value":val}
 
+    def _do_labeled_assume(self, instruction):
+        exp = utils.validate_arg(instruction, 'expression',
+                utils.validate_expression, modifier=_modify_expression,
+                wrap_exception=False)
+        sym = utils.validate_arg(instruction, 'symbol', utils.validate_symbol)
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        did, val = self.engine.labeled_assume(label, sym, exp)
+        return {'directive_id': did, 'value': val}
+
     def _do_observe(self,instruction):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
@@ -112,11 +127,29 @@ class CoreSivm(object):
         did, weights = self.engine.observe(exp,val)
         return {"directive_id":did, "value":weights}
 
+    def _do_labeled_observe(self, instruction):
+        exp = utils.validate_arg(instruction, 'expression',
+                utils.validate_expression, modifier=_modify_expression,
+                wrap_exception=False)
+        val = utils.validate_arg(instruction, 'value', utils.validate_value,
+                modifier=_modify_value)
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        did, weights = self.engine.labeled_observe(label, exp, val)
+        return {'directive_id': did, 'value': weights}
+
     def _do_predict(self,instruction):
         exp = utils.validate_arg(instruction,'expression',
                 utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
         did, val = self.engine.predict(exp)
         return {"directive_id":did, "value":val}
+
+    def _do_labeled_predict(self, instruction):
+        exp = utils.validate_arg(instruction, 'expression',
+                utils.validate_expression, modifier=_modify_expression,
+                wrap_exception=False)
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        did, val = self.engine.labeled_predict(label, exp)
+        return {'directive_id': did, 'value': val}
 
     def _do_forget(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',
@@ -124,16 +157,31 @@ class CoreSivm(object):
         weights = self.engine.forget(did)
         return {"value": weights}
 
+    def _do_labeled_forget(self, instruction):
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        weights = self.engine.labeled_forget(label)
+        return {'value': weights}
+
     def _do_freeze(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         self.engine.freeze(did)
         return {}
 
+    def _do_labeled_freeze(self, instruction):
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        self.engine.labeled_freeze(label)
+        return {}
+
     def _do_report(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
         return {"value": self.engine.report_value(did)}
+
+    def _do_labeled_report(self, instruction):
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        value = self.engine.labeled_report_value(label)
+        return {'value': value}
 
     def _do_evaluate(self,instruction):
         e = utils.validate_arg(instruction,'expression',

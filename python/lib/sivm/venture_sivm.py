@@ -32,19 +32,16 @@ class VentureSivm(object):
         self._ci_pauser_stack = []
         self._clear()
 
-    dicts = [s + '_dict' for s in ['label', 'did', 'syntax', 'directive']]
+    dicts = {
+        'directive_dict',
+        'syntax_dict',
+    }
 
     # list of all instructions supported by venture sivm
     _extra_instructions = {
         'force',
         'get_directive',
-        'labeled_assume',
-        'labeled_forget',
-        'labeled_freeze',
         'labeled_get_directive',
-        'labeled_observe',
-        'labeled_predict',
-        'labeled_report',
         'list_directives',
         'sample',
     }
@@ -57,6 +54,12 @@ class VentureSivm(object):
         'forget',
         'freeze',
         'infer',
+        'labeled_assume',
+        'labeled_forget',
+        'labeled_freeze',
+        'labeled_observe',
+        'labeled_predict',
+        'labeled_report',
         'observe',
         'predict',
         'report',
@@ -105,8 +108,6 @@ class VentureSivm(object):
     ###############################
 
     def _clear(self):
-        self.label_dict = {} # Maps labels to directive ids
-        self.did_dict = {} # Maps directive ids back to labels
         self.directive_dict = {} # Maps directive ids to the actual instructions
         # Maps directive ids to the Syntax objects that record their
         # macro expansion history
@@ -155,13 +156,31 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         predicted_did = None
         # desugar the expression
-        if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
+        if instruction_type in [
+                'assume',
+                'define',
+                'evaluate',
+                'infer',
+                'labeled_assume',
+                'labeled_observe',
+                'labeled_predict',
+                'observe',
+                'predict',
+        ]:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             syntax = macro_system.expand(exp)
             desugared_instruction['expression'] = syntax.desugared()
             # for error handling
             predicted_did = self._record_running_instruction(instruction, (exp, syntax))
+        if instruction_type == 'forget':
+            forgotten_did = instruction['directive_id']
+        elif instruction_type == 'labeled_forget':
+            label = utils.validate_arg(instruction, 'label',
+                utils.validate_symbol)
+            forgotten_did = self.core_sivm.engine.get_directive_id(label)
+        else:
+            forgotten_did = None
         try:
             response = self.core_sivm.execute_instruction(desugared_instruction)
         except VentureException as e:
@@ -188,7 +207,8 @@ class VentureSivm(object):
                     if predicted_did in self.syntax_dict:
                         del self.syntax_dict[predicted_did]
             raise e, None, info[2]
-        self._register_executed_instruction(instruction, predicted_did, response)
+        self._register_executed_instruction(instruction, predicted_did,
+            forgotten_did, response)
         return response
 
     def _record_running_instruction(self, instruction, record):
@@ -241,14 +261,6 @@ class VentureSivm(object):
             exp = instruction['expression']
             i = macro_system.sugar_expression_index(exp,i)
             e.data['expression_index'] = i
-        # turn directive_id into label
-        if e.exception == 'invalid_argument':
-            if e.data['argument'] == 'directive_id':
-                did = e.data['directive_id']
-                if did in self.did_dict:
-                    e.data['label'] = self.did_dict[did]
-                    e.data['argument'] = 'label'
-                    del e.data['directive_id']
         return e
 
     def trace_address_to_stack(self, address):
@@ -288,7 +300,8 @@ class VentureSivm(object):
         return self.core_sivm.engine.persistent_inference_trace \
             and did <= len(e._inference_prelude())
 
-    def _register_executed_instruction(self, instruction, predicted_did, response):
+    def _register_executed_instruction(self, instruction, predicted_did,
+            forgotten_did, response):
         if response is not None and 'directive_id' in response:
             if response['directive_id'] != predicted_did:
                 warning = "Warning: Instruction %s was pre-assigned did %s but actually assigned did %s"
@@ -301,13 +314,9 @@ class VentureSivm(object):
         if instruction_type == 'clear':
             self._clear()
         # forget directive mappings on the "forget" command
-        if instruction_type == 'forget':
-            did = instruction['directive_id']
-            del self.directive_dict[did]
-            del self.syntax_dict[did]
-            if did in self.did_dict:
-                del self.label_dict[self.did_dict[did]]
-                del self.did_dict[did]
+        if forgotten_did is not None:
+            del self.directive_dict[forgotten_did]
+            del self.syntax_dict[forgotten_did]
         if instruction_type in ['evaluate', 'infer']:
             # "evaluate" and "infer" are forgotten by the Engine;
             # forget them here, too.
@@ -369,63 +378,18 @@ class VentureSivm(object):
             {'instruction' : 'stop_continuous_inference'})
 
     ###############################
-    # Shortcuts
-    ###############################
-
-    def _validate_label(self, instruction, exists=False):
-        label = utils.validate_arg(instruction,'label',
-                utils.validate_symbol)
-        if exists is False and label in self.label_dict:
-            raise VentureException('invalid_argument',
-                    'Label "{}" is already assigned to a different directive.'.format(label),
-                    argument='label')
-        if exists is True and label not in self.label_dict:
-            raise VentureException('invalid_argument',
-                    'Label "{}" does not exist.'.format(label),
-                    argument='label')
-        return label
-
-    ###############################
-    # labeled instruction wrappers
-    ###############################
-
-    def _do_labeled_directive(self, instruction):
-        label = self._validate_label(instruction, exists=False)
-        tmp = instruction.copy()
-        tmp['instruction'] = instruction['instruction'][len('labeled_'):]
-        del tmp['label']
-        response = self._call_core_sivm_instruction(tmp)
-        did = response['directive_id']
-        self.label_dict[label] = did
-        self.did_dict[did] = label
-        return response
-
-    _do_labeled_assume = _do_labeled_directive
-    _do_labeled_observe = _do_labeled_directive
-    _do_labeled_predict = _do_labeled_directive
-
-    def _do_labeled_operation(self, instruction):
-        label = self._validate_label(instruction, exists=True)
-        tmp = instruction.copy()
-        tmp['instruction'] = instruction['instruction'][len('labeled_'):]
-        tmp['directive_id'] = self.label_dict[label]
-        del tmp['label']
-        return self._call_core_sivm_instruction(tmp)
-
-    _do_labeled_forget = _do_labeled_operation
-    _do_labeled_freeze = _do_labeled_operation
-    _do_labeled_report = _do_labeled_operation
-
-    ###############################
     # new instructions
     ###############################
 
     # adds label back to directive
     def get_directive(self, did):
         tmp = copy.copy(self.directive_dict[did])
-        if did in self.did_dict:
-            tmp['label'] = v.symbol(self.did_dict[did])
+        label = self.core_sivm.engine.get_directive_label(did)
+        if label is not None:
+            tmp['label'] = v.symbol(label)
             #tmp['instruction'] = 'labeled_' + tmp['instruction']
+        if tmp['instruction'].startswith('labeled_'):
+            tmp['instruction'] = tmp['instruction'][len('labeled_'):]
         return tmp
 
     def _do_list_directives(self, _):
@@ -445,9 +409,9 @@ class VentureSivm(object):
         return {"directive": self.get_directive(did)}
 
     def _do_labeled_get_directive(self, instruction):
-        label = self._validate_label(instruction, exists=True)
-        did = self.label_dict[label]
-        return {"directive":self.get_directive(did)}
+        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+        did = self.core_sivm.engine.get_directive_id(label)
+        return {'directive': self.get_directive(did)}
 
     def _do_force(self, instruction):
         exp = utils.validate_arg(instruction,'expression',

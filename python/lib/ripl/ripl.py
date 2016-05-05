@@ -403,7 +403,7 @@ class Ripl():
         return ans
 
     def directive_id_for_label(self, label):
-        return self.sivm.label_dict[label]
+        return self.sivm.core_sivm.engine.get_directive_id(label)
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
