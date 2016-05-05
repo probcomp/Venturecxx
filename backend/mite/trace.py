@@ -1,4 +1,6 @@
 import math
+import random
+import numpy.random as npr
 
 from venture.lite.address import Address
 from venture.lite.address import List
@@ -11,10 +13,10 @@ from venture.lite.trace import Trace as LiteTrace
 from venture.mite.builtin import builtInSPs
 from venture.mite.builtin import builtInValues
 from venture.mite.evaluator import EvalContext, RestoreContext
-from venture.mite.sp import Args
+from venture.mite.sp import TraceNodeArgs
 
 class Trace(LiteTrace):
-  def __init__(self):
+  def __init__(self, seed):
     self.globalEnv = VentureEnvironment()
     for name, val in builtInValues().iteritems():
       self.bindPrimitiveName(name, val)
@@ -24,6 +26,10 @@ class Trace(LiteTrace):
 
     self.unpropagatedObservations = {}
     self.families = {}
+
+    rng = random.Random(seed)
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 
   def bindPrimitiveSP(self, name, sp):
     spNode = self.createConstantNode(None, sp)
@@ -41,7 +47,7 @@ class Trace(LiteTrace):
     return outputNode
 
   def argsAt(self, node, context=None):
-    return Args(self, node, context=context)
+    return TraceNodeArgs(self, node, context=context)
 
   def madeSPAt(self, node):
     # SPs and SPRecords are the same now.

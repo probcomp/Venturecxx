@@ -1,5 +1,5 @@
 from venture.lite.exception import VentureBuiltinSPMethodError
-from venture.lite.node import Args as LiteArgs
+from venture.lite.node import TraceNodeArgs as LiteTraceNodeArgs
 from venture.lite.utils import override
 from venture.lite.value import VentureValue
 import venture.value.dicts as v
@@ -124,9 +124,11 @@ class RequestReferenceSP(VentureSP):
   def request(self, _args):
     raise VentureBuiltinSPMethodError("Request not implemented!")
 
-class Args(LiteArgs):
+# TODO: rename "args" -> "traceview"
+# and define an ITraceView and put that here instead
+class TraceNodeArgs(LiteTraceNodeArgs):
   def __init__(self, trace, node, context=None):
-    super(Args, self).__init__(trace, node)
+    super(TraceNodeArgs, self).__init__(trace, node)
     self.context = context
 
   def outputValue(self):

@@ -16,6 +16,7 @@ class LiteSP(SimulationSP):
       "Cannot wrap requesting SPs"
 
   def wrap_args(self, args):
+    # TODO: use one of Alexey's new Args classes
     args = copy.copy(args)
     args.spaux = lambda: self.wrapped_aux
     return args

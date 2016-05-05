@@ -8,8 +8,8 @@ from venture.mite.sp import RequestReferenceSP
 from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 
-def simulateCRP(counts, alpha):
-  return simulateCategorical(counts.values() + [alpha],
+def simulateCRP(counts, alpha, np_rng):
+  return simulateCategorical(counts.values() + [alpha], np_rng,
                              counts.keys() + [None])
 
 def getNextTable(counts):
@@ -26,7 +26,7 @@ class DPSP(RequestReferenceSP):
     self.counts = {}
 
   def apply(self, args):
-    raddr = simulateCRP(self.counts, self.alpha)
+    raddr = simulateCRP(self.counts, self.alpha, args.np_prng())
     if raddr is not None:
       args.incRequest(raddr)
     else:
@@ -77,7 +77,7 @@ class DPSP(RequestReferenceSP):
     weights.append(self.alpha * math.exp(newWeight))
     tables.append(newTable)
 
-    raddr = simulateCategorical(weights, tables)
+    raddr = simulateCategorical(weights, args.np_prng(), tables)
     if raddr == newTable:
       self.counts[raddr] = 0
     else:
