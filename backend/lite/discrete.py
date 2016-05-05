@@ -421,12 +421,8 @@ class SuffBernoulliOutputPSP(DiscretePSP):
       return math.log1p(-self.weight)
 
   def logDensityOfData(self, aux):
-    [ctY,ctN] = aux.cts()
-    # TODO Do I even want the total for all consistent sequences, or
-    # just for one?  The latter is the same, except for the
-    # numCombinations term.
-    # numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
-    return ctY * math.log(self.weight) + ctN * math.log1p(-self.weight) # + math.log(numCombinations)
+    [ctY, ctN] = aux.cts()
+    return ctY * math.log(self.weight) + ctN * math.log1p(-self.weight)
 
 
 registerBuiltinSP("make_uc_beta_bernoulli",
