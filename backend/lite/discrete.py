@@ -336,10 +336,9 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     [ctY,ctN] = aux.cts()
     trues = ctY + self.alpha
     falses = ctN + self.beta
-    numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do directly in log space
     numerator = scipy.special.betaln(trues,falses)
     denominator = scipy.special.betaln(self.alpha,self.beta)
-    return math.log(numCombinations) + numerator - denominator
+    return numerator - denominator
 
 
 registerBuiltinSP("make_beta_bernoulli", typed_nr(MakerCBetaBernoulliOutputPSP(),
