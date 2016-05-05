@@ -421,7 +421,9 @@ class SuffBernoulliOutputPSP(DiscretePSP):
 
   def logDensityOfData(self, aux):
     [ctY, ctN] = aux.cts()
-    return ctY * math.log(self.weight) + ctN * math.log1p(-self.weight)
+    term1 = ctY * math.log(self.weight) if ctY > 0 else 0
+    term2 = ctN * math.log1p(-self.weight) if ctN > 0 else 0
+    return term1 + term2
 
 
 registerBuiltinSP("make_uc_beta_bernoulli",
