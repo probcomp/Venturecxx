@@ -121,12 +121,7 @@ class CoreSivm(object):
     def _do_forget(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',
                 utils.validate_nonnegative_integer)
-        try:
-            weights = self.engine.forget(did)
-        except Exception as e:
-            if e.message == 'There is no such directive.':
-                raise VentureException('invalid_argument',e.message,argument='directive_id')
-            raise
+        weights = self.engine.forget(did)
         return {"value": weights}
 
     def _do_freeze(self,instruction):
