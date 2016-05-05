@@ -42,6 +42,7 @@ class VentureSivm(object):
             'force','sample','sample_all',
     }
     _core_instructions = {'define','assume','observe','predict',
+            'predict_all',
             'forget','freeze','report','evaluate','infer',
             'start_continuous_inference',
             'stop_continuous_inference','continuous_inference_status',
@@ -136,7 +137,8 @@ class VentureSivm(object):
         instruction_type = instruction['instruction']
         predicted_did = None
         # desugar the expression
-        if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
+        if instruction_type in ['define','assume','observe',
+                'predict','predict_all','evaluate','infer']:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
             syntax = macro_system.expand(exp)
@@ -158,7 +160,8 @@ class VentureSivm(object):
                 print traceback.format_exc()
                 raise e, None, info[2]
             finally:
-                if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
+                if instruction_type in ['define','assume','observe',
+                        'predict','predict_all','evaluate','infer']:
                     # After annotation completes, clear the syntax
                     # dictionaries, because the instruction was
                     # (presumably!) not recorded in the underlying
@@ -414,7 +417,7 @@ class VentureSivm(object):
                       for did in sorted(self.directive_dict.keys())]
         return { "directives" :
                  [c for c in candidates
-                  if c['instruction'] in ['assume', 'observe', 'predict']] }
+                  if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']] }
 
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id',

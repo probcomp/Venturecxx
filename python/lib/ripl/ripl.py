@@ -565,8 +565,8 @@ value to be returned as a dict annotating its Venture type.
         return value if type else u.strip_types(value)
 
     def predict_all(self, expression, type=False):
-        expression = self._ensure_parsed_expression(expression)
-        (pid, value) = self.sivm.core_sivm.engine.predict_all(expression)
+        i = {'instruction':'predict_all', 'expression':expression}
+        value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None, type=False):
