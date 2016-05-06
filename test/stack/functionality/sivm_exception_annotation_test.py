@@ -20,6 +20,7 @@ import time
 from nose.tools import eq_
 
 from venture.test.config import broken_in
+from venture.test.config import gen_broken_in
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 import venture.test.errors as err
@@ -314,3 +315,21 @@ def testAnnotateErrorInListLookup2():
 Index out of bounds VentureNumber(-1.0)
 """,
   ripl.sample, "(lookup (list 2 3) -1)")
+
+@gen_broken_in("puma", "Puma does not report error addresses")
+def testAnnotateModelProgramError():
+  for form in ['(predict foo)', '(predict_all foo)', '(sample foo)',
+               '(sample_all foo)', '(force foo 3)']:
+    yield checkAnnotateModelProgramError, form
+
+def checkAnnotateModelProgramError(form):
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+(autorun %s)
+         %s
+Caused by
+*** evaluation: Cannot find symbol 'foo'
+foo
+^^^
+""" % (form, "^" * len(form)),
+  ripl.evaluate, form)

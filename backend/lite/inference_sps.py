@@ -947,11 +947,11 @@ Extracts the last row of the supplied inference Dataset and prints its iteration
 
   ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol>"), t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
   ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
-  macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()])),
+  ripl_macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()])),
   ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1)),
   ripl_macro_helper("predict_all", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1)),
-  macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
-  macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.ListType())),
+  ripl_macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
+  ripl_macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
   macro_helper("extract_stats", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
 
   ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")], return_type=t.AnyType()), desc="""\
