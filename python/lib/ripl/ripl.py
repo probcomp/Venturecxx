@@ -788,7 +788,7 @@ Open issues:
         self._collect_value_of(d)
         return d
 
-    def force(self, expression, value):
+    def force(self, expression, value, type=False):
         i = {'instruction':'force', 'expression':expression, 'value':value}
         self.execute_instruction(i)
         return None
