@@ -77,6 +77,10 @@ class DPSP(RequestReferenceSP):
     weights.append(self.alpha * math.exp(newWeight))
     tables.append(newTable)
 
+    numerator = math.log(sum(weights))
+    denominator = math.log(self.alpha + sum(self.counts.values()))
+    weight = numerator - denominator
+
     raddr = simulateCategorical(weights, args.np_prng(), tables)
     if raddr == newTable:
       self.counts[raddr] = 0
@@ -86,7 +90,7 @@ class DPSP(RequestReferenceSP):
     self.counts[raddr] += 1
     self.request_map[args.node] = raddr
 
-    return logaddexp(weights) - math.log(self.alpha + len(self.counts))
+    return weight
 
   def unconstrain(self, args):
     from venture.mite.evaluator import EvalContext
@@ -114,8 +118,11 @@ class DPSP(RequestReferenceSP):
     for table, count in self.counts.items():
       if args.hasRequest(table) and args.requestedValue(table) == value:
         weights.append(count)
-    weights.append(newWeight)
-    weight = logaddexp(weights) - math.log(self.alpha + len(self.counts))
+    weights.append(self.alpha * math.exp(newWeight))
+
+    numerator = math.log(sum(weights))
+    denominator = math.log(self.alpha + sum(self.counts.values()))
+    weight = numerator - denominator
     args.setState(args.node, weight, ext="constrained weight")
 
     return weight, self.apply(eargs)
