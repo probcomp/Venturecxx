@@ -148,30 +148,67 @@ def careful_exp(x):
     if x > 0: return float("inf")
     else: return float("-inf")
 
-def logistic(x): return 1 / (1 + careful_exp(-x))
+def logistic(x):
+  # logistic never overflows, but e^{-x} does if x is much less than
+  # -log 2^(emax + 1) ~= -709.  Fortunately, for x <= -37, IEEE 754
+  # double-precision arithmetic rounds 1 + e^{-x} to e^{-x} anyway,
+  # giving the approximation 1/(1 + e^{-x}) ~= 1/e^{-x} = e^x, which
+  # never overflows.
+  if x <= -37:
+    return np.exp(x)
+  else:
+    return 1/(1 + np.exp(-x))
 
 def T_logistic(x):
-  # This should be derivable from the above by AD, but here I use the
-  # identity d logistic(x) / dx = logistic(x) * (1 - logistic(x))
-  logi_x = logistic(x)
-  return (logi_x, logi_x * (1 - logi_x))
+  # If L is the logistic function, we have
+  #
+  #                 e^{-x}         e^{-x}         1
+  #     L'(x) = -------------- = ---------- * ----------
+  #             (1 + e^{-x})^2   1 + e^{-x}   1 + e^{-x}
+  #
+  #                e^{-x}*e^x          1
+  #           = ---------------- * ----------
+  #             (1 + e^{-x})*e^x   1 + e^{-x}
+  #
+  #                1           1
+  #           = ------- * ----------
+  #             e^x + 1   1 + e^{-x}
+  #
+  #           = L(-x) L(x) = (1 - L(x)) L(x).
+  #
+  # We could compute L'(x) by computing L(x) and then multiplying L(x)
+  # and 1 - L(x), but that would lose precision for both factors if
+  # either one were near 1.  We could compute L(x) and L(-x)
+  # separately, but that would cost two exps.  We instead compute L(x)
+  # and L'(x) simultaneously in terms of e^{-x}.
+  if x <= -37:
+    # When x <= -37, so that 1 + e^{-x} ~= e^{-x}, we have
+    #
+    #   1/(1 + e^{-x}) = 1/e^{-x} = e^x
+    #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
+    ex = np.exp(x)
+    return (ex, ex)
+  else:
+    ex = np.exp(-x)
+    ex1 = 1 + ex
+    return (1/ex1, ex/(ex1*ex1))
 
 def log_logistic(x):
-  if x < -40:
-    # Because 1 + exp(40+) = exp(40+) in IEEE-64, and I don't want the
-    # +inf that will come from exp(400+)
+  if x <= -37:
     return x
-  else: return math.log(logistic(x))
+  else:
+    # log 1/(1 + e^{-x}) = log 1 - log (1 + e^{-x}) = -log1p(e^{-x}).
+    #
+    # When x is large and positive, e^{-x} is small relative to 1, so
+    # computing 1 + e^{-x} may lose precision, which log1p avoids.
+    return -np.log1p(np.exp(-x))
 
 def d_log_logistic(x):
-  # This should be derivable from the above by AD.
-  # Perhaps this could be improved upon by analysis, due to the usual
-  # derivative of approximation problem.
-  if x < -40:
-    return 1
-  else:
-    (logi_x, dlogi_x) = T_logistic(x)
-    return (1/logi_x) * dlogi_x
+  # Since 1 - L(x) = L(-x) and L'(x) = L(x) (1 - L(x)) = L(x) L(-x),
+  # we have
+  #
+  #     (log o L)'(x) = L'(x) log'(L(x)) = L(x) L(-x) / L(x) = L(-x).
+  return logistic(-x)
 
 def logit(x):
   # TODO Check the numeric analysis of this
