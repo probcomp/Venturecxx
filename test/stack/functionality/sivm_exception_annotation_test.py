@@ -289,3 +289,28 @@ def testAnnotateErrorInEvaluate():
           ^^^^^^^
 """,
   ripl.evaluate, "(badness)")
+
+def testAnnotateErrorInListLookup():
+  # Doubles as a regression test for Issue #510 (silent acceptance of
+  # negative list indexes).
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+Index out of bounds VentureNumber(-1.0)
+(autorun (lookup (list 2 3) -1))
+         ^^^^^^^^^^^^^^^^^^^^^^
+""",
+  ripl.evaluate, "(lookup (list 2 3) -1)")
+
+@broken_in("puma", "Puma does not report error addresses")
+def testAnnotateErrorInListLookup2():
+  # Doubles as a regression test for Issue #510 (silent acceptance of
+  # negative list indexes).
+  ripl = get_ripl()
+  # TODO Include the segment
+  # (autorun (lookup (list 2 3) -1))
+  #          ^^^^^^^^^^^^^^^^^^^^^^
+  # once Issue #491 is fixed
+  err.assert_error_message_contains("""\
+Index out of bounds VentureNumber(-1.0)
+""",
+  ripl.sample, "(lookup (list 2 3) -1)")

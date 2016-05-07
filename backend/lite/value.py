@@ -537,6 +537,8 @@ class VenturePair(VentureValue):
       ind = index.getNumber()
     except VentureTypeError:
       raise VentureValueError("Looking up non-number %r in a list" % index)
+    if ind < 0: # Equivalent to floor for negative floats
+      raise VentureValueError("Index out of bounds %s" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:

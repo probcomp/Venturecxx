@@ -30,6 +30,7 @@ def override(interface_class):
   return overrider
 
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
+def extendedLog1p(x): return math.log1p(x) if x > -1 else float("-inf")
 
 def normalizeList(seq):
   denom = sum(seq)

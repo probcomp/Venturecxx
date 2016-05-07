@@ -33,6 +33,7 @@ from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import extendedLog
+from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logDensityCategorical
 from venture.lite.utils import simulateCategorical
 from venture.lite.value import VentureInteger
@@ -56,7 +57,7 @@ class BernoulliOutputPSP(DiscretePSP):
     if val:
       return extendedLog(p)
     else:
-      return extendedLog(1 - p)
+      return extendedLog1p(-p)
 
   def gradientOfLogDensity(self, val, args):
     vals = args.operandValues()
@@ -97,11 +98,12 @@ class LogBernoulliOutputPSP(DiscretePSP):
   def logDensity(self, val, args):
     logp = args.operandValues()[0]
     if val: return logp
-    else: return extendedLog(1 - math.exp(logp))
+    else: return extendedLog1p(-math.exp(logp))
 
   def gradientOfLogDensity(self, val, args):
     logp = args.operandValues()[0]
-    deriv = 1 if val else 1 / (1 - math.exp(-logp))
+    # If val is false, deriv = 1 / (1 - e^(-logp)), computed here with expm1.
+    deriv = 1 if val else 1. / -math.expm1(-logp)
     return (0, [deriv])
 
   def enumerateValues(self, args):
@@ -328,7 +330,7 @@ class CBetaBernoulliOutputPSP(DiscretePSP):
     if value is True:
       return math.log(weight)
     else:
-      return math.log(1-weight)
+      return math.log1p(-weight)
 
   def logDensityOfData(self,aux):
     [ctY,ctN] = aux.cts()
@@ -416,7 +418,7 @@ class SuffBernoulliOutputPSP(DiscretePSP):
     if value is True:
       return math.log(self.weight)
     else:
-      return math.log(1-self.weight)
+      return math.log1p(-self.weight)
 
   def logDensityOfData(self, aux):
     [ctY,ctN] = aux.cts()
@@ -424,7 +426,7 @@ class SuffBernoulliOutputPSP(DiscretePSP):
     # just for one?  The latter is the same, except for the
     # numCombinations term.
     # numCombinations = scipy.misc.comb(ctY + ctN,ctY) # TODO Do this directly in log space
-    return ctY * math.log(self.weight) + ctN * math.log(1 - self.weight) # + math.log(numCombinations)
+    return ctY * math.log(self.weight) + ctN * math.log1p(-self.weight) # + math.log(numCombinations)
 
 
 registerBuiltinSP("make_uc_beta_bernoulli",

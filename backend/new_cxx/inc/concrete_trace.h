@@ -70,7 +70,11 @@ struct ConcreteTrace : Trace
   /* Primitive getters */
   gsl_rng * getRNG();
   const gsl_rng * getRNG() const;
-  VentureValuePtr getValue(Node * node);
+  VentureValuePtr getValue(Node * node) {
+    VentureValuePtr answer = values[node];
+    assert(answer);
+    return answer;
+  };
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
