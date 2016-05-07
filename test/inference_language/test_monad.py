@@ -151,6 +151,40 @@ def testPerModelLabelNamespaceForget():
       (forget 'foo)))
 """)
 
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetAssume():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (assume foo (normal 0 1))
+    (m <- (new_model))
+    (in_model m
+      (assume foo (gamma 1 1)))
+    (forget 'foo)
+    (in_model m
+      (forget 'foo)))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetAssume2():
+  # The example Marco provided for Issue #540
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  ripl.execute_program("""
+define env = run(new_model());
+
+infer in_model(env, do(
+    assume(foo, normal(0, 1)),
+    observe(foo, 1.123, foo_obs),
+    assume(bar, normal(0, 1)),
+    observe(bar, 4.24, bar_obs)));
+
+infer in_model(env, do(
+    forget(quote(bar_obs)),
+    forget(quote(bar)),
+    forget(quote(foo_obs)),
+    forget(quote(foo))));
+""")
+
 @on_inf_prim("return")
 @on_inf_prim("action")
 def testReturnAndAction():
