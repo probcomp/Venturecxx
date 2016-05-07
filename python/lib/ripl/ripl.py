@@ -565,8 +565,8 @@ value to be returned as a dict annotating its Venture type.
         return value if type else u.strip_types(value)
 
     def predict_all(self, expression, type=False):
-        expression = self._ensure_parsed_expression(expression)
-        (pid, value) = self.sivm.core_sivm.engine.predict_all(expression)
+        i = {'instruction':'predict_all', 'expression':expression}
+        value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None, type=False):
@@ -788,7 +788,7 @@ Open issues:
         self._collect_value_of(d)
         return d
 
-    def force(self, expression, value):
+    def force(self, expression, value, type=False):
         i = {'instruction':'force', 'expression':expression, 'value':value}
         self.execute_instruction(i)
         return None
@@ -799,8 +799,8 @@ Open issues:
         return value if type else u.strip_types(value)
 
     def sample_all(self, expression, type=False):
-        expression = self._ensure_parsed_expression(expression)
-        value = self.sivm.core_sivm.engine.sample_all(expression)
+        i = {'instruction':'sample_all', 'expression':expression}
+        value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def continuous_inference_status(self):

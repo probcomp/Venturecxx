@@ -51,6 +51,7 @@ class CoreSivm(object):
         'labeled_report',
         'observe',
         'predict',
+        'predict_all',
         'report',
         'start_continuous_inference',
         'stop_continuous_inference',
@@ -150,6 +151,12 @@ class CoreSivm(object):
         label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
         did, val = self.engine.labeled_predict(label, exp)
         return {'directive_id': did, 'value': val}
+
+    def _do_predict_all(self,instruction):
+        exp = utils.validate_arg(instruction,'expression',
+                utils.validate_expression,modifier=_modify_expression, wrap_exception=False)
+        did, val = self.engine.predict_all(exp)
+        return {"directive_id":did, "value":val}
 
     def _do_forget(self,instruction):
         did = utils.validate_arg(instruction,'directive_id',

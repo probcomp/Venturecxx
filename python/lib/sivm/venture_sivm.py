@@ -44,6 +44,7 @@ class VentureSivm(object):
         'labeled_get_directive',
         'list_directives',
         'sample',
+        'sample_all',
     }
     _core_instructions = {
         'assume',
@@ -62,6 +63,7 @@ class VentureSivm(object):
         'labeled_report',
         'observe',
         'predict',
+        'predict_all',
         'report',
         'start_continuous_inference',
         'stop_continuous_inference',
@@ -166,6 +168,7 @@ class VentureSivm(object):
                 'labeled_predict',
                 'observe',
                 'predict',
+                'predict_all',
         ]:
             exp = utils.validate_arg(instruction,'expression',
                     utils.validate_expression, wrap_exception=False)
@@ -196,7 +199,8 @@ class VentureSivm(object):
                 print traceback.format_exc()
                 raise e, None, info[2]
             finally:
-                if instruction_type in ['define','assume','observe','predict','evaluate','infer']:
+                if instruction_type in ['define','assume','observe',
+                        'predict','predict_all','evaluate','infer']:
                     # After annotation completes, clear the syntax
                     # dictionaries, because the instruction was
                     # (presumably!) not recorded in the underlying
@@ -397,7 +401,7 @@ class VentureSivm(object):
                       for did in sorted(self.directive_dict.keys())]
         return { "directives" :
                  [c for c in candidates
-                  if c['instruction'] in ['assume', 'observe', 'predict']] }
+                  if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']] }
 
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id',
@@ -439,6 +443,21 @@ class VentureSivm(object):
                 utils.validate_expression, wrap_exception=False)
         inst1 = {
                 'instruction' : 'predict',
+                'expression' : exp,
+                }
+        o1 = self._call_core_sivm_instruction(inst1)
+        inst2 = {
+                'instruction' : 'forget',
+                'directive_id' : o1['directive_id'],
+                }
+        self._call_core_sivm_instruction(inst2)
+        return {'value':o1['value']}
+
+    def _do_sample_all(self, instruction):
+        exp = utils.validate_arg(instruction,'expression',
+                utils.validate_expression, wrap_exception=False)
+        inst1 = {
+                'instruction' : 'predict_all',
                 'expression' : exp,
                 }
         o1 = self._call_core_sivm_instruction(inst1)

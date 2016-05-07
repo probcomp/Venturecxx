@@ -505,7 +505,7 @@ general-purpose inference programs except particle Gibbs.
   return wrap
 
 def doingParticleGibbs():
-  return config["infer"].startswith("(pgibbs")
+  return config["infer"].startswith("(pgibbs") or config["infer"].startswith("(func_pgibbs")
 
 def skipWhenInParallel(reason):
   def wrap(f):
