@@ -87,6 +87,10 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     return (baseAddr, self.model.define(baseAddr,id,datum))
 
+  def labeled_assume(self, label, id, datum):
+    baseAddr = self.nextBaseAddr()
+    return (baseAddr, self.model.labeled_define(label, baseAddr, id, datum))
+
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     values = self.model.evaluate(baseAddr, datum)
@@ -96,6 +100,11 @@ class Engine(object):
     (did, answers) = self.predict_all(datum)
     return (did, answers[0])
 
+  def labeled_predict(self, label, datum):
+    baseAddr = self.nextBaseAddr()
+    values = self.model.labeled_evaluate(label, baseAddr, datum)
+    return (baseAddr, values[0])
+
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
@@ -103,9 +112,26 @@ class Engine(object):
       weights = self.incorporate()
     return (baseAddr, weights)
 
+  def labeled_observe(self, label, datum, val):
+    baseAddr = self.nextBaseAddr()
+    self.model.labeled_observe(label, baseAddr, datum, val)
+    if True: # TODO: add flag to toggle auto-incorporation
+      weights = self.incorporate()
+    return (baseAddr, weights)
+
   def forget(self,directiveId):
     weights = self.model.forget(directiveId)
     return weights
+
+  def labeled_forget(self, label):
+    weights = self.model.labeled_forget(label)
+    return weights
+
+  def get_directive_id(self, label):
+    return self.model.get_directive_id(label)
+
+  def get_directive_label(self, did):
+    return self.model.get_directive_label(did)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -135,11 +161,20 @@ class Engine(object):
   def freeze(self,directiveId):
     self.model.freeze(directiveId)
 
+  def labeled_freeze(self, label):
+    self.model.labeled_freeze(label)
+
   def report_value(self,directiveId):
     return self.model.report_value(directiveId)
 
+  def labeled_report_value(self, label):
+    return self.model.labeled_report_value(label)
+
   def report_raw(self,directiveId):
     return self.model.report_raw(directiveId)
+
+  def labeled_report_raw(self, label):
+    return self.model.labeled_report_raw(label)
 
   def register_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
