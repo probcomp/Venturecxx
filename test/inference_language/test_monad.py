@@ -138,6 +138,19 @@ def testPerModelLabelNamespaceSmoke():
       (do (observe (gamma 1 1) 2 foo))))
 """)
 
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForget():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (observe (normal 0 1) 3 foo)
+    (m <- (new_model))
+    (in_model m
+      (observe (gamma 1 1) 2 foo))
+    (forget 'foo)
+    (in_model m
+      (forget 'foo)))
+""")
+
 @on_inf_prim("return")
 @on_inf_prim("action")
 def testReturnAndAction():
