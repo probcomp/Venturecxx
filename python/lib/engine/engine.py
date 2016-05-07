@@ -34,7 +34,6 @@ class Engine(object):
   def __init__(self, backend, seed, persistent_inference_trace=True):
     self._py_rng = random.Random(seed)
     self.model = self.new_model(backend)
-    self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
     import venture.lite.inference_sps as inf
@@ -227,14 +226,12 @@ class Engine(object):
 
   def in_model(self, model, action):
     current_model = self.model
-    current_swapped_status = self.swapped_model
     self.model = model
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
     stack_dict_action = {"type":"SP", "value":action}
     program = [v.sym("run"), v.quote(stack_dict_action)]
     try:
-      self.swapped_model = True
       with self.inference_trace():
         did = self._do_raw_evaluate(program)
         ans = self.infer_trace.extractRaw(did)
@@ -242,7 +239,6 @@ class Engine(object):
         return (ans, model)
     finally:
       self.model = current_model
-      self.swapped_model = current_swapped_status
 
   @contextmanager
   def _particle_swapping(self, action):
