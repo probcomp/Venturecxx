@@ -145,8 +145,7 @@ def careful_exp(x):
   try:
     return math.exp(x)
   except OverflowError:
-    if x > 0: return float("inf")
-    else: return float("-inf")
+    return float("inf")
 
 def logistic(x):
   # logistic never overflows, but e^{-x} does if x is much less than
