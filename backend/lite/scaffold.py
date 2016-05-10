@@ -30,7 +30,7 @@ class Scaffold(object):
     self.absorbing = absorbing if absorbing else set() # Set Node
     self.aaa = aaa if aaa else set() # Set Node
     self.border = border if border else [] # [[Node]]
-    self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
+    self.lkernels = lkernels if lkernels else {} # {Address:LKernel}
     self.brush = brush if brush else set() # Set Node
     self.drg = drg if drg else set() # Set Node
     # Store the drg for introspection; not directly read by regen/detach
@@ -44,8 +44,8 @@ class Scaffold(object):
   def isResampling(self,node): return node in self.regenCounts
   def isAbsorbing(self,node): return node in self.absorbing
   def isAAA(self,node): return node in self.aaa
-  def hasLKernel(self,node): return node in self.lkernels
-  def getLKernel(self,node): return self.lkernels[node]
+  def hasLKernel(self,node): return node.address in self.lkernels
+  def getLKernel(self,node): return self.lkernels[node.address]
   def getPNode(self):
     assert len(self.setsOfPNodes) == 1
     pnodes = []
@@ -286,7 +286,7 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
   return regenCounts
 
 def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
-  lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
+  lkernels = {node.address: trace.pspAt(node).getAAALKernel() for node in aaa}
   if useDeltaKernels:
     for node in drg - aaa:
       if not isOutputNode(node): continue
@@ -295,7 +295,9 @@ def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
       # is in the "joint-delta-kernels" footnote of doc/on-latents.md
       for o in node.operandNodes:
         if o in drg: continue
-      if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel(deltaKernelArgs)
+      if trace.pspAt(node).hasDeltaKernel():
+        lkernels[node.address] = \
+          trace.pspAt(node).getDeltaKernel(deltaKernelArgs)
   return lkernels
 
 def assignBorderSequnce(border,indexAssignments,numIndices):

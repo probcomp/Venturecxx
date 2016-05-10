@@ -30,7 +30,7 @@ def registerVariationalLKernels(trace,scaffold):
        not trace.isConstrainedAt(node) and \
        trace.pspAt(node).hasVariationalLKernel() and \
        not scaffold.isResampling(node.operatorNode):
-      scaffold.lkernels[node] = \
+      scaffold.lkernels[node.address] = \
           trace.pspAt(node).getVariationalLKernel(TraceNodeArgs(trace,node))
       hasVariational = True
   return hasVariational
@@ -53,7 +53,10 @@ class MeanfieldOperator(object):
       gradients = {}
       gain = regenAndAttach(trace,scaffold,False,OmegaDB(),gradients)
       detachAndExtract(trace,scaffold)
-      for node,lkernel in scaffold.lkernels.iteritems():
+      address_to_node = \
+        {node.address: node for node in scaffold.regenCounts}
+      for address, lkernel in scaffold.lkernels.iteritems():
+        node = address_to_node[address]
         if isinstance(lkernel,VariationalLKernel):
           assert node in gradients
           lkernel.updateParameters(gradients[node],gain,self.stepSize)

@@ -31,12 +31,12 @@ def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues):
     if pnode in scaffold.brush:
       raise Exception("Cannot deterministically propose values for nodes " \
                       "whose existence is conditional")
-    scaffold.lkernels[pnode] = \
+    scaffold.lkernels[pnode.address] = \
         DeterministicLKernel(trace.pspAt(pnode), currentValue)
 
 def unregisterDeterministicLKernels(_trace, scaffold, pnodes):
   for pnode in pnodes:
-    del scaffold.lkernels[pnode]
+    del scaffold.lkernels[pnode.address]
 
 def getCurrentValuesWithAddresses(trace, pnodes):
   return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
@@ -48,7 +48,7 @@ def registerDeterministicLKernelsByAddress(
     assert not isinstance(currentValue, list)
     assert addr in nodes
     node = nodes[addr]
-    scaffold.lkernels[node] = \
+    scaffold.lkernels[node.address] = \
         DeterministicLKernel(trace.pspAt(node), currentValue)
 
 def mixMH(trace, indexer, operator):
