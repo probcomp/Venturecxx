@@ -350,10 +350,12 @@ Specific micro-benchmarks:
 - SMC or particle filter on simple series model in Puma/Lite.  Stresses:
   - resampling
   - inference program interpretation, somewhat
+- Same thing multiprocess.  Stresses distributed resampling.
 - long complicated Markov chain (with many operators) as a tall
   inference program repeat.  Stresses:
   - inference interpretation
   - crossing whatever barriers
+- Same thing multiprocess (parallel chains).  Stresses lockstep execution.
 - long complicated Markov chain as a Python program.  Stresses:
   - jumping in and out of inference program interpretation; parsing
 
