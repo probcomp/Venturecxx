@@ -71,7 +71,7 @@ def ripl_builder(args, backend):
     plugins = []
     if args and args.seed:
       r = backend.make_combined_ripl(persistent_inference_trace = True,
-                                     entropy=int(args.seed))
+                                     seed=int(args.seed))
     else:
       r = backend.make_combined_ripl(persistent_inference_trace = True)
 
