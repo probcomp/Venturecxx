@@ -119,7 +119,7 @@ weeks of February 2016.
       `draw_scaffold` does.
     - However, `draw_scaffold` is completely useless because it is not
       tied to the source code.  Can we make a better instance of both?
-  - Reproducibility: Venture programs should be deterministic given a
+  + Reproducibility: Venture programs should be deterministic given a
     fixed seed, for reproducibility of results. (#138)
 - Performance projects
   - Asymptotic performance assessment: We should make it easy to
