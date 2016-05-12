@@ -650,7 +650,8 @@ class Trace(object):
     pnodes = scaffold.getPrincipalNodes()
     from infer.mh import getCurrentValues, registerDeterministicLKernels
     currentValues = getCurrentValues(self, pnodes)
-    registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
+    registerDeterministicLKernels(self, scaffold, pnodes, currentValues,
+      unconditional=True)
     (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
     xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
     # Old state restored, don't need to do anything else
