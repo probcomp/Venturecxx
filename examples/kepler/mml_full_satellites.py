@@ -1,3 +1,20 @@
+# Copyright (c) 2013-2016 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -6,30 +23,41 @@ import numpy as np
 import bayeslite
 import bdbcontrib
 
+
+from bdbcontrib.bql_utils import query
 from bdbcontrib.metamodels.composer import Composer
 from bdbcontrib.predictors import keplers_law
-from bdbcontrib.predictors import random_forest
 from bdbcontrib.predictors import multiple_regression
+from bdbcontrib.predictors import random_forest
 
-create = False
-if create:
+def create_bdb():
     # Load the bdb.
     timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
     bdb = bayeslite.bayesdb_open('bdb/%s.bdb' % timestamp)
 
     # Load satellites data.
     bayeslite.bayesdb_read_csv_file(bdb, 'satellites',
-        'resources/satellites_full.csv', header=True, create=True)
-    bdbcontrib.nullify(bdb, 'satellites', '')
+        'resources/satellites_all.csv', header=True, create=True)
+    bdbcontrib.nullify(bdb, 'satellites', 'NaN')
+    return bdb
 
+def retrieve_bdb(filename):
     # Register MML models.
+    bdb = bayeslite.bayesdb_open(filename)
     composer = Composer()
     composer.register_foreign_predictor(keplers_law.KeplersLaw)
     composer.register_foreign_predictor(random_forest.RandomForest)
     composer.register_foreign_predictor(multiple_regression.MultipleRegression)
     bayeslite.bayesdb_register_metamodel(bdb, composer)
+    return bdb
 
-def create_initialize_analyze():
+def create_initialize_analyze(bdb):
+    # Create default gpm.
+    bdb.execute('''
+        CREATE GENERATOR t11 FOR satellites USING crosscat(
+            GUESS(*));''')
+    bdb.execute('INITIALIZE 64 MODELS FOR t11;')
+    bdb.execute('ANALYZE t11 FOR 200 ITERATION WAIT;')
     # Create the GPMs.
     bdb.execute('''
         CREATE GENERATOR t12 FOR satellites USING composer(
@@ -65,11 +93,12 @@ def create_initialize_analyze():
         );''')
 
     print 'Init'
-    bdb.execute('INITIALIZE 1 MODEL FOR t12;')
+    bdb.execute('INITIALIZE 64 MODELS FOR t12;')
     print 'Analyz'
-    bdb.execute('ANALYZE t12 FOR 1500 ITERATION WAIT;')
+    bdb.execute('ANALYZE t12 FOR 150 ITERATION WAIT;')
 
-def plot_T_given_CO():
+
+def plot_T_given_CO(bdb):
     create = False
     if create:
         leo = bdb.execute('''SELECT Period_minutes FROM satellites WHERE
@@ -129,3 +158,43 @@ def plot_T_given_CO():
         a.set_ylabel('Period (minutes)', fontweight='bold', size=16)
         a.grid()
         a.grid()
+
+
+def plot_period_perigee_given_purpose(bdb):
+    # bdb.execute("""
+    #     CREATE TABLE period_perigee_given_purpose_t11 AS
+    #         SIMULATE perigee_km, period_minutes FROM t11
+    #         GIVEN purpose = 'Communications' LIMIT 1000;""")
+
+    # bdb.execute("""
+    #     CREATE TABLE period_perigee_given_purpose_t12 AS
+    #         SIMULATE perigee_km, period_minutes FROM t12
+    #         GIVEN purpose = 'Communications' LIMIT 100;""")
+
+    t11 = np.asarray(bdb.execute(
+        'SELECT * FROM period_perigee_given_purpose_t11 LIMIT 75;').fetchall())
+    t12 = np.asarray(bdb.execute(
+        'SELECT * FROM period_perigee_given_purpose_t12 LIMIT 75;').fetchall())
+
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    fig.suptitle('SIMULATE period_minutes, perigee_km '
+        'GIVEN purpose = \'Communications\'', fontweight='bold', fontsize=18)
+
+    ax[0].scatter(t11[:,0], t11[:,1], color='r', label='Crosscat',
+        s=8)
+    ax[0].set_xlim(-1000, 48000)
+    ax[0].set_ylim(-100, 1800)
+
+    ax[1].scatter(t12[:,0], t12[:,1], color='g', label='Crosscat + Kepler',
+        s=8)
+    ax[1].set_xlim(*ax[0].get_xlim())
+    ax[1].set_ylim(*ax[0].get_ylim())
+
+    for a in ax:
+        a.grid()
+        a.legend(framealpha=0, loc='upper left')
+        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=12)
+        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=12)
+
+bdb = retrieve_bdb('bdb/20160513-122941.bdb')
+plot_period_perigee_given_purpose(bdb)
