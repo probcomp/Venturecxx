@@ -245,8 +245,9 @@ def plot_period_perigee_cluster(bdb):
     period_error = (period_theory - t11[:,1])**2
     outliers = np.argsort(period_error)[::-1][:25]
     cluster_kp = np.zeros(len(t11), dtype=int)
-    cluster_kp[outliers] = 1
-    colors_kp = ['red', 'green']
+    cluster_kp[outliers[:12]] = 1
+    cluster_kp[outliers[12:]] = 2
+    colors_kp = ['red', 'green', 'blue']
 
     # Prepare figure.
     fig, ax = plt.subplots(nrows=1, ncols=2)
