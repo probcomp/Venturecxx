@@ -17,18 +17,41 @@
 
 from datetime import datetime
 
+import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 
 import bayeslite
 import bdbcontrib
 
-
 from bdbcontrib.bql_utils import query
 from bdbcontrib.metamodels.composer import Composer
 from bdbcontrib.predictors import keplers_law
 from bdbcontrib.predictors import multiple_regression
 from bdbcontrib.predictors import random_forest
+
+
+# Global constants.
+GM = 398600.4418
+EARTH_RADIUS = 6378
+T = 1436
+
+# Helper functions.
+def compute_period(apogee_km, perigee_km):
+    """Computes the period of the satellite in seconds given the apogee_km
+    and perigee_km of the satellite.
+    """
+    a = 0.5*(abs(apogee_km) + abs(perigee_km)) + EARTH_RADIUS
+    T = 2 * np.pi * np.sqrt(a**3/GM) / 60.
+    return T
+
+def compute_a(T):
+    a = ((60*T/(2*np.pi))**2 * GM)**(1./3)
+    return a
+
+def compute_T(a):
+    T = 2 * np.pi * np.sqrt(a**3/GM) / 60.
+    return T
 
 def create_bdb():
     # Load the bdb.
@@ -161,40 +184,106 @@ def plot_T_given_CO(bdb):
 
 
 def plot_period_perigee_given_purpose(bdb):
+    # Create the simulations.
     # bdb.execute("""
     #     CREATE TABLE period_perigee_given_purpose_t11 AS
     #         SIMULATE perigee_km, period_minutes FROM t11
     #         GIVEN purpose = 'Communications' LIMIT 1000;""")
-
     # bdb.execute("""
     #     CREATE TABLE period_perigee_given_purpose_t12 AS
     #         SIMULATE perigee_km, period_minutes FROM t12
     #         GIVEN purpose = 'Communications' LIMIT 100;""")
 
+    # Extract data to arrays.
     t11 = np.asarray(bdb.execute(
         'SELECT * FROM period_perigee_given_purpose_t11 LIMIT 75;').fetchall())
     t12 = np.asarray(bdb.execute(
         'SELECT * FROM period_perigee_given_purpose_t12 LIMIT 75;').fetchall())
 
+    # Prepare figure.
     fig, ax = plt.subplots(nrows=1, ncols=2)
     fig.suptitle('SIMULATE period_minutes, perigee_km '
         'GIVEN purpose = \'Communications\'', fontweight='bold', fontsize=18)
 
-    ax[0].scatter(t11[:,0], t11[:,1], color='r', label='Crosscat',
-        s=8)
+    # Scatter crosscat.
+    ax[0].scatter(
+        t11[:,0], t11[:,1], color='r', label='Crosscat', s=8)
     ax[0].set_xlim(-1000, 48000)
     ax[0].set_ylim(-100, 1800)
 
-    ax[1].scatter(t12[:,0], t12[:,1], color='g', label='Crosscat + Kepler',
-        s=8)
-    ax[1].set_xlim(*ax[0].get_xlim())
-    ax[1].set_ylim(*ax[0].get_ylim())
+    # Scatter Kepler + Crosscat.
+    ax[1].scatter(
+        t12[:,0], t12[:,1], color='g', label='Crosscat + Kepler', s=8)
+    ax[1].set_xlim(*ax[1].get_xlim())
+    ax[1].set_ylim(*ax[1].get_ylim())
 
+    # Grids and legends.
     for a in ax:
         a.grid()
         a.legend(framealpha=0, loc='upper left')
         a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=12)
         a.set_ylabel('Period [mins]', fontweight='bold', fontsize=12)
 
+
+def plot_period_perigee_cluster(bdb):
+    # Select empirical data from joint.
+    t11 = query(bdb,
+        """SELECT perigee_km, period_minutes, apogee_km
+            FROM satellites
+            WHERE apogee_km IS NOT NULL
+                AND apogee_km IS NOT NULL
+                AND period_minutes IS NOT NULL""").as_matrix()
+
+    # Do heuristic KNN clustering to mask the crosscat clustering.
+    from sklearn.cluster import KMeans
+    cluster_km = KMeans(n_clusters=12, random_state=1).fit_predict(t11)
+    colors_km = cm.nipy_spectral(np.linspace(0, 1, len(set(cluster_km))))
+
+    # Do outlier computation to compute Kepler violations.
+    from bdbcontrib.predictors.keplers_law import satellite_period_minutes
+    period_theory = satellite_period_minutes(t11[:,2], t11[:,0])
+    period_error = (period_theory - t11[:,1])**2
+    outliers = np.argsort(period_error)[::-1][:25]
+    cluster_kp = np.zeros(len(t11), dtype=int)
+    cluster_kp[outliers] = 1
+    colors_kp = ['red', 'green']
+
+    # Prepare figure.
+    fig, ax = plt.subplots(nrows=1, ncols=2)
+    fig.suptitle('SELECT perigee_km, period_minutes FROM satellites',
+        fontweight='bold', fontsize=18)
+
+    ax[0].set_title('Crosscat GPM Clustering', fontweight='bold')
+    for ix in set(cluster_km):
+        points = t11[cluster_km==ix]
+        print ix, len(points)
+        ax[0].scatter(points[:,0], points[:,1], color=colors_km[ix])
+
+    ax[1].set_title('Kepler Conditional GPM Clustering', fontweight='bold')
+    for ix in set(cluster_kp):
+        points = t11[cluster_kp==ix]
+        print ix, len(points)
+        ax[1].scatter(points[:,0], points[:,1], color=colors_kp[ix])
+
+    #  -- Parameterize by eccentricity.
+    perigees = np.linspace(np.min(t11[:,0]), 48000, 100)
+    for ecc in [.0, .9]:
+        apogees_ecc = (perigees + EARTH_RADIUS) * (1+ecc)/(1-ecc) - EARTH_RADIUS
+        periods_ecc = compute_period(apogees_ecc, perigees)
+        ax[0].plot(perigees, periods_ecc, color='purple', linestyle='dashed',
+            label='Theoretical [ecc={:1.1f}]'.format(ecc))
+        ax[1].plot(perigees, periods_ecc, color='purple', linestyle='dashed',
+            label='Theoretical [ecc={:1.1f}]'.format(ecc))
+
+    # Grids and legends.
+    for a in ax:
+        a.set_xlim([-2500, 48000])
+        a.set_ylim([-500, 5000])
+        a.grid()
+        a.legend(framealpha=0, loc='upper right')
+        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=12)
+        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=12)
+
 bdb = retrieve_bdb('bdb/20160513-122941.bdb')
-plot_period_perigee_given_purpose(bdb)
+# plot_period_perigee_given_purpose(bdb)
+plot_period_perigee_cluster(bdb)
