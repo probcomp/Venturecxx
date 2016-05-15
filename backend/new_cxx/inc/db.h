@@ -39,7 +39,8 @@ struct DB
 
   bool hasESRParent(shared_ptr<SP> sp, FamilyID id);
   RootOfFamily getESRParent(shared_ptr<SP> sp, FamilyID id);
-  void registerSPFamily(shared_ptr<SP> sp, FamilyID id, RootOfFamily esrParent);
+  void registerSPFamily(shared_ptr<SP> sp, FamilyID id,
+                        RootOfFamily esrParent);
 
   bool hasMadeSPAux(Node * makerNode);
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
