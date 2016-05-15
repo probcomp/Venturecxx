@@ -30,3 +30,9 @@ sample unquote(y) + 1;
 sample(unquote(y) + 2);
   ''', type=False)
   eq_(ans, [42.0, 43.0, 44.0])
+
+@on_inf_prim("unquote")
+def testUnquotePermitsModelMacroExpansion():
+  r = get_ripl()
+  ans = r.evaluate('(predict (let ((x (unquote (+ 2 2)))) (+ x x)))')
+  eq_(ans, 8.0)
