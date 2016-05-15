@@ -285,6 +285,22 @@ def plot_period_perigee_cluster(bdb):
         a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=12)
         a.set_ylabel('Period [mins]', fontweight='bold', fontsize=12)
 
+    # Now create a plot of the sample errors.
+    fig, ax = plt.subplots()
+    for ix in set(cluster_kp):
+        samples = period_error[cluster_kp==ix]
+        for i, s in enumerate(samples):
+            if i > 200: break
+            ax.vlines(s, 0, 1., linewidth=1, color=colors_kp[ix])
+        print ix, len(samples)
+    ax.set_xlabel(
+        'Magnitude of Deviation from Kepler\'s 3rd Law [minutes^2]',
+        fontweight='bold', fontsize=12)
+    # ax.set_xlim(0, ax.get_xlim()[1])
+    ax.set_xscale('log')
+    ax.set_ylim(0, 5)
+    ax.grid()
+
 bdb = retrieve_bdb('bdb/20160513-122941.bdb')
 # plot_period_perigee_given_purpose(bdb)
 plot_period_perigee_cluster(bdb)
