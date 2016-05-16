@@ -29,7 +29,7 @@ weeks of February 2016.
       for such jobs, especially if cross-machine communication is
       involved.
     - Some notes and candidate user stories of sorts in
-      doc/axch-dev-thrust-menu.org under "Project: Desing a good
+      doc/axch-dev-thrust-menu.org under "Project: Design a good
       experiment runner" and under "Project: Get cloud infrastructure"
 - Capability completion projects
   - Implement recursively nested particle sets.
