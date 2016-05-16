@@ -267,14 +267,28 @@ def plot_period_perigee_cluster(bdb):
         ax[1].scatter(points[:,0], points[:,1], color=colors_kp[ix])
 
     #  -- Parameterize by eccentricity.
+    ecc = [.0, .9]
     perigees = np.linspace(np.min(t11[:,0]), 48000, 100)
-    for ecc in [.0, .9]:
-        apogees_ecc = (perigees + EARTH_RADIUS) * (1+ecc)/(1-ecc) - EARTH_RADIUS
-        periods_ecc = compute_period(apogees_ecc, perigees)
-        ax[0].plot(perigees, periods_ecc, color='purple', linestyle='dashed',
-            label='Theoretical [ecc={:1.1f}]'.format(ecc))
-        ax[1].plot(perigees, periods_ecc, color='purple', linestyle='dashed',
-            label='Theoretical [ecc={:1.1f}]'.format(ecc))
+    compute_apogees = lambda ecc:\
+        (perigees + EARTH_RADIUS) * (1+ecc)/(1-ecc) - EARTH_RADIUS
+    apogees_ecc = map(compute_apogees, ecc)
+    periods_ecc = [compute_period(ap_ecc, perigees) for ap_ecc in apogees_ecc]
+
+    # ax[0].plot(perigees, periods_ecc[0], color='purple', linestyle='dashed',
+    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[0]))
+    # ax[0].plot(perigees, periods_ecc[1], color='purple', linestyle='dashed',
+    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[1]))
+    ax[0].fill_between(
+        perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
+        label='Theoretically Feasible Orbits')
+
+    # ax[1].plot(perigees, periods_ecc[0], color='purple', linestyle='dashed',
+    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[0]))
+    # ax[1].plot(perigees, periods_ecc[1], color='purple', linestyle='dashed',
+    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[1]))
+    ax[1].fill_between(
+        perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
+        label='Theoretically Feasible Orbits')
 
     # Grids and legends.
     for a in ax:
