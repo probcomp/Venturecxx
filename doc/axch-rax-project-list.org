@@ -32,23 +32,7 @@ weeks of February 2016.
       doc/axch-dev-thrust-menu.org under "Project: Design a good
       experiment runner" and under "Project: Get cloud infrastructure"
 - Capability completion projects
-  - Implement recursively nested particle sets.
-    (https://github.com/probcomp/Venturecxx/blob/master/doc/on-non-probability-measures.md#benefits,
-    first bullet)
-    - Could help with particle-specific inference programs if the
-      inference program interpreter is also made recursively nestable.
-  - Implement particle-specific inference programs.
-    - demo case: compound inference programs that make their random choices
-      independently for each particle
-    - alternative description: `for_each_particle` that really works
-      - candidate name: over :: ST OneParticle a -> ST ManyParticles [a]
-    - can maintain per-particle inference traces, with their own
-      independent `define`; or can ban `define` from the argument of
-      `over`.
-    - Presumably eases #228 (parallelize custom Markov chains).
-    - Could also fix #396 (parallel execution is lockstep).
-    - Draft design notes in doc/axch-dev-thrust-menu.org under "Better
-      for_each_particle".
+  - Implement recursive particle-specific inference programs (#566).
   - Expose the local posterior to the inference programming language (#199).
     - Seems to impede a lot of stuff
     - Actually really expose detach and regen (with gradients) usefully
