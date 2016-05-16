@@ -289,6 +289,11 @@ class VentureSivm(object):
             # never entered into the syntax_dict.
             print "Warning: skipping annotating did %s, assumed to be from the inference prelude" % did
             return None
+        if self._hack_skip_synthetic_in_model_directive(index):
+            # Engine.in_model synthesizes an extra directive, which is
+            # not routed through here but can appear in stack traces.
+            print "Warning: skipping annotating did %s, assumed to be synthesized by in_model" % did
+            return None
         exp, syntax = self._get_syntax_record(did)
         index = index[1:]
 
@@ -303,6 +308,14 @@ class VentureSivm(object):
         # <= because directive IDs are 1-indexed (see Engine.nextBaseAddr)
         return self.core_sivm.engine.persistent_inference_trace \
             and did <= len(e._inference_prelude())
+
+    def _hack_skip_synthetic_in_model_directive(self, index):
+        # Actually, it may be sound to always skip indexes of length
+        # 1, since they hardly carry any useful data anyway.  Could
+        # instrument this check to see how often length-1 indexes are
+        # annotatable.
+        did = index[0]
+        return did not in self.syntax_dict and len(index) == 1
 
     def _register_executed_instruction(self, instruction, predicted_did,
             forgotten_did, response):
