@@ -333,3 +333,20 @@ foo
 ^^^
 """ % (form, "^" * len(form)),
   ripl.evaluate, form)
+
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
+def testAnnotateInModelError():
+  # Tests Github Issue #538.
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  err.assert_error_message_contains("""\
+*** evaluation: Nested ripl operation signalled an error
+(autorun (in_model (run (new_model)) (action (run (sample (add foo 1))))))
+                                                  ^^^^^^^^^^^^^^^^^^^^
+Caused by
+*** evaluation: Cannot find symbol 'foo'
+(add foo 1.0)
+     ^^^
+""",
+  ripl.evaluate, "in_model(run(new_model()), action(run(sample(foo + 1))))")
