@@ -32,22 +32,33 @@ weeks of February 2016.
       doc/axch-dev-thrust-menu.org under "Project: Design a good
       experiment runner" and under "Project: Get cloud infrastructure"
 - Capability completion projects
-  - Implement recursive particle-specific inference programs (#566).
-  - Expose the local posterior to the inference programming language (#199).
-    - Seems to impede a lot of stuff
-    - Actually really expose detach and regen (with gradients) usefully
-      to the inference programming language, so that mh, custom mh, hmc,
-      and slice can be written sensibly in the inference programming
-      language.
-      - Does this depend on the nested particle set project to be able to
-        work over multiple chains?
-      - "fixed log density of regen" is useful to expose as a
-        differentiable deterministic function, so the programmer can
-        apply their own sophisticated routines to it.
-      - If, e.g., L-BFGS deals gracefully with hard edges, those could
-        perhaps be exposed to it in a reasonable way.
-    - Have more notes in doc/axch-dev-thrust-menu.org under
-      "Project: Regen/Detach as inference SPs"
+  - Inference programming for real.  The plan, in order:
+    - #566 (Recursive per-particle inference programs)
+      - Kills off or much eases all of
+        - #396 (non-lockstep parallel execution)
+        - #228 (parallel custom Markov chains)
+        - #227 (tutorial's custom markov chain failed horribly)
+        - #563 (is a model one estimate or many?)
+        - #564 (replicates of SMC runs)
+        - #271 (confusing stochastic errors in multiparticle programs)
+        - #565 (modeling directives in `for_each_particle`)
+        - Plausible per-particle random choices
+        - #519 (likelihood_weighting in the inference language)
+    - #501 (assessable inference actions) to make `on_subproblem` or any
+      kind of random-site M-H work
+      - Enables writing `mh` and simple custom proposals in the
+        inference language correctly
+    - #199 part 1 (multicallable local posterior function)
+    - #199 part 2 (deterministic local posterior function)
+      - Enables writing slice sampling in the inference language
+    - #199 part 3 (gradient of local posterior function)
+      - Enables writing HMC in the inference language
+    - #376 (export inference compounds to Python)
+      - Enables plugging in to third-party tools for inference or
+        optimization (L-BFGS, any standalone HMC implementations)
+    - There is an unfiled "#199 part 4": If, e.g., L-BFGS deals
+      gracefully with hard edges, those could perhaps be exposed to it
+      in a reasonable way as well.
   - Smoother Python integration: Venture should be happy to consume and
     produce Python functions.
     - Python callables should smoothly work as inference actions (functions?)
