@@ -254,13 +254,13 @@ def plot_period_perigee_cluster(bdb):
     # fig.suptitle('SELECT perigee_km, period_minutes FROM satellites',
     #     fontweight='bold', fontsize=18)
 
-    ax[0].set_title('Crosscat GPM Clustering', fontweight='bold')
+    ax[0].set_title('K-Means Clustering', fontweight='bold')
     for ix in set(cluster_km):
         points = t11[cluster_km==ix]
         print ix, len(points)
         ax[0].scatter(points[:,0], points[:,1], color=colors_km[ix])
 
-    ax[1].set_title('Kepler Conditional GPM Clustering', fontweight='bold')
+    ax[1].set_title('Kepler Clustering', fontweight='bold')
     for ix in set(cluster_kp):
         points = t11[cluster_kp==ix]
         print ix, len(points)
@@ -274,21 +274,22 @@ def plot_period_perigee_cluster(bdb):
     apogees_ecc = map(compute_apogees, ecc)
     periods_ecc = [compute_period(ap_ecc, perigees) for ap_ecc in apogees_ecc]
 
-    # ax[0].plot(perigees, periods_ecc[0], color='purple', linestyle='dashed',
-    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[0]))
-    # ax[0].plot(perigees, periods_ecc[1], color='purple', linestyle='dashed',
-    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[1]))
     ax[0].fill_between(
-        perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
-        label='Theoretically Feasible Orbits')
+        perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2)
 
-    # ax[1].plot(perigees, periods_ecc[0], color='purple', linestyle='dashed',
-    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[0]))
-    # ax[1].plot(perigees, periods_ecc[1], color='purple', linestyle='dashed',
-    #     label='Theoretical [ecc={:1.1f}]'.format(ecc[1]))
     ax[1].fill_between(
         perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
-        label='Theoretically Feasible Orbits')
+        label='Theoretically\nFeasible Orbits')
+
+    # Find names of four satellites.
+    # sat1 = t11[(t11['Period_minutes']<100) & (t11['Perigee_km']>30000)].iloc[0]
+    # name1, perigee1, period1 = 'Advanced Orion 6', 35771, 23.94
+
+    # sat2 = t11[(t11['Period_minutes']>3000) & (t11['Perigee_km']>15000)].iloc[0]
+    # name1, perigee1, period1 = 'Rumba', 17240, 3431
+
+    # sat3 = t11[(t11['Period_minutes']>3000) & (t11['Perigee_km']>15000)].iloc[0]
+    # name1, perigee1, period1 = 'Rumba', 17240, 3431
 
     # Grids and legends.
     for a in ax:
@@ -296,18 +297,20 @@ def plot_period_perigee_cluster(bdb):
         a.set_ylim([-500, 5000])
         a.grid()
         a.legend(framealpha=0, loc='upper right')
-        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=12)
-        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=12)
+        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=16)
+        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=16)
+
+    ax[1].set_ylabel('')
 
     # Now create a plot of the sample errors.
-    import seaborn as sns
+    # import seaborn as sns
     fig, ax = plt.subplots()
-    bins = [100, 50, 50]
+    bins = [50, 50, 50]
     for ix in set(cluster_kp):
         samples = np.log(period_error[cluster_kp==ix])
         ax.hist(samples, bins=bins[ix], alpha=1, color=colors_kp[ix], normed=0)
     ax.set_xlabel(
-        'Magnitude of Deviation from Kepler\'s 3rd Law [log minutes]',
+        'Magntiude of Deviation from Kepler\'s Law [log minutes]',
         fontweight='bold', fontsize=16)
     ax.set_ylabel(
         'Number of Satellites',
