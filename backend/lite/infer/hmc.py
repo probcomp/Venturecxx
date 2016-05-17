@@ -69,6 +69,8 @@ class GradientOfRegen(object):
       return self.regen(values)
 
   def regen(self, values):
+    for pnode in self.pnodes:
+      self.scaffold.delLKernel(pnode)
     registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
     return regenAndAttach(self.trace, self.scaffold, False, OmegaDB(), {})
 

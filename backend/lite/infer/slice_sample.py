@@ -28,8 +28,8 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
   from ..particle import Particle
   def f(x):
     with fixed_randomness:
-      scaffold.lkernels[pnode.address] = \
-        DeterministicLKernel(psp,VentureNumber(x))
+      scaffold.delLKernel(pnode)
+      scaffold.setLKernel(pnode, DeterministicLKernel(psp,VentureNumber(x)))
       # The particle is a way to regen without clobbering the underlying trace
       # TODO Do repeated regens along the same scaffold actually work?
       return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),{})
@@ -66,7 +66,7 @@ class SliceOperator(object):
     psp = trace.pspAt(pnode)
     currentVValue = trace.valueAt(pnode)
     currentValue = currentVValue.getNumber()
-    scaffold.lkernels[pnode.address] = DeterministicLKernel(psp,currentVValue)
+    scaffold.setLKernel(pnode, DeterministicLKernel(psp,currentVValue))
 
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold)
 
@@ -79,7 +79,8 @@ class SliceOperator(object):
     proposedValue = self.sampleInterval(f,currentValue,logy,L,R,trace.py_rng)
     xiLD = f(proposedValue)
     proposedVValue = VentureNumber(proposedValue)
-    scaffold.lkernels[pnode.address] = DeterministicLKernel(psp,proposedVValue)
+    scaffold.delLKernel(pnode)
+    scaffold.setLKernel(pnode, DeterministicLKernel(psp,proposedVValue))
     xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
 
     # Cancel out weight compensation.  From Puma's "slice.cxx":

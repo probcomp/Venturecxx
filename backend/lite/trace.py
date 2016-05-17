@@ -410,9 +410,8 @@ class Trace(object):
 #      print "PROPAGATE", node, appNode
       scaffold = constructScaffold(self, [set([appNode])])
       rhoWeight, _ = detachAndExtract(self, scaffold)
-      assert appNode.address not in scaffold.lkernels
-      scaffold.lkernels[appNode.address] = \
-        DeterministicLKernel(self.pspAt(appNode), val)
+      scaffold.setLKernel(appNode,
+        DeterministicLKernel(self.pspAt(appNode), val))
       xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
       # If xiWeight is -inf, we are in an impossible state, but that might be ok.
       # Finish constraining, to avoid downstream invariant violations.

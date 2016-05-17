@@ -70,6 +70,8 @@ class EnumerativeGibbsOperator(object):
         omegaDB = OmegaDB()
       xiParticle = self.copy_trace(trace)
       assertTorus(scaffold)
+      for pnode in pnodes:
+        scaffold.delLKernel(pnode)
       registerDeterministicLKernels(trace, scaffold, pnodes, newValues)
       xiParticles.append(xiParticle)
       xiWeights.append(
