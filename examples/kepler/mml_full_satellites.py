@@ -251,8 +251,8 @@ def plot_period_perigee_cluster(bdb):
 
     # Prepare figure.
     fig, ax = plt.subplots(nrows=1, ncols=2)
-    fig.suptitle('SELECT perigee_km, period_minutes FROM satellites',
-        fontweight='bold', fontsize=18)
+    # fig.suptitle('SELECT perigee_km, period_minutes FROM satellites',
+    #     fontweight='bold', fontsize=18)
 
     ax[0].set_title('Crosscat GPM Clustering', fontweight='bold')
     for ix in set(cluster_km):
@@ -300,20 +300,23 @@ def plot_period_perigee_cluster(bdb):
         a.set_ylabel('Period [mins]', fontweight='bold', fontsize=12)
 
     # Now create a plot of the sample errors.
+    import seaborn as sns
     fig, ax = plt.subplots()
+    bins = [100, 50, 50]
     for ix in set(cluster_kp):
-        samples = period_error[cluster_kp==ix]
-        for i, s in enumerate(samples):
-            if i > 200: break
-            ax.vlines(s, 0, 1., linewidth=1, color=colors_kp[ix])
-        print ix, len(samples)
+        samples = np.log(period_error[cluster_kp==ix])
+        ax.hist(samples, bins=bins[ix], alpha=1, color=colors_kp[ix], normed=0)
     ax.set_xlabel(
-        'Magnitude of Deviation from Kepler\'s 3rd Law [minutes^2]',
-        fontweight='bold', fontsize=12)
-    # ax.set_xlim(0, ax.get_xlim()[1])
-    ax.set_xscale('log')
-    ax.set_ylim(0, 5)
+        'Magnitude of Deviation from Kepler\'s 3rd Law [log minutes]',
+        fontweight='bold', fontsize=16)
+    ax.set_ylabel(
+        'Number of Satellites',
+        fontweight='bold', fontsize=16)
+    ax.set_yscale('log', basey=2)
     ax.grid()
+    # ax.set_xlim(0, ax.get_xlim()[1])
+    # ax.set_xscale('log')
+    # ax.set_ylim(0, 5)
 
 bdb = retrieve_bdb('bdb/20160513-122941.bdb')
 # plot_period_perigee_given_purpose(bdb)
