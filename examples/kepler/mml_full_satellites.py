@@ -251,16 +251,14 @@ def plot_period_perigee_cluster(bdb):
 
     # Prepare figure.
     fig, ax = plt.subplots(nrows=1, ncols=2)
-    # fig.suptitle('SELECT perigee_km, period_minutes FROM satellites',
-    #     fontweight='bold', fontsize=18)
 
-    ax[0].set_title('K-Means Clustering', fontweight='bold')
+    ax[0].set_title('K-Means Clustering', fontweight='bold', fontsize=18)
     for ix in set(cluster_km):
         points = t11[cluster_km==ix]
         print ix, len(points)
         ax[0].scatter(points[:,0], points[:,1], color=colors_km[ix])
 
-    ax[1].set_title('Kepler Clustering', fontweight='bold')
+    ax[1].set_title('Kepler Clustering', fontweight='bold', fontsize=18)
     for ix in set(cluster_kp):
         points = t11[cluster_kp==ix]
         print ix, len(points)
@@ -281,15 +279,30 @@ def plot_period_perigee_cluster(bdb):
         perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
         label='Theoretically\nFeasible Orbits')
 
-    # Find names of four satellites.
-    # sat1 = t11[(t11['Period_minutes']<100) & (t11['Perigee_km']>30000)].iloc[0]
-    # name1, perigee1, period1 = 'Advanced Orion 6', 35771, 23.94
+    # Find four satellites to plot.
+    t12 = query(bdb,
+        """SELECT perigee_km, period_minutes, apogee_km, name
+            FROM satellites WHERE apogee_km IS NOT NULL
+            AND apogee_km IS NOT NULL AND period_minutes IS NOT NULL""")
 
-    # sat2 = t11[(t11['Period_minutes']>3000) & (t11['Perigee_km']>15000)].iloc[0]
-    # name1, perigee1, period1 = 'Rumba', 17240, 3431
+    sat1 = t12[(t12['Period_minutes']<100) & (t12['Perigee_km']>30000)].iloc[0]
+    sat2 = t12[(t12['Period_minutes']>3000) & (t12['Perigee_km']>15000)].iloc[0]
+    sat3 = np.nonzero(cluster_kp==2)[0] # Entry 149
+    sat4 = t12[(900<t12['Period_minutes']) & (t12['Period_minutes']<1000)
+        & (t12['Perigee_km']<10000)].iloc[0]
+    name1, perigee1, period1, index1, = 'Orion6', 35771, 23.94, 9
+    name2, perigee2, period2, index2, = 'Rumba', 17240, 3431, 855
+    name3, perigee3, period3, index3, = 'Compass9', 35693, 1435.11, 149
+    name4, perigee4, period4, index4 = 'Sirius4', 6179, 994, 946
+    plot_names = [name1, name2, name3, name4]
+    plot_perigees = [perigee1, perigee2, perigee3, perigee4]
+    plot_periods = [period1, period2, period3, period4]
+    indexes = [index1, index2, index3, index4]
 
-    # sat3 = t11[(t11['Period_minutes']>3000) & (t11['Perigee_km']>15000)].iloc[0]
-    # name1, perigee1, period1 = 'Rumba', 17240, 3431
+    for nm, prg, prd in zip(plot_names, plot_perigees, plot_periods):
+        for a in ax:
+            a.text(
+                prg-3000, prd+200, nm, fontdict={'weight':'bold', 'size':12})
 
     # Grids and legends.
     for a in ax:
@@ -297,10 +310,11 @@ def plot_period_perigee_cluster(bdb):
         a.set_ylim([-500, 5000])
         a.grid()
         a.legend(framealpha=0, loc='upper right')
-        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=16)
-        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=16)
+        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=18)
+        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=18)
 
     ax[1].set_ylabel('')
+    ax[1].set_yticklabels([])
 
     # Now create a plot of the sample errors.
     # import seaborn as sns
@@ -309,12 +323,41 @@ def plot_period_perigee_cluster(bdb):
     for ix in set(cluster_kp):
         samples = np.log(period_error[cluster_kp==ix])
         ax.hist(samples, bins=bins[ix], alpha=1, color=colors_kp[ix], normed=0)
+
+    # Annotate the outlier satellites.
+    samples = np.log(period_error)
+    props = dict(facecolor='black', width=1)
+    ax.annotate(plot_names[0],
+        xy=(samples[indexes[0]], 1),
+        xytext=(samples[indexes[0]]-2, 8),
+        arrowprops=props,
+        weight='bold',
+        size=14)
+    ax.annotate(plot_names[1],
+        xy=(samples[indexes[1]], 1),
+        xytext=(0, 40),
+        arrowprops=props,
+        weight='bold',
+        size=14)
+    ax.annotate(plot_names[2],
+        xy=(samples[indexes[2]], 1),
+        xytext=(samples[indexes[2]]-2, 4),
+        arrowprops=props,
+        weight='bold',
+        size=14)
+    ax.annotate(plot_names[3],
+        xy=(samples[indexes[3]], 1),
+        xytext=(0, 20),
+        arrowprops=props,
+        weight='bold',
+        size=14)
+
     ax.set_xlabel(
-        'Magntiude of Deviation from Kepler\'s Law [log minutes]',
-        fontweight='bold', fontsize=16)
+        'Magntiude of Deviation from Kepler\'s Law [log mins]',
+        fontweight='bold', fontsize=18)
     ax.set_ylabel(
         'Number of Satellites',
-        fontweight='bold', fontsize=16)
+        fontweight='bold', fontsize=18)
     ax.set_yscale('log', basey=2)
     ax.grid()
     # ax.set_xlim(0, ax.get_xlim()[1])
