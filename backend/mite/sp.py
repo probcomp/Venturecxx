@@ -1,7 +1,7 @@
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.node import TraceNodeArgs as LiteTraceNodeArgs
 from venture.lite.utils import override
-from venture.lite.value import VentureValue
+from venture.lite.value import VentureValue, VentureNil
 import venture.value.dicts as v
 
 class VentureSP(VentureValue):
@@ -31,8 +31,11 @@ class VentureSP(VentureValue):
   def show(self):
     return "<procedure>"
 
+  def extractStateAsVentureValue(self):
+    return VentureNil()
+
   def asStackDict(self, _trace=None):
-    return v.sp(self.show())
+    return v.sp(self.show(), self.extractStateAsVentureValue().asStackDict())
 
 class SimulationSP(VentureSP):
   @override(VentureSP)
