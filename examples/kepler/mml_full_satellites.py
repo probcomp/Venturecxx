@@ -30,6 +30,7 @@ from bdbcontrib.predictors import keplers_law
 from bdbcontrib.predictors import multiple_regression
 from bdbcontrib.predictors import random_forest
 
+from bdbcontrib.predictors.keplers_law import satellite_period_minutes
 
 # Global constants.
 GM = 398600.4418
@@ -229,133 +230,151 @@ def plot_period_perigee_cluster(bdb):
     # Select empirical data from joint.
     t11 = query(bdb,
         """SELECT perigee_km, period_minutes, apogee_km
-            FROM satellites
-            WHERE apogee_km IS NOT NULL
-                AND apogee_km IS NOT NULL
-                AND period_minutes IS NOT NULL""").as_matrix()
+            FROM satellites""").as_matrix()
 
-    # Do heuristic KNN clustering to mask the crosscat clustering.
-    from sklearn.cluster import KMeans
-    cluster_km = KMeans(n_clusters=12, random_state=1).fit_predict(t11)
-    colors_km = cm.nipy_spectral(np.linspace(0, 1, len(set(cluster_km))))
+    COLORS = ['red','green','blue','magenta','purple','orange','orange',
+        'orange','orange','orange']
 
-    # Do outlier computation to compute Kepler violations.
-    from bdbcontrib.predictors.keplers_law import satellite_period_minutes
-    period_theory = satellite_period_minutes(t11[:,2], t11[:,0])
-    period_error = (period_theory - t11[:,1])**2
-    outliers = np.argsort(period_error)[::-1][:25]
-    cluster_kp = np.zeros(len(t11), dtype=int)
-    cluster_kp[outliers[:12]] = 1
-    cluster_kp[outliers[12:]] = 2
-    colors_kp = ['red', 'green', 'blue']
+    # import ipdb; ipdb.set_trace()
+    name0, perigee0, period0, index0, = 'Orion6', 35771, 23.94, 10
+    name1, perigee1, period1, index1, = 'Geotail', 7079.0, 2872.15, 331
+    name2, perigee2, period2, index2, = 'Meridian4', 961, 645, 646
 
-    # Prepare figure.
-    fig, ax = plt.subplots()
+    # t12[ (t12['Perigee_km']<35600) & (t12['Perigee_km']>35580)] 53
+    name3, perigee3, period3, index3 = 'Amos5', 35595, 1436, 53
 
-    ax.set_title('Clusters Identified by Kepler CPGM',
-        fontweight='bold', fontsize=18)
-    for ix in set(cluster_kp):
-        points = t11[cluster_kp==ix]
-        print ix, len(points)
-        ax.scatter(points[:,0], points[:,1], color=colors_kp[ix])
+    name4, perigee4, period4, index4 = 'NavStar', 20188, 718, 685
 
-    #  -- Parameterize by eccentricity.
-    ecc = [.0, .9]
-    perigees = np.linspace(np.min(t11[:,0]), 48000, 100)
-    compute_apogees = lambda ecc:\
-        (perigees + EARTH_RADIUS) * (1+ecc)/(1-ecc) - EARTH_RADIUS
-    apogees_ecc = map(compute_apogees, ecc)
-    periods_ecc = [compute_period(ap_ecc, perigees) for ap_ecc in apogees_ecc]
+    plot_names = [name0, name1, name2, name3, name4]
+    plot_perigees = [perigee0, perigee1, perigee2, perigee3, perigee4]
+    plot_periods = [period0, period1, period2, period3, period4]
+    indexes = [index0, index1, index2, index3, index4]
 
-    ax.fill_between(
-        perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
-        label='Theoretically\nFeasible Orbits')
 
     # Find four satellites to plot.
     t12 = query(bdb,
         """SELECT perigee_km, period_minutes, apogee_km, name
-            FROM satellites WHERE apogee_km IS NOT NULL
-            AND apogee_km IS NOT NULL AND period_minutes IS NOT NULL""")
+            FROM satellites""")
+    t13 = np.asarray(t12.iloc[:,:2])
 
-    sat1 = t12[(t12['Period_minutes']<100) & (t12['Perigee_km']>30000)].iloc[0]
-    sat2 = t12[(t12['Period_minutes']>3000) & (t12['Perigee_km']>15000)].iloc[0]
-    sat3 = np.nonzero(cluster_kp==2)[0] # Entry 149
-    sat4 = t12[(900<t12['Period_minutes']) & (t12['Period_minutes']<1000)
-        & (t12['Perigee_km']<10000)].iloc[0]
-    name1, perigee1, period1, index1, = 'Orion6', 35771, 23.94, 9
-    name2, perigee2, period2, index2, = 'Rumba', 17240, 3431, 855
-    name3, perigee3, period3, index3, = 'Compass9', 35693, 1435.11, 149
-    name4, perigee4, period4, index4 = 'Sirius4', 6179, 994, 946
-    plot_names = [name1, name2, name3, name4]
-    plot_perigees = [perigee1, perigee2, perigee3, perigee4]
-    plot_periods = [period1, period2, period3, period4]
-    indexes = [index1, index2, index3, index4]
+    def plot_satellite_scatter(ax, clusters, colors):
+        ax.set_title('Clusters Identified by Kepler CPGM',
+            fontweight='bold', fontsize=18)
+        for ix in reversed([2,3,1,0,4,5,6,7,8]):
+            points = t13[clusters==ix]
+            print ix, len(points), colors[ix]
+            ax.scatter(points[:,0], points[:,1], color=colors[ix])
 
-    for nm, prg, prd in zip(plot_names, plot_perigees, plot_periods):
-        ax.text(
-            prg-3000, prd+200, nm, fontdict={'weight':'bold', 'size':12})
+        #  -- Parameterize by eccentricity.
+        ecc = [.0, .9]
+        perigees = np.linspace(np.min(t11[~np.isnan(t11[:,0])][:,0]), 48000, 100)
+        compute_apogees = lambda ecc:\
+            (perigees + EARTH_RADIUS) * (1+ecc)/(1-ecc) - EARTH_RADIUS
+        apogees_ecc = map(compute_apogees, ecc)
+        periods_ecc = [compute_period(ap_ecc, perigees) for ap_ecc in apogees_ecc]
 
-    # Grids and legends.
-    ax.set_xlim([-2500, 48000])
-    ax.set_ylim([-500, 5000])
-    ax.grid()
-    ax.legend(framealpha=0, loc='upper right')
-    ax.set_xlabel('Perigee [km]', fontweight='bold', fontsize=18)
-    ax.set_ylabel('Period [mins]', fontweight='bold', fontsize=18)
+        ax.fill_between(
+            perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
+            label='Theoretically\nFeasible Orbits')
 
-    # ax[1].set_ylabel('')
-    # ax[1].set_yticklabels([])
+        # Put the names
+        for nm, prg, prd in zip(plot_names, plot_perigees, plot_periods):
+            ax.text(
+                prg-3000, prd+200, nm, fontdict={'weight':'bold', 'size':12})
 
-    # Now create a plot of the sample errors.
-    # import seaborn as sns
+        # Grids and legends.
+        ax.set_xlim([-2500, 48000])
+        ax.set_ylim([-500, 5000])
+        ax.grid()
+        ax.legend(framealpha=0, loc='upper right')
+        ax.set_xlabel('Perigee [km]', fontweight='bold', fontsize=18)
+        ax.set_ylabel('Period [mins]', fontweight='bold', fontsize=18)
+
+    def plot_error_distribution(ax, errors, clusters, colors):
+        t12 = query(bdb,
+            """SELECT perigee_km, period_minutes, apogee_km, name
+                FROM satellites""")
+        t13 = np.asarray(t12.iloc[:,:2])
+        errors = np.log(errors)
+        ax.set_title(
+            'Empirical Distribution of Orbital Deviations', fontweight='bold',
+            fontsize=18)
+        for ix in set(clusters):
+            samples = errors[clusters==ix]
+            ax.hist(samples, bins=50, alpha=1, color=colors[ix], normed=0)
+        # Annotate the outlier satellites.
+        props = dict(facecolor='black', width=1)
+        # import ipdb; ipdb.set_trace()
+        ax.annotate(plot_names[0],
+            xy=(errors[indexes[0]], 1),
+            xytext=(errors[indexes[0]]+1, 4),
+            arrowprops=props,
+            weight='bold',
+            size=14)
+        ax.annotate(plot_names[1],
+            xy=(errors[indexes[1]], 1),
+            xytext=(0, 40),
+            arrowprops=props,
+            weight='bold',
+            size=14)
+        ax.annotate(plot_names[2],
+            xy=(errors[indexes[2]], 1),
+            xytext=(errors[indexes[2]]-2, 4),
+            arrowprops=props,
+            weight='bold',
+            size=14)
+        ax.annotate(plot_names[3],
+            xy=(errors[indexes[3]], 1),
+            xytext=(0, 4),
+            arrowprops=props,
+            weight='bold',
+            size=14)
+        # ax.annotate(plot_names[4],
+        #     xy=(samples[indexes[4]], 2),
+        #     xytext=(0, 20),
+        #     arrowprops=props,
+        #     weight='bold',
+        #     size=14)
+        ax.set_xlabel(
+            'Magntiude of Deviation from Kepler\'s Law [log mins]',
+            fontweight='bold', fontsize=18)
+        ax.set_ylabel(
+            'Number of Satellites',
+            fontweight='bold', fontsize=18)
+        ax.set_yscale('log', basey=2)
+        ax.grid()
+
+    inferred_clusters = query(bdb,
+        'SELECT * FROM inferred_orbital_cluster').values.ravel().astype(int)
+    inferred_noise = query(bdb,
+        'SELECT * FROM inferred_orbital_noise;').values
+    inferred_errors = (inferred_noise**2).ravel()
+
     fig, ax = plt.subplots()
-    ax.set_title('Empirical Distribution of Orbital Deviations',
-        fontweight='bold', fontsize=18)
-    bins = [50, 50, 50]
-    for ix in set(cluster_kp):
-        samples = np.log(period_error[cluster_kp==ix])
-        ax.hist(samples, bins=bins[ix], alpha=1, color=colors_kp[ix], normed=0)
+    plot_satellite_scatter(ax, inferred_clusters, COLORS)
 
-    # Annotate the outlier satellites.
-    samples = np.log(period_error)
-    props = dict(facecolor='black', width=1)
-    ax.annotate(plot_names[0],
-        xy=(samples[indexes[0]], 1),
-        xytext=(samples[indexes[0]]+1, 4),
-        arrowprops=props,
-        weight='bold',
-        size=14)
-    ax.annotate(plot_names[1],
-        xy=(samples[indexes[1]], 1),
-        xytext=(0, 40),
-        arrowprops=props,
-        weight='bold',
-        size=14)
-    ax.annotate(plot_names[2],
-        xy=(samples[indexes[2]], 1),
-        xytext=(samples[indexes[2]]-2, 4),
-        arrowprops=props,
-        weight='bold',
-        size=14)
-    ax.annotate(plot_names[3],
-        xy=(samples[indexes[3]], 1),
-        xytext=(0, 20),
-        arrowprops=props,
-        weight='bold',
-        size=14)
+    fig, ax = plt.subplots()
+    plot_error_distribution(
+        ax, inferred_errors, inferred_clusters, COLORS)
 
-    ax.set_xlabel(
-        'Magntiude of Deviation from Kepler\'s Law [log mins]',
-        fontweight='bold', fontsize=18)
-    ax.set_ylabel(
-        'Number of Satellites',
-        fontweight='bold', fontsize=18)
-    ax.set_yscale('log', basey=2)
-    ax.grid()
-    # ax.set_xlim(0, ax.get_xlim()[1])
-    # ax.set_xscale('log')
-    # ax.set_ylim(0, 5)
-
-bdb = retrieve_bdb('bdb/20160513-122941.bdb')
-# plot_period_perigee_given_purpose(bdb)
+bdb = retrieve_bdb('/scratch/fs/gpmcc/examples/satellites/kep/kep.bdb')
 plot_period_perigee_cluster(bdb)
+
+inferred_clusters = query(bdb,
+    'SELECT * FROM inferred_orbital_cluster').values.ravel().astype(int)
+inferred_noise = query(bdb,
+    'SELECT * FROM inferred_orbital_noise;').values
+inferred_errors = (inferred_noise**2).ravel()
+
+errors = np.log(inferred_errors)
+between = np.nonzero((-3<errors) & (errors<0))[0]
+
+# Find four satellites to plot.
+t12 = query(bdb,
+    """SELECT perigee_km, period_minutes, apogee_km, name
+        FROM satellites""")
+
+# for entry in between:
+#     if inferred_clusters[entry] == 3:
+#         print entry
+#         print t12.iloc[entry]
