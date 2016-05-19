@@ -108,8 +108,7 @@ tagged(none)		::= expression(e).
 tagged(kw)		::= L_NAME(name) T_COLON(colon) expression(e).
 
 primary(paren)		::= T_LROUND(o) body(e) T_RROUND(c).
-primary(brace)		::= T_LCURLY(o) let(l) T_SEMI(semi) expression(e)
-				T_RCURLY(c).
+primary(brace)		::= T_LCURLY(o) body(e) T_RCURLY(c).
 primary(proc)		::= K_PROC(k)
 				T_LROUND(po) paramlist(params) T_RROUND(pc)
 				T_LCURLY(bo) body(body) T_RCURLY(bc).

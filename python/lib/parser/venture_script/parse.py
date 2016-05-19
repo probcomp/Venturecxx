@@ -311,9 +311,9 @@ class Semantics(object):
     def p_primary_paren(self, o, e, c):
         assert isloc(e)
         return locbracket(o, c, e['value'])
-    def p_primary_brace(self, o, l, semi, e, c):
+    def p_primary_brace(self, o, e, c):
         assert isloc(e)
-        return locbracket(o, c, [locbracket(o, c, val.symbol('let')), l, e])
+        return locbracket(o, c, e['value'])
     def p_primary_proc(self, k, po, params, pc, bo, body, bc):
         assert isloc(body)
         return locbracket(k, bc, [
