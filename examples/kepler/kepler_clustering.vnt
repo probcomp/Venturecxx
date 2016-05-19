@@ -1,3 +1,31 @@
+;; $ venture -f kepler_clustering.vnt -f satellites.vnt -i
+;; venture[script] kepler_clustering.vnt satellites.vnt > observe_data(satellites_data)
+;; []
+;; venture[script] kepler_clustering.vnt satellites.vnt > print_clusters(10)
+;; VentureList([VentureNumber(1104.0), VentureNumber(-43220.7180731), VentureNumber(472971113.054)])
+;; VentureList([VentureNumber(7.0), VentureNumber(0.258241732605), VentureNumber(0.0131498808335)])
+;; VentureList([VentureNumber(5.0), VentureNumber(-125.13327316), VentureNumber(15709.1065702)])
+;; VentureList([VentureNumber(56.0), VentureNumber(1.46804436586), VentureNumber(0.267541168374)])
+;; VentureList([VentureNumber(1.0), VentureNumber(-0.03000402421), VentureNumber(0.000900241468793)])
+;; VentureList([VentureNumber(1.0), VentureNumber(0.0561016947042), VentureNumber(0.00314740014869)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; []
+;; venture[script] kepler_clustering.vnt satellites.vnt > mh(default, one, 10000)
+;; [9.0]
+;; venture[script] kepler_clustering.vnt satellites.vnt > print_clusters(10)
+;; VentureList([VentureNumber(46.0), VentureNumber(-31557.096649), VentureNumber(333305424.851)])
+;; VentureList([VentureNumber(17.0), VentureNumber(-0.118308109758), VentureNumber(3.94581679549)])
+;; VentureList([VentureNumber(1.0), VentureNumber(-11818.6881822), VentureNumber(139681390.349)])
+;; VentureList([VentureNumber(1104.0), VentureNumber(32.1946117188), VentureNumber(3.18552621873)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; VentureList([VentureNumber(6.0), VentureNumber(-0.390434934453), VentureNumber(0.113759441941)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; VentureList([VentureNumber(0.0), VentureNumber(0.0), VentureNumber(0.0)])
+;; []
+
 (assume crp_alpha 1)
 
 ;; Kepler model
