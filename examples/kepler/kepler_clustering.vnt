@@ -1,0 +1,50 @@
+(assume crp_alpha 1)
+
+;; Kepler model
+[define period_kepler
+  (lambda (apogee perigee)
+    (let ((GM 398600.4418) (earth_radius 6378)
+          (a (+ (* .5 (+ (abs apogee) (abs perigee))) earth_radius)))
+      (/ (* (* 2 3.1415) (sqrt (/ (pow a 3) GM))) 60)))]
+
+;; error model
+(assume simulate_cluster
+  (make_crp crp_alpha))
+(assume simulate_cluster_id
+  (mem (lambda (r) (simulate_cluster))))
+(assume get_error_sampler
+  (mem (lambda (cluster) (make_nig_normal 1 1 1 1))))
+(assume get_error
+  (mem (lambda (r) ((get_error_sampler (simulate_cluster_id r))))))
+
+;; train the model
+[define observe_period_minutes
+  (lambda (r actual_period apogee perigee)
+    (let ((theoretical_period (period_kepler apogee perigee))
+          (error (- actual_period theoretical_period)))
+      (observe (get_error ,r) error)))]
+
+;; query the model
+[define simulate_cluster_id
+  (lambda (r)
+    (sample (simulate_cluster_id ,r)))]
+[define simulate_error
+  (lambda (r)
+    (sample (get_error ,r)))]
+[define simulate_period_minutes
+  (lambda (r apogee perigee)
+    (let ((theoretical_period (period_kepler apogee perigee)))
+      (do (error <- (sample (get_error ,r)))
+          (return (+ theoretical_period error)))))]
+
+;; some shell utilities
+[define observe_data
+  (lambda (data)
+    (for_each_indexed data
+      (lambda (i row)
+        (apply observe_period_minutes (pair i (to_list row))))))]
+[define print_clusters
+  (lambda (n)
+    (for_each (arange 1 n) (lambda (i)
+      (do (x <- (extract_stats (get_error_sampler ,(atom i))))
+          (action (print x))))))]
