@@ -169,11 +169,6 @@ class Semantics(object):
         return locval(e, {'instruction': i, 'expression': e})
 
     # directive: Return located {'instruction': located(..., 'foo'), ...}.
-    def p_directive_define(self, k, n, eq, e):
-        assert isloc(e)
-        i = loctoken1(k, 'define')
-        s = locmap(loctoken(n), val.symbol)
-        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
     def p_directive_assume(self, k, n, eq, e):
         assert isloc(e)
         i = loctoken1(k, val.symbol('assume'))
@@ -189,6 +184,11 @@ class Semantics(object):
         return locmerge(i, e, expression_evaluation_instruction(loclist([i, e])))
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
+    def p_command_define(self, k, n, eq, e):
+        assert isloc(e)
+        i = loctoken1(k, 'define')
+        s = locmap(loctoken(n), val.symbol)
+        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
     def p_command_infer(self, k, e):
         assert isloc(e)
         i = loctoken1(k, 'infer')
@@ -240,20 +240,36 @@ class Semantics(object):
         n = loctoken(n)
         # XXX Yes, this remains infix, for the macro expander to handle...
         return locmerge(n, e, [n, locmap(loctoken(op), val.symbol), e])
-    def p_force_some(self, k, e1, eq, e2):
+    def p_action_assume(self, k, n, eq, e):
+        assert isloc(e)
+        i = loctoken1(k, val.symbol('assume'))
+        s = locmap(loctoken(n), val.symbol)
+        app = [i, s, e]
+        return locmerge(i, e, app)
+    def p_action_observe(self, k, e1, eq, e2):
+        assert isloc(e1)
+        assert isloc(e2)
+        i = loctoken1(k, val.symbol('observe'))
+        app = [i, e1, e2]
+        return locmerge(i, e2, app)
+    def p_action_predict(self, k, e):
+        assert isloc(e)
+        i = loctoken1(k, val.symbol('predict'))
+        app = [i, e]
+        return locmerge(i, e, app)
+    def p_action_force(self, k, e1, eq, e2):
         assert isloc(e1)
         assert isloc(e2)
         i = loctoken1(k, val.symbol('force'))
         app = [i, e1, e2]
         return locmerge(i, e2, app)
-    def p_sample_some(self, k, e):
+    def p_action_sample(self, k, e):
         assert isloc(e)
         i = loctoken1(k, val.symbol('sample'))
         app = [i, e]
         return locmerge(i, e, app)
     p_do_bind_none = _p_exp
-    p_force_none = _p_exp
-    p_sample_none = _p_exp
+    p_action_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop

@@ -39,15 +39,14 @@ instruction_opt(none)	::= .
 instruction_opt(some)	::= instruction(inst).
 
 instruction(labelled)	::= L_NAME(l) T_COLON directive(d).
-instruction(unlabelled)	::= directive(d).
 instruction(command)	::= command(c).
 instruction(expression)	::= expression(e).
 
-directive(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
+command(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 command(infer)		::= K_INFER(k) expression(e).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
@@ -56,17 +55,17 @@ body(exp)		::= expression(e).
 let(one)		::= let1(l).
 let(many)		::= let(ls) T_SEMI(semi) let1(l).
 let1(l)			::= L_NAME(n) T_EQDEF(eq) expression(e).
-
 expression(top)		::= do_bind(e).
 
 do_bind(bind)		::= L_NAME(n) T_LARR(op) expression(e).
-do_bind(none)		::= force(e).
+do_bind(none)		::= action(e).
 
-force(some)		::= K_FORCE(k) boolean_and(e1) T_EQDEF(eq) boolean_and(e2).
-force(none)		::= sample(e).
-
-sample(some)		::= K_SAMPLE(k) boolean_and(e).
-sample(none)		::= boolean_and(e).
+action(assume)		::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
+action(observe)	::= K_OBSERVE(k) expression(e1) T_EQDEF(eq) expression(e2).
+action(predict)	::= K_PREDICT(k) expression(e).
+action(force)		::= K_FORCE(k) expression(e1) T_EQDEF(eq) expression(e2).
+action(sample)		::= K_SAMPLE(k) expression(e).
+action(none)		::= boolean_and(e).
 
 /* XXX This AND/OR precedence is backwards from everyone else!  */
 boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).
