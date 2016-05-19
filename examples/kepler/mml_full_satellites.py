@@ -250,19 +250,14 @@ def plot_period_perigee_cluster(bdb):
     colors_kp = ['red', 'green', 'blue']
 
     # Prepare figure.
-    fig, ax = plt.subplots(nrows=1, ncols=2)
+    fig, ax = plt.subplots()
 
-    ax[0].set_title('K-Means Clustering', fontweight='bold', fontsize=18)
-    for ix in set(cluster_km):
-        points = t11[cluster_km==ix]
-        print ix, len(points)
-        ax[0].scatter(points[:,0], points[:,1], color=colors_km[ix])
-
-    ax[1].set_title('Kepler Clustering', fontweight='bold', fontsize=18)
+    ax.set_title('Clusters Identified by Kepler CPGM',
+        fontweight='bold', fontsize=18)
     for ix in set(cluster_kp):
         points = t11[cluster_kp==ix]
         print ix, len(points)
-        ax[1].scatter(points[:,0], points[:,1], color=colors_kp[ix])
+        ax.scatter(points[:,0], points[:,1], color=colors_kp[ix])
 
     #  -- Parameterize by eccentricity.
     ecc = [.0, .9]
@@ -272,10 +267,7 @@ def plot_period_perigee_cluster(bdb):
     apogees_ecc = map(compute_apogees, ecc)
     periods_ecc = [compute_period(ap_ecc, perigees) for ap_ecc in apogees_ecc]
 
-    ax[0].fill_between(
-        perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2)
-
-    ax[1].fill_between(
+    ax.fill_between(
         perigees, periods_ecc[0], periods_ecc[1], color='gray', alpha=0.2,
         label='Theoretically\nFeasible Orbits')
 
@@ -300,25 +292,25 @@ def plot_period_perigee_cluster(bdb):
     indexes = [index1, index2, index3, index4]
 
     for nm, prg, prd in zip(plot_names, plot_perigees, plot_periods):
-        for a in ax:
-            a.text(
-                prg-3000, prd+200, nm, fontdict={'weight':'bold', 'size':12})
+        ax.text(
+            prg-3000, prd+200, nm, fontdict={'weight':'bold', 'size':12})
 
     # Grids and legends.
-    for a in ax:
-        a.set_xlim([-2500, 48000])
-        a.set_ylim([-500, 5000])
-        a.grid()
-        a.legend(framealpha=0, loc='upper right')
-        a.set_xlabel('Perigee [km]', fontweight='bold', fontsize=18)
-        a.set_ylabel('Period [mins]', fontweight='bold', fontsize=18)
+    ax.set_xlim([-2500, 48000])
+    ax.set_ylim([-500, 5000])
+    ax.grid()
+    ax.legend(framealpha=0, loc='upper right')
+    ax.set_xlabel('Perigee [km]', fontweight='bold', fontsize=18)
+    ax.set_ylabel('Period [mins]', fontweight='bold', fontsize=18)
 
-    ax[1].set_ylabel('')
-    ax[1].set_yticklabels([])
+    # ax[1].set_ylabel('')
+    # ax[1].set_yticklabels([])
 
     # Now create a plot of the sample errors.
     # import seaborn as sns
     fig, ax = plt.subplots()
+    ax.set_title('Empirical Distribution of Orbital Deviations',
+        fontweight='bold', fontsize=18)
     bins = [50, 50, 50]
     for ix in set(cluster_kp):
         samples = np.log(period_error[cluster_kp==ix])
@@ -329,7 +321,7 @@ def plot_period_perigee_cluster(bdb):
     props = dict(facecolor='black', width=1)
     ax.annotate(plot_names[0],
         xy=(samples[indexes[0]], 1),
-        xytext=(samples[indexes[0]]-2, 8),
+        xytext=(samples[indexes[0]]+1, 4),
         arrowprops=props,
         weight='bold',
         size=14)
