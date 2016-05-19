@@ -128,6 +128,10 @@ class DPSP(RequestReferenceSP):
     return weight, self.apply(eargs)
 
   def reconstrain(self, value, args):
+    raddr = self.request_map.pop(args.node)
+    self.counts[raddr] -= 1
+    args.decRequest(raddr)
+
     raddr = args.getState(args.node, ext="constrained raddr")
     if args.hasRequest(raddr):
       args.incRequest(raddr)
