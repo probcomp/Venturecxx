@@ -9,6 +9,7 @@ from venture.mite.sp_registry import builtInSPs
 import venture.mite.sps.lite_sp
 import venture.mite.sps.mem
 import venture.mite.sps.dpmem
+import venture.mite.sps.suff_stat_cat
 import venture.mite.sps.trick_coin
 
 def builtInValues():
