@@ -295,7 +295,7 @@ def plot_period_perigee_cluster(bdb):
             """SELECT perigee_km, period_minutes, apogee_km, name
                 FROM satellites""")
         t13 = np.asarray(t12.iloc[:,:2])
-        errors = np.log(errors)
+        errors = np.log10(errors)
         ax.set_title(
             'Empirical Distribution of Orbital Deviations', fontweight='bold',
             fontsize=18)
@@ -307,7 +307,7 @@ def plot_period_perigee_cluster(bdb):
         # import ipdb; ipdb.set_trace()
         ax.annotate(plot_names[0],
             xy=(errors[indexes[0]], 1),
-            xytext=(errors[indexes[0]]+1, 4),
+            xytext=(errors[indexes[0]]+1, 3),
             arrowprops=props,
             weight='bold',
             size=14)
@@ -319,13 +319,13 @@ def plot_period_perigee_cluster(bdb):
             size=14)
         ax.annotate(plot_names[2],
             xy=(errors[indexes[2]], 1),
-            xytext=(errors[indexes[2]]-2, 4),
+            xytext=(errors[indexes[2]]+1, 5),
             arrowprops=props,
             weight='bold',
             size=14)
         ax.annotate(plot_names[3],
             xy=(errors[indexes[3]], 1),
-            xytext=(0, 4),
+            xytext=(1, 5),
             arrowprops=props,
             weight='bold',
             size=14)
@@ -336,12 +336,14 @@ def plot_period_perigee_cluster(bdb):
         #     weight='bold',
         #     size=14)
         ax.set_xlabel(
-            'Magntiude of Deviation from Kepler\'s Law [log mins]',
+            'Magntiude of Deviation from Kepler\'s Law [mins]',
             fontweight='bold', fontsize=18)
         ax.set_ylabel(
             'Number of Satellites',
             fontweight='bold', fontsize=18)
         ax.set_yscale('log', basey=2)
+        labels = ['1e%1.f'%x for x in ax.get_xticks()]
+        ax.set_xticklabels(labels)
         ax.grid()
 
     inferred_clusters = query(bdb,
@@ -359,22 +361,3 @@ def plot_period_perigee_cluster(bdb):
 
 bdb = retrieve_bdb('/scratch/fs/gpmcc/examples/satellites/kep/kep.bdb')
 plot_period_perigee_cluster(bdb)
-
-inferred_clusters = query(bdb,
-    'SELECT * FROM inferred_orbital_cluster').values.ravel().astype(int)
-inferred_noise = query(bdb,
-    'SELECT * FROM inferred_orbital_noise;').values
-inferred_errors = (inferred_noise**2).ravel()
-
-errors = np.log(inferred_errors)
-between = np.nonzero((-3<errors) & (errors<0))[0]
-
-# Find four satellites to plot.
-t12 = query(bdb,
-    """SELECT perigee_km, period_minutes, apogee_km, name
-        FROM satellites""")
-
-# for entry in between:
-#     if inferred_clusters[entry] == 3:
-#         print entry
-#         print t12.iloc[entry]
