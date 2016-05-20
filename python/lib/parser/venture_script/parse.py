@@ -218,7 +218,12 @@ class Semantics(object):
         ss['value'].append(s)
         return locmerge(ss, s, ss['value'])
 
-    def p_statement_let(self, n, eq, e):
+    def p_statement_let(self, l, n, eq, e):
+        assert isloc(e)
+        let = loctoken1(l, val.symbol('let'))
+        n = locmap(loctoken(n), val.symbol)
+        return locmerge(let, e, [let, n, e])
+    def p_statement_assign(self, n, eq, e):
         assert isloc(e)
         let = loctoken1(eq, val.symbol('let'))
         n = locmap(loctoken(n), val.symbol)

@@ -55,7 +55,9 @@ body(exp)		::= expression(e).
 statements(one)	::= statement(s).
 statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
 
-statement(let)		::= L_NAME(n) T_EQDEF(eq) expression(e).
+/* TODO deprecate "assign" in favor of let */
+statement(let)		::= K_LET(l) L_NAME(n) T_EQDEF(eq) expression(e).
+statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
 statement(none)	::= expression(e).
 
 expression(top)		::= do_bind(e).
