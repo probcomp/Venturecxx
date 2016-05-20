@@ -201,6 +201,8 @@ class Semantics(object):
     # body: Return located expression.
     def p_body_do(self, ss, semi, e):
         assert isloc(ss)
+        if e is None:
+            e = loctoken1(semi, val.symbol('pass'))
         assert isloc(e)
         do = locmerge(ss, e, val.symbol('do'))
         return locmerge(ss, e, [do] + ss['value'] + [e])
@@ -229,6 +231,13 @@ class Semantics(object):
         n = locmap(loctoken(n), val.symbol)
         return locmerge(n, e, [let, n, e])
     def p_statement_none(self, e):
+        assert isloc(e)
+        return e
+
+    # expression_opt: Return located expression or None.
+    def p_expression_opt_none(self):
+        return None
+    def p_expression_opt_some(self, e):
         assert isloc(e)
         return e
 

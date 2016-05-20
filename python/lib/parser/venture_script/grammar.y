@@ -50,7 +50,7 @@ command(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 command(infer)		::= K_INFER(k) expression(e).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
-body(do)		::= statements(ss) T_SEMI(semi) expression(e).
+body(do)		::= statements(ss) T_SEMI(semi) expression_opt(e).
 body(exp)		::= expression(e).
 statements(one)	::= statement(s).
 statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
@@ -59,6 +59,9 @@ statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
 statement(let)		::= K_LET(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
 statement(none)	::= expression(e).
+
+expression_opt(none)	::= .
+expression_opt(some)	::= expression(e).
 
 expression(top)		::= do_bind(e).
 
