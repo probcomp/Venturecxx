@@ -72,7 +72,12 @@ do_bind(none)		::= action(e).
 action(directive)	::= directive(d).
 action(force)		::= K_FORCE(k) expression(e1) T_EQDEF(eq) expression(e2).
 action(sample)		::= K_SAMPLE(k) expression(e).
-action(none)		::= boolean_and(e).
+action(none)		::= arrow(e).
+
+arrow(one)		::= L_NAME(param) T_RARR(op) expression(body).
+arrow(tuple)		::= T_LROUND(po) arraybody(params) T_RROUND(pc)
+				T_RARR(op) expression(body).
+arrow(none)		::= boolean_and(e).
 
 /* XXX This AND/OR precedence is backwards from everyone else!  */
 boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).

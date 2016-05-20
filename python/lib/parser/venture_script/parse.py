@@ -267,8 +267,24 @@ class Semantics(object):
         i = loctoken1(k, val.symbol('sample'))
         app = [i, e]
         return locmerge(i, e, app)
+    def p_arrow_one(self, param, op, body):
+        assert isloc(body)
+        param = locmap(loctoken(param), val.symbol)
+        return locmerge(param, body, [
+            locmap(loctoken1(op, 'lambda'), val.symbol),
+            locval(param, [param]),
+            body,
+        ])
+    def p_arrow_tuple(self, po, params, pc, op, body):
+        assert isloc(body)
+        return locmerge(loctoken(po), body, [
+            locmap(loctoken1(op, 'lambda'), val.symbol),
+            locbracket(po, pc, params),
+            body,
+        ])
     p_do_bind_none = _p_exp
     p_action_none = _p_exp
+    p_arrow_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop

@@ -168,6 +168,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('${'), grammar.T_LDOLLAR_CURLY),
         (Plex.Str('='), grammar.T_EQDEF),
         (Plex.Str('<-'), grammar.T_LARR),
+        (Plex.Str('->'), grammar.T_RARR),
         (Plex.Str('||'), grammar.T_AND),
         (Plex.Str('&&'), grammar.T_OR),
         (Plex.Str('=='), grammar.T_EQ),
