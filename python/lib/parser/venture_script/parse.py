@@ -307,9 +307,14 @@ class Semantics(object):
     def p_tagged_none(self, e):         return e
     def p_tagged_kw(self, name, colon, e): return e
 
-    def p_primary_paren(self, o, e, c):
-        assert isloc(e)
-        return locbracket(o, c, e['value'])
+    def p_primary_paren(self, o, es, c):
+        assert isinstance(es, list) and all(map(isloc, es))
+        if len(es) == 1:
+            [e] = es
+            return locbracket(o, c, e['value'])
+        else:
+            construction = [locmap(loctoken1(o, 'list'), val.symbol)] + es
+            return locbracket(o, c, construction)
     def p_primary_brace(self, o, e, c):
         assert isloc(e)
         return locbracket(o, c, e['value'])
