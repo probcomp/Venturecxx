@@ -349,9 +349,10 @@ class Semantics(object):
             [locmap(loctoken1(k, 'if'), val.symbol), p, c, a])
     def p_primary_qquote(self, o, b, c):
         return locbracket(o, c, val.quasiquote(b))
-    def p_primary_unquote(self, o, b, c):
-        return locbracket(o, c,
-            val.quote(locbracket(o, c, val.unquote(b))))
+    def p_primary_unquote(self, op, e):
+        op = loctoken(op)
+        return locmerge(op, e,
+            val.quote(locmerge(op, e, val.unquote(e))))
     def p_primary_array(self, o, a, c):
         assert isinstance(a, list)
         construction = [locmap(loctoken1(o, 'array'), val.symbol)] + a
