@@ -85,6 +85,84 @@ def testHMMSP2():
   ans = [(0,0.6528), (1,0.3472)]
   return reportKnownDiscrete(ans, predictions)
 
+@on_inf_prim("any")
+@skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
+@statisticalTest
+def testHMMSP3():
+  ripl = get_ripl()
+  ripl.assume("z", "(flip)")
+  ripl.assume("f", """
+(if z
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.9 0.2)
+               (array 0.1 0.8))))
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.8 0.8)
+               (array 0.2 0.2)))))
+""")
+  ripl.observe("(f 1)","integer<0>")
+  ripl.observe("(f 2)","integer<0>")
+  ripl.observe("(f 3)","integer<1>")
+  ripl.observe("(f 4)","integer<0>")
+  ripl.observe("(f 5)","integer<0>")
+  ripl.predict("z",label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(True, 0.2952), (False, 0.7048)]
+  return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("any")
+@statisticalTest
+def testHMMSP4():
+  ripl = get_ripl()
+  ripl.assume("z", "(flip)")
+  ripl.assume("f", """
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (if z
+  (matrix (array (array 0.9 0.2)
+                 (array 0.1 0.8)))
+  (matrix (array (array 0.8 0.8)
+                 (array 0.2 0.2)))))
+""")
+  ripl.observe("(f 1)","integer<0>")
+  ripl.observe("(f 2)","integer<0>")
+  ripl.observe("(f 3)","integer<1>")
+  ripl.observe("(f 4)","integer<0>")
+  ripl.observe("(f 5)","integer<0>")
+  ripl.predict("z",label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(True, 0.2952), (False, 0.7048)]
+  return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("any")
+@statisticalTest
+def testHMMObservationZero():
+  ripl = get_ripl()
+  ripl.assume("f","""
+(make_lazy_hmm
+ (simplex 0.5 0.5)
+ (matrix (array (array 0.7 0.3)
+               (array 0.3 0.7)))
+ (matrix (array (array 0.9 0.2)
+               (array 0.1 0.8))))
+""")
+  ripl.observe("(f 0)", "integer<0>")
+  ripl.predict("(f 1)", label="pid")
+
+  predictions = collectSamples(ripl,"pid")
+  ans = [(0, 0.69/1.1), (1, 0.41/1.1)]
+  return reportKnownDiscrete(ans, predictions)
+
 @broken_in('lite', "https://github.com/probcomp/Venturecxx/issues/342")
 @on_inf_prim("resample")
 def testHMMResampleSmoke():
