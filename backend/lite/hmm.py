@@ -97,6 +97,10 @@ class UncollapsedHMMAAALKernel(SimulationAAALKernel):
     sp = newValue.sp
     return sp.forwardMarginalWeight(madeaux)
 
+  def weightBound(self, _trace, _oldValue, _args):
+    # Assume all outputs are discrete
+    return 0
+
 class UncollapsedHMMSP(SP):
   def __init__(self, p0, T, O):
     req = TypedPSP(UncollapsedHMMRequestPSP(),
