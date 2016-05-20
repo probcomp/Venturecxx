@@ -27,7 +27,9 @@ struct Particle;
 struct PSP;
 struct ApplicationNode;
 
-/* Acknowledgements: The slice code is translated from Radford's Neal's implementation, which can be found at http://www.cs.toronto.edu/~radford/ftp/slice-R-prog */
+/* Acknowledgements: The slice code is translated from Radford's
+ * Neal's implementation, which can be found at
+ * http://www.cs.toronto.edu/~radford/ftp/slice-R-prog */
 
 /*  x0    Initial point
  *  g     Function returning the log of the probability density (plus constant)
@@ -48,7 +50,8 @@ struct SliceGKernel : GKernel
   double computeLogDensity(double x);
   double sliceSample(double x0, double w, int m, double lower, double upper);
 
-  pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
+  pair<Trace*, double>
+  propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold);
   int accept();
   int reject();
 

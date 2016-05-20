@@ -53,8 +53,10 @@ class SamplableMap(object):
   def _as_dict(self):
     return {k:self[k] for k in self.d}
 
-  def sample(self): return random.sample(self.a,1)[0]
+  def sample(self,py_rng): return py_rng.sample(self.a,1)[0]
 
   def keys(self): return self.d.keys()
 
   def values(self): return [v for (_,v) in self.a]
+
+  def iteritems(self): return self.a

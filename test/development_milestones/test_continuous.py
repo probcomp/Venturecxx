@@ -17,9 +17,10 @@
 
 import math
 
-from venture.test.stats import statisticalTest
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testNormal1():

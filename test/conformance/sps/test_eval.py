@@ -89,7 +89,7 @@ def testEvalIf1():
 @on_inf_prim("none")
 def testEvalIf2():
   "Eval should work on programmatically constructed expressions that require macro expansion"
-  raise SkipTest("This fails because the stack's \"desugaring\" is not applied by eval itself to the expressions being evaluated.  Oops.  Issue: https://app.asana.com/0/9277419963067/10249544822511")
+  raise SkipTest("This fails because the stack's \"desugaring\" is not applied by eval itself to the expressions being evaluated.  Oops.  Issue: #556")
   ripl = get_ripl()
   ripl.assume("expr", "(array (quote if) true 1 2)")
   eq_(ripl.predict("(eval expr (get_current_environment))"), 1)

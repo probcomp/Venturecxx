@@ -157,12 +157,10 @@ def testMakeDirCat1():
   for maker in ["make_dir_cat", "make_uc_dir_cat"]:
     yield checkMakeDirCat1, maker
 
+@skipWhenRejectionSampling(
+  "Too slow.  Tightening the rejection bound is Issue #468.")
 @statisticalTest
 def checkMakeDirCat1(maker):
-  if rejectionSampling() and maker == "make_dir_cat":
-    raise SkipTest("Is the log density of data bounded for "
-                   "collapsed beta bernoulli?  Issue: "
-                   "https://app.asana.com/0/9277419963067/10623454782852")
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")

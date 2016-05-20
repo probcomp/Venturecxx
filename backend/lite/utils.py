@@ -17,11 +17,9 @@
 
 import math
 import numbers
-import random
 
 import numpy as np
 import numpy.linalg as npla
-import numpy.random as npr
 import scipy.special as ss
 
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
@@ -32,6 +30,7 @@ def override(interface_class):
   return overrider
 
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
+def extendedLog1p(x): return math.log1p(x) if x > -1 else float("-inf")
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -41,10 +40,10 @@ def normalizeList(seq):
     n = float(len(seq))
     return [1.0/n for x in seq]
 
-def simulateCategorical(ps,os=None):
+def simulateCategorical(ps,np_rng,os=None):
   if os is None: os = range(len(ps))
   ps = normalizeList(ps)
-  return os[npr.multinomial(1,ps).argmax()]
+  return os[np_rng.multinomial(1,ps).argmax()]
 
 def logDensityCategorical(val,ps,os=None):
   if os is None: os = range(len(ps))
@@ -75,7 +74,7 @@ def logDensityCategoricalSequence(weights, counts):
     return np.log(w) * c
   return sum(term(w, c) for (w, c) in zip(weights, counts))
 
-def simulateDirichlet(alpha): return npr.dirichlet(alpha)
+def simulateDirichlet(alpha, np_rng): return np_rng.dirichlet(alpha)
 
 def logDensityDirichlet(theta, alpha):
   theta = np.array(theta)
@@ -118,16 +117,17 @@ def logWeightsToNormalizedDirect(logs):
     # If all the logs are -inf, force 0 instead of NaN.
     return [0 for _ in logs]
 
-def sampleLogCategorical(logs):
+def sampleLogCategorical(logs, np_rng):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
-    return simulateCategorical([math.exp(log - the_max) for log in logs])
+    return simulateCategorical([math.exp(log - the_max) for log in logs],
+      np_rng, os=None)
   else:
     # normalizeList, as written above, will actually do the right
     # thing with this, namely treat all impossible options as equally
     # impossible.
-    return simulateCategorical([0 for _ in logs])
+    return simulateCategorical([0 for _ in logs], np_rng, os=None)
 
 def numpy_force_number(answer):
   if isinstance(answer, numbers.Number):
@@ -145,33 +145,69 @@ def careful_exp(x):
   try:
     return math.exp(x)
   except OverflowError:
-    if x > 0: return float("inf")
-    else: return float("-inf")
+    return float("inf")
 
-def logistic(x): return 1 / (1 + careful_exp(-x))
+def logistic(x):
+  # logistic never overflows, but e^{-x} does if x is much less than
+  # -log 2^(emax + 1) ~= -709.  Fortunately, for x <= -37, IEEE 754
+  # double-precision arithmetic rounds 1 + e^{-x} to e^{-x} anyway,
+  # giving the approximation 1/(1 + e^{-x}) ~= 1/e^{-x} = e^x, which
+  # never overflows.
+  if x <= -37:
+    return np.exp(x)
+  else:
+    return 1/(1 + np.exp(-x))
 
 def T_logistic(x):
-  # This should be derivable from the above by AD, but here I use the
-  # identity d logistic(x) / dx = logistic(x) * (1 - logistic(x))
-  logi_x = logistic(x)
-  return (logi_x, logi_x * (1 - logi_x))
+  # If L is the logistic function, we have
+  #
+  #                 e^{-x}         e^{-x}         1
+  #     L'(x) = -------------- = ---------- * ----------
+  #             (1 + e^{-x})^2   1 + e^{-x}   1 + e^{-x}
+  #
+  #                e^{-x}*e^x          1
+  #           = ---------------- * ----------
+  #             (1 + e^{-x})*e^x   1 + e^{-x}
+  #
+  #                1           1
+  #           = ------- * ----------
+  #             e^x + 1   1 + e^{-x}
+  #
+  #           = L(-x) L(x) = (1 - L(x)) L(x).
+  #
+  # We could compute L'(x) by computing L(x) and then multiplying L(x)
+  # and 1 - L(x), but that would lose precision for both factors if
+  # either one were near 1.  We could compute L(x) and L(-x)
+  # separately, but that would cost two exps.  We instead compute L(x)
+  # and L'(x) simultaneously in terms of e^{-x}.
+  if x <= -37:
+    # When x <= -37, so that 1 + e^{-x} ~= e^{-x}, we have
+    #
+    #   1/(1 + e^{-x}) = 1/e^{-x} = e^x
+    #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
+    ex = np.exp(x)
+    return (ex, ex)
+  else:
+    ex = np.exp(-x)
+    ex1 = 1 + ex
+    return (1/ex1, ex/(ex1*ex1))
 
 def log_logistic(x):
-  if x < -40:
-    # Because 1 + exp(40+) = exp(40+) in IEEE-64, and I don't want the
-    # +inf that will come from exp(400+)
+  if x <= -37:
     return x
-  else: return math.log(logistic(x))
+  else:
+    # log 1/(1 + e^{-x}) = log 1 - log (1 + e^{-x}) = -log1p(e^{-x}).
+    #
+    # When x is large and positive, e^{-x} is small relative to 1, so
+    # computing 1 + e^{-x} may lose precision, which log1p avoids.
+    return -np.log1p(np.exp(-x))
 
 def d_log_logistic(x):
-  # This should be derivable from the above by AD.
-  # Perhaps this could be improved upon by analysis, due to the usual
-  # derivative of approximation problem.
-  if x < -40:
-    return 1
-  else:
-    (logi_x, dlogi_x) = T_logistic(x)
-    return (1/logi_x) * dlogi_x
+  # Since 1 - L(x) = L(-x) and L'(x) = L(x) (1 - L(x)) = L(x) L(-x),
+  # we have
+  #
+  #     (log o L)'(x) = L'(x) log'(L(x)) = L(x) L(-x) / L(x) = L(-x).
+  return logistic(-x)
 
 def logit(x):
   # TODO Check the numeric analysis of this
@@ -185,21 +221,23 @@ against fixed randomness.
   the random number generator (other than by calling it) that
   monkeying will be suppressed, and not propagated to its caller. """
 
-  def __init__(self):
-    self.pyr_state = random.getstate()
-    self.numpyr_state = npr.get_state()
-    random.jumpahead(random.randint(1,2**31-1))
-    npr.seed(random.randint(1,2**31-1))
+  def __init__(self, py_rng, np_rng):
+    self.py_rng = py_rng
+    self.np_rng = np_rng
+    self.pyr_state = py_rng.getstate()
+    self.numpyr_state = np_rng.get_state()
+    py_rng.jumpahead(py_rng.randint(1,2**31-1))
+    np_rng.seed(py_rng.randint(1,2**31-1))
 
   def __enter__(self):
-    self.cur_pyr_state = random.getstate()
-    self.cur_numpyr_state = npr.get_state()
-    random.setstate(self.pyr_state)
-    npr.set_state(self.numpyr_state)
+    self.cur_pyr_state = self.py_rng.getstate()
+    self.cur_numpyr_state = self.np_rng.get_state()
+    self.py_rng.setstate(self.pyr_state)
+    self.np_rng.set_state(self.numpyr_state)
 
   def __exit__(self, _type, _value, _backtrace):
-    random.setstate(self.cur_pyr_state)
-    npr.set_state(self.cur_numpyr_state)
+    self.py_rng.setstate(self.cur_pyr_state)
+    self.np_rng.set_state(self.cur_numpyr_state)
     return False # Do not suppress any thrown exception
 
 # raise is a statement and can't be used in a lambda :(

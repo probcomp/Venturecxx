@@ -51,15 +51,16 @@ class PSP(object):
   mechanism.  If you don't know what lkernels are, don't worry about
   it -- the defaults will do.
 
-  The general pattern of PSP methods is that they accept an Args
-  struct (and possibly some additional arguments) and compute
-  something about the stochastic process at that Args struct.  The
-  main thing the Args struct contains is the list of arguments this
+  The general pattern of PSP methods is that they accept an IArgs
+  instance (and possibly some additional arguments) and compute
+  something about the stochastic process in the context given by that
+  IArgs instance.  The
+  main thing the IArgs object contains is the list of arguments this
   stochastic process is applied to, but it also has a bunch of
   additional contextual information that can be useful for special
-  PSPs.  See node.py for the definition of Args.
+  PSPs.  See below for the definition of IArgs.
 
-  The data members of the Args struct will generally be represented as
+  The data members of the IArgs object will generally be represented as
   Venture values (instances of the venture.lite.value.VentureValue
   class).  The data returned from psp methods should generally also be
   instances of the VentureValue class, except methods that yield
@@ -170,7 +171,7 @@ class PSP(object):
     rejection sampling.
 
     Specifically, the value and any or all of the operands present in
-    the Args struct may be None.  Return an upper bound on the value
+    the IArgs instance may be None.  Return an upper bound on the value
     the logDensity function could take for any values substituted for
     the None arguments, but holding fixed the given non-None
     arguments.  See NormalOutputPSP for an example implementation.
@@ -240,7 +241,7 @@ class PSP(object):
     number for the probability of every value returned from this
     method, given the same arguments.
     """
-    raise VentureBuiltinSPMethodError("Cannot enumerate.")
+    raise VentureBuiltinSPMethodError("Cannot enumerate %s.", type(self))
 
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the
@@ -304,6 +305,70 @@ class PSP(object):
     """
     raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure "
       "with unbounded log density of data.")
+
+class IArgs(object):
+  """The evaluation context against which a (P)SP is executed.
+
+  This class serves as a container for documentation about the
+  evaluation context interface Lite (P)SPs expect.
+
+  """
+  def __init__(self):
+    self.operandNodes = None
+    """The identities of the arguments passed to the PSP.
+
+    These are used primarily by parametrically polymorphic PSPs, like
+    the RequestPSP in the implementation of lambda and the maker
+    corresponding to mem.
+    """
+    self.node = None
+    """The identity of the current application itself.
+
+    This is used mainly as a unique key to prevent auto-caching of
+    requests that are supposed to be generative.
+    """
+    self.env = None
+    """The lexical environment of the application.
+
+    This is only used by SPs that need to access it, like the
+    implementation of lambda, and get_current_environment.
+    """
+
+  def operandValues(self):
+    """The actual arguments this SP is called with."""
+    raise NotImplementedError
+
+  def spaux(self):
+    """The SP's saved auxiliary state."""
+    raise NotImplementedError
+
+  def madeSPAux(self):
+    """The made SP's saved auxiliary state, if this is an AAA maker application."""
+    raise NotImplementedError
+
+  def esrValues(self):
+    """The results of evaluation of requests the request stage made, if any."""
+    raise NotImplementedError
+
+  def esrNodes(self):
+    """The identities of the evaluations of requests the request stage made, if any."""
+    raise NotImplementedError
+
+  def requestValue(self):
+    """The request the requesting stage made, if any.  Rarely used."""
+    raise NotImplementedError
+
+  def py_prng(self):
+    """PRNG with Python's standard `random.Random` interface that may be used.
+
+    Mutable refence."""
+    raise NotImplementedError
+
+  def np_prng(self):
+    """PRNG with Numpy's `RandomState` interface that may be used.
+
+    Mutable reference."""
+    raise NotImplementedError
 
 class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic

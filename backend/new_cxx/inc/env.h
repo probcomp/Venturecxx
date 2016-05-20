@@ -35,15 +35,15 @@ struct VentureEnvironment : VentureValue
 
   int getValueTypeRank() const;
 
-  void addBinding(const string& sym,Node * node);
+  void addBinding(const string& sym, Node * node);
   void removeBinding(const string& sym);
-  void fillBinding(const string& sym,Node * node);
+  void fillBinding(const string& sym, Node * node);
   Node * lookupSymbol(boost::shared_ptr<VentureSymbol> sym);
   Node * lookupSymbol(const string& sym);
   Node * safeLookupSymbol(const string& sym);
 
   boost::shared_ptr<VentureEnvironment> outerEnv;
-  map<string,Node*> frame;
+  map<string, Node*> frame;
 
   VentureEnvironment* copy_help(ForwardingMap* m) const;
 };

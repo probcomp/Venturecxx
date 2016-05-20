@@ -164,6 +164,11 @@ class Semantics(object):
                 locmap(loctoken(n), val.symbol),
                 e]
         return expression_evaluation_instruction(loclist(expr))
+    def p_directive_assume_values(self, k, nl, e):
+        expr = [loctoken1(k, val.symbol('assume_values')),
+                nl,
+                e]
+        return expression_evaluation_instruction(loclist(expr))
     def p_directive_observe(self, k, e, e1):
         expr = [loctoken1(k, val.symbol('observe')), e, e1]
         return expression_evaluation_instruction(loclist(expr))
@@ -192,17 +197,35 @@ class Semantics(object):
         return locquoted(qquote, e, val.quasiquote)
     def p_expression_unquote(self, unquote, e):
         return locquoted(unquote, e, val.unquote)
-    def p_expression_combination(self, open, es, close):
-        return locbracket(open, close, es or [])
-    def p_expression_comb_error(self, open, es, close):
+    def p_expression_comb0(self, open, close):
+        return locbracket(open, close, [])
+    def p_expression_comb1(self, open, op, args, close):
+        return locbracket(open, close, [op] + args)
+    def p_expression_comb_error(self, open, op, args, close):
         return 'error'
 
-    # expressions: Return list of expressions, or None.
-    def p_expressions_none(self):
+    # arguments: Return list of expressions.
+    def p_arguments_none(self):
         return []
-    def p_expressions_some(self, es, e):
-        es.append(e)
-        return es
+    def p_arguments_some(self, args, e):
+        args.append(e)
+        return args
+    def p_arguments_some_kw(self, args, name, colon, e):
+        args.append(e)
+        return args # The colons are for fake keyword syntax, see Issue #445.
+    def p_arguments_kw_error(self, args, name, colon):
+        return 'error'
+
+    # namelist: return a located list of names
+    def p_namelist_nl(self, open, ns, close):
+        return locbracket(open, close, ns)
+
+    # names: return list of located symbols
+    def p_names_none(self):
+        return []
+    def p_names_some(self, ns, n):
+        ns.append(locmap(loctoken(n), val.symbol))
+        return ns
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
@@ -285,6 +308,27 @@ def parse_church_prime_string(string):
             e.data['instruction_string'] = string[lstart : lend]
             e.data['text_index'] = [start - lstart, end - lstart]
         raise e
+
+
+def string_complete_p(string):
+    scanner = scan.Scanner(StringIO.StringIO(string), '(string)')
+    semantics = Semantics()
+    parser = grammar.Parser(semantics)
+    while True:
+        token = scanner.read()
+        if token[0] == -1:      # scan error
+            return True
+        else:
+            if token[0] == 0:   # EOF
+                try:
+                    parser.feed(token)
+                    # If the EOF parses, then we had a complete string
+                    return True
+                except VentureException:
+                    # Parse was not complete
+                    return False
+            else:
+                parser.feed(token)
 
 def parse_instructions(string):
     return parse_church_prime_string(string)

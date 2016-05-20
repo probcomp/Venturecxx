@@ -25,8 +25,7 @@ using std::endl;
 VentureValuePtr AddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   double sum = 0;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     sum += args->operandValues[i]->getDouble();
   }
   return shared_ptr<VentureNumber>(new VentureNumber(sum));
@@ -41,8 +40,7 @@ VentureValuePtr SubOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr MulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   double prod = 1;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     prod *= args->operandValues[i]->getDouble();
   }
   return shared_ptr<VentureNumber>(new VentureNumber(prod));
@@ -128,7 +126,7 @@ VentureValuePtr TanOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr HypotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("hypot", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(hypot(args->operandValues[0]->getDouble(),args->operandValues[1]->getDouble())));
+  return shared_ptr<VentureNumber>(new VentureNumber(hypot(args->operandValues[0]->getDouble(), args->operandValues[1]->getDouble())));
 }
 
 VentureValuePtr ExpOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -146,7 +144,7 @@ VentureValuePtr LogOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 VentureValuePtr PowOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("pow", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(pow(args->operandValues[0]->getDouble(),args->operandValues[1]->getDouble())));
+  return shared_ptr<VentureNumber>(new VentureNumber(pow(args->operandValues[0]->getDouble(), args->operandValues[1]->getDouble())));
 }
 
 VentureValuePtr SqrtOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -159,6 +157,12 @@ VentureValuePtr NotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 {
   checkArgsLength("not", args, 1);
   return shared_ptr<VentureBool>(new VentureBool(!args->operandValues[0]->getBool()));
+}
+
+VentureValuePtr RealOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+{
+  checkArgsLength("real", args, 1);
+  return VentureValuePtr(new VentureNumber(args->operandValues[0]->getDouble()));
 }
 
 VentureValuePtr IsNumberOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
@@ -212,11 +216,16 @@ VentureValuePtr IsIntegerOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
 VentureValuePtr ProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("probability", args, 1);
-  return VentureValuePtr(new VentureProbability(args->operandValues[0]->getProbability()));
+  return VentureValuePtr(new VentureNumber(args->operandValues[0]->getProbability()));
 }
 
 VentureValuePtr IsProbabilityOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
 {
   checkArgsLength("is_probability", args, 1);
-  return VentureValuePtr(new VentureBool(dynamic_pointer_cast<VentureProbability>(args->operandValues[0]) != NULL));
+  if (args->operandValues[0]->hasDouble()) {
+    double x = args->operandValues[0]->getDouble();
+    return VentureValuePtr(new VentureBool(0 <= x && x <= 1));
+  } else {
+    return VentureValuePtr(new VentureBool(false));
+  }
 }

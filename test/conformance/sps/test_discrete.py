@@ -18,8 +18,14 @@
 import math
 
 from nose.tools import eq_
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim, broken_in, collectSamples
-from venture.test.stats import statisticalTest, reportKnownDiscrete
+
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("none")
 def testDirSmoke():

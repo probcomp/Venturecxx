@@ -92,6 +92,7 @@ def testCollectSmoke4():
   # TODO Also check the distributions of x and the difference
   return reportKnownGaussian(0.0, 2.0, result["y"])
 
+@on_inf_prim("collect") # Technically also resample and MH, but not testing them
 def testPrintf():
   '''Intercept stdout and make sure the message read what we expect'''
   ripl = get_ripl()
@@ -106,6 +107,7 @@ def testPrintf():
   res = result.getvalue()
   assert pattern.match(res) is not None
 
+@on_inf_prim("collect") # Technically also resample and MH, but not testing them
 def testPrintf2():
   '''Intercept stdout and make sure the message read what we expect'''
   ripl = get_ripl()
@@ -120,6 +122,7 @@ def testPrintf2():
   res = result.getvalue()
   assert pattern.match(res) is not None
 
+@on_inf_prim("collect") # Technically also resample and MH, but not testing them
 def testCollectLogScore():
   '''In the presence of likelihood-free SP's, the calling "collect" or "printf"
   should not crash the program.'''

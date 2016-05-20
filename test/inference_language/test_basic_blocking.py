@@ -57,8 +57,8 @@ def testBlockingExample1():
   ripl.infer("(mh 0 0 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
 
 @on_inf_prim("mh")
 def testBlockingExample2():
@@ -79,10 +79,10 @@ def testBlockingExample2():
   newd = ripl.report("d")
   if olda == newa:
     assert oldb == newb
-    assert not oldc == newc
-    assert not oldd == newd
+    assert oldc != newc
+    assert oldd != newd
   else:
-    assert not oldb == newb
+    assert oldb != newb
     assert oldc == newc
     assert oldd == newd
 
@@ -97,15 +97,15 @@ def testBlockingExample3():
   ripl.infer("(mh 0 all 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
 
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
 @on_inf_prim("rejection")
 def testBasicRejection1():
   ripl = get_ripl()
-  ripl.assume("x", "(bernoulli 0.5)",label="pid")
+  ripl.assume("x", "(flip 0.5)",label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
@@ -116,7 +116,7 @@ def testBasicRejection1():
 def testBasicRejection2():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)")
-  ripl.assume("x", "(bernoulli p)", label="pid")
+  ripl.assume("x", "(flip p)", label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
@@ -127,7 +127,7 @@ def testBasicRejection2():
 def testBasicRejection3():
   ripl = get_ripl()
   ripl.assume("p", "(uniform_continuous 0 1)", label="pid")
-  ripl.observe("(bernoulli p)", "true")
+  ripl.observe("(flip p)", "true")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   cdf = stats.beta(2,1).cdf
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
@@ -160,5 +160,5 @@ def testStringScopes():
   ripl.infer('(mh "foo" "bar" 1)')
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb

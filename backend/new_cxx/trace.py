@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 import random
+import numpy.random as npr
 
 import libpumatrace as puma
 
@@ -23,6 +24,7 @@ from venture.lite.value import VentureValue
 from venture.lite.builtin import builtInSPs
 import venture.lite.foreign as foreign
 import venture.value.dicts as v
+import venture.lite.value as vv
 
 class WarningPSP(object):
   warned = {}
@@ -49,12 +51,14 @@ class WarningSP(object):
     return getattr(self.sp, attrname)
 
 class Trace(object):
-  def __init__(self, trace=None):
+  def __init__(self, seed, trace=None):
+    assert trace is None or isinstance(trace, puma.Trace)
+    self.py_rng = random.Random(None)
+    self.np_rng = npr.RandomState(None)
     if trace is None:
       self.trace = puma.Trace()
-      # Poor Puma defaults its local RNG seed to the system time
-      self.trace.set_seed(random.randint(1,2**31-1))
-      for name,sp in builtInSPs().iteritems():
+      self.set_seed(seed)
+      for name, sp in builtInSPs().iteritems():
         if self.trace.boundInGlobalEnv(name):
           # Already there
           pass
@@ -64,15 +68,29 @@ class Trace(object):
     else:
       assert isinstance(trace, puma.Trace)
       self.trace = trace
+      py_state, np_state = seed
+      self.py_rng.setstate(py_state)
+      self.np_rng.set_state(np_state)
 
   def __getattr__(self, attrname):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
   def has_own_prng(self): return True
+  def set_seed(self, seed):
+    prng = random.Random(seed)
+    # XXX It is unclear why 0 and >=2^31 are not allowed here, but it
+    # will be better to fix this when we replace all seeds by 32-byte
+    # strings and all PRNGs by cryptographic ones.
+    self.np_rng.seed(prng.randint(1, 2**31 - 1))
+    self.py_rng.seed(prng.randint(1, 2**31 - 1))
+    self.trace.set_seed(prng.randint(1, 2**31 - 1))
 
   def stop_and_copy(self):
-    return Trace(self.trace.stop_and_copy())
+    py_state = self.py_rng.getstate()
+    np_state = self.np_rng.get_state()
+    state = (py_state, np_state)
+    return Trace(seed=state, trace=self.trace.stop_and_copy())
 
   def short_circuit_copyable(self): return True
 
@@ -105,14 +123,11 @@ class Trace(object):
                                    _ensure_stack_dict(block))
 
   def numNodesInBlock(self, scope, block):
-    # This is kooky for compatibility with the Lite numNodesInBlock method.
-    def guess_type(obj):
-      if isinstance(obj, int):
-        return v.number(obj)
-      if isinstance(obj, basestring):
-        return v.symbol(obj)
-      raise Exception("numNodesInBlock can't handle %s" % obj)
-    return self.trace.numNodesInBlock(guess_type(scope), guess_type(block))
+    return self.trace.numNodesInBlock(_coerce_to_stack_dict(scope),
+                                      _coerce_to_stack_dict(block))
+
+  def numBlocksInScope(self, scope):
+    return self.trace.numBlocksInScope(_coerce_to_stack_dict(scope))
 
   def set_profiling(self, _enabled):
     pass # Puma can't be internally profiled (currently)
@@ -127,6 +142,12 @@ def _unwrapVentureValue(val):
 def _ensure_stack_dict(val):
   assert isinstance(val, VentureValue)
   return val.asStackDict(None)
+
+def _coerce_to_stack_dict(val):
+  if isinstance(val, VentureValue):
+    return val.asStackDict(None)
+  else:
+    return val
 
 def _expToDict(exp):
   if isinstance(exp, int):
@@ -218,4 +239,4 @@ def _expToDict(exp):
     else:
       return {"kernel":"rejection","scope":scope,"block":block,"transitions":1}
   else:
-    raise Exception("Cannot parse infer instruction")
+    raise Exception("The Puma backend does not support the %s inference primitive" % (tag,))

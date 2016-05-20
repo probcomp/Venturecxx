@@ -16,12 +16,16 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples
-from venture.test.config import ignore_inference_quality
+
+from venture.test.config import collectSamples
 from venture.test.config import default_num_transitions_per_sample
-from venture.test.config import gen_on_inf_prim, on_inf_prim
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import ignore_inference_quality
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("pgibbs")
 def testPGibbsBasic1():

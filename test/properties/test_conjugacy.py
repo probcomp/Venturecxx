@@ -17,10 +17,11 @@
 
 import numpy as np
 
+from venture.test.config import collectIidSamples
 from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import gen_on_inf_prim
-from venture.test.config import get_ripl, collectIidSamples
+from venture.test.config import get_ripl
 from venture.test.stats import reportSameContinuous
 from venture.test.stats import reportSameDiscrete
 from venture.test.stats import statisticalTest

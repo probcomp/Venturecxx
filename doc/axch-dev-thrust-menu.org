@@ -210,68 +210,6 @@ PETs).
 - Devise (abstract?) some boilerplate for genericity in Puma and make
   Puma arithmetic generic
 - Go through the types of all the builtins and make integers where appropriate
-*** Project: Regen/Detach as inference SPs
-- can start with a restricted interface, permitting built-in
-  operators to access the broader one.  Eventually try to
-  replicate/replace built-in facilities with inference programming
-- reusable scaffolds would help, perhaps after
-- enables generic Gaussian drift (finally)
-  - If I have generic Gaussian drift, I will feel better about
-    killing the LKernel mechanism
-
-- Subgoals:
-  + Reproduce resimulation mh on a fixed scaffold
-  - Reproduce resimulation mh on a randomly selected scaffold
-  - Gaussian drift kernel
-
-- Initial limitations:
-  - Lite only
-  - One trace only
-    - Can add "distribute" or "scatter" to multiprocessing by passing
-      explicit parallel lists and a command type tag to the worker
-      - cleans up the rest of the control channel too: tags can be
-        "stop", "dump", "at", "map", "scatter", each with their own
-        arguments.
-  - Non-serializing parallelism mode only
-  - Non-stochastic subproblems only
-
-Would be nice if:
-- destructuring worked
-- subproblems did not mutate
-- could transmit this program to the workers to make their random
-  choices independently from each other
-- subproblems, rho_dbs were serializable (?)
-
-;; Imperative mh looks like this if the default regen is from the prior
-(do (subproblem <- (select foo bar)) ; really, select by availability of log densities
-    ((rho_weight, rho_db) <- (detach subproblem))
-    (xi_weight <- (regen subproblem))
-    (if (< (uniform ...) ...)
-        ...
-        (do (detach subproblem)
-            (restore subproblem rho_db))))
-
-;; With functional-underneath traces, we can have this
-(do (subproblem <- (select foo bar))
-    (original <- (copy_trace))
-    (rho_weight <- (detach subproblem))
-    (xi_weight <- (regen subproblem))
-    (if (< (uniform ...) ...)
-        ...
-        (set_trace original)))
-
-(do (subproblem <- (select foo bar))
-    (current_x <- ...)
-    ((rho_weight, rho_db) <- (detach subproblem))
-    ; somewhere need credit for the reverse proposal, rather than the prior
-    (new_x <- (normal current_x 1))
-    (correction <- ....)
-    set x to new x
-    (xi_weight <- (regen subproblem))
-    (if (< (uniform ...) ...)
-        ...
-        (do (detach subproblem)
-            (regen/restore subproblem rho_db))))
 *** Project: make-sp
 - Define a class named something like SyntheticSP, whose methods etc.
 *** Project: A normal profiler (based on addresses)
@@ -350,10 +288,12 @@ Specific micro-benchmarks:
 - SMC or particle filter on simple series model in Puma/Lite.  Stresses:
   - resampling
   - inference program interpretation, somewhat
+- Same thing multiprocess.  Stresses distributed resampling.
 - long complicated Markov chain (with many operators) as a tall
   inference program repeat.  Stresses:
   - inference interpretation
   - crossing whatever barriers
+- Same thing multiprocess (parallel chains).  Stresses lockstep execution.
 - long complicated Markov chain as a Python program.  Stresses:
   - jumping in and out of inference program interpretation; parsing
 
@@ -1060,26 +1000,8 @@ x #213 (model prelude)
   - Therefore, it probably is not in the list of candidate AnyType
     values, either
   - Would need to update that list in Puma, as well.
-- #216 Should make sure that strings work as scope and block ids, (also in
++ #216 Should make sure that strings work as scope and block ids, (also in
   Puma)
-  - Puma has a separate code path for parsing scopes and blocks, named
-    fromPython, that doesn't appear to be used for anything else (?).
-    - As opposed to parseValue, which interprets stack dicts.
-  - This seems to be compensated for on the python side with
-    _expToDict and _unwrapVentureValue (applied to scopes and blocks)!
-  - Candidate resolution: Make sure that all the parameters Puma sees
-    are uniformly stack dicts, parse them as such, and flush the
-    "fromPython" code path.
-    - Difficulty: On entry to _expToDict, some of the arguments were
-      unwrapped to bare Python by specific types given in
-      inference_sps.py, and some (notably the scope and block ids)
-      were left as-is by AnyType instances therein.
-    - enumerative_diversify, collapse_equal, collapse_equal_map, use
-      expressiontype for the scope and block
-    - Actually, the scope and block are the only general values in any
-      of these.
-    - numNodesInBlock breaks because somebody passes raw ints instead
-      of stack dicts.
 - #217 Make there be one standard satisfactory gp implementation
   - Did we ever get good results for gradients through GPs, or is
     there reason to believe that's broken?
@@ -1431,67 +1353,9 @@ Vikash
 Hm.  There are actually two heuristics in this program: the choice of
 which obstacles to freeze, and the choice of when to devote
 inferential effort to mapping vs localization.
-*** Project: Better for_each_particle
-- Interface: Pass in an inference action, it gets distributed, mutates
-  the relevant particles and you get back the array of values
-  - What environment does pyexec get?  Does that environment persist
-    across invocations of for_each_particle
-- Implementation:
-  - An "engine" has an inference interpreter and a model (which is
-    implicit to the inference interpreter).
-  - A model is either a trace or a parallel set of "engine"s.
-  - for_each_particle at one level packages up the action, ships it to
-    the engines one level down, and makes them execute it
-    - Pass the action the index of the particle
-    - Need to be able to transmit inference closures to workers for
-      this to work
-  - if there is nesting:
-    - resample operates on the immediate bags only
-    - the weight of a bag is the average weight of its constituents
-      - this invariant needs to be maintained in the face of
-        set_particle_log_weights and such
-  - builtins like `mh` auto-distribute themselves all the way down
-- Benefit from nesting: independent SMC runs
-- Further extension: on_one_particle index action
-- Issues:
-  - Is there a coherent way for the particles to carry inference-level
-    state, i.e. by parallel define?  What would it mean for the outer
-    inference program to try to refer to such a particle-local variable?
-    - Option: No inner defines
-    - Option: Separate namespaces (then, how can a new command refer
-      to old state?)
-    - Option: Joint namespace, but "particle-local" variables
-      - How to do recursion?  "particle-local" variables whose values are
-        themselves "particle-local" structures?
-    - The traditional answer from other programming languages is that
-      local state does not survive a thread's termination.  However,
-      if I am keeping the actual particle anyway, I can conceptually
-      carry all kinds of state "with it".
-  - The inner engines can't cogently have a back pointer to the outer
-    ripl.  What do we do about that?
-    - per-particle `pyexec` does want a ripl object; should I just
-      synthesize new ripls to wrap each particle's engine in?
-    - would that yield an acceptable implementation of `assume` and co?
-      - if the per-particle sivm/ripl are transient, then all the
-        annotation information will be lost
-        - move macro expansion and macro-error-annotation immediately
-          around each interpreter?
-  - The particles can diverge even more seriously this way than they
-    could with freeze, s.t. e.g. list_directives (at the top level)
-    becomes advisory at best
-    - on_particle 3 list_directives should work, though
-
-Re: distribution: starting a worker server will now require reloading
-all the loaded plugins.
-- This constrains how they may be written
-- They (and all their dependencies!) need to be transmitted to the
-  worker machine
-  - Shared file system?
-  - How does ipcluster do this?
-
-Possible enabler project: Refactor evaluation structure (in Lite) to
-carry its own origin information, so as to get rid of the brittle
-directive-syntax map in the Sivm.  Path:
+*** Project: Flush directive-syntax map in SIVM
+Possible strategy: Refactor evaluation structure (in Lite) to
+carry its own origin information.  Path:
 - Define an algebraic data type of abstract syntax trees
 - Change appropriate elements of venture.value.dicts to emit that
   instead of the old stack dict format

@@ -618,8 +618,8 @@ Resample all particles in the current set from the prior and reset
 their weights to the likelihood."""),
 
   engine_method_sp("enumerative_diversify",
-                   infer_action_maker_type([t.ExpressionType("scope : object"),
-                                            t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.AnyType("scope : object"),
+                                            t.AnyType("block : object")]),
                    desc="""\
 Diversify the current particle set to represent the local conditional exactly.
 
@@ -641,8 +641,8 @@ This is useful together with `collapse_equal` and
 programs in Venture. """),
 
   engine_method_sp("collapse_equal",
-                   infer_action_maker_type([t.ExpressionType("scope : object"),
-                                            t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.AnyType("scope : object"),
+                                            t.AnyType("block : object")]),
                    desc="""\
 Collapse the current particle set to represent the local conditional less redundantly.
 
@@ -665,13 +665,20 @@ This is useful together with `enumerative_diversify` for
 implementing certain kinds of dynamic programs in Venture. """),
 
   engine_method_sp("collapse_equal_map",
-                   infer_action_maker_type([t.ExpressionType("scope : object"),
-                                            t.ExpressionType("block : object")]),
+                   infer_action_maker_type([t.AnyType("scope : object"),
+                                            t.AnyType("block : object")]),
                    desc="""\
 Like `collapse_equal` but deterministically retain the max-weight particle.
 
 And leave its weight unaltered, instead of adding in the weights of
 all the other particles in the bin. """),
+
+  engine_method_sp("checkInvariants",
+                   infer_action_maker_type([]),
+                   desc="""\
+Run a trace self-check looking for contract violations in derived data fields.
+
+O(#nodes). """),
 
   trace_method_sp("draw_scaffold", transition_oper_type(), desc="""\
 Draw a visual representation of the scaffold indicated by the given scope and block.
@@ -812,6 +819,13 @@ particle, and is not allowed to contain modeling commands (``assume``,
 ``observe``, ``predict``, ``forget``, ``freeze``).
 """),
 
+  engine_method_sp("on_particle",
+                   infer_action_maker_type([t.IntegerType(), t.AnyType("<action>")], t.AnyType()), desc="""\
+Run the given inference action on the particle with the given index.
+The inference action is not allowed to contain modeling commands (``assume``,
+``observe``, ``predict``, ``forget``, ``freeze``).
+"""),
+
   engine_method_sp("load_plugin", infer_action_maker_type([t.SymbolType("filename")], return_type=t.AnyType(), variadic=True), desc="""\
 Load the plugin located at <filename>.
 
@@ -933,11 +947,11 @@ Extracts the last row of the supplied inference Dataset and prints its iteration
 
   ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol>"), t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
   ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
-  macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()])),
+  ripl_macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()])),
   ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1)),
   ripl_macro_helper("predict_all", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1)),
-  macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
-  macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.ListType())),
+  ripl_macro_helper("sample", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
+  ripl_macro_helper("sample_all", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
   macro_helper("extract_stats", infer_action_maker_type([t.AnyType("<expression>")], return_type=t.AnyType())),
 
   ripl_method_sp("forget", infer_action_maker_type([t.AnyType("<label>")], return_type=t.AnyType()), desc="""\
@@ -1113,6 +1127,11 @@ Does not interoperate with multiple particles.
 Get the current values of the principal nodes of the given subproblem.
 
 Does not interoperate with multiple particles.
+
+"""),
+
+  engine_method_sp("num_blocks", infer_action_maker_type([t.AnyType("scope : object")], t.ArrayUnboxedType(t.NumberType())), desc="""\
+Report the number of blocks in the given scope in each particle.
 
 """),
 

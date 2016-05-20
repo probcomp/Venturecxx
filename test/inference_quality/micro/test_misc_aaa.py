@@ -18,8 +18,19 @@
 from nose import SkipTest
 from testconfig import config
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, rejectionSampling, skipWhenSubSampling, inParallel, gen_on_inf_prim
+from venture.test.config import collectSamples
+from venture.test.config import default_num_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import inParallel
+from venture.test.config import on_inf_prim
+from venture.test.config import rejectionSampling
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import skipWhenSubSampling
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportSameContinuous
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("any")
 def testMakeBetaBernoulli1():
@@ -30,8 +41,8 @@ def testMakeBetaBernoulli1():
 
 @statisticalTest
 def checkMakeBetaBernoulli1(maker, hyper):
-  if rejectionSampling() and maker == "make_beta_bernoulli" and hyper == "(normal 10.0 1.0)":
-    raise SkipTest("Is the log density of data bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
+  if rejectionSampling() and hyper == "(normal 10.0 1.0)":
+    raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl()
@@ -57,8 +68,8 @@ def testMakeBetaBernoulli2():
 # constraint forwarding and brush).
 @statisticalTest
 def checkMakeBetaBernoulli2(maker):
-  if rejectionSampling() and maker == "make_beta_bernoulli":
-    raise SkipTest("Is the log density of data bounded for collapsed beta bernoulli?  Issue: https://app.asana.com/0/9277419963067/10623454782852")
+  if rejectionSampling():
+    raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl()
@@ -195,3 +206,18 @@ def checkAAAResampleSmoke(sp):
 (resample 4)
 (mh default one 1)
 """ % sp)
+
+@on_inf_prim("block mh")
+@statisticalTest
+def testAAAHyperInference():
+  def try_at_five(maker):
+    r = get_ripl()
+    r.assume("mu", "(normal 0 1)")
+    r.assume("obs", "(%s mu 1 1 1)" % maker)
+    r.observe("(obs)", 5)
+    infer = "(mh default all %d)" % default_num_transitions_per_sample()
+    return collectSamples(r, "mu", infer=infer,
+                          num_samples=default_num_samples(2))
+  collapsed = try_at_five("make_nig_normal")
+  uncollapsed = try_at_five("make_uc_nig_normal")
+  return reportSameContinuous(collapsed, uncollapsed)

@@ -164,6 +164,7 @@ def testHMMObservationZero():
   return reportKnownDiscrete(ans, predictions)
 
 @broken_in('lite', "https://github.com/probcomp/Venturecxx/issues/342")
+@on_inf_prim("resample")
 def testHMMResampleSmoke():
   ripl = get_ripl()
   ripl.assume("f","""

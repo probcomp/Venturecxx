@@ -123,6 +123,9 @@ class Infer(object):
   def collapse_equal_map(self, scope, block):
     self.engine.collapse_map(scope, block)
 
+  def checkInvariants(self):
+    self.engine.model.traces.map('checkInvariants')
+
   def incorporate(self): self.engine.incorporate()
 
   def printf(self, dataset): print dataset.asPandas()
@@ -207,13 +210,16 @@ class Infer(object):
 
   def for_each_particle(self, action):
     return self.engine.for_each_particle(action)
+  def on_particle(self, index, action):
+    return self.engine.on_particle(index, action)
 
   def new_model(self, backend_name=None):
     if backend_name is None:
-      return TraceSet(self.engine, self.engine.model.backend)
+      backend = None
     else:
       import venture.shortcuts as s
-      return TraceSet(self.engine, s.backend(backend_name))
+      backend = s.backend(backend_name)
+    return self.engine.new_model(backend)
   def fork_model(self, backend_name=None):
     model = self.new_model(backend_name)
     model.convertFrom(self.engine.model)
@@ -260,6 +266,8 @@ class Infer(object):
     assert len(self.engine.model.log_weights) == 1, \
       "Custom proposals only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'get_current_values', scaffold)
+  def num_blocks(self, scope):
+    return self.engine.model.traces.map('numBlocksInScope', scope)
 
   def pyexec(self, code):
     self.engine.ripl.pyexec(code)

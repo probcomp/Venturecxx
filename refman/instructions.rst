@@ -46,9 +46,12 @@ operations.
   normal(0, 1) = 0` is valid, but `observe normal(0, 1) + 1 = 0` is
   not, because `+` is a deterministic function of its arguments.
 
-  `observe` has no effect on the distribution of other values (besides
-  the one directly constrained) until the next time inference is
-  invoked.
+  `observe` generally has no effect on the distribution of values in
+  the program until the next time inference is invoked.  The
+  exceptions to this are: the observed value itself and deterministic
+  consequecnes (which are changed to match the observation
+  immediately), and the values of any new variables created after
+  the `observe` is executed.
 
 - `predict expression`: register a persistent prediction.
 

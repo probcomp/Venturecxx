@@ -326,16 +326,138 @@ def testEnumerateCoupledChoices3():
                             num_samples=default_num_samples(6))
   return reportSameDiscrete(ans, predicts)
 
+@statisticalTest
 @on_inf_prim("gibbs")
 def testOccasionalRejection():
-  if config["get_ripl"] == "puma":
-    raise SkipTest("Puma's MHOperator rejects Puma's Gibbs transitions sometimes, triggering assert False.  See https://github.com/probcomp/Venturecxx/issues/415")
-  # The mem is relevant: without it, the program runs to completion
-  # even in Puma.
-  get_ripl().execute_program("""
-(assume cluster_id (if (flip) 1 2))
+  # The mem is relevant: without it, the test passes even in Puma.
+  r = get_ripl()
+  r.execute_program("""
+(assume cluster_id (flip))
 (assume cluster (mem (lambda (id) (normal 0 1))))
 (observe (cluster cluster_id) 1)
-;; Seems to crash with probability about 50% per transition in Puma
-(gibbs default one 10 false)
 """)
+  infer = "(do (force cluster_id true) (gibbs default one 1 false))"
+  predictions = collectSamples(r, address="cluster_id", infer=infer)
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("gibbs")
+def testOccasionalRejectionScope():
+  # Like the previous test but in a custom scope, because Lite
+  # special-cases the default scope when computing the
+  # number-of-blocks correction.
+  # Note: The "frob" scope registers as always having two blocks, even
+  # though one of them will, at runtime, end up having no
+  # unconstrained random choices.
+  r = get_ripl()
+  r.execute_program("""
+(assume cluster_id (tag "frob" 0 (flip)))
+(assume cluster (mem (lambda (id) (tag "frob" 1 (normal 0 1)))))
+(observe (cluster cluster_id) 1)
+""")
+  infer = '(do (force cluster_id true) (gibbs "frob" one 1 false))'
+  predictions = collectSamples(r, address="cluster_id", infer=infer)
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@on_inf_prim("gibbs")
+def testOccasionalRejectionScope2():
+  # Variant of the previous (changing block id).
+  r = get_ripl()
+  r.execute_program("""
+(assume cluster_id (tag "frob" 0 (flip)))
+(assume cluster (mem (lambda (id) (tag "frob" id (normal 0 1)))))
+(observe (cluster cluster_id) 1)
+""")
+  infer = '(do (force cluster_id true) (gibbs "frob" one 1 false))'
+  predictions = collectSamples(r, address="cluster_id", infer=infer)
+  ans = [(True, 0.5), (False, 0.5)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testOccasionalRejectionBrush():
+  # Another version, this time with explicit brush creating the mix mh
+  # correction.
+
+  # Note that in this case, the correction is sound: The number of
+  # random choices available in the default one scope really is
+  # changing, whereas in `testOccasionalRejection` it is not.
+
+  # To see why, consider what transition the operator (gibbs default
+  # one 1) induces on this model (assuming the current behavior of
+  # always claiming the proposal weight is 0).
+  # - False, False is not possible
+  # - From False, True:
+  #   - With probability 50%, enumerate the second coin, and propose
+  #     to keep it at True.
+  #   - Else, enumerate the first coin, find that both states are
+  #     equally good, and
+  #     - With probability 50%, propose to leave it
+  #     - Else, propose to change it to True, which is accepted (with
+  #       or without the correction)
+  #   - Ergo, move to the True state 25% of the time.
+  # - From True, enumerate the first coin
+  #   - With probability 50%, the second coin comes up False in the brush;
+  #     propose to stay in the True state.
+  #   - Else, both states equally good
+  #     - With probability 50%, propose to stay in the True state
+  #     - Else, propose to move to the False, True state
+  #       - If the correction is applied, this proposal will be
+  #         rejected with probability 50%.
+  #   - Ergo, move to the False, True state 25% (no correction) or
+  #     12.5% (correction) of the time.
+  # - The former will induce a 50/50 stationary distribution on the
+  #   value of flip1, whereas the right answer is 2:1 odds in favor of
+  #   True.
+  r = get_ripl()
+  r.execute_program("""
+(assume flip1 (flip))
+(assume flip1_or_flip2
+  (if flip1 true (flip)))
+(observe (exactly flip1_or_flip2) true)
+;; Reject with a non-negligible probability per transition, which would
+;; cause a crash if Gibbs couldn't handle rejection
+(gibbs default one 50 false)
+""")
+  infer = "(gibbs default one %s false)" % default_num_transitions_per_sample()
+  predictions = collectSamples(r, address="flip1", infer=infer)
+  ans = [(True, 2.0/3), (False, 1.0/3)]
+  return reportKnownDiscrete(ans, predictions)
+
+@statisticalTest
+@on_inf_prim("gibbs")
+def testOccasionalRejectionBrushScope():
+  # Another version, this time requiring correct computation of the
+  # correction on a custom scope (which is carefully arranged to avoid
+  # creating blocks where some principal node might be in the brush).
+  #
+  # This particular arrangment of blocks is chosen to falsify the
+  # heuristic present at the time of writing in both Lite and Puma's
+  # correction computation, which is to add the number of blocks the
+  # scope had remaining in the pre-proposal trace with the number of
+  # blocks that gained root nodes in the proposal.  This heuristic is
+  # wrong if a block that is not empty in the pre-proposal trace gains
+  # a new node due to the proposal, which is what happens here, when
+  # `flip2` proposes to move from True to False.
+  r = get_ripl()
+  r.execute_program("""
+(assume flip1 (tag "frob" 1 (flip)))
+(assume flip2 (tag "frob" 2 (flip)))
+(assume flip2_or_flip3
+  (if flip2 true (tag "frob" 1 (flip))))
+(observe (exactly (or flip1 flip2_or_flip3)) true)
+""")
+  infer = '(gibbs "frob" one %s false)' % default_num_transitions_per_sample()
+  predictions = collectSamples(r, address="flip2", infer=infer,
+                               num_samples=default_num_samples(10))
+  # TODO Would be nice to do the power analysis to pick the number of
+  # samples.  Not sure exactly what distribution the expected bug
+  # produces, but empirically it looks like it might be 2:1
+  # True:False.  (The incorrect computation being singled out
+  # overcorrects, which I think means more rejections of True->False
+  # moves than are justified.)  A reasonable fallback might be "Pick
+  # the closest distribution given by comparably small integer ratios
+  # that is skewed in the expected direction".
+  ans = [(True, 4.0/7), (False, 3.0/7)]
+  return reportKnownDiscrete(ans, predictions)

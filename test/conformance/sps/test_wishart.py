@@ -15,14 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from nose.tools import eq_
 from testconfig import config
 import numpy as np
 import scipy.stats
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.lite.utils import logaddexp
+from venture.lite.sp_registry import builtInSPs
+from venture.lite.sp_use import logDensity
+from venture.test.config import SkipTest
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import inParallel
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, collectSamples, on_inf_prim, inParallel, SkipTest
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testWishartSmoke():
@@ -159,3 +169,22 @@ def testInvWishartPrior4():
 
   predictions = collectSamples(ripl, "prediction")
   return reportKnownGaussian(0, 0.01, predictions)
+
+def testInvWishartAssess():
+  psi = 3 # Parameterization from https://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+  dof = 5
+  n = 3000
+  low = 0.00001
+  high = 500
+  get_ripl() # Make sure the SP registry is built (!)
+  inv_wishart_sp = builtInSPs()["inv_wishart"]
+  scale_matrix = [[psi]]
+  def inv_wishart(x):
+    return logDensity(inv_wishart_sp, no_wrapper=True)([[x]], [scale_matrix, dof])
+  inv_wisharts = np.vectorize(inv_wishart)(np.linspace(low, high, n))
+  inv_gamma = scipy.stats.invgamma(dof*0.5, scale=psi*0.5).logpdf
+  inv_gammas = np.vectorize(inv_gamma)(np.linspace(low, high, n))
+  cum_w = math.exp(logaddexp(inv_wisharts)) * (high - low) / n
+  cum_g = math.exp(logaddexp(inv_gammas)) * (high - low) / n
+  np.testing.assert_allclose([1, 1], [cum_w, cum_g], rtol=1e-2)
+  np.testing.assert_allclose(inv_wisharts, inv_gammas)

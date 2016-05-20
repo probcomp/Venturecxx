@@ -18,7 +18,9 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
+@on_inf_prim("unquote")
 def testUnquoteWorksAtToplevel():
   r = get_ripl()
   r.set_mode('venture_script')
@@ -28,3 +30,9 @@ sample unquote(y) + 1;
 sample(unquote(y) + 2);
   ''', type=False)
   eq_(ans, [42.0, 43.0, 44.0])
+
+@on_inf_prim("unquote")
+def testUnquotePermitsModelMacroExpansion():
+  r = get_ripl()
+  ans = r.evaluate('(predict (let ((x (unquote (+ 2 2)))) (+ x x)))')
+  eq_(ans, 8.0)

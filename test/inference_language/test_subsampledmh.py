@@ -18,9 +18,15 @@
 import numpy as np
 import scipy.stats as stats
 from nose.plugins.attrib import attr
+
 from venture.lite.infer.subsampled_mh import sequentialTest
-from venture.test.config import in_backend, get_ripl, collectSamples, broken_in, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import in_backend
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
 
 @in_backend("none")
 def testSequentialTest():

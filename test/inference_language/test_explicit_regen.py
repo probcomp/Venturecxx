@@ -17,9 +17,13 @@
 
 import math
 
-from venture.test.stats import statisticalTest
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownGaussian
-from venture.test.config import get_ripl, on_inf_prim, broken_in, collectSamples, default_num_transitions_per_sample
+from venture.test.stats import statisticalTest
 
 def custom_mh_ripl():
   ripl = get_ripl(persistent_inference_trace=True)
@@ -44,7 +48,7 @@ def testDetachRegenSmoke():
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(custom_mh default all)")
-  assert not old == ripl.sample("x")
+  assert old != ripl.sample("x")
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
@@ -82,7 +86,7 @@ def testCustomProposalSmoke():
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(repeat 5 (gaussian_drift_mh default all 0.1))")
-  assert not old == ripl.sample("x")
+  assert old != ripl.sample("x")
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
@@ -105,4 +109,4 @@ def testDetachForProposalDoesNotMutateScaffold():
     (detach_for_proposal subproblem)
     (regen subproblem))
 """)
-  assert not old == ripl.sample("x")
+  assert old != ripl.sample("x")

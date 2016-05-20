@@ -29,8 +29,8 @@ struct Particle;
 struct EnumerativeGibbsGKernel : GKernel
 {
   EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
-  pair<Trace*,double> propose(ConcreteTrace * trace,
-                              boost::shared_ptr<Scaffold> scaffold);
+  pair<Trace*, double> propose(ConcreteTrace * trace,
+                               boost::shared_ptr<Scaffold> scaffold);
   int accept();
   int reject();
 
@@ -54,7 +54,8 @@ struct EnumerativeGibbsGKernel : GKernel
 
 struct EnumerativeMAPGKernel : EnumerativeGibbsGKernel
 {
-  EnumerativeMAPGKernel(bool inParallel): EnumerativeGibbsGKernel(inParallel) {}
+  EnumerativeMAPGKernel(bool inParallel):
+    EnumerativeGibbsGKernel(inParallel) {}
   boost::shared_ptr<Particle> selectParticle(
     const vector<boost::shared_ptr<Particle> >& particles,
     const vector<double>& particleWeights,

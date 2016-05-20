@@ -25,10 +25,14 @@ if [ -z "$release" ]; then
     exit 1
 fi
 
-script/release-tarball
-
 python setup.py sdist
+
+# Run release-tarball after sdist to capture generated egg-info and
+# such
+script/release-tarball
 
 dist_name=xventure-${release} # I only need this for the length anyway
 
 diff -u <(tar -tf ../venture-$release.tgz | cut -c 11- | sort) <(tar -ztf dist/venture-$release.tar.gz | cut -c ${#dist_name}- | sort)
+
+echo "Note: sdist seems to put PKG-INFO and setup.cfg into the archive even if they don't exist."

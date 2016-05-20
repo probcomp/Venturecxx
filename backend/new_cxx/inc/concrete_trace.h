@@ -39,24 +39,28 @@ struct ConcreteTrace : Trace
   /* Registering metadata */
   void registerAEKernel(Node * node);
   void registerUnconstrainedChoice(Node * node);
-  void registerUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node);
+  void registerUnconstrainedChoiceInScope(
+    ScopeID scope, BlockID block, Node * node);
   void registerConstrainedChoice(Node * node);
 
   /* Unregistering metadata */
   void unregisterAEKernel(Node * node);
   void unregisterUnconstrainedChoice(Node * node);
-  void unregisterUnconstrainedChoiceInScope(ScopeID scope,BlockID block,Node * node);
+  void unregisterUnconstrainedChoiceInScope(
+    ScopeID scope, BlockID block, Node * node);
   void unregisterConstrainedChoice(Node * node);
 
   /* Regen mutations */
-  void addESREdge(RootOfFamily esrRoot,OutputNode * outputNode);
+  void addESREdge(RootOfFamily esrRoot, OutputNode * outputNode);
   void reconnectLookup(LookupNode * lookupNode);
   void incNumRequests(RootOfFamily root);
-  void incRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node);
+  void incRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node);
 
   bool hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node);
-  void registerLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node,boost::shared_ptr<LKernel> lkernel);
-  boost::shared_ptr<LKernel> getLKernel(boost::shared_ptr<Scaffold> scaffold,Node * node);
+  void registerLKernel(boost::shared_ptr<Scaffold> scaffold,
+                       Node * node, boost::shared_ptr<LKernel> lkernel);
+  boost::shared_ptr<LKernel> getLKernel(boost::shared_ptr<Scaffold> scaffold,
+                                        Node * node);
 
   void addChild(Node * node, Node * child);
 
@@ -64,22 +68,27 @@ struct ConcreteTrace : Trace
   RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
   void decNumRequests(RootOfFamily root);
-  void decRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node);
+  void decRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node);
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
   gsl_rng * getRNG();
-  VentureValuePtr getValue(Node * node);
+  const gsl_rng * getRNG() const;
+  VentureValuePtr getValue(Node * node) {
+    VentureValuePtr answer = values[node];
+    assert(answer);
+    return answer;
+  };
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
   int getNumRequests(RootOfFamily root);
-  int getRegenCount(boost::shared_ptr<Scaffold> scaffold,Node * node);
+  int getRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node);
   VentureValuePtr getObservedValue(Node * node);
   boost::shared_ptr<SP> getMadeSP(Node * makerNode);
   boost::shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
 
   boost::shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
-  boost::shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode); // not in particle
+  boost::shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode);
 
 
   bool isMakerNode(Node * node);
@@ -91,27 +100,29 @@ struct ConcreteTrace : Trace
   void clearValue(Node * node);
 
   void unobserveNode(Node * node);
-  void observeNode(Node * node,VentureValuePtr value);
+  void observeNode(Node * node, VentureValuePtr value);
 
 
-  void setMadeSPRecord(Node * makerNode,boost::shared_ptr<VentureSPRecord> spRecord);
+  void setMadeSPRecord(Node * makerNode,
+                       boost::shared_ptr<VentureSPRecord> spRecord);
   void destroyMadeSPRecord(Node * makerNode);
 
 
   void clearMadeSPFamilies(Node * node);
 
 
-  void setMadeSP(Node * node,boost::shared_ptr<SP> sp);
-  void setMadeSPAux(Node * node,boost::shared_ptr<SPAux> spaux);
+  void setMadeSP(Node * node, boost::shared_ptr<SP> sp);
+  void setMadeSPAux(Node * node, boost::shared_ptr<SPAux> spaux);
 
-  void setChildren(Node * node,set<Node*> children);
-  void setESRParents(Node * node,const vector<RootOfFamily> & esrRoots);
+  void setChildren(Node * node, set<Node*> children);
+  void setESRParents(Node * node, const vector<RootOfFamily> & esrRoots);
 
-  void setNumRequests(RootOfFamily node,int num);
+  void setNumRequests(RootOfFamily node, int num);
 
   /* SPFamily operations */
-  void registerMadeSPFamily(Node * makerNode,FamilyID id,RootOfFamily esrRoot);
-  void unregisterMadeSPFamily(Node * makerNode,FamilyID id);
+  void registerMadeSPFamily(Node * makerNode, FamilyID id,
+                            RootOfFamily esrRoot);
+  void unregisterMadeSPFamily(Node * makerNode, FamilyID id);
 
   bool containsMadeSPFamily(Node * makerNode, FamilyID id);
   RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
@@ -122,20 +133,23 @@ struct ConcreteTrace : Trace
   /* New in ConcreteTrace */
 
   BlockID sampleBlock(ScopeID scope);
-  vector<BlockID> blocksInScope(ScopeID scope); // TODO this should be an iterator
+  vector<BlockID> blocksInScope(ScopeID scope); // TODO should be an iterator
   int numBlocksInScope(ScopeID scope);
   set<Node*> getAllNodesInScope(ScopeID scope);
 
-  vector<set<Node*> > getOrderedSetsInScopeAndRange(ScopeID scope,BlockID minBlock,BlockID maxBlock);
+  vector<set<Node*> > getOrderedSetsInScopeAndRange(
+    ScopeID scope, BlockID minBlock, BlockID maxBlock);
   vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
 
-  // TODO Vlad: read this carefully. The default scope is handled differently than the other scopes.
-  // For default, the nodes are the actual principal nodes.
-  // For every other scope, they are only the roots w.r.t. the dynamic scoping rules.
+  // The default scope is handled differently than the other scopes.
+  // For default, the nodes returned are the actual principal nodes.
+  // For every other scope, they are only the roots w.r.t. the dynamic
+  // scoping rules.
   set<Node*> getNodesInBlock(ScopeID scope, BlockID block);
 
   // Helper function for dynamic scoping
-  void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,set<Node*> & pnodes,Node * node);
+  void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block,
+                                      set<Node*> & pnodes, Node * node);
 
   bool scopeHasEntropy(ScopeID scope);
   double makeConsistent();
@@ -152,7 +166,8 @@ struct ConcreteTrace : Trace
 
   bool hasAAAMadeSPAux(OutputNode * makerNode);
   void discardAAAMadeSPAux(OutputNode * makerNode);
-  void registerAAAMadeSPAux(OutputNode * makerNode,boost::shared_ptr<SPAux> spAux);
+  void registerAAAMadeSPAux(OutputNode * makerNode,
+                            boost::shared_ptr<SPAux> spAux);
   boost::shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
   boost::shared_ptr<ConcreteTrace> stop_and_copy() const;
@@ -168,11 +183,11 @@ struct ConcreteTrace : Trace
   set<Node*> constrainedChoices;
   set<Node*> arbitraryErgodicKernels;
 
-  map<Node*,VentureValuePtr> unpropagatedObservations;
+  map<Node*, VentureValuePtr> unpropagatedObservations;
 
-  map<OutputNode*,boost::shared_ptr<SPAux> > aaaMadeSPAuxs;
+  map<OutputNode*, boost::shared_ptr<SPAux> > aaaMadeSPAuxs;
 
-  map<DirectiveID,RootOfFamily> families;
+  map<DirectiveID, RootOfFamily> families;
 
   ScopesMap scopes;
 
@@ -180,8 +195,8 @@ struct ConcreteTrace : Trace
   map<RootOfFamily, int> numRequests;
   map<Node*, boost::shared_ptr<VentureSPRecord> > madeSPRecords;
 
-  map<Node*,VentureValuePtr> values;
-  map<Node*,VentureValuePtr> observedValues;
+  map<Node*, VentureValuePtr> values;
+  map<Node*, VentureValuePtr> observedValues;
 
   // hack for simple garbage collection
   set<boost::shared_ptr<Node> > builtInNodes;

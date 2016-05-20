@@ -283,6 +283,7 @@ def test_serialize_repeatedly():
         v.save(f.name)
         v.load(f.name)
 
+@gen_on_inf_prim("resample")
 def test_foreign_sp():
     # make sure that foreign SP's are retained through serialization
     for mode in ['', '_serializing', '_threaded', '_thread_ser', '_multiprocess']:

@@ -19,7 +19,6 @@ import copy
 import math
 
 import scipy.special
-import numpy.random as npr
 
 from venture.lite.exception import VentureValueError
 from venture.lite.lkernel import PosteriorAAALKernel
@@ -42,7 +41,7 @@ class DirichletOutputPSP(RandomPSP):
 
   def simulate(self, args):
     alpha = args.operandValues()[0]
-    return simulateDirichlet(alpha)
+    return simulateDirichlet(alpha, args.np_prng())
 
   def logDensity(self, val, args):
     alpha = args.operandValues()[0]
@@ -60,7 +59,8 @@ class SymmetricDirichletOutputPSP(RandomPSP):
 
   def simulate(self, args):
     (alpha, n) = args.operandValues()
-    return simulateDirichlet([float(alpha) for _ in range(int(n))])
+    return simulateDirichlet([float(alpha) for _ in range(int(n))],
+                             args.np_prng())
 
   def logDensity(self, val, args):
     (alpha, n) = args.operandValues()
@@ -149,6 +149,11 @@ class MakerCDirCatOutputPSP(DeterministicMakerAAAPSP):
     else:
       return [dalphas, 0]
 
+  def madeSpLogDensityOfDataBound(self, _aux):
+    # Observations are discrete, so the logDensityOfData is bounded by 0.
+    # Improving this bound is Github issue #468.
+    return 0
+
 class CDirCatOutputPSP(RandomPSP):
   def __init__(self, alpha, os):
     self.alpha = Node(alpha)
@@ -156,7 +161,7 @@ class CDirCatOutputPSP(RandomPSP):
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
   def simulate(self, args):
-    index = sample(self.alpha, args.spaux().counts)
+    index = sample(args.np_prng(), self.alpha, args.spaux().counts)
     return self.os[index]
 
   def logDensity(self, val, args):
@@ -213,7 +218,7 @@ class MakerUDirCatOutputPSP(RandomPSP):
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
-    theta = npr.dirichlet(alpha)
+    theta = args.np_prng().dirichlet(alpha)
     output = TypedPSP(UDirCatOutputPSP(theta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n))
 
@@ -232,6 +237,12 @@ class MakerUDirCatOutputPSP(RandomPSP):
     os = vals[1] if len(vals) > 1 else [VentureInteger(i) for i in range(n)]
     return CDirCatOutputPSP(alpha, os).logDensityOfData(aux)
 
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCDirCatOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCDirCatOutputPSP().madeSpLogDensityOfDataBound(aux)
+
   def description(self, name):
     return "  %s is an uncollapsed variant of make_dir_cat." % name
 
@@ -244,7 +255,7 @@ class UDirCatAAALKernel(PosteriorAAALKernel):
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirCatSPAux)
     counts = [count + a for (count, a) in zip(madeaux.counts, alpha)]
-    newTheta = npr.dirichlet(counts)
+    newTheta = args.np_prng().dirichlet(counts)
     output = TypedPSP(UDirCatOutputPSP(newTheta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha,
                                      len(alpha)),
@@ -256,8 +267,8 @@ class UDirCatOutputPSP(RandomPSP):
     self.os = os
     self.index = dict((val, i) for (i, val) in enumerate(os))
 
-  def simulate(self, _args):
-    index = sample(self.theta)
+  def simulate(self, args):
+    index = sample(args.np_prng(), self.theta)
     return self.os[index]
 
   def logDensity(self, val, _args):
@@ -317,6 +328,8 @@ class MakerCSymDirCatOutputPSP(DeterministicMakerAAAPSP):
 
   def madeSpLogDensityOfDataBound(self, aux):
     N = aux.counts.total
+    if N == 0:
+      return 0
     empirical_freqs = [float(c) / N for c in aux.counts]
     # The prior can't do better than concentrating all mass on exactly
     # the best weights, which are the empirical ones.
@@ -349,7 +362,7 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
     if len(os) != n:
       raise VentureValueError(
         "Set of objects to choose from is the wrong length")
-    theta = npr.dirichlet([alpha for _ in range(n)])
+    theta = args.np_prng().dirichlet([alpha for _ in range(n)])
     output = TypedPSP(USymDirCatOutputPSP(theta, os), SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n))
 
@@ -369,6 +382,12 @@ class MakerUSymDirCatOutputPSP(RandomPSP):
     os = vals[2] if len(vals) > 2 else [VentureInteger(i) for i in range(n)]
     return CSymDirCatOutputPSP(alpha, n, os).logDensityOfData(aux)
 
+  def gradientOfLogDensityOfData(self, aux, args):
+    return MakerCSymDirCatOutputPSP().gradientOfLogDensityOfData(aux, args)
+
+  def madeSpLogDensityOfDataBound(self, aux):
+    return MakerCSymDirCatOutputPSP().madeSpLogDensityOfDataBound(aux)
+
   def description(self, name):
     return "  %s is an uncollapsed symmetric variant of make_dir_cat." % name
 
@@ -380,7 +399,7 @@ class USymDirCatAAALKernel(PosteriorAAALKernel):
     madeaux = args.madeSPAux()
     assert isinstance(madeaux, DirCatSPAux)
     counts = [count + alpha for count in madeaux.counts]
-    newTheta = npr.dirichlet(counts)
+    newTheta = args.np_prng().dirichlet(counts)
     output = TypedPSP(USymDirCatOutputPSP(newTheta, os),
                       SPType([], t.AnyType()))
     return VentureSPRecord(DirCatSP(NullRequestPSP(), output, alpha, n),

@@ -41,8 +41,6 @@ class VentureValue(object):
     raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self):
     raise VentureTypeError("Cannot convert %s to integer" % type(self))
-  def getProbability(self):
-    raise VentureTypeError("Cannot convert %s to probability" % type(self))
   def getAtom(self):
     raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self):
@@ -181,11 +179,6 @@ class VentureNumber(VentureValue):
     return self.number
   def getInteger(self):
     return int(self.number)
-  def getProbability(self):
-    if 0 <= self.number and self.number <= 1:
-      return self.number
-    else: # TODO Do what?  Clip to [0,1]?  Raise?
-      raise VentureTypeError("Probability out of range %s" % self.number)
   def getBool(self):
     return self.number
 
@@ -280,46 +273,6 @@ class VentureInteger(VentureValue):
   def expressionFor(self):
     return self.number
 
-class VentureProbability(VentureValue):
-  def __init__(self, number):
-    assert isinstance(number, Number)
-    assert 0 <= number and number <= 1
-    self.number = float(number)
-  def __repr__(self):
-    if hasattr(self, "number"):
-      return "VentureProbability(%s)" % self.number
-    else:
-      return "VentureProbability(uninitialized)"
-  def getNumber(self):
-    return self.number
-  def getProbability(self):
-    return self.number
-  def asStackDict(self, _trace=None):
-    return v.probability(self.number)
-  @staticmethod
-  def fromStackDict(thing):
-    return VentureProbability(thing["value"])
-  def compareSameType(self, other):
-    return stupidCompare(self.number, other.number)
-  def __hash__(self):
-    return hash(self.number)
-  def expressionFor(self):
-    return [v.symbol("probability"), self.number]
-  def map_real(self, f):
-    return VentureNumber(f(self.number))
-  def real_lenses(self):
-    class NumberLens(MLens):
-      # Poor man's closure: pass the relevant thing from the lexical
-      # scope directly.
-      def __init__(self, vn):
-        self.vn = vn
-      def get(self):
-        return self.vn.number
-      def set(self, new):
-        assert isinstance(new, Number)
-        self.vn.number = new
-    return [NumberLens(self)]
-
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
   # strings don't have __cmp__ either? or lists?
@@ -398,13 +351,6 @@ class VentureBool(VentureValue):
   def __repr__(self):
     return "Bool(%s)" % self.boolean
   def getBool(self):
-    return self.boolean
-  def getNumber(self):
-    # TODO This horrible thing permits adding the outputs of bernoulli
-    # trials as well as dispatching on them.  Or should flip and
-    # bernoulli be different SPs?
-    return self.boolean
-  def getInteger(self):
     return self.boolean
   def asStackDict(self, _trace=None):
     return v.boolean(self.boolean)
@@ -591,6 +537,8 @@ class VenturePair(VentureValue):
       ind = index.getNumber()
     except VentureTypeError:
       raise VentureValueError("Looking up non-number %r in a list" % index)
+    if ind < 0: # Equivalent to floor for negative floats
+      raise VentureValueError("Index out of bounds %s" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:
@@ -1093,7 +1041,7 @@ class VentureSymmetricMatrix(VentureMatrix):
     # Do I seriously have to special-case this?
     if self.matrix.size == 0: return self
     candidate = np.vectorize(f)(self.matrix)
-    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
+    return VentureSymmetricMatrix( (candidate + candidate.T) / 2. )
 
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
@@ -1119,19 +1067,19 @@ class SPRef(VentureValue):
 ## Not Requests, because we do not reflect on them
 
 venture_types = [
-  VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
+  VentureNumber, VentureInteger, VentureAtom, VentureBool,
   VentureSymbol, VentureString, VentureForeignBlob, VentureNil, VenturePair,
   VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict,
   VentureMatrix, VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
-venture_numeric_types = [VentureNumber, VentureInteger, VentureProbability]
+venture_numeric_types = [VentureNumber, VentureInteger]
 
 stackable_types = {
   "number": VentureNumber,
   "real": VentureNumber,
   "integer": VentureInteger,
-  "probability": VentureProbability,
+  "probability": VentureNumber, # TODO Eliminate this stack dict type?
   "atom": VentureAtom,
   "boolean": VentureBool,
   "symbol": VentureSymbol,

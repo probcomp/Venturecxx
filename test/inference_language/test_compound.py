@@ -22,6 +22,8 @@ from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_data
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenDoingParticleGibbs
 from venture.test.config import skipWhenRejectionSampling
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
@@ -31,6 +33,7 @@ __author__ = 'ulli'
 # Simple smoke test
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("none")
 def test_compound_assume_smoke():
     smoke_prog ="""
     [assume a_ref (ref (uniform_discrete 2 3))]
@@ -55,6 +58,7 @@ def test_compound_assume_smoke():
     assert ripl.sample("u") == 20, "compound assume does not work for a one-element-compound"
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("none")
 def test_compound_assume_nonduplication():
     ripl = get_ripl()
     ripl.execute_program("""
@@ -69,6 +73,7 @@ def test_compound_assume_nonduplication():
 # Testing observations
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("none")
 def test_compound_assume_observations():
     obs_prog ="""
     [assume a_ref (ref (normal 0 1))]
@@ -101,6 +106,7 @@ def test_compound_assume_observations():
 # Testing inference
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("mh")
 def test_compound_assume_inf_happening():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -127,6 +133,7 @@ def test_compound_assume_inf_happening():
 
 @broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
+@skipWhenDoingParticleGibbs("Issue #531")
 def test_compound_assume_inf_first_element():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -151,6 +158,7 @@ def test_compound_assume_inf_first_element():
 @broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
 @skipWhenRejectionSampling("Rejection takes too long to solve this")
+@skipWhenDoingParticleGibbs("Issue #531")
 def test_compound_assume_inf_second_element():
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
@@ -174,3 +182,23 @@ def test_compound_assume_inf_second_element():
     ripl.predict("(obs_2)", label="predictive")
     post_samples = collectSamples(ripl, "predictive")
     return reportKnownGaussian(-15, 1, post_samples)
+
+@statisticalTest
+@skipWhenDoingParticleGibbs("Issue #531")
+def test_model_without_compound_assume():
+    inf_test_prog ="""
+    [assume a (tag (quote a_scope) 0 (normal 0 10))]
+    [assume b (tag (quote b_scope) 0 (normal -10 10))]
+    [assume obs_1 (make_suff_stat_normal a 1)]
+    [assume obs_2 (make_suff_stat_normal b 1)]
+    """
+
+    ripl = get_ripl()
+    ripl.execute_program(inf_test_prog)
+
+    for _ in range(default_num_data()):
+        ripl.observe("(obs_1)", np.random.normal(5, 1))
+
+    ripl.predict("(obs_1)", label="predictive")
+    post_samples = collectSamples(ripl, "predictive")
+    return reportKnownGaussian(5, 1, post_samples)

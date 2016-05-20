@@ -16,12 +16,17 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import cPickle as pickle
+import contextlib
+import random
+
+import numpy.random as npr
 
 from ..multiprocess import MultiprocessingMaster
 from ..multiprocess import SynchronousMaster
 from ..multiprocess import SynchronousSerializingMaster
 from ..multiprocess import ThreadedMaster
 from ..multiprocess import ThreadedSerializingMaster
+from venture.exception import VentureException
 from venture.lite.utils import log_domain_even_out
 from venture.lite.utils import logaddexp
 from venture.lite.utils import sampleLogCategorical
@@ -29,13 +34,18 @@ import venture.engine.trace as tr
 
 class TraceSet(object):
 
-  def __init__(self, engine, backend):
+  def __init__(self, engine, backend, seed):
     self.engine = engine # Because it contains the foreign sp registry and other misc stuff for restoring traces
     self.backend = backend
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
-    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
+    self._py_rng = random.Random(seed)
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    trace = tr.Trace(self.backend.trace_constructor()(seed))
+    self.create_trace_pool([trace])
+    self._did_to_label = {}
+    self._label_to_did = {}
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':
@@ -51,11 +61,86 @@ class TraceSet(object):
 
   def create_trace_pool(self, traces, weights=None):
     del self.traces # To (try and) force reaping any worker processes
-    self.traces = self._trace_master(self.mode)(traces, self.process_cap)
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    self.traces = self._trace_master(self.mode)(traces, self.process_cap, seed)
     if weights is not None:
       self.log_weights = weights
     else:
       self.log_weights = [0 for _ in traces]
+
+  # Labeled operations.
+
+  @contextlib.contextmanager
+  def _putting_label(self, label, did):
+    if label in self._label_to_did:
+      raise VentureException('invalid_argument',
+          'Label %r is already assigned to a different directive.' % (label,),
+          argument='label')
+    assert did not in self._did_to_label, \
+        'did %r already has label %r, not %r' % \
+        (did, self._did_to_label[did], label)
+    yield
+    assert label not in self._label_to_did, \
+      'Label %r mysteriously appeared in model!' % (label,)
+    assert did not in self._did_to_label
+    self._label_to_did[label] = did
+    self._did_to_label[did] = label
+
+  def _get_label(self, label):
+    if label not in self._label_to_did:
+      raise VentureException('invalid_argument',
+          'Label %r does not exist.' % (label,),
+          argument='label')
+    return self._label_to_did[label]
+
+  @contextlib.contextmanager
+  def _forgetting_label(self, label):
+    if label not in self._label_to_did:
+      raise VentureException('invalid_argument',
+          'Label %r does not exist.' % (label,),
+          argument='label')
+    did = self._label_to_did[label]
+    assert label == self._did_to_label[did]
+    yield self._label_to_did[label]
+    assert did == self._label_to_did[label]
+    assert did not in self._did_to_label
+    del self._label_to_did[label]
+
+  def get_directive_id(self, label):
+    return self._get_label(label)
+
+  def get_directive_label(self, did):
+    return self._did_to_label.get(did)
+
+  def labeled_define(self, label, baseAddr, id, exp):
+    with self._putting_label(label, baseAddr):
+      return self.define(baseAddr, id, exp)
+
+  def labeled_observe(self, label, baseAddr, exp, val):
+    with self._putting_label(label, baseAddr):
+      self.observe(baseAddr, exp, val)
+
+  def labeled_evaluate(self, label, baseAddr, exp):
+    with self._putting_label(label, baseAddr):
+      return self.evaluate(baseAddr, exp)
+
+  def labeled_forget(self, label):
+    with self._forgetting_label(label) as directiveId:
+      return self.forget(directiveId)
+
+  def labeled_freeze(self, label):
+    directiveId = self._get_label(label)
+    self.freeze(directiveId)
+
+  def labeled_report_value(self, label):
+    directiveId = self._get_label(label)
+    return self.report_value(directiveId)
+
+  def labeled_report_raw(self, label):
+    directiveId = self._get_label(label)
+    return self.report_raw(directiveId)
+
+  # Unlabeled operations.
 
   def define(self, baseAddr, id, datum):
     values = self.traces.map('define', baseAddr, id, datum)
@@ -68,7 +153,10 @@ class TraceSet(object):
     self.traces.map('observe', baseAddr, datum, val)
 
   def forget(self, directiveId):
-    return self.traces.map('forget', directiveId)
+    weights = self.traces.map('forget', directiveId)
+    if directiveId in self._did_to_label:
+      del self._did_to_label[directiveId]
+    return weights
 
   def freeze(self, directiveId):
     self.traces.map('freeze', directiveId)
@@ -89,7 +177,11 @@ class TraceSet(object):
     self.traces.map('bind_foreign_sp', name, sp)
 
   def clear(self):
-    self.create_trace_pool([tr.Trace(self.backend.trace_constructor()())])
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    trace = tr.Trace(self.backend.trace_constructor()(seed))
+    self.create_trace_pool([trace])
+    self._label_to_did = {}
+    self._did_to_label = {}
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -116,8 +208,10 @@ if freeze has been used.
     P = int(P)
     newTraces = [None for p in range(P)]
     used_parents = {}
+    seed = self._py_rng.randint(1, 2**31 - 1)
+    np_rng = npr.RandomState(seed)
     for p in range(P):
-      parent = sampleLogCategorical(self.log_weights) # will need to include or rewrite
+      parent = sampleLogCategorical(self.log_weights, np_rng) # will need to include or rewrite
       newTrace = self._use_parent(used_parents, parent)
       newTraces[p] = newTrace
     return newTraces
@@ -223,6 +317,23 @@ if freeze has been used.
       self.mode = mode
       self.create_trace_pool(traces, weights)
 
+  def on_trace(self, i, f):
+    mode = self.mode
+    self.mode = 'sequential'
+    traces = self.retrieve_traces()
+    weights = self.log_weights
+    try:
+      self.create_trace_pool([traces[i]], [weights[i]])
+      ans = f(traces[i])
+      new_trace = self.retrieve_traces()[0]
+      new_weight = self.log_weights[0]
+      traces = traces[0:i] + [new_trace] + traces[i+1:]
+      weights = weights[0:i] + [new_weight] + weights[i+1:]
+      return ans
+    finally:
+      self.mode = mode
+      self.create_trace_pool(traces, weights)
+
   def primitive_infer(self, exp):
     return self.traces.map('primitive_infer', exp)
 
@@ -253,7 +364,9 @@ if freeze has been used.
       return [self.restore_trace(dumped) for dumped in dumped_all]
 
   def restore_trace(self, values, skipStackDictConversion=False):
-    return tr.Trace.restore(self.backend.trace_constructor(), values, self.engine.foreign_sps, skipStackDictConversion)
+    mktrace_seed = self.backend.trace_constructor()
+    mktrace = lambda: mktrace_seed(self._py_rng.randint(1, 2**31 - 1))
+    return tr.Trace.restore(mktrace, values, self.engine.foreign_sps, skipStackDictConversion)
 
   def copy_trace(self, trace):
     if trace.short_circuit_copyable():
@@ -267,12 +380,16 @@ if freeze has been used.
     data['mode'] = self.mode
     data['traces'] = self.retrieve_dumps()
     data['log_weights'] = self.log_weights
+    data['label_dict'] = self._label_to_did
+    data['did_dict'] = self._did_to_label
     return data
 
   def load(self, data):
     traces = [self.restore_trace(trace) for trace in data['traces']]
     self.mode = data['mode']
     self.create_trace_pool(traces, data['log_weights'])
+    self._label_to_did = data['label_dict']
+    self._did_to_label = data['did_dict']
 
   def convertFrom(self, other):
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]

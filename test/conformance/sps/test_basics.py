@@ -17,12 +17,28 @@
 
 import scipy.stats
 
-from venture.test.config import get_ripl, collectSamples, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testEq():
-  assert get_ripl().predict("(eq 1 1)")
+  r = get_ripl()
+  assert r.predict("(eq 1 1)")
+  assert not r.predict("(eq 1 2)")
+  assert not r.predict("(neq 1 1)")
+  assert r.predict("(neq 1 2)")
+  r.set_mode("venture_script")
+  assert r.predict("1 == 1")
+  assert r.predict("eq(1, 1)")
+  assert not r.predict("1 == 2")
+  assert not r.predict("eq(1, 2)")
+  assert not r.predict("1 != 1")
+  assert not r.predict("neq(1, 1)")
+  assert r.predict("1 != 2")
+  assert r.predict("neq(1, 2)")
 
 @on_inf_prim("none")
 def testCompare():
@@ -37,6 +53,7 @@ def testBasicCDFs():
   yield checkCDF, "(beta 1 1)", scipy.stats.beta(1, 1).cdf
   yield checkCDF, "(gamma 1 2)", scipy.stats.gamma(1, scale=1/2.0).cdf
   yield checkCDF, "(student_t 1)", scipy.stats.t(1).cdf
+  yield checkCDF, "(inv_gamma 1 2)", scipy.stats.invgamma(1, scale=2.0).cdf
 
 @statisticalTest
 def checkCDF(expr, cdf):

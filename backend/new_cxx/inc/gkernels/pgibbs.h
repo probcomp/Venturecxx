@@ -28,9 +28,11 @@ struct Particle;
 /* Functional particle gibbs. */
 struct PGibbsGKernel : GKernel
 {
-  PGibbsGKernel(size_t numNewParticles,bool inParallel): inParallel(inParallel), numNewParticles(numNewParticles) {}
+  PGibbsGKernel(size_t numNewParticles, bool inParallel):
+    inParallel(inParallel), numNewParticles(numNewParticles) {}
 
-  pair<Trace*,double> propose(ConcreteTrace * trace,boost::shared_ptr<Scaffold> scaffold);
+  pair<Trace*, double>
+  propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold);
   int accept();
   int reject();
 

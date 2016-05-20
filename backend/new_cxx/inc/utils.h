@@ -54,28 +54,23 @@ Simplex normalizeVector(const vector<double> & xs);
 
 size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec);
 
-VentureValuePtr simulateCategorical(const Simplex & ps,const vector<VentureValuePtr> & os, gsl_rng * rng);
+VentureValuePtr simulateCategorical(const Simplex & ps, const vector<VentureValuePtr> & os, gsl_rng * rng);
 
 double logDensityCategorical(VentureValuePtr val, const Simplex & ps);
-double logDensityCategorical(VentureValuePtr val, const Simplex & ps,const vector<VentureValuePtr> & os);
+double logDensityCategorical(VentureValuePtr val, const Simplex & ps, const vector<VentureValuePtr> & os);
 
 template <typename T>
 vector<vector<T> > cartesianProduct(vector<vector<T> > sequences)
 {
   vector<vector<T> > products;
-  if (sequences.empty())
-  {
+  if (sequences.empty()) {
     products.push_back(vector<T>());
-  }
-  else
-  {
+  } else {
     vector<T> lastGroup = sequences.back();
     sequences.pop_back();
     vector<vector<T> > recursiveProduct = cartesianProduct(sequences);
-    BOOST_FOREACH(vector<T> vs, recursiveProduct)
-    {
-      BOOST_FOREACH(T v, lastGroup)
-      {
+    BOOST_FOREACH(vector<T> vs, recursiveProduct) {
+      BOOST_FOREACH(T v, lastGroup) {
         vector<VentureValuePtr> new_vs(vs);
         new_vs.push_back(v);
         products.push_back(new_vs);
@@ -87,16 +82,16 @@ vector<vector<T> > cartesianProduct(vector<vector<T> > sequences)
 
 template <class T>
 boost::python::object toPython(Trace * trace, const T& t)
-{ 
+{
   return boost::python::object(t);
 }
 
 // Converts a C++ map to a python dict
 template <class Map>
-boost::python::dict toPythonDict(Trace * trace, const Map& map) {
+boost::python::dict toPythonDict(Trace * trace, const Map& map)
+{
   boost::python::dict dict;
-  BOOST_FOREACH(const typename Map::value_type& pair, map)
-  {
+  BOOST_FOREACH(const typename Map::value_type& pair, map) {
     dict[toPython(trace, pair.first)["value"]] = toPython(trace, pair.second);
   }
   return dict;
@@ -104,10 +99,10 @@ boost::python::dict toPythonDict(Trace * trace, const Map& map) {
 
 // Converts a C++ vector to a python list
 template <class T>
-boost::python::list toPythonList(Trace * trace, const vector<T>& vec) {
+boost::python::list toPythonList(Trace * trace, const vector<T>& vec)
+{
   boost::python::list list;
-  BOOST_FOREACH(const T& v, vec)
-  {
+  BOOST_FOREACH(const T& v, vec) {
     list.append(toPython(trace, v));
   }
   return list;

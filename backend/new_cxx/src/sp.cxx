@@ -21,14 +21,14 @@
 #include "concrete_trace.h"
 #include "stop-and-copy.h"
 
-bool SPFamilies::containsFamily(FamilyID id)  { return families.count(id); }
+bool SPFamilies::containsFamily(FamilyID id) { return families.count(id); }
 RootOfFamily SPFamilies::getRootOfFamily(FamilyID id)
 {
   assert(families.count(id));
   return families[id];
 }
 
-void SPFamilies::registerFamily(FamilyID id,RootOfFamily root)
+void SPFamilies::registerFamily(FamilyID id, RootOfFamily root)
 {
   assert(!families.count(id));
   families[id] = root;
@@ -54,7 +54,7 @@ boost::shared_ptr<LatentDB> SP::constructLatentDB() const
 SP::SP(PSP * requestPSP, PSP * outputPSP) :
   requestPSP(boost::shared_ptr<PSP>(requestPSP)),
   outputPSP(boost::shared_ptr<PSP>(outputPSP))
-  {}
+{}
 
 double SP::simulateLatents(boost::shared_ptr<Args> args,
                            boost::shared_ptr<LSR> lsr,

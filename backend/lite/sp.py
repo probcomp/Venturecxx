@@ -127,35 +127,6 @@ class VentureSPRecord(VentureValue):
 
 registerVentureType(VentureSPRecord)
 
-class UnwrappingArgs(object):
-  def __init__(self, f_type, args):
-    self.f_type = f_type
-    self.args = args
-    self.node = args.node
-    self.operandNodes = args.operandNodes
-    self.env = args.env
-
-  def operandValues(self):
-    return self.f_type.unwrap_arg_list(self.args.operandValues())
-
-  def spaux(self): return self.args.spaux()
-
-  # These four are only used on output nodes
-  def requestValue(self):
-    return self.args.requestValue()
-
-  def esrNodes(self):
-    return self.args.esrNodes()
-
-  def esrValues(self):
-    return self.args.esrValues()
-
-  def madeSPAux(self):
-    return self.args.madeSPAux()
-
-  def __repr__(self):
-    return "%s(%r)" % (self.__class__, self.__dict__)
-
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
   the types expected for the arguments and the return, and thus knows
@@ -199,7 +170,10 @@ class SPType(VentureType):
     return self.return_type.asPythonNoneable(value)
 
   def unwrap_args(self, args):
-    return UnwrappingArgs(self, args)
+    from venture.lite.sp_use import RemappingArgs
+    def remap(values):
+      return self.unwrap_arg_list(values)
+    return RemappingArgs(remap, args)
 
   def args_match(self, args):
     vals = args.operandValues()

@@ -41,8 +41,8 @@ struct ForeignLitePSP : PSP
   VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool isRandom() const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode,
@@ -70,9 +70,9 @@ struct ForeignLiteLKernel : LKernel
 {
   ForeignLiteLKernel(boost::python::object lkernel): lkernel(lkernel) {}
   VentureValuePtr forwardSimulate(Trace * trace, VentureValuePtr oldValue,
-                                  shared_ptr<Args> args,gsl_rng * rng);
+                                  shared_ptr<Args> args, gsl_rng * rng);
   double forwardWeight(Trace * trace, VentureValuePtr newValue,
-                       VentureValuePtr oldValue,shared_ptr<Args> args);
+                       VentureValuePtr oldValue, shared_ptr<Args> args);
   double reverseWeight(Trace * trace, VentureValuePtr oldValue,
                        shared_ptr<Args> args);
 

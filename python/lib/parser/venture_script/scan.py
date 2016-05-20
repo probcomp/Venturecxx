@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-# Venture lexical scanner (`VentureScript', Lisp-style notation).
+# Venture lexical scanner (`VentureScript', JavaScript-style notation).
 
 import StringIO
 
@@ -162,6 +162,9 @@ class Scanner(Plex.Scanner):
         (Plex.Str(']'), grammar.T_RSQUARE),
         (Plex.Str('{'), grammar.T_LCURLY),
         (Plex.Str('}'), grammar.T_RCURLY),
+        (Plex.Str('[|'), grammar.T_LOXFORD),
+        (Plex.Str('|]'), grammar.T_ROXFORD),
+        (Plex.Str('${'), grammar.T_LDOLLAR_CURLY),
         (Plex.Str('='), grammar.T_EQDEF),
         (Plex.Str('<-'), grammar.T_LARR),
         (Plex.Str('||'), grammar.T_AND),

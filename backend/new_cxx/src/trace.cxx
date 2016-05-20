@@ -28,34 +28,34 @@ ConstantNode * Trace::createConstantNode(VentureValuePtr value)
   return constantNode;
 }
 
-LookupNode * Trace::createLookupNode(Node * sourceNode,VentureValuePtr sym)
+LookupNode * Trace::createLookupNode(Node * sourceNode, VentureValuePtr sym)
 {
-  LookupNode * lookupNode = new LookupNode(sourceNode,sym);
-  setValue(lookupNode,getValue(sourceNode));
+  LookupNode * lookupNode = new LookupNode(sourceNode, sym);
+  setValue(lookupNode, getValue(sourceNode));
   //cout << "createLookupNode(" << sourceNode << "," << lookupNode << ")";
-  addChild(sourceNode,lookupNode);
+  addChild(sourceNode, lookupNode);
   return lookupNode;
 }
 
 
-pair<RequestNode*,OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env,VentureValuePtr exp)
+pair<RequestNode*, OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env, VentureValuePtr exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
 
   //cout << "createApplicationNodes(" << operatorNode << "," << requestNode << ")";
-  
+
   requestNode->outputNode = outputNode;
   addChild(requestNode, outputNode);
-  
+
   addChild(operatorNode, requestNode);
   addChild(operatorNode, outputNode);
-  
+
   for (size_t i = 0; i < operandNodes.size(); ++i) {
     addChild(operandNodes[i], requestNode);
     addChild(operandNodes[i], outputNode);
   }
-  
+
   return make_pair(requestNode, outputNode);
 }
 
@@ -69,18 +69,19 @@ VentureValuePtr Trace::getGroundValue(Node * node)
 {
   VentureValuePtr value = getValue(node);
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(value);
-  
+
   // TODO Hack!
-  if (spRef) { return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),getMadeSPAux(spRef->makerNode))); }
-  else { return value; }
+  if (spRef) {
+    return VentureValuePtr(new VentureSPRecord(getMadeSP(spRef->makerNode),
+                                               getMadeSPAux(spRef->makerNode)));
+  } else { return value; }
 }
 
 Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 {
   VentureValuePtr candidate = getValue(node->operatorNode);
   boost::shared_ptr<VentureSPRef> spRef = dynamic_pointer_cast<VentureSPRef>(candidate);
-  if (!spRef)
-  {
+  if (!spRef) {
     throw "Cannot apply a non-procedure: " + candidate->toString();
   }
   return spRef->makerNode;
@@ -90,18 +91,16 @@ Node * Trace::getOperatorSPMakerNode(ApplicationNode * node)
 vector<Node*> Trace::getParents(Node * node)
 {
   vector<Node*> parents = node->getDefiniteParents();
-  if (dynamic_cast<OutputNode*>(node)) 
-  {
+  if (dynamic_cast<OutputNode*>(node)) {
     vector<RootOfFamily> esrRoots = getESRParents(node);
-    for (size_t i = 0; i < esrRoots.size(); ++i)
-    {
+    for (size_t i = 0; i < esrRoots.size(); ++i) {
       parents.push_back(esrRoots[i].get());
     }
   }
   return parents;
 }
 
-boost::shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return boost::shared_ptr<Args>(new Args(this,node)); }
+boost::shared_ptr<Args> Trace::getArgs(ApplicationNode * node) { return boost::shared_ptr<Args>(new Args(this, node)); }
 
 
 ///////// misc
@@ -113,8 +112,7 @@ OutputNode * Trace::getConstrainableNode(Node * node)
   OutputNode * outputNode = dynamic_cast<OutputNode*>(candidate);
   assert(outputNode);
 
-  if (!getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)->isRandom())
-  {
+  if (!getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode)->isRandom()) {
     throw "Cannot constrain a deterministic value.";
   }
   return outputNode;
@@ -127,20 +125,15 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
   if (lookupNode) { return getOutermostNonReferenceNode(lookupNode->sourceNode); }
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   assert(outputNode);
-  
+
   boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
-  
-  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp))
-  { 
+
+  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp)) {
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
-  }
-  else if (dynamic_pointer_cast<TagOutputPSP>(psp))
-  { 
+  } else if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
     return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
-  }
-  else
-  {
+  } else {
     return node;
   }
 }

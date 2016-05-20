@@ -28,26 +28,20 @@ VentureValuePtr foreignFromPython(boost::python::object thing)
 {
   // proxy for pyutils::parseValue that handles foreign SPs by wrapping them
   // TODO: should foreign_sp be a recognized stack dict type?
-  if (thing["type"] == "foreign_sp")
-  {
+  if (thing["type"] == "foreign_sp") {
     return VentureValuePtr(new VentureSPRecord(new ForeignLiteSP(thing["sp"]),
                                                new ForeignLiteSPAux(thing["aux"])));
-  }
-  else if (thing["type"] == "request")
-  {
+  } else if (thing["type"] == "request") {
     boost::python::list foreignESRs = boost::python::extract<boost::python::list>(thing["value"]["esrs"]);
     boost::python::list foreignLSRs = boost::python::extract<boost::python::list>(thing["value"]["lsrs"]);
     vector<ESR> esrs;
     vector<shared_ptr<LSR> > lsrs;
     // TODO: ESRs
-    for (boost::python::ssize_t i = 0; i < boost::python::len(foreignLSRs); ++i)
-    {
+    for (boost::python::ssize_t i = 0; i < boost::python::len(foreignLSRs); ++i) {
       lsrs.push_back(shared_ptr<LSR>(new ForeignLiteLSR(foreignLSRs[i])));
     }
     return VentureValuePtr(new ForeignLiteRequest(esrs, lsrs));
-  }
-  else
-  {
+  } else {
     return parseValue(boost::python::extract<boost::python::dict>(thing));
   }
 }
@@ -57,26 +51,26 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
   boost::python::dict foreignArgs;
 
   boost::python::list foreignOperandValues;
-  for (size_t i = 0; i < args->operandValues.size(); ++i)
-  {
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
     foreignOperandValues.append(args->operandValues[i]->toPython(args->_trace));
   }
   foreignArgs["operandValues"] = foreignOperandValues;
 
   boost::python::object foreignAux;
-  if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux))
-  {
+  if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(args->spAux)) {
     foreignAux = aux->aux;
   }
   foreignArgs["spaux"] = foreignAux;
 
   OutputNode * outputNode = dynamic_cast<OutputNode*>(args->node);
-  if (outputNode && args->_trace->hasAAAMadeSPAux(outputNode))
-  {
+  if (outputNode && args->_trace->hasAAAMadeSPAux(outputNode)) {
     shared_ptr<SPAux> madeSPAux = args->_trace->getAAAMadeSPAux(outputNode);
     boost::python::object foreignMadeSPAux = dynamic_pointer_cast<ForeignLiteSPAux>(madeSPAux)->aux;
     foreignArgs["madeSPAux"] = foreignMadeSPAux;
   }
+
+  boost::python::long_ seed(gsl_rng_get(args->_trace->getRNG()));
+  foreignArgs["seed"] = seed;
 
   // TODO: nodes, env, requests
 
@@ -100,14 +94,14 @@ double ForeignLitePSP::logDensity(VentureValuePtr value,
   return boost::python::extract<double>(foreignLogDensity);
 }
 
-void ForeignLitePSP::incorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void ForeignLitePSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   psp.attr("incorporate")(foreignValue, foreignArgs);
 }
 
-void ForeignLitePSP::unincorporate(VentureValuePtr value,shared_ptr<Args> args) const
+void ForeignLitePSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -150,8 +144,7 @@ vector<VentureValuePtr> ForeignLitePSP::enumerateValues(shared_ptr<Args> args) c
   boost::python::object foreignResult = psp.attr("enumerateValues")(foreignArgs);
   boost::python::list foreignValues = boost::python::extract<boost::python::list>(foreignResult);
   vector<VentureValuePtr> values;
-  for (boost::python::ssize_t i = 0; i < boost::python::len(foreignValues); ++i)
-  {
+  for (boost::python::ssize_t i = 0; i < boost::python::len(foreignValues); ++i) {
     values.push_back(foreignFromPython(foreignValues[i]));
   }
   return values;
@@ -177,8 +170,7 @@ VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
                                                     gsl_rng * rng)
 {
   boost::python::object foreignOldValue;
-  if (oldValue)
-  {
+  if (oldValue) {
     foreignOldValue = oldValue->toPython(args->_trace);
   }
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -193,8 +185,7 @@ double ForeignLiteLKernel::forwardWeight(Trace * trace,
 {
   boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
   boost::python::object foreignOldValue;
-  if (oldValue)
-  {
+  if (oldValue) {
     foreignOldValue = oldValue->toPython(args->_trace);
   }
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -202,7 +193,7 @@ double ForeignLiteLKernel::forwardWeight(Trace * trace,
   return boost::python::extract<double>(foreignWeight);
 }
 
-double ForeignLiteLKernel::reverseWeight(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args)
+double ForeignLiteLKernel::reverseWeight(Trace * trace, VentureValuePtr oldValue, shared_ptr<Args> args)
 {
   boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -215,8 +206,7 @@ boost::python::dict ForeignLiteRequest::toPython(Trace * trace) const
   boost::python::list foreignESRs;
   boost::python::list foreignLSRs;
   // TODO: ESRs
-  for (size_t i = 0; i < lsrs.size(); ++i)
-  {
+  for (size_t i = 0; i < lsrs.size(); ++i) {
     foreignLSRs.append(dynamic_pointer_cast<ForeignLiteLSR>(lsrs[i])->lsr);
   }
   boost::python::dict value;
@@ -242,8 +232,7 @@ double ForeignLiteSP::simulateLatents(shared_ptr<Args> args,
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignLSR = dynamic_pointer_cast<ForeignLiteLSR>(lsr)->lsr;
   boost::python::object foreignLatentDB;
-  if (latentDB)
-  {
+  if (latentDB) {
     foreignLatentDB = dynamic_pointer_cast<ForeignLiteLatentDB>(latentDB)->latentDB;
   }
   return boost::python::extract<double>(sp.attr("simulateLatents")(foreignArgs, foreignLSR, shouldRestore, foreignLatentDB));
@@ -268,7 +257,8 @@ void ForeignLiteSP::AEInfer(shared_ptr<SPAux> spAux, shared_ptr<Args> args,
                             gsl_rng * rng) const
 {
   boost::python::object foreignAux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)->aux;
-  sp.attr("AEInfer")(foreignAux);
+  boost::python::long_ seed(gsl_rng_get(rng));
+  sp.attr("AEInfer")(foreignAux, seed);
 }
 
 ForeignLiteSP* ForeignLiteSP::copy_help(ForwardingMap* forward) const
@@ -286,8 +276,7 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace,
                                             shared_ptr<SPAux> spAux) const
 {
   boost::python::object foreignAux;
-  if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux))
-  {
+  if (shared_ptr<ForeignLiteSPAux> aux = dynamic_pointer_cast<ForeignLiteSPAux>(spAux)) {
     foreignAux = aux->aux;
   }
   // TODO: make this transparent if possible
