@@ -175,6 +175,12 @@ def DoExpand(exp):
       # Binding statement, venturescript form
       pattern = ["do", ["<-", "var", "expr"]] + rest_vars
       template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
+          statement[0]["value"] == "let"):
+      # Let statement
+      pattern = ["do", ["let", "var", "expr"]] + rest_vars
+      template = ["let", [["var", "expr"]], ["do"] + rest_vars]
     else:
       # Non-binding statement
       pattern = ["do", "stmt"] + rest_vars
