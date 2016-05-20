@@ -199,29 +199,33 @@ class Semantics(object):
         return locmerge(i, p, {'instruction': i, 'file': p})
 
     # body: Return located expression.
-    def p_body_let(self, l, semi, e):
-        assert isloc(l)
+    def p_body_do(self, ss, semi, e):
+        assert isloc(ss)
         assert isloc(e)
-        return locmerge(l, e, [locmerge(l, e, val.symbol('let')), l, e])
+        do = locmerge(ss, e, val.symbol('do'))
+        return locmerge(ss, e, [do] + ss['value'] + [e])
     def p_body_exp(self, e):
         assert isloc(e)
         return e
 
-    # let: Return located list of located bindings.
-    def p_let_one(self, l):
-        assert isloc(l)
-        return locval(l, [l])
-    def p_let_many(self, ls, semi, l):
-        assert isloc(ls)
-        assert isloc(l)
-        ls['value'].append(l)
-        return locmerge(ls, l, ls['value'])
+    # statements: Return located list of located bindings.
+    def p_statements_one(self, s):
+        assert isloc(s)
+        return locval(s, [s])
+    def p_statements_many(self, ss, semi, s):
+        assert isloc(s)
+        assert isloc(s)
+        ss['value'].append(s)
+        return locmerge(ss, s, ss['value'])
 
-    # let1: Return located binding.
-    def p_let1_l(self, n, eq, e):
+    def p_statement_let(self, n, eq, e):
         assert isloc(e)
-        n = loctoken(n)
-        return locmerge(n, e, [locmap(n, val.symbol), e])
+        let = loctoken1(eq, val.symbol('let'))
+        n = locmap(loctoken(n), val.symbol)
+        return locmerge(n, e, [let, n, e])
+    def p_statement_none(self, e):
+        assert isloc(e)
+        return e
 
     def _p_binop(self, l, op, r):
         assert isloc(l)
