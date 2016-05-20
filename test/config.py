@@ -564,7 +564,7 @@ def needs_seaborn(f):
       import seaborn
       return f(*args)
     except ImportError:
-      raise SkipTest("pystan not installed on this machine")
+      raise SkipTest("seaborn not installed on this machine")
   return wrapped
 
 def capture_output(ripl, program):
