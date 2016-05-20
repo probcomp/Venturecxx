@@ -136,8 +136,8 @@ params(many)		::= params(params) T_COMMA(c) L_NAME(param).
 
 arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
-arrayelts(one)		::= body(e).
-arrayelts(many)		::= arrayelts(es) T_COMMA(c) body(e).
+arrayelts(one)		::= expression(e).
+arrayelts(many)		::= arrayelts(es) T_COMMA(c) expression(e).
 
 literal(true)		::= T_TRUE(t).
 literal(false)		::= T_FALSE(f).
