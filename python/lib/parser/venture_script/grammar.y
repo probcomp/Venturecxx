@@ -109,6 +109,7 @@ exponential(none)	::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND(o) arglist(args)
 				T_RROUND(c).
+applicative(lookup)	::= applicative(a) T_LSQUARE(o) expression(index) T_RSQUARE(c).
 applicative(none)	::= primary(e).
 
 arglist(none)		::= .

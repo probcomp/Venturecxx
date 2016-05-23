@@ -311,6 +311,11 @@ class Semantics(object):
         for arg in args:
             assert isloc(arg)
         return locmerge(fn, loctoken(c), [fn] + args)
+    def p_applicative_lookup(self, a, o, index, c):
+        assert isloc(a)
+        assert isloc(index)
+        lookup = loctoken1(o, val.sym('lookup'))
+        return locmerge(a, loctoken(c), [lookup, a, index])
     def p_applicative_none(self, e):
         assert isloc(e)
         return e
