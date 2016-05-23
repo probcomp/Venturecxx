@@ -181,6 +181,23 @@ def DoExpand(exp):
       # Let statement
       pattern = ["do", ["let", "var", "expr"]] + rest_vars
       template = ["let", [["var", "expr"]], ["do"] + rest_vars]
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
+          statement[0]["value"] == "letrec"):
+      # Letrec statement
+      mutrec = 0
+      for next_statement in rest:
+        if (type(next_statement) is list and len(next_statement) == 3 and
+            type(next_statement[0]) is dict and
+            next_statement[0]["value"] == "mutrec"):
+          mutrec += 1
+        else:
+          break
+      mutrec_vars = [["var_%d" % i, "expr_%d" % i] for i in range(mutrec)]
+      pattern = (["do", ["letrec", "var", "expr"]] +
+                 [["mutrec"] + e for e in mutrec_vars] +
+                 rest_vars[mutrec:])
+      template = ["letrec", [["var", "expr"]] + mutrec_vars, ["do"] + rest_vars[mutrec:]]
     else:
       # Non-binding statement
       pattern = ["do", "stmt"] + rest_vars
