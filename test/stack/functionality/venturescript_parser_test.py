@@ -84,6 +84,8 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
     def test_let(self):
         self.run_test( '{ a=b;c=d;e}',
                 r(0,12,r(2,9,v.sym('do'),2,3,r(3,1,v.sym('let'),2,1,v.sym('a'),4,1,v.sym('b')),6,3,r(7,1,v.sym('let'),6,1,v.sym('c'),8,1,v.sym('d')),10,1,v.sym('e'))))
+        self.run_test( '{ let a=b; let c=d; e}',
+                r(0,22,r(2,19,v.sym('do'),2,7,r(2,3,v.sym('let'),6,1,v.sym('a'),8,1,v.sym('b')),11,7,r(11,3,v.sym('let'),15,1,v.sym('c'),17,1,v.sym('d')),20,1,v.sym('e'))))
 
 
     def test_do(self):
