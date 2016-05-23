@@ -81,6 +81,17 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 r(0,15,r(0,4,v.sym('lambda'),4,2,r(),8,5,r(8,5,v.sym('do'),8,3,r(9,1,v.sym('let'),8,1,v.sym('a'),10,1,v.sym('b')),12,1,v.sym('c')))))
 
 
+    def test_arrow_proc(self):
+        self.run_test( '(arg, arg) -> true',
+                r(0,18,r(11,2,v.sym('lambda'),0,10,r(1,3,v.sym('arg'),6,3,v.sym('arg')),14,4,v.boolean(True))))
+        self.run_test( '(arg) -> true',
+                r(0,13,r(6,2,v.sym('lambda'),0,5,r(1,3,v.sym('arg')),9,4,v.boolean(True))))
+        self.run_test( 'arg   -> true',
+                r(0,13,r(6,2,v.sym('lambda'),0,3,r(0,3,v.sym('arg')),9,4,v.boolean(True))))
+        self.run_test( '() -> { a=b;c }',
+                r(0,15,r(3,2,v.sym('lambda'),0,2,r(),6,9,r(8,5,v.sym('do'),8,3,r(9,1,v.sym('let'),8,1,v.sym('a'),10,1,v.sym('b')),12,1,v.sym('c')))))
+
+
     def test_let(self):
         self.run_test( '{ a=b;c=d;e}',
                 r(0,12,r(2,9,v.sym('do'),2,3,r(3,1,v.sym('let'),2,1,v.sym('a'),4,1,v.sym('b')),6,3,r(7,1,v.sym('let'),6,1,v.sym('c'),8,1,v.sym('d')),10,1,v.sym('e'))))
