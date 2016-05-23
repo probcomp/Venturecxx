@@ -99,6 +99,11 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 r(0,22,r(2,19,v.sym('do'),2,7,r(2,3,v.sym('let'),6,1,v.sym('a'),8,1,v.sym('b')),11,7,r(11,3,v.sym('let'),15,1,v.sym('c'),17,1,v.sym('d')),20,1,v.sym('e'))))
 
 
+    def test_letrec(self):
+        self.run_test( '{ letrec a=b; and c=d; e}',
+                r(0,25,r(2,22,v.sym('do'),2,10,r(2,6,v.sym('letrec'),9,1,v.sym('a'),11,1,v.sym('b')),14,7,r(14,3,v.sym('mutrec'),18,1,v.sym('c'),20,1,v.sym('d')),23,1,v.sym('e'))))
+
+
     def test_do(self):
         self.run_test( '{a <- b; e}',
                 r(0,11,r(1,9,v.sym('do'),1,6,r(1,1,'a',3,2,v.sym('<-'),6,1,v.sym('b')),9,1,v.sym('e'))))
