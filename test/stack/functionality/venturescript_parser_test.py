@@ -528,11 +528,10 @@ class TestInstructions(unittest.TestCase):
 
     def test_labeled_assume(self):
         full_loc = j(0,4,5,1,7,6,14,1,16,1,18,1)
-        expr_loc = j(7,6,14,1,16,1,18,1)
         self.run_test( 'name : assume a = b',
                 [{'loc':full_loc, 'value':{
-                    'instruction' : {'loc': expr_loc, 'value':'evaluate'},
-                    'expression' : {'loc': expr_loc, 'value':
+                    'instruction' : {'loc': full_loc, 'value':'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
                         [{'loc':j(7,6), 'value':v.sym('assume')},
                          {'loc': j(14,1), 'value':v.sym('a')},
                          {'loc':j(18,1), 'value':v.sym('b')},
@@ -552,11 +551,10 @@ class TestInstructions(unittest.TestCase):
                     }}])
     def test_labeled_predict(self):
         full_loc = j(0,4,5,1,7,7,15,4)
-        expr_loc = j(7,7,15,4)
         self.run_test( 'name : predict blah',
                 [{'loc':full_loc, 'value':{
-                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
-                    'expression' : {'loc': expr_loc, 'value':
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
                         [{'loc':j(7,7), 'value':v.sym('predict')},
                          {'loc':j(15,4), 'value':v.sym('blah')},
                          {'loc':j(0,4), 'value':v.sym('name')}]}
@@ -576,11 +574,10 @@ class TestInstructions(unittest.TestCase):
                     }}])
     def test_labeled_observe(self):
         full_loc = j(0,4,5,1,7,7,15,1,17,1,19,9)
-        expr_loc = j(7,7,15,1,17,1,19,9)
         self.run_test( 'name : observe a = count<32>',
                 [{'loc':full_loc, 'value':{
-                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
-                    'expression' : {'loc':expr_loc, 'value':
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc':full_loc, 'value':
                         [{'loc':j(7,7), 'value':v.sym('observe')},
                          {'loc':j(15,1), 'value':v.sym('a')},
                          {'loc':j(19,9), 'value':{'type':'count', 'value':32.0}},
