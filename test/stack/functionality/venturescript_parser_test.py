@@ -459,6 +459,25 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                                     5,1, v.number(2),
                                     9,1, v.number(3))))))
 
+    def test_list_syntax(self):
+        self.run_legacy_test('()', [[v.sym('list')]], 'zero')
+        self.run_legacy_test('(1,2)',
+            [[v.sym('list'), v.number(1), v.number(2)]],
+            'two')
+        self.run_legacy_test('(1,2,    3)',
+            [[v.sym('list'), v.number(1), v.number(2), v.number(3)]],
+            'three')
+        self.run_legacy_test('(1, 2, 3)',
+            [[v.sym('list'), v.number(1), v.number(2), v.number(3)]],
+            'four')
+        self.run_test('f((1,2 + 3))',
+            r(0,12, r(0,1, v.sym('f'),
+                      2,9, r(2,1, v.sym('list'),
+                             3,1, v.number(1),
+                             5,5, r(7,1, v.sym('add'),
+                                    5,1, v.number(2),
+                                    9,1, v.number(3))))))
+
 
 # Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class
