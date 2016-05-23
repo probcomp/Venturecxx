@@ -95,6 +95,19 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 r(0,10,r(1,7,v.sym('do'),1,6,r(1,1,'a',3,2,v.sym('<-'),6,1,v.sym('b')),7,1,v.sym('pass'))))
 
 
+    def test_do_directive(self):
+        self.run_test( '{ assume a = b; observe c = d; predict e }',
+                r(0,42,r(2,38,v.sym('do'),
+                         2,12,r(2,6,v.sym('assume'),9,1,v.sym('a'),13,1,v.sym('b')),
+                         16,13,r(16,7,v.sym('observe'),24,1,v.sym('c'),28,1,v.sym('d')),
+                         31,9,r(31,7,v.sym('predict'),39,1,v.sym('e')))))
+        self.run_test( '{ assume a = b; label: observe c = d; predict e }',
+                r(0,49,r(2,45,v.sym('do'),
+                         2,12,r(2,6,v.sym('assume'),9,1,v.sym('a'),13,1,v.sym('b')),
+                         16,20,r(23,7,v.sym('observe'),31,1,v.sym('c'),35,1,v.sym('d'),16,5,v.sym('label')),
+                         38,9,r(38,7,v.sym('predict'),46,1,v.sym('e')))))
+
+
     def test_identity(self):
         self.run_test( '(a)',
                 r(0,3,v.sym('a')))
