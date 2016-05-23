@@ -209,6 +209,22 @@ def testEagerReturn():
       (return (= r1 r2))))
 """)
 
+@on_inf_prim("none")
+def testDoLet():
+  assert get_ripl().evaluate("""\
+(do (let x 1)
+    (let y x)
+    (= x y))
+""")
+
+@on_inf_prim("none")
+def testDoLetrec():
+  assert get_ripl().evaluate("""\
+(do (letrec x (lambda () (y)))
+    (mutrec y (lambda () 1))
+    (= (x) (y)))
+""")
+
 @needs_backend("lite")
 @needs_backend("puma")
 @on_inf_prim("new_model")
