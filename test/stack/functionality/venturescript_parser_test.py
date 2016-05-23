@@ -490,6 +490,30 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                                     9,1, v.number(3))))))
 
 
+    def test_lookup(self):
+        self.run_legacy_test( 'a[b][c]',
+                [[v.sym('lookup'),
+                  [v.sym('lookup'), v.sym('a'), v.sym('b')],
+                  v.sym('c')]],
+                'lookup')
+        self.run_legacy_test( 'a[b](d,e)[c]',
+                [[v.sym('lookup'),
+                  [[v.sym('lookup'), v.sym('a'), v.sym('b')],
+                   v.sym('d'), v.sym('e')],
+                  v.sym('c')]],
+                'lookup')
+        self.run_legacy_test( 'a + b[c]',
+                [[v.sym('add'),
+                  v.sym('a'),
+                  [v.sym('lookup'), v.sym('b'), v.sym('c')]]],
+                'lookup')
+        self.run_legacy_test( '(a + b)[c]',
+                [[v.sym('lookup'),
+                  [v.sym('add'), v.sym('a'), v.sym('b')],
+                  v.sym('c')]],
+                'lookup')
+
+
 # Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class
 @attr(backend='none')
