@@ -38,10 +38,10 @@ instructions(some)	::= instructions(insts) instruction_opt(inst) T_SEMI.
 instruction_opt(none)	::= .
 instruction_opt(some)	::= instruction(inst).
 
-instruction(labelled)	::= L_NAME(l) T_COLON directive(d).
 instruction(command)	::= command(c).
-instruction(expression)	::= expression(e).
+instruction(statement)	::= statement(e).
 
+labelled(directive)	::= L_NAME(l) T_COLON directive(d).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
@@ -58,6 +58,7 @@ statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
 /* TODO deprecate "assign" in favor of let */
 statement(let)		::= K_LET(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
+statement(labelled)	::= labelled(d).
 statement(none)	::= expression(e).
 
 expression_opt(none)	::= .
@@ -68,9 +69,7 @@ expression(top)		::= do_bind(e).
 do_bind(bind)		::= L_NAME(n) T_LARR(op) expression(e).
 do_bind(none)		::= action(e).
 
-action(assume)		::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
-action(observe)	::= K_OBSERVE(k) expression(e1) T_EQDEF(eq) expression(e2).
-action(predict)	::= K_PREDICT(k) expression(e).
+action(directive)	::= directive(d).
 action(force)		::= K_FORCE(k) expression(e1) T_EQDEF(eq) expression(e2).
 action(sample)		::= K_SAMPLE(k) expression(e).
 action(none)		::= boolean_and(e).

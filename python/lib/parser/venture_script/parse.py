@@ -141,47 +141,39 @@ class Semantics(object):
         return inst
 
     # instruction: Return located {'instruction': 'foo', ...}.
-    def p_instruction_labelled(self, l, d):
-        label = locmap(loctoken(l), val.symbol)
-        if d['value']['instruction']['value'] == 'evaluate':
-            # The grammar only permits expressions that are calls to
-            # the 'assume', 'observe', or 'predict' macros to be
-            # labeled with syntactic sugar.
-            locexp = d['value']['expression']
-            exp = locexp['value']
-            new_exp = exp + [label]
-            new_locexp = located(locexp['loc'], new_exp)
-            new_d = expression_evaluation_instruction(new_locexp)
-            return locmerge(loctoken(l), d, new_d)
-        else:
-            d['value']['label'] = label
-            d['value']['instruction'] = \
-                locmap(d['value']['instruction'], lambda i: 'labeled_' + i)
-            return locmerge(loctoken(l), d, d['value'])
-    def p_instruction_unlabelled(self, d):
-        assert isloc(d)
-        return d
     def p_instruction_command(self, c):
         assert isloc(c)
         return c
-    def p_instruction_expression(self, e):
+    def p_instruction_statement(self, e):
         i = locval(e, 'evaluate')
         return locval(e, {'instruction': i, 'expression': e})
 
-    # directive: Return located {'instruction': located(..., 'foo'), ...}.
+    # labelled: Return located expression.
+    def p_labelled_directive(self, l, d):
+        label = locmap(loctoken(l), val.symbol)
+        exp = d['value']
+        new_exp = exp + [label]
+        new_d = locmerge(label, d, new_exp)
+        return new_d
+
+    # directive: Return located expression.
     def p_directive_assume(self, k, n, eq, e):
         assert isloc(e)
         i = loctoken1(k, val.symbol('assume'))
         s = locmap(loctoken(n), val.symbol)
-        return locmerge(i, e, expression_evaluation_instruction(loclist([i, s, e])))
+        app = [i, s, e]
+        return locmerge(i, e, app)
     def p_directive_observe(self, k, e, eq, e1):
         assert isloc(e)
+        assert isloc(e1)
         i = loctoken1(k, val.symbol('observe'))
-        return locmerge(i, e1, expression_evaluation_instruction(loclist([i, e, e1])))
+        app = [i, e, e1]
+        return locmerge(i, e1, app)
     def p_directive_predict(self, k, e):
         assert isloc(e)
         i = loctoken1(k, val.symbol('predict'))
-        return locmerge(i, e, expression_evaluation_instruction(loclist([i, e])))
+        app = [i, e]
+        return locmerge(i, e, app)
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_define(self, k, n, eq, e):
@@ -230,6 +222,9 @@ class Semantics(object):
         let = loctoken1(eq, val.symbol('let'))
         n = locmap(loctoken(n), val.symbol)
         return locmerge(n, e, [let, n, e])
+    def p_statement_labelled(self, d):
+        assert isloc(d)
+        return d
     def p_statement_none(self, e):
         assert isloc(e)
         return e
@@ -258,23 +253,9 @@ class Semantics(object):
         n = loctoken(n)
         # XXX Yes, this remains infix, for the macro expander to handle...
         return locmerge(n, e, [n, locmap(loctoken(op), val.symbol), e])
-    def p_action_assume(self, k, n, eq, e):
-        assert isloc(e)
-        i = loctoken1(k, val.symbol('assume'))
-        s = locmap(loctoken(n), val.symbol)
-        app = [i, s, e]
-        return locmerge(i, e, app)
-    def p_action_observe(self, k, e1, eq, e2):
-        assert isloc(e1)
-        assert isloc(e2)
-        i = loctoken1(k, val.symbol('observe'))
-        app = [i, e1, e2]
-        return locmerge(i, e2, app)
-    def p_action_predict(self, k, e):
-        assert isloc(e)
-        i = loctoken1(k, val.symbol('predict'))
-        app = [i, e]
-        return locmerge(i, e, app)
+    def p_action_directive(self, d):
+        assert isloc(d)
+        return d
     def p_action_force(self, k, e1, eq, e2):
         assert isloc(e1)
         assert isloc(e2)
