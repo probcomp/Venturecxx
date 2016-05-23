@@ -266,6 +266,21 @@ Set up push-button profiling (and time measurement)
   to profile itself?)
 - startprof also an option for Python stuff
 - what for Puma?
+
+Summary of extant results, as given to Dan Roy on Flowdock on May 13,
+2016:
+- For [PPAML] CP5, we bound a third-party parser and chewed up one
+  section of the Penn Treebank in reasonable time (I forget whether it
+  was hours or minutes).
+- For CP1 we did SLAM on 90 seconds of laser data (25 frames per
+  second, I assume).
+- CP 4.1 was a 5-D 500-pt Bayes linear regression, and I was able to
+  draw enough samples on my laptop to convince myself that the program
+  worked.
+- One of our things for CP4.3 was a 10,000-wide particle filter on a
+  20-step discrete HMM that ran in a couple hours.
+- I also hear rumors of someone getting an LDA to run on a 1M-token
+  corpus, but I haven't seen that reproduced.
 *** Project: Start a suite of micro-benchmarks (ideally with baselines)
 Specific micro-benchmarks:
 - long simple Markov chain on simple model (normal-normal) in Puma.
