@@ -514,6 +514,21 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 'lookup')
 
 
+    def test_unquote(self):
+        self.run_legacy_test( '${e}',
+                [['quote', ['unquote', v.sym('e')]]],
+                'unquote')
+        self.run_legacy_test( '$e',
+                [['quote', ['unquote', v.sym('e')]]],
+                'unquote')
+        self.run_legacy_test( '${e + 1}',
+                [['quote', ['unquote', [v.sym('add'), v.sym('e'), v.num(1)]]]],
+                'unquote')
+        self.run_legacy_test( '$e + 1',
+                [[v.sym('add'), ['quote', ['unquote', v.sym('e')]], v.num(1)]],
+                'unquote')
+
+
 # Almost the same effect as @venture.test.config.in_backend('none'),
 # but works on the whole class
 @attr(backend='none')
