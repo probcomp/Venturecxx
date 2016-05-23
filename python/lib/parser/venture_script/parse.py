@@ -222,6 +222,16 @@ class Semantics(object):
         let = loctoken1(eq, val.symbol('let'))
         n = locmap(loctoken(n), val.symbol)
         return locmerge(n, e, [let, n, e])
+    def p_statement_letrec(self, l, n, eq, e):
+        assert isloc(e)
+        let = loctoken1(l, val.symbol('letrec'))
+        n = locmap(loctoken(n), val.symbol)
+        return locmerge(let, e, [let, n, e])
+    def p_statement_mutrec(self, l, n, eq, e):
+        assert isloc(e)
+        let = loctoken1(l, val.symbol('mutrec'))
+        n = locmap(loctoken(n), val.symbol)
+        return locmerge(let, e, [let, n, e])
     def p_statement_labelled(self, d):
         assert isloc(d)
         return d

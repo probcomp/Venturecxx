@@ -58,6 +58,8 @@ statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
 /* TODO deprecate "assign" in favor of let */
 statement(let)		::= K_LET(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
+statement(letrec)	::= K_LETREC(l) L_NAME(n) T_EQDEF(eq) expression(e).
+statement(mutrec)	::= K_AND(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(labelled)	::= labelled(d).
 statement(none)	::= expression(e).
 

@@ -56,6 +56,7 @@ keywords = {                    # XXX Use a perfect hash.
     'lambda': grammar.K_LAMBDA,
     'le': grammar.K_LE,
     'let': grammar.K_LET,
+    'letrec': grammar.K_LETREC,
     'load': grammar.K_LOAD,
     'lt': grammar.K_LT,
     'mul': grammar.K_MUL,
