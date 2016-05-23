@@ -71,19 +71,19 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
     def test_optional_let(self):
         self.run_test( 'a',
                 r(0,1,v.sym('a')))
-        self.run_test( '(a=b;c)',
-                r(0,7,r(1,5,v.sym('let'),1,3,r(1,3,r(1,1,v.sym('a'),3,1,v.sym('b'))),5,1,v.sym('c'))))
+        self.run_test( '{a=b;c}',
+                r(0,7,r(1,5,v.sym('do'),1,3,r(2,1,v.sym('let'),1,1,v.sym('a'),3,1,v.sym('b')),5,1,v.sym('c'))))
 
     def test_proc(self):
         self.run_test( 'proc(arg, arg){ true }',
                 r(0,22,r(0,4,v.sym('lambda'),4,10,r(5,3,v.sym('arg'),10,3,v.sym('arg')),16,4,v.boolean(True))))
         self.run_test( 'proc(){ a=b;c }',
-                r(0,15,r(0,4,v.sym('lambda'),4,2,r(),8,5,r(8,5,v.sym('let'),8,3,r(8,3,r(8,1,v.sym('a'),10,1,v.sym('b'))),12,1,v.sym('c')))))
+                r(0,15,r(0,4,v.sym('lambda'),4,2,r(),8,5,r(8,5,v.sym('do'),8,3,r(9,1,v.sym('let'),8,1,v.sym('a'),10,1,v.sym('b')),12,1,v.sym('c')))))
 
 
     def test_let(self):
         self.run_test( '{ a=b;c=d;e}',
-                r(0,12,r(0,12,v.sym('let'),2,7,r(2,3,r(2,1,v.sym('a'),4,1,v.sym('b')),6,3,r(6,1,v.sym('c'),8,1,v.sym('d'))),10,1,v.sym('e'))))
+                r(0,12,r(2,9,v.sym('do'),2,3,r(3,1,v.sym('let'),2,1,v.sym('a'),4,1,v.sym('b')),6,3,r(7,1,v.sym('let'),6,1,v.sym('c'),8,1,v.sym('d')),10,1,v.sym('e'))))
 
 
     def test_identity(self):
@@ -96,9 +96,9 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 r(0,20,r(0,2,v.sym('if'),4,1,v.sym('a'),9,1,v.sym('b'),18,1,v.sym('c'))))
         self.run_test( 'if( a=b;c) {d=e;f}else{g=h;i }',
                 r(0,30,r(0,2,v.sym('if'),
-                    4,5,r(4,5,v.sym('let'),4,3,r(4,3,r(4,1,v.sym('a'),6,1,v.sym('b'))),8,1,v.sym('c')),
-                         12,5,r(12,5,v.sym('let'),12,3,r(12,3,r(12,1,v.sym('d'),14,1,v.sym('e'))),16,1,v.sym('f')),
-                         23,5,r(23,5,v.sym('let'),23,3,r(23,3,r(23,1,v.sym('g'),25,1,v.sym('h'))),27,1,v.sym('i')),
+                    4,5,r(4,5,v.sym('do'),4,3,r(5,1,v.sym('let'),4,1,v.sym('a'),6,1,v.sym('b')),8,1,v.sym('c')),
+                         12,5,r(12,5,v.sym('do'),12,3,r(13,1,v.sym('let'),12,1,v.sym('d'),14,1,v.sym('e')),16,1,v.sym('f')),
+                         23,5,r(23,5,v.sym('do'),23,3,r(24,1,v.sym('let'),23,1,v.sym('g'),25,1,v.sym('h')),27,1,v.sym('i')),
                 )))
 
     def test_infix_locations(self):
@@ -361,11 +361,11 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 'expression')
         #let
         self.run_legacy_test( '{ a=b; c=d; e}',
-                [[v.sym('let'), [[v.sym('a'),v.sym('b')], [v.sym('c'),v.sym('d')]], v.sym('e')]],
+                [[v.sym('do'), [v.sym('let'),v.sym('a'),v.sym('b')], [v.sym('let'),v.sym('c'),v.sym('d')], v.sym('e')]],
                 'expression')
         #proc
         self.run_legacy_test( 'proc(){ a=2; b }',
-                [[v.sym('lambda'),[],[v.sym('let'),[[v.sym('a'), v.number(2.0)]], v.sym('b')]]],
+                [[v.sym('lambda'),[],[v.sym('do'),[v.sym('let'), v.sym('a'), v.number(2.0)], v.sym('b')]]],
                 'expression')
         #sym
         self.run_legacy_test( 'b',
