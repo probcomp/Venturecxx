@@ -91,6 +91,8 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
     def test_do(self):
         self.run_test( '{a <- b; e}',
                 r(0,11,r(1,9,v.sym('do'),1,6,r(1,1,'a',3,2,v.sym('<-'),6,1,v.sym('b')),9,1,v.sym('e'))))
+        self.run_test( '{a <- b; }',
+                r(0,10,r(1,7,v.sym('do'),1,6,r(1,1,'a',3,2,v.sym('<-'),6,1,v.sym('b')),7,1,v.sym('pass'))))
 
 
     def test_identity(self):
