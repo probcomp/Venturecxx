@@ -25,7 +25,7 @@ class SamplableMap(object):
 
 
   def __setitem__(self,k,v):
-    assert not k in self.d
+    assert k not in self.d
     self.d[k] = len(self.a)
     self.a.append((k,v))
 
