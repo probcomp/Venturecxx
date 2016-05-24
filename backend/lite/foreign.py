@@ -53,7 +53,9 @@ def asStackDict(thing):
         return thing.asStackDict()
 
 def asArgsObject(args):
-    prng = random.Random(args['seed'])
+    seed = args['seed']
+    assert seed is not None
+    prng = random.Random(seed)
     return MockArgs(
         map(fromStackDict, args.get('operandValues')),
         args.get('spaux'),
@@ -170,6 +172,7 @@ class ForeignLiteSP(object):
     def hasAEKernel(self):
         return self.sp.hasAEKernel()
     def AEInfer(self, aux, seed):
+        assert seed is not None
         np_rng = npr.RandomState(seed)
         return self.sp.AEInfer(aux, np_rng)
 

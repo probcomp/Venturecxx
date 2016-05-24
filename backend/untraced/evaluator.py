@@ -90,6 +90,7 @@ class RequestArgs(IArgs):
     self.node = node.Node(address)
     self.operandNodes = nodes
     self.env = env
+    assert seed is not None
     rng = random.Random(seed)
     self._py_rng = random.Random(rng.randint(1, 2**31 - 1))
     self._np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))

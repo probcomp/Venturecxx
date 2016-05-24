@@ -41,6 +41,7 @@ class Trace(object):
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
 
+    assert seed is not None
     rng = random.Random(seed)
     self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
     self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
