@@ -17,7 +17,7 @@
 
 import random
 
-import numpy.random
+import numpy.random as npr
 
 from venture.lite.request import Request
 from venture.lite.sp import VentureSPRecord
@@ -58,7 +58,7 @@ def asArgsObject(args):
         map(fromStackDict, args.get('operandValues')),
         args.get('spaux'),
         py_rng=random.Random(prng.randint(1, 2**31 - 1)),
-        np_rng=numpy.random.RandomState(prng.randint(1, 2**31 - 1)),
+        np_rng=npr.RandomState(prng.randint(1, 2**31 - 1)),
         madeSPAux=args.get('madeSPAux'))
 
 class ForeignLitePSP(object):
@@ -170,7 +170,7 @@ class ForeignLiteSP(object):
     def hasAEKernel(self):
         return self.sp.hasAEKernel()
     def AEInfer(self, aux, seed):
-        np_rng = numpy.random.RandomState(seed)
+        np_rng = npr.RandomState(seed)
         return self.sp.AEInfer(aux, np_rng)
 
     def show(self, spaux):
