@@ -140,6 +140,8 @@ def test_loglikelihood_logjoint():
     check('(log_joint_at default all)',
           logp_x_given_theta + logp_theta_given_alpha + logp_alpha)
 
+    assert_almost_equal(ripl.get_global_logscore()[0], logp_x_given_theta)
+
     # Conditional model:
     #
     #   alpha ~ Expon(1)
@@ -178,3 +180,5 @@ def test_loglikelihood_logjoint():
     #   = p(x, theta, alpha)
     check('(log_joint_at default all)',
           logp_x_given_theta + logp_theta_given_alpha + logp_alpha)
+
+    assert_almost_equal(ripl.get_global_logscore()[0], logp_x_given_theta)
