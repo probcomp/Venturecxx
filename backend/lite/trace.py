@@ -802,11 +802,6 @@ the scaffold determined by the given expression."""
     # Python's native randomness.
     return 0
 
-  def set_seed(self, seed):
-    # random.seed(seed)
-    # numpy.random.seed(seed)
-    pass
-
   def getGlobalLogScore(self):
     # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
     all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
