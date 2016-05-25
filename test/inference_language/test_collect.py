@@ -84,7 +84,7 @@ def testCollectSmoke4():
            (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d))))
       (return d)))""")
   result = out.asPandas()
-  for k in ["x", "y", "iter", "time (s)", "log score", "prt. id", "(abs (sub y x))", "abs_x"]:
+  for k in ["x", "y", "iter", "time (s)", "prt. id", "(abs (sub y x))", "abs_x"]:
     assert k in result
     assert len(result[k]) == 30
   # Check that the dataset can be extracted again
