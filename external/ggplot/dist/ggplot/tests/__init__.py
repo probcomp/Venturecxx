@@ -243,7 +243,7 @@ def _setup():
                                         str(plt.get_fignums())
 
 
-# This is here to run it like "from ggplot.tests import test; test()"
+# This is here to run it like "from ..tests import test; test()"
 def test(verbosity=1):
     """run the ggplot test suite"""
     old_backend = mpl.rcParams['backend']

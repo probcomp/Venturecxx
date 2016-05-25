@@ -78,8 +78,8 @@ def test_axis_changes_applied_to_all_axis_visual():
 
 @cleanup
 def test_different_markers():
-    from ggplot.components import assign_visual_mapping
-    from ggplot.components.shapes import shape_gen
+    from ..components import assign_visual_mapping
+    from ..components.shapes import shape_gen
     # First the generator which assigns the shapes
     shape = shape_gen()
     assert_true(six.next(shape) != six.next(shape), "Subsequent shapes are not different!")

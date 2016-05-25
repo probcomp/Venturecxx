@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 import sys
 
 from .geom import geom
-from ggplot.utils import is_categorical
+from ..utils import is_categorical
 import numpy as np
 
 

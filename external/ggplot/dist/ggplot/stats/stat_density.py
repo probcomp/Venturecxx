@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import gaussian_kde
 
-from ggplot.utils import make_iterable_ntimes
-from ggplot.utils.exceptions import GgplotError
+from ..utils import make_iterable_ntimes
+from ..utils.exceptions import GgplotError
 from .stat import stat
 
 # TODO: switch to statsmodels kdes

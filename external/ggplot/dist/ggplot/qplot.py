@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import ggplot
+from .ggplot import ggplot
 from .components import aes
 from .geoms import geom_point, geom_bar, geom_boxplot, geom_histogram, geom_line
 from .geoms.chart_components import xlab as xlabel
@@ -111,7 +111,7 @@ def qplot(x, y=None, color=None, size=None, fill=None, data=None,
     else:
         geom = geom_map.get(geom, geom_point)
 
-    p = ggplot.ggplot(_aes, data=data) + geom()
+    p = ggplot(_aes, data=data) + geom()
     if "x" in log:
         p += scale_x_log()
     if "y" in log:

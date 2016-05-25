@@ -2,7 +2,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from nose.tools import assert_true, assert_raises
-from ggplot.tests import image_comparison, cleanup
+from ..tests import image_comparison, cleanup
 
 from ggplot import *
 

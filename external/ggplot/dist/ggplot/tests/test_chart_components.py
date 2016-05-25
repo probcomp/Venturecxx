@@ -7,7 +7,7 @@ import pandas as pd
 from nose.tools import assert_raises, assert_equal, assert_is_none
 
 from ggplot import *
-from ggplot.utils.exceptions import GgplotError
+from ..utils.exceptions import GgplotError
 
 
 def test_chart_components():

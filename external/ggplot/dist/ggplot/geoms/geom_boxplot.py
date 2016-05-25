@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cbook as cbook
 
 from .geom import geom
-from ggplot.utils import is_string
-from ggplot.utils import is_categorical
+from ..utils import is_string
+from ..utils import is_categorical
 
 class geom_boxplot(geom):
     DEFAULT_AES = {'y': None, 'color': 'black', 'flier_marker': '+'}

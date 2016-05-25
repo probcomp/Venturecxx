@@ -1,6 +1,6 @@
 from nose.tools import assert_equal, assert_true
 
-from ggplot.themes.element_target import *
+from ..themes.element_target import *
 
 
 def test_element_target1():

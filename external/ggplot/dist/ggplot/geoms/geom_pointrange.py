@@ -5,7 +5,7 @@ import sys
 
 import matplotlib as mpl
 from .geom import geom
-from ggplot.utils import is_categorical
+from ..utils import is_categorical
 import numpy as np
 
 

@@ -6,7 +6,7 @@ import numpy as np
 import scipy.stats
 import pandas as pd
 
-from ggplot.utils import make_iterable_ntimes
+from ..utils import make_iterable_ntimes
 from .stat import stat
 
 

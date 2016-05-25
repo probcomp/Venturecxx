@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.cbook as cbook
 
-from ggplot import scales
-from ggplot.utils import is_categorical, make_iterable_ntimes
-from ggplot.utils.exceptions import GgplotError
+from .. import scales
+from ..utils import is_categorical, make_iterable_ntimes
+from ..utils.exceptions import GgplotError
 from .stat import stat
 
 import datetime

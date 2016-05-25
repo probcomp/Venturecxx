@@ -5,8 +5,8 @@ import pandas as pd
 import matplotlib.cbook as cbook
 
 from .geom import geom
-from ggplot.utils import is_string
-from ggplot.utils import is_categorical
+from ..utils import is_string
+from ..utils import is_categorical
 
 
 class geom_bar(geom):

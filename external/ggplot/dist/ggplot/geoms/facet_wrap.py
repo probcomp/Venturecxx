@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 from copy import deepcopy
 import math
 from ..utils.ggutils import add_ggplotrc_params
-from ggplot.utils.exceptions import GgplotError
+from ..utils.exceptions import GgplotError
 
 class facet_wrap(object):
     def __init__(self, x=None, y=None, ncol=None, nrow=None, scales="free"):

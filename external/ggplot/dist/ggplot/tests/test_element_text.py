@@ -1,6 +1,6 @@
 from nose.tools import assert_equal, assert_true
 
-from ggplot.tests import image_comparison, cleanup
+from ..tests import image_comparison, cleanup
 from ggplot import *
 
 from numpy import linspace

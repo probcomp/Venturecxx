@@ -5,7 +5,7 @@ from nose.tools import (assert_equal, assert_is, assert_is_not,
 import pandas as pd
 
 from ggplot import *
-from ggplot.utils.exceptions import GgplotError
+from ..utils.exceptions import GgplotError
 from . import cleanup
 
 

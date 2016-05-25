@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from six.moves import xrange
 
 from nose.tools import assert_equal, assert_true, assert_raises
-from ggplot.tests import image_comparison
+from ..tests import image_comparison
 
 from ggplot import *
 

@@ -2,7 +2,7 @@ from nose.tools import assert_equal, assert_true, assert_raises
 from numpy import linspace
 from pandas import DataFrame
 
-from ggplot.tests import image_comparison, cleanup
+from ..tests import image_comparison, cleanup
 from ggplot import *
 
 df = DataFrame({"x": linspace(999, 1111, 9),

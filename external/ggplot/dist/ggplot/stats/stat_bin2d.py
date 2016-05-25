@@ -5,7 +5,7 @@ from collections import defaultdict
 import pandas as pd
 import numpy as np
 
-from ggplot.utils import make_iterable_ntimes
+from ..utils import make_iterable_ntimes
 from .stat import stat
 
 

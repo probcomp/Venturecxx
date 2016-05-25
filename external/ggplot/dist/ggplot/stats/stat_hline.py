@@ -2,8 +2,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import pandas as pd
 
-from ggplot.utils import pop, make_iterable, make_iterable_ntimes
-from ggplot.utils.exceptions import GgplotError
+from ..utils import pop, make_iterable, make_iterable_ntimes
+from ..utils.exceptions import GgplotError
 from .stat import stat
 
 

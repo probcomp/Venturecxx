@@ -5,12 +5,12 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 from matplotlib.cbook import iterable
-from ggplot.utils import is_string
+from ..utils import is_string
 
-import ggplot.stats
-from ggplot.utils import is_scalar_or_string
-from ggplot.components import aes
-from ggplot.utils.exceptions import GgplotError
+from .. import stats
+from ..utils import is_scalar_or_string
+from ..components import aes
+from ..utils.exceptions import GgplotError
 
 __all__ = ['geom']
 __all__ = [str(u) for u in __all__]
@@ -158,7 +158,7 @@ class geom(object):
             _name = 'stat_%s' % kwargs['stat']
         except KeyError:
             _name = 'stat_%s' % self.DEFAULT_PARAMS['stat']
-        return getattr(ggplot.stats, _name)
+        return getattr(stats, _name)
 
     def __radd__(self, gg):
         gg = deepcopy(gg)

@@ -12,8 +12,8 @@ from ggplot import *
 
 import six
 import pandas as pd
-from ggplot.components import assign_visual_mapping
-from ggplot.utils.exceptions import GgplotError
+from ..components import assign_visual_mapping
+from ..utils.exceptions import GgplotError
 
 def get_test_df():
     df = pd.DataFrame({

@@ -3,8 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 import sys
 from copy import deepcopy
 
-from ggplot.utils.exceptions import GgplotError
-import ggplot.geoms
+from ..utils.exceptions import GgplotError
 
 __all__ = ['stat']
 __all__ = [str(u) for u in __all__]
@@ -61,7 +60,8 @@ class stat(object):
 
     def __radd__(self, gg):
         # Create and add a geom to ggplot object
-        _g = getattr(ggplot.geoms, 'geom_' + self.params['geom'])
+        import venture.ggplot.geoms as geoms
+        _g = getattr(geoms, 'geom_' + self.params['geom'])
         _geom = _g(*self._cache['args'], **self._cache['kwargs'])
         _geom.params['stat'] = self.__class__.__name__
         _geom.params['position'] = self.params['position']

@@ -4,7 +4,7 @@ import matplotlib as mpl
 import six
 
 from nose.tools import assert_true
-from ggplot.tests import image_comparison, cleanup
+from ..tests import image_comparison, cleanup
 
 from ggplot import *
 

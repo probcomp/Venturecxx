@@ -6,10 +6,10 @@ import pandas as pd
 from nose.tools import assert_true
 
 from ggplot import *
-from ggplot.components.legend import get_labels
-from ggplot.components.colors import assign_continuous_colors, \
+from ..components.legend import get_labels
+from ..components.colors import assign_continuous_colors, \
     assign_discrete_colors
-from ggplot.tests import cleanup
+from ..tests import cleanup
 
 
 @cleanup

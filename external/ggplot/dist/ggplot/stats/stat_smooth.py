@@ -3,8 +3,8 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 import pandas as pd
 
-from ggplot.components import smoothers
-from ggplot.utils import make_iterable_ntimes
+from ..components import smoothers
+from ..utils import make_iterable_ntimes
 from .stat import stat
 
 
