@@ -127,11 +127,13 @@ def default_num_data(desired=None):
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl(**kwargs):
+def get_ripl(init_mode="church_prime", **kwargs):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
+  r = s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
+  r.set_mode(init_mode)
+  return r
 
 
 def get_core_sivm():
@@ -485,6 +487,26 @@ general-purpose inference programs except sub-sampled MH.
 def subSampling():
   return config["infer"].startswith("(subsampled_mh")
 
+# TODO Abstract commonalities with the rejection skipper
+def skipWhenDoingParticleGibbs(reason):
+  """Annotate a test function as being suitable for testing all
+general-purpose inference programs except particle Gibbs.
+
+  """
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      if not doingParticleGibbs():
+        return f(*args)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_doing_particle_gibbs = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def doingParticleGibbs():
+  return config["infer"].startswith("(pgibbs") or config["infer"].startswith("(func_pgibbs")
+
 def skipWhenInParallel(reason):
   def wrap(f):
     @nose.make_decorator(f)
@@ -523,6 +545,26 @@ def gen_needs_ggplot(f):
       for t in f(*args): yield t
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
+  return wrapped
+
+def needs_pystan(f):
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import pystan
+      return f(*args)
+    except ImportError:
+      raise SkipTest("pystan not installed on this machine")
+  return wrapped
+
+def needs_seaborn(f):
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import seaborn
+      return f(*args)
+    except ImportError:
+      raise SkipTest("seaborn not installed on this machine")
   return wrapped
 
 def capture_output(ripl, program):

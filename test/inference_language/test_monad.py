@@ -129,6 +129,62 @@ def testModelSwitchingSmoke():
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
   return reportKnownGaussian(0.0, 1.0, predictions)
 
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceSmoke():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (observe (normal 0 1) 3 foo)
+    (in_model (run (new_model))
+      (do (observe (gamma 1 1) 2 foo))))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForget():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (observe (normal 0 1) 3 foo)
+    (m <- (new_model))
+    (in_model m
+      (observe (gamma 1 1) 2 foo))
+    (forget 'foo)
+    (in_model m
+      (forget 'foo)))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetAssume():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (assume foo (normal 0 1))
+    (m <- (new_model))
+    (in_model m
+      (assume foo (gamma 1 1)))
+    (forget 'foo)
+    (in_model m
+      (forget 'foo)))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetAssume2():
+  # The example Marco provided for Issue #540
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  ripl.execute_program("""
+define env = run(new_model());
+
+infer in_model(env, do(
+    assume(foo, normal(0, 1)),
+    observe(foo, 1.123, foo_obs),
+    assume(bar, normal(0, 1)),
+    observe(bar, 4.24, bar_obs)));
+
+infer in_model(env, do(
+    forget(quote(bar_obs)),
+    forget(quote(bar)),
+    forget(quote(foo_obs)),
+    forget(quote(foo))));
+""")
+
 @on_inf_prim("return")
 @on_inf_prim("action")
 def testReturnAndAction():
@@ -224,6 +280,45 @@ foo : [assume x (+ 1 2)]
 (report 'foo)
 """)
   eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))
+
+@on_inf_prim("report")
+def testReportObserveActionSmoke():
+  vals = get_ripl().execute_program("""\
+foo : [observe (normal 0 1) 0.2]
+(report 'foo)
+""")
+  eq_(0.2, u.strip_types(vals[1]['value']))
+
+@on_inf_prim("report")
+def testReportObserveListActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume m (array 0. 0.)]
+[assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
+foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
+(report 'foo)
+""")
+  eq_([0.1, -0.1], u.strip_types(vals[3]['value']))
+
+@on_inf_prim("report")
+def testReportObserveInferActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume x (normal 0 1)]
+foo : [observe (normal x 1) 0.2]
+[infer (mh default one 1)]
+(report 'foo)
+""")
+  eq_(0.2, u.strip_types(vals[3]['value']))
+
+@on_inf_prim("report")
+def testReportObserveListInferActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume m (array 0. 0.)]
+[assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
+foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
+[infer (mh default one 1)]
+(report 'foo)
+""")
+  eq_([0.1, -0.1], u.strip_types(vals[4]['value']))
 
 @on_inf_prim("force")
 def testForceSugar():

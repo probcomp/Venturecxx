@@ -139,6 +139,10 @@ registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
 
 
 class InverseWishartOutputPSP(RandomPSP):
+  # Parameterization follows Wikipedia
+  # https://en.wikipedia.org/wiki/Inverse-Wishart_distribution, namely
+  # - lmbda is a p by p positive definite scale matrix
+  # - dof > p - 1 is the degrees of freedom
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
@@ -168,13 +172,26 @@ class InverseWishartOutputPSP(RandomPSP):
     T = scipy.linalg.solve_triangular(R.T, chol.T, lower=True)
     return np.dot(T.T, T)
 
+  # PDF formula from Wikipedia cross-checked against Murphy [1, Sec
+  # 4.5.1, p.127].  They agree with the following translation
+  # dictionary:
+  # Murphy | Wiki
+  # S^-1   | Psi
+  # Sigma  | X
+  # D      | p
+  # nu     | nu
+  # and the published erratum to eq. 4.166 in [1] "In the
+  # normalization of inverse Wishart, the exponent of |S| shouldn't be
+  # negated."  See derivation of logarithm in sp-math.tex.
   def logDensity(self, x, args):
-    (lmbda, dof) = self.__parse_args__(args)
-    p = len(lmbda)
-    log_density =  dof/2*(np.log(npla.det(lmbda)) - p*np.log(2)) \
-      - spsp.multigammaln(dof*.5, p) \
-      + (-.5*(dof+p+1))*np.log(npla.det(x)) \
-      - .5*np.trace(np.dot(lmbda, npla.inv(x)))
+    def logdet(m):
+      return np.log(npla.det(m))
+    (psi, dof) = self.__parse_args__(args)
+    p = len(psi)
+    log_density = 0.5 * dof * (logdet(psi) - p * np.log(2)) \
+      - spsp.multigammaln(0.5 * dof, p) \
+      - 0.5 * (dof + p + 1) * logdet(x) \
+      - 0.5 * np.trace(np.dot(psi, npla.inv(x)))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
@@ -501,7 +518,7 @@ class BetaOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
-    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
+    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log1p(-x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self, name):
@@ -558,8 +575,10 @@ class GammaOutputPSP(RandomPSP):
                                   [args.np_prng()]))
 
   def gradientOfSimulate(self, args, value, direction):
-    # These gradients were computed by Sympy; the script to get them is
-    # in doc/gradients.py
+    # These gradients were computed by Sympy; the script to get them
+    # is in doc/gradients.py.  Subsequently modified to convert
+    # math.log(math.exp(foo)) to (foo), because apparently Sympy's
+    # simplifier is not up to that.
     alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
@@ -569,9 +588,9 @@ class GammaOutputPSP(RandomPSP):
       gradBeta = -value / math.pow(beta, 2.0)
     elif alpha > 1:
       x0 = value / (3.0 * alpha - 1)
-      gradAlpha = (-3.0 * x0 / 2 + 3 * 3 ** (2.0 / 3) *
-                   (beta * x0) ** (2.0 / 3) / (2.0 * beta))
-      gradBeta = -value/beta
+      gradAlpha = (-3. * x0 / 2. + 3. * 3. ** (2. / 3.) *
+                   (beta * x0) ** (2. / 3.) / (2. * beta))
+      gradBeta = -value / beta
     else:
       if value <= (1.0 / beta) * math.pow(1 - alpha, 1.0 / alpha):
         x0 = (beta * value) ** alpha
@@ -580,14 +599,14 @@ class GammaOutputPSP(RandomPSP):
       else:
         x0 = -alpha + 1
         x1 = 1.0 / alpha
-        x2 = alpha * math.log(math.exp(x1 * (x0 - (beta * value) ** alpha)))
+        x2 = alpha * (x1 * (x0 - (beta * value) ** alpha))
         x3 = -x2
         x4 = x0 + x3
         gradAlpha = (x4 ** (x0 * x1) * (x3 + (alpha + x2 - 1) *
                      math.log(x4)) / (alpha ** 2.0 * beta))
         x0 = 1.0 / alpha
-        gradBeta = ( -(-alpha * math.log(math.exp(-x0 * (alpha +
-          (beta * value) ** alpha - 1))) - alpha + 1) ** x0 / beta ** 2.0 )
+        gradBeta = ( -(-alpha * (-x0 * (alpha +
+          (beta * value) ** alpha - 1)) - alpha + 1) ** x0 / beta ** 2.0 )
     return [direction * gradAlpha, direction * gradBeta]
 
   def logDensity(self, x, args):
@@ -645,7 +664,7 @@ class StudentTOutputPSP(RandomPSP):
     x4 = x2 + x3
     x5 = nu / 2.0
     gradNu = (x0 * (nu * x4 * (-math.log(x0 * x4 / x1) - spsp.digamma(x5)
-              + spsp.digamma(x5 + 1.0 / 2)) - x2
+                               + spsp.digamma(x5 + 1. / 2.)) - x2
               + x3 * (nu + 1) - x3) / (2.0 * x4))
     if len(vals) == 1:
       return (gradX,[gradNu])
@@ -993,3 +1012,9 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
+
+### References
+
+# [1] Murphy, Kevin P. "Machine Learning, A Probabilistic
+# Perspective", MIT Press, 2012. Third printing. ISBN
+# 978-0-262-01802-9

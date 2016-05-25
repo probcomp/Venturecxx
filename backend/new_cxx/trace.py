@@ -239,4 +239,4 @@ def _expToDict(exp):
     else:
       return {"kernel":"rejection","scope":scope,"block":block,"transitions":1}
   else:
-    raise Exception("Cannot parse infer instruction")
+    raise Exception("The Puma backend does not support the %s inference primitive" % (tag,))

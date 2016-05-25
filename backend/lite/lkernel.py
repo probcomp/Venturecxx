@@ -20,7 +20,6 @@ import sys
 import math
 
 from venture.lite.exception import VentureBuiltinLKernelMethodError
-from venture.lite.node import FixedValueArgs
 from venture.lite.sp import VentureSPRecord
 from venture.lite.value import VentureValue
 
@@ -211,7 +210,8 @@ class DefaultVariationalLKernel(VariationalLKernel):
     return w
 
   def gradientOfLogDensity(self, value, args):
-    new_args = FixedValueArgs(args, self.parameters)
+    from venture.lite.sp_use import ReplacingArgs
+    new_args = ReplacingArgs(args, self.parameters)
     # Ignore the derivative of the value because we do not care about it
     (_, grad) = self.psp.gradientOfLogDensity(value, new_args)
     return grad

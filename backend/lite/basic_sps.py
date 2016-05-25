@@ -165,7 +165,7 @@ registerBuiltinSP("contains", deterministic_typed(lambda xs, x: xs.contains(x),
 
 registerBuiltinSP("size", deterministic_typed(lambda xs: xs.size(),
     [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v"))],
-    t.NumberType(),
+    t.IntegerType(),
     descr="size returns the number of elements in the given collection " \
           "(lists and arrays work too)"))
 

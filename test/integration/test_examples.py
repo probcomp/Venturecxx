@@ -31,6 +31,7 @@ from venture.test.config import gen_needs_backend
 from venture.test.config import gen_needs_ggplot
 from venture.test.config import in_backend
 from venture.test.config import needs_backend
+from venture.test.config import needs_seaborn
 
 def findTimeout():
   '''
@@ -107,6 +108,7 @@ def temp_directory(suffix):
 
 @in_backend("none")
 @needs_backend("lite")
+@needs_seaborn
 def testGaussianGeweke():
   with extra_module_path("examples"):
     with temp_directory("geweke") as plots_dir:

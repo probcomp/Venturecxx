@@ -58,7 +58,7 @@ double BetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args
   double b = beta + aux->tails;
   double w = a / (a + b);
   if (value->getBool()) { return log(w); }
-  else { return log(1-w); }
+  else { return log1p(-w); }
 }
 
 void BetaBernoulliOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
@@ -164,7 +164,7 @@ double SuffBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args
   shared_ptr<USuffBernoulliSPAux> aux = dynamic_pointer_cast<USuffBernoulliSPAux>(args->spAux);
   double p = aux->p;
   if (value->getBool()) { return log(p); }
-  else { return log(1-p); }
+  else { return log1p(-p); }
 }
 
 void SuffBernoulliOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const

@@ -21,6 +21,7 @@ from testconfig import config
 
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_use import simulate
 from venture.lite.types import AnyType
 from venture.lite.value import VentureValue
 from venture.test.config import gen_on_inf_prim
@@ -60,8 +61,8 @@ def testRiplSimulate():
     if name in [# Because tag is misannotated as to the true
                 # permissible types of scopes and blocks
                 "tag", "tag_exclude",
-                "get_current_environment", # Because BogusArgs gives a bogus environment
-                "extend_environment", # Because BogusArgs gives a bogus environment
+                "get_current_environment", # Because MockArgs gives a bogus environment
+                "extend_environment", # Because MockArgs gives a bogus environment
               ]:
       continue
     if config["get_ripl"] != "lite" and name in [
@@ -98,13 +99,11 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
 def propRiplAgreesWithDeterministicSimulate(args_lists, name, sp):
   """Check that the given SP produces the same answer directly and
 through a ripl (applied fully uncurried)."""
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  answer = carefully(sp.outputPSP.simulate, args)
+  answer = carefully(simulate(sp), args_lists[0])
   if isinstance(answer, VentureSPRecord):
     if isinstance(answer.sp.requestPSP, NullRequestPSP):
       if not answer.sp.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], answer.spAux)
-        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
+        ans2 = carefully(simulate(answer.sp), args_lists[1], spaux=answer.spAux)
         inner = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert eq_(ans2, carefully(eval_in_ripl, expr))
@@ -136,8 +135,8 @@ def testForeignInterfaceSimulate():
                                  # permissible types of scopes and
                                  # blocks
                 "tag",
-                "get_current_environment", # Because BogusArgs gives a bogus environment
-                "extend_environment", # Because BogusArgs gives a bogus environment
+                "get_current_environment", # Because MockArgs gives a bogus environment
+                "extend_environment", # Because MockArgs gives a bogus environment
               ]:
       continue
     if config["get_ripl"] != "lite" and name in [
@@ -160,13 +159,11 @@ def checkForeignInterfaceAgreesWithDeterministicSimulate(name, sp):
 def propForeignInterfaceAgreesWithDeterministicSimulate(args_lists, name, sp):
   """Check that the given SP produces the same answer directly and
 through the foreign function interface (applied fully uncurried)."""
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  answer = carefully(sp.outputPSP.simulate, args)
+  answer = carefully(simulate(sp), args_lists[0])
   if isinstance(answer, VentureSPRecord):
     if isinstance(answer.sp.requestPSP, NullRequestPSP):
       if not answer.sp.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], answer.spAux)
-        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
+        ans2 = carefully(simulate(answer.sp), args_lists[1], spaux=answer.spAux)
         inner = [v.symbol("test_sp")] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert ans2.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))

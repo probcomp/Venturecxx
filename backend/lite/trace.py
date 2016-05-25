@@ -36,7 +36,6 @@ from venture.lite.exception import VentureError
 from venture.lite.infer import BlockScaffoldIndexer
 from venture.lite.infer import mixMH
 from venture.lite.lkernel import DeterministicLKernel
-from venture.lite.node import Args
 from venture.lite.node import ConstantNode
 from venture.lite.node import LookupNode
 from venture.lite.node import OutputNode
@@ -44,6 +43,7 @@ from venture.lite.node import RequestNode
 from venture.lite.node import isConstantNode
 from venture.lite.node import isLookupNode
 from venture.lite.node import isOutputNode
+from venture.lite.node import TraceNodeArgs
 from venture.lite.omegadb import OmegaDB
 from venture.lite.psp import ESRRefOutputPSP
 from venture.lite.regen import constrain
@@ -217,7 +217,7 @@ class Trace(object):
     if isinstance(value, SPRef): return self.madeSPRecordAt(value.makerNode)
     else: return value
 
-  def argsAt(self, node): return Args(self, node)
+  def argsAt(self, node): return TraceNodeArgs(self, node)
 
   def spRefAt(self, node):
     candidate = self.valueAt(node.operatorNode)

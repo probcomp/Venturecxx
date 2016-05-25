@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import random
+import numpy.random as npr
+
 from ..lite import exp as e
 from ..lite.exception import VentureError
 from venture.exception import VentureException
@@ -23,11 +26,9 @@ from ..lite import value as vv
 
 from ..lite.sp import VentureSPRecord
 from ..lite.psp import PSP
+from ..lite.psp import IArgs
 
 import node
-
-import random
-import numpy.random as npr
 
 # We still have a notion of nodes.  A node is a thing that knows its
 # address, and its value if it has one.
@@ -82,9 +83,10 @@ def apply(address, nodes, env, rng):
   assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
   return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, rng.randint(1, 2**31 - 1), req_nodes, requests))
 
-class RequestArgs(object):
+class RequestArgs(IArgs):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
   def __init__(self, address, nodes, env, seed):
+    super(RequestArgs, self).__init__()
     self.node = node.Node(address)
     self.operandNodes = nodes
     self.env = env

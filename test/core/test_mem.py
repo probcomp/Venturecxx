@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
+from nose.tools import eq_, assert_raises_regexp
 
 from venture.test.config import collectSamples
 from venture.test.config import defaultInfer
@@ -24,6 +24,11 @@ from venture.test.config import on_inf_prim
 from venture.test.config import skipWhenSubSampling
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
+
+def all_equal(results):
+  iresults = iter(results)
+  first = next(iresults)
+  return all(result == first for result in iresults)
 
 @on_inf_prim("none")
 def testMemSmoke1():
@@ -37,7 +42,7 @@ def testMemBasic1():
   ripl.assume("f","(mem (lambda () (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f)",label="p%d" % i)
   for _ in range(5):
-    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    assert all_equal([ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
@@ -47,7 +52,7 @@ def testMemBasic2():
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1)",label="p%d" % i)
   for _ in range(5):
-    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    assert all_equal([ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
@@ -57,7 +62,7 @@ def testMemBasic3():
   ripl.assume("f","(mem (lambda (x y) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1 2)",label="p%d" % i)
   for _ in range(5):
-    assert reduce(lambda x,y: x == y,[ripl.report("p%d" % i) for i in range(10)])
+    assert all_equal([ripl.report("p%d" % i) for i in range(10)])
     ripl.infer(defaultInfer())
             
   
@@ -196,6 +201,25 @@ def testMemoizingOnASymbol1():
   ripl.predict("(f (quote sym))",label="pid")
   predictions = collectSamples(ripl,"pid",3)
   assert predictions == [1, 1, 1]
+
+def testForgetMem():
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda () (normal 0 1)))")
+  a = ripl.predict("(f)", label="p1")
+  b = ripl.predict("(f)", label="p2")
+  assert a == b
+  ripl.forget("p1")
+  ripl.forget("p2")
+  c = ripl.predict("(f)", label="p3")
+  assert a != c
+
+def testMemLoop():
+  ripl = get_ripl()
+  ripl.assume("f","(mem (lambda () (if (flip) (+ 1 (f)) 0)))")
+  with assert_raises_regexp(
+      Exception, 'mem argument loop|request at existing address'):
+    for _ in range(50):
+      ripl.sample("(f)")
 
 # TODO slow to run, and not worth it 
 def testMemHashCollisions1():

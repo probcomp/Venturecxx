@@ -537,6 +537,8 @@ class VenturePair(VentureValue):
       ind = index.getNumber()
     except VentureTypeError:
       raise VentureValueError("Looking up non-number %r in a list" % index)
+    if ind < 0: # Equivalent to floor for negative floats
+      raise VentureValueError("Index out of bounds %s" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:
@@ -1039,7 +1041,7 @@ class VentureSymmetricMatrix(VentureMatrix):
     # Do I seriously have to special-case this?
     if self.matrix.size == 0: return self
     candidate = np.vectorize(f)(self.matrix)
-    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
+    return VentureSymmetricMatrix( (candidate + candidate.T) / 2. )
 
   def expressionFor(self):
     return v.quote(self.asStackDict(None))

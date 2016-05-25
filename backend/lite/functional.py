@@ -19,7 +19,6 @@ from venture.lite.address import emptyAddress
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureValueError
-from venture.lite.node import FixedValueArgs
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
@@ -30,6 +29,7 @@ from venture.lite.sp import SPType
 from venture.lite.sp_help import esr_output
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.sp_use import ReplacingArgs
 from venture.lite.value import SPRef
 from venture.lite.value import VentureArray
 import venture.lite.exp as e
@@ -157,7 +157,7 @@ class AssessOutputPSP(DeterministicPSP):
         if not operator.sp.outputPSP.isRandom():
             raise VentureValueError("Cannot assess a deterministic SP.")
 
-        assessedArgs = FixedValueArgs(
+        assessedArgs = ReplacingArgs(
             args, vals[2:], operandNodes=args.operandNodes[2:],
             spaux=operator.spAux)
         return operator.sp.outputPSP.logDensity(value, assessedArgs)

@@ -29,6 +29,8 @@ from testconfig import config
 from venture.lite.builtin import builtInSPsIter
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_use import MockArgs
+from venture.lite.sp_use import simulate
 from venture.lite.utils import FixedRandomness
 from venture.test.config import gen_in_backend
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
@@ -51,7 +53,8 @@ def relevantSPs():
 @gen_in_backend("none")
 def testTypes():
   for (name,sp) in relevantSPs():
-    yield checkTypeCorrect, name, sp
+    if name != "make_lazy_hmm": # Makes requests
+      yield checkTypeCorrect, name, sp
 
 def checkTypeCorrect(_name, sp):
   type_ = sp.venture_type()
@@ -67,8 +70,7 @@ applied fully uncurried) match the expected types."""
       sp, aux = sp.sp, sp.spAux
     else:
       aux = carefully(sp.constructSPAux)
-    args = BogusArgs(args_lists[0], aux)
-    answer = carefully(sp.outputPSP.simulate, args)
+    answer = carefully(simulate(sp), args_lists[0], spaux=aux)
     assert answer in type_.return_type
     propTypeCorrect(args_lists[1:], answer, type_.return_type)
 
@@ -88,19 +90,18 @@ def checkDeterministic(name, sp):
 def propDeterministic(args_lists, name, sp):
   """Check that the given SP returns the same answer every time (applied
 fully uncurried)."""
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  answer = carefully(sp.outputPSP.simulate, args)
+  answer = carefully(simulate(sp), args_lists[0])
   if isinstance(answer, VentureSPRecord):
     if isinstance(answer.sp.requestPSP, NullRequestPSP):
       if not answer.sp.outputPSP.isRandom():
         # We don't currently have any curried SPs that are
         # deterministic at both points, so this code never actually
         # runs.
-        args2 = BogusArgs(args_lists[1], answer.spAux)
-        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
+        ans2 = carefully(simulate(answer.sp), args_lists[1], spaux=answer.spAux)
         for _ in range(5):
-          new_ans = carefully(sp.outputPSP.simulate, args)
-          new_ans2 = carefully(new_ans.sp.outputPSP.simulate, args2)
+          aux = sp.constructSPAux()
+          new_ans = carefully(simulate(sp), args_lists[0], spaux=aux)
+          new_ans2 = carefully(simulate(new_ans.sp), args_lists[1], spaux=aux)
           eq_(ans2, new_ans2)
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
@@ -108,7 +109,7 @@ fully uncurried)."""
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     for _ in range(5):
-      eq_(answer, carefully(sp.outputPSP.simulate, args))
+      eq_(answer, carefully(simulate(sp), args_lists[0]))
 
 @gen_in_backend("none")
 def testRandom():
@@ -157,7 +158,7 @@ def simulate_fully_uncurried(name, sp, args_lists, py_rng, np_rng):
     aux = carefully(sp.constructSPAux)
   if not isinstance(sp.requestPSP, NullRequestPSP):
     raise SkipTest("SP %s returned a requesting SP" % name)
-  args = BogusArgs(args_lists[0], aux, py_rng, np_rng)
+  args = MockArgs(args_lists[0], aux, py_rng, np_rng)
   answer = carefully(sp.outputPSP.simulate, args)
   if len(args_lists) == 1:
     return answer
@@ -172,7 +173,7 @@ def log_density_fully_uncurried(name, sp, args_lists, value):
     aux = carefully(sp.constructSPAux)
   if not isinstance(sp.requestPSP, NullRequestPSP):
     raise SkipTest("SP %s returned a requesting SP" % name)
-  args = BogusArgs(args_lists[0], aux)
+  args = MockArgs(args_lists[0], aux)
   if len(args_lists) == 1:
     return carefully(sp.outputPSP.logDensity, value, args)
   else:
