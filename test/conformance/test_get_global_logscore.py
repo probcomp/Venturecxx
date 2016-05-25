@@ -141,6 +141,8 @@ def test_loglikelihood_logjoint():
           logp_x_given_theta + logp_theta_given_alpha + logp_alpha)
 
     assert_almost_equal(ripl.get_global_logscore()[0], logp_x_given_theta)
+    check('global_log_joint',
+          logp_x_given_theta + logp_theta_given_alpha + logp_alpha)
 
     # Conditional model:
     #
@@ -182,3 +184,5 @@ def test_loglikelihood_logjoint():
           logp_x_given_theta + logp_theta_given_alpha + logp_alpha)
 
     assert_almost_equal(ripl.get_global_logscore()[0], logp_x_given_theta)
+    check('global_log_joint',
+          logp_x_given_theta + logp_theta_given_alpha + logp_alpha)
