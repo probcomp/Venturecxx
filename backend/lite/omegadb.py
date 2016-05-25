@@ -31,13 +31,13 @@ class OmegaDB(object):
   def getValue(self,node): return self.values[node]
 
   def extractValue(self,node,value):
-    assert not node in self.values
+    assert node not in self.values
     self.values[node] = value
 
   def hasLatentDB(self,sp): return sp in self.latentDBs
 
   def registerLatentDB(self,sp,latentDB):
-    assert not sp in self.latentDBs
+    assert sp not in self.latentDBs
     self.latentDBs[sp] = latentDB
 
   def getLatentDB(self,sp): return self.latentDBs[sp]
@@ -45,7 +45,7 @@ class OmegaDB(object):
   def hasESRParent(self,sp,id): return (sp,id) in self.spFamilyDBs
   def getESRParent(self,sp,id): return self.spFamilyDBs[(sp,id)]
   def registerSPFamily(self,sp,id,esrParent):
-    assert not (sp,id) in self.spFamilyDBs
+    assert (sp,id) not in self.spFamilyDBs
     self.spFamilyDBs[(sp,id)] = esrParent
 
   def addPartials(self, nodes, partials):
