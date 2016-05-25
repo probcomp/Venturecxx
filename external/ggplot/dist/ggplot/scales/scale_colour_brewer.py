@@ -1,9 +1,9 @@
 from .scale import scale
 from copy import deepcopy
-import brewer2mpl
 
 
 def _number_to_palette(ctype, n):
+    import brewer2mpl
     n -= 1
     palettes = sorted(brewer2mpl.COLOR_MAPS[ctype].keys())
     if n < len(palettes):
@@ -68,6 +68,7 @@ class scale_colour_brewer(scale):
             # only one color used
             n_colors = 3
 
+        import brewer2mpl
         bmap = brewer2mpl.get_map(palette, ctype, n_colors)
         gg.manual_color_list = bmap.hex_colors
 
