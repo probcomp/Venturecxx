@@ -27,6 +27,7 @@ config["get_ripl"] = "mite"
 
 config["global_reporting_threshold"] = 0.00001
 config["infer"] = """
+(repeat 5
 (mh_correct
  (on_subproblem default all
    (lambda (subproblem)
@@ -38,6 +39,6 @@ config["infer"] = """
           (list (- xi_weight rho_weight)
                 pass                    ; accept
                 (do (detach subproblem) ; reject
-                    (restore subproblem rho_db)))))))))
+                    (restore subproblem rho_db))))))))))
 """
 config["ignore_inference_quality"] = False
