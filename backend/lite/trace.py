@@ -809,18 +809,7 @@ the scaffold determined by the given expression."""
     pass
 
   def getGlobalLogScore(self):
-    # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
-    all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
-    scores, _isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
-    return sum(scores)
-
-  def _getOneLogScore(self, node):
-    # Hack: likelihood-free PSP's contribute 0 to global logscore.
-    # This is incorrect, but better than the function breaking entirely.
-    try:
-      return (self.pspAt(node).logDensity(self.groundValueAt(node), self.argsAt(node)), False)
-    except VentureBuiltinSPMethodError:
-      return (0.0, True)
+    return self.log_joint_at("default", "all")
 
   #### Serialization interface
 
