@@ -45,8 +45,7 @@ class stat_bin2d(stat):
         df = pd.DataFrame({'xbin': x_assignments,
                            'ybin': y_assignments,
                            'weights': weight})
-        table = pd.pivot_table(df, values='weights',
-                               index=['xbin', 'ybin'], aggfunc=np.sum)
+        table = pd.pivot_table(df, 'weights', ['xbin', 'ybin'], aggfunc=np.sum)
         rects = np.array([[xbreaks[i], xbreaks[i+1],
                            ybreaks[j], ybreaks[j+1],
                            table[(i, j)]]

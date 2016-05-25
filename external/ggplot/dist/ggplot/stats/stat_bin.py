@@ -123,8 +123,8 @@ class stat_bin(stat):
         _df = pd.DataFrame({'assignments': x_assignments,
                             'weights': weights
                             })
-        _wfreq_table = pd.pivot_table(_df, values='weights',
-                                      index=['assignments'], aggfunc=np.sum)
+        _wfreq_table = pd.pivot_table(_df, 'weights', ['assignments'],
+                                      aggfunc=np.sum)
 
         # For numerical x values, empty bins get have no value
         # in the computed frequency table. We need to add the zeros and
