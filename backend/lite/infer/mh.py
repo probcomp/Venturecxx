@@ -96,7 +96,6 @@ def mixMH(trace, indexer, operator):
       operator = operator.name(),
       indexer = indexer.name(),
       time = time.time() - start,
-      logscore = trace.getGlobalLogScore(),
       current = current,
       proposed = proposed,
       accepted = accepted,

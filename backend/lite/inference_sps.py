@@ -888,8 +888,7 @@ The possible data streams are:
 - _<an integer>_ that column in the data set, 0-indexed,
 - _%_ the next column after the last used one
 - iteration _c_ounter,
-- _t_ime (wall clock, since the beginning of the Venture program),
-- log _s_core, and
+- _t_ime (wall clock, since the beginning of the Venture program), and
 - pa_r_ticle
 
 The possible scales are:

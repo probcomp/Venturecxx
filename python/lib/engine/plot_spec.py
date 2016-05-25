@@ -178,8 +178,6 @@ class FrameSpec(object):
         ans[key] = "prt. id"
       elif stream == "t":
         ans[key] = "time (s)"
-      elif stream == "s":
-        ans[key] = "log score"
       elif stream == "" or stream == "%":
         ans[key] = names[next_index]
         next_index += 1
