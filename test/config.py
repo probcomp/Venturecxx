@@ -508,7 +508,7 @@ def needs_ggplot(f):
   @nose.make_decorator(f)
   def wrapped(*args):
     try:
-      import ggplot             # pylint: disable=unused-variable
+      import venture.ggplot             # pylint: disable=unused-variable
       return f(*args)
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
@@ -519,7 +519,7 @@ def gen_needs_ggplot(f):
   @nose.make_decorator(f)
   def wrapped(*args):
     try:
-      import ggplot
+      import venture.ggplot
       for t in f(*args): yield t
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
