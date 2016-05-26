@@ -37,11 +37,10 @@ def testScopeObservedThroughMem1():
 @broken_in("puma", "No introspection on blocks in scope")
 @on_inf_prim("resample")
 def testScopeObservedThroughMem2():
-  """The way resample happened to be implemented in Lite when I wrote
-this test, it had the effect of undoing [infer (incorporate)] for all
-observations.  This was detected through a horrible mess involving mem.
-
-  """
+  # The way resample happened to be implemented in Lite when I wrote
+  # this test, it had the effect of undoing [infer (incorporate)] for
+  # all observations.  This was detected through a horrible mess
+  # involving mem.
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
   r.observe("(frob 1)", True)
@@ -57,11 +56,9 @@ observations.  This was detected through a horrible mess involving mem.
 
 @on_inf_prim("resample")
 def testResamplingObservations():
-  """The way resample happened to be implemented in Lite when I wrote
-this test, it had the effect of undoing [infer (incorporate)] for all
-observations.
-
-  """
+  # The way resample happened to be implemented in Lite when I wrote
+  # this test, it had the effect of undoing [infer (incorporate)] for
+  # all observations.
   r = get_ripl()
   r.assume("x", "(normal 0 1)")
   r.observe("x", 1)

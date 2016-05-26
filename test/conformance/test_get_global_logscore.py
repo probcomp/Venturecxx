@@ -49,7 +49,7 @@ def test_global_logscore_coupled():
 
 @on_inf_prim("none")
 def test_logscore_likelihood_free():
-    "Shouldn't break in the presence of likelihood-free SP's"
+    # Shouldn't break in the presence of likelihood-free SP's
     ripl = setup_likelihood_free()
     for _ in range(100):
         ripl.observe('(flip)', 'true')

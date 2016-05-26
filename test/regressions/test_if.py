@@ -20,8 +20,8 @@ from venture.test.config import on_inf_prim
 
 @on_inf_prim("mh")
 def testIf2():
-  """This caused an earlier CXX implementation to crash because of a
-  corner case of operators changing during inference."""
+  # This caused an earlier CXX implementation to crash because of a
+  # corner case of operators changing during inference.
   ripl = get_ripl()
   ripl.assume('if1', '(if (bernoulli 0.5) biplex biplex)')
   ripl.assume('if2', '(if (bernoulli 0.5) if1 if1)')

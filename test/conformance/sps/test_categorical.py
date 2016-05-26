@@ -27,7 +27,8 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testCategorical1():
-  "A simple test that checks the interface of categorical and its simulate method"
+  # A simple test that checks the interface of categorical and its
+  # simulate method
   ripl = get_ripl()
 
   ripl.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (array 1 2 3 4))")
@@ -45,7 +46,8 @@ def testCategorical1():
 
 @statisticalTest
 def testCategoricalAbsorb():
-  "A simple test that checks the interface of categorical and its simulate and log density methods"
+  # A simple test that checks the interface of categorical and its
+  # simulate and log density methods
   ripl = get_ripl()
 
   ripl.assume("x","(simplex .1 .9)")
@@ -63,7 +65,8 @@ def testCategoricalDefault1():
 
 @statisticalTest
 def testLogCategoricalAbsorb():
-  "A simple test that checks the interface of log categorical and its simulate and log density methods"
+  # A simple test that checks the interface of log categorical and its
+  # simulate and log density methods
   if config["get_ripl"] != "puma":
     raise SkipTest("log categorical only implemented in Puma")
   ripl = get_ripl()

@@ -41,7 +41,7 @@ def testMakeSymDirCat1():
 
 @statisticalTest
 def checkMakeSymDirCat1(maker):
-  """Extremely simple program, with an AAA procedure when uncollapsed"""
+  # Extremely simple program, with an AAA procedure when uncollapsed
   ripl = get_ripl()
   ripl.assume("f", "(%s 1.0 2)" % maker)
   ripl.predict("(f)", label="pid")
@@ -56,7 +56,7 @@ def testMakeSymDirCatAAA():
 
 @statisticalTest
 def checkMakeSymDirCatAAA(maker):
-  """Simplest program with collapsed AAA"""
+  # Simplest program with collapsed AAA
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -66,7 +66,7 @@ def checkMakeSymDirCatAAA(maker):
 
 @gen_on_inf_prim("any")
 def testMakeSymDirCatFlip():
-  """AAA where the SP flips between collapsed and uncollapsed."""
+  # AAA where the SP flips between collapsed and uncollapsed.
   for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
       yield checkMakeSymDirCatFlip, maker_1, maker_2
@@ -85,8 +85,8 @@ def checkMakeSymDirCatFlip(maker_1, maker_2):
 
 @gen_on_inf_prim("any")
 def testMakeSymDirCatBrushObserves():
-  """AAA where the SP flips between collapsed and uncollapsed, and
-     there are observations in the brush."""
+  # AAA where the SP flips between collapsed and uncollapsed, and
+  # there are observations in the brush.
   for maker_1 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
     for maker_2 in ["make_sym_dir_cat", "make_uc_sym_dir_cat"]:
       yield checkMakeSymDirCatBrushObserves, maker_1, maker_2
@@ -110,7 +110,7 @@ def checkMakeSymDirCatBrushObserves(maker_1, maker_2):
 @statisticalTest
 @on_inf_prim("any")
 def testMakeSymDirCatNative():
-  """AAA where the SP flips between collapsed, uncollapsed, and native"""
+  # AAA where the SP flips between collapsed, uncollapsed, and native
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -138,8 +138,8 @@ def testMakeSymDirCatAppControlsFlip():
   "Too slow.  Is the log density of data bound too conservative?")
 @statisticalTest
 def checkMakeSymDirCatAppControlsFlip(maker_1, maker_2):
-  """Two AAA SPs with same parameters, where their applications control
-which are applied"""
+  # Two AAA SPs with same parameters, where their applications control
+  # which are applied
   ripl = get_ripl()
 
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -218,7 +218,7 @@ def testDirCatObjectVariation():
 
 @statisticalTest
 def checkDirCatObjectVariation(maker_form):
-  "Testing for Issue #452."
+  # Testing for Issue #452.
   r = get_ripl()
   r.assume("x1", "(flip)")
   r.assume("x2", "(flip)")

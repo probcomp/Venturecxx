@@ -32,12 +32,12 @@ def all_equal(results):
 
 @on_inf_prim("none")
 def testMemSmoke1():
-  "Mem should be a noop on deterministic procedures (only memoizing)."
+  # Mem should be a noop on deterministic procedures (only memoizing).
   eq_(get_ripl().predict("((mem (lambda (x) 3)) 1)"), 3.0)
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
 def testMemBasic1():
-  "MSPs should always give the same answer when called on the same arguments"
+  # MSPs should always give the same answer when called on the same arguments
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f)",label="p%d" % i)
@@ -47,7 +47,7 @@ def testMemBasic1():
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
 def testMemBasic2():
-  "MSPs should always give the same answer when called on the same arguments"
+  # MSPs should always give the same answer when called on the same arguments
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1)",label="p%d" % i)
@@ -57,7 +57,7 @@ def testMemBasic2():
 
 @skipWhenSubSampling("Subsampling the consequences causes them to become stale")
 def testMemBasic3():
-  "MSPs should always give the same answer when called on the same arguments"
+  # MSPs should always give the same answer when called on the same arguments
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x y) (bernoulli 0.5)))")
   for i in range(10): ripl.predict("(f 1 2)",label="p%d" % i)
@@ -70,7 +70,7 @@ def testMemBasic3():
 @on_inf_prim("any") # Not completely agnostic because uses MH, but
                     # responds to the default inference program
 def testMem1():
-  "MSPs should deal with their arguments changing under inference."
+  # MSPs should deal with their arguments changing under inference.
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
@@ -81,7 +81,7 @@ def testMem1():
 
 @statisticalTest
 def testMem2():
-  "Ensures that all (f 1) and (f 2) are the same"
+  # Ensures that all (f 1) and (f 2) are the same
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f 1)")
@@ -102,7 +102,7 @@ def testMem2():
 
 @statisticalTest
 def testMem3():
-  "Same as testMem3 but with booby traps"
+  # Same as testMem3 but with booby traps
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","((lambda () (mem (lambda (y) (f (add y 1))))))")
@@ -124,7 +124,8 @@ def testMem3():
 
 @on_inf_prim("mh")
 def testMem4():
-  "Like TestMem1, makes sure that MSPs handle changes to their arguments without crashing"
+  # Like TestMem1, makes sure that MSPs handle changes to their
+  # arguments without crashing
   ripl = get_ripl()
   ripl.assume("pick_a_stick","""
 (lambda (sticks k)
@@ -140,7 +141,7 @@ def testMem4():
 
 @statisticalTest
 def testMemArray():
-  "Same as testMem2 but when the arguments are arrays"
+  # Same as testMem2 but when the arguments are arrays
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f (array 1 2))")
@@ -161,7 +162,7 @@ def testMemArray():
 
 @statisticalTest
 def testMemSP():
-  "Same as testMem2 but when the arguments are SPs"
+  # Same as testMem2 but when the arguments are SPs
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","(lambda (x) x)")
@@ -185,8 +186,9 @@ def testMemSP():
 ############ Puma mem tests
 
 def testMemoizingOnAList1():
-  """MSP.requestPSP.simulate() needs to quote the values to pass this.
-     In Puma, VentureList needs to override several VentureValue methods as well"""
+  # MSP.requestPSP.simulate() needs to quote the values to pass this.
+  # In Puma, VentureList needs to override several VentureValue
+  # methods as well
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (list 0))",label="pid")
@@ -194,8 +196,9 @@ def testMemoizingOnAList1():
   assert predictions == [1, 1, 1]
 
 def testMemoizingOnASymbol1():
-  """MSP.requestPSP.simulate() needs to quote the values to pass this.
-     In Puma, VentureSymbol needs to override several VentureValue methods as well"""
+  # MSP.requestPSP.simulate() needs to quote the values to pass this.
+  # In Puma, VentureSymbol needs to override several VentureValue
+  # methods as well
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda (x) (if (flip) 1 1)))")
   ripl.predict("(f (quote sym))",label="pid")
@@ -223,8 +226,8 @@ def testMemLoop():
 
 # TODO slow to run, and not worth it 
 def testMemHashCollisions1():
-  """For large A and B, makes sure that MSPs don't allow hash collisions for requests based on
-   different arguments."""
+  # For large A and B, makes sure that MSPs don't allow hash
+  # collisions for requests based on different arguments.
   from nose import SkipTest
   raise SkipTest("Skipping testMemHashCollisions1.  Issue https://app.asana.com/0/9277419963067/9801332616438")
   ripl = get_ripl()

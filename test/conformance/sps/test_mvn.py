@@ -33,8 +33,8 @@ def testMVGaussSmoke():
 
 @statisticalTest
 def testMVGaussPrior():
-  """Confirm that projecting a multivariate Gaussian to one dimension
-  results in a univariate Gaussian."""
+  # Confirm that projecting a multivariate Gaussian to one dimension
+  # results in a univariate Gaussian.
 
   ripl = get_ripl()
   ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (array (array 1 0.5) (array 0.5 1))))")
@@ -45,7 +45,7 @@ def testMVGaussPrior():
 
 @statisticalTest
 def testMVN1a():
-  "Check that MVN recovers normal correctly"
+  # Check that MVN recovers normal correctly
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 10)")
@@ -58,7 +58,7 @@ def testMVN1a():
 
 @statisticalTest
 def testMVN1b():
-  "Check that MVN recovers normal with observe correctly"
+  # Check that MVN recovers normal with observe correctly
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 10)")
@@ -72,7 +72,7 @@ def testMVN1b():
 
 @statisticalTest
 def testMVN2a():
-  "Check that MVN runs in 2 dimensions"
+  # Check that MVN runs in 2 dimensions
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 100 10)")
@@ -85,7 +85,7 @@ def testMVN2a():
 
 @statisticalTest
 def testMVN2b():
-  "Check that MVN runs in 2 dimensions with observe"
+  # Check that MVN runs in 2 dimensions with observe
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 100 10)")
@@ -100,7 +100,7 @@ def testMVN2b():
 @skipWhenRejectionSampling("MVN has no log density bound")
 @statisticalTest
 def testMVN3():
-  "Check that MVN is observable"
+  # Check that MVN is observable
   ripl = get_ripl()
 
   ripl.assume("mu","(vector 0 0)")

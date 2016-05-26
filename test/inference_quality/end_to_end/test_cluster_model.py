@@ -27,7 +27,7 @@ def mean(xs): return sum(xs) / float(len(xs))
 @attr("slow")    
 @on_inf_prim("mh")
 def testCRPMixSimple1():
-  """Makes sure basic clustering model behaves reasonably"""
+  # Makes sure basic clustering model behaves reasonably
   ripl = get_ripl()
 
   ripl.assume('get_cluster_mean', "(mem (lambda (cluster) (uniform_continuous -10.0 10.0)))")

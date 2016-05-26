@@ -27,8 +27,8 @@ def testBrushScopeFuncPGibbs():
   yield checkBrushScope, "func_pgibbs"
 
 def checkBrushScope(operator):
-  """Check that putting scope control in the brush doesn't cause
-  particle Gibbs to crash."""
+  # Check that putting scope control in the brush doesn't cause
+  # particle Gibbs to crash.
   ripl = get_ripl()
   ripl.assume("x1", "(tag (quote state) 0 (normal 1 1))")
   ripl.assume("t", "1") # This variable matters to get the block id into the brush.

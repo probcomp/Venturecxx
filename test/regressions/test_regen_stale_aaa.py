@@ -20,11 +20,10 @@ from venture.test.config import on_inf_prim
 
 @on_inf_prim("mh")
 def testRegenStaleAAA():
-  """
-  This test ensures that if an AAA procedure is being resampled in the
-  same scaffold as something that reads it through an SPRef, the AAA
-  procedure gets regenerated not later than the thing that reads it.
-  """
+  # This test ensures that if an AAA procedure is being resampled in the
+  # same scaffold as something that reads it through an SPRef, the AAA
+  # procedure gets regenerated not later than the thing that reads it.
+  #
   # TODO: The regen order depends on how the border nodes are sorted,
   # which is (I think) unspecified, so this test might not necessarily
   # fail even without the stale AAA check. Is there a way to exercise

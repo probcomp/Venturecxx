@@ -24,7 +24,7 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testExpon1():
-  "Check that exponential distribution is parameterized correctly"
+  # Check that exponential distribution is parameterized correctly
   ripl = get_ripl()
   ripl.assume("a", "(expon 4.0)", label = "pid")
   observed = collectSamples(ripl, "pid")
