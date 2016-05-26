@@ -43,7 +43,7 @@ def testExecuteSmoke():
 
 @on_inf_prim("forget")
 def testForgetSmoke():
-  '''Check that execute_program does not break on labels and forgets'''
+  # Check that execute_program does not break on labels and forgets
   ripl = get_ripl()
   prog = '''
   label : [ASSUME x 1]
@@ -52,7 +52,7 @@ def testForgetSmoke():
 
 @on_inf_prim("resample")
 def testInferReturn():
-  '''Make sure that execute_program returns results from infer commands'''
+  # Make sure that execute_program returns results from infer commands
   ripl = get_ripl()
   prog = '[INFER (return (+ 5 3))]'
   ripl.infer('(resample 3)')
@@ -61,9 +61,7 @@ def testInferReturn():
 
 @on_inf_prim("mh")
 def testCollectFunction():
-  '''
-  Make sure that calling collect on a function evaluation doesn't break
-  '''
+  # Make sure that calling collect on a function evaluation doesn't break
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
   _ = ripl.infer('(do (mh default one 1) (collect (x)))')

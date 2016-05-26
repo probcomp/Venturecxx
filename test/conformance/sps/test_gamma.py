@@ -24,7 +24,7 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testGamma1():
-  "Check that Gamma is parameterized correctly"
+  # Check that Gamma is parameterized correctly
   ripl = get_ripl()
   # samples
   ripl.assume("a","(gamma 10.0 10.0)",label ="pid")

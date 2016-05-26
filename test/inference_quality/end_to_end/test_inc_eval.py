@@ -116,7 +116,7 @@ def extractValue(d):
 @on_inf_prim("none")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator1a():
-  "Extremely basic test"
+  # Extremely basic test
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","(quote 1)")
@@ -127,7 +127,7 @@ def testIncrementalEvaluator1a():
 @on_inf_prim("none")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator1b():
-  "Incremental appllication"
+  # Incremental appllication
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","(list (ref add) (ref 1) (ref 1))")
@@ -138,7 +138,7 @@ def testIncrementalEvaluator1b():
 @on_inf_prim("none")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator1c():
-  "Incremental compound procedure"
+  # Incremental compound procedure
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","(list (ref (list (ref 'lambda) (ref '()) (ref 1))))")
@@ -149,7 +149,7 @@ def testIncrementalEvaluator1c():
 @on_inf_prim("none")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator1d():
-  "Incremental compound with body"
+  # Incremental compound with body
   ripl = get_ripl()
   loadAll(ripl)
   ripl.assume("expr","""(list (ref (list (ref 'lambda) (ref '())
@@ -162,8 +162,8 @@ def testIncrementalEvaluator1d():
 @on_inf_prim("mh")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 def testIncrementalEvaluator2():
-  """Difficult test. We make sure that it stumbles on the solution
-in a reasonable amount of time."""
+  # Difficult test. We make sure that it stumbles on the solution in a
+  # reasonable amount of time.
   ripl = get_ripl()
 
   loadAll(ripl)

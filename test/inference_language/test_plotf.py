@@ -31,7 +31,7 @@ from venture.test.config import on_inf_prim
 @needs_ggplot
 @on_inf_prim("plotf_to_file")
 def testPlotfToFile1():
-  'Test that plotf_to_file dumps file of correct name'
+  # Test that plotf_to_file dumps file of correct name
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   testfile = 'test1.png'
@@ -51,7 +51,7 @@ def testPlotfToFile1():
 @needs_ggplot
 @on_inf_prim("plotf_to_file")
 def testPlotToFile1():
-  'Test that plot_to_file dumps file of correct name'
+  # Test that plot_to_file dumps file of correct name
   # TODO Delete this duplicate test if plotf becomes an alias for return plot
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
@@ -73,7 +73,7 @@ def testPlotToFile1():
 @needs_ggplot
 @on_inf_prim("plotf_to_file")
 def testPlotfToFile2():
-  'Test that plotf_to_file handles multiple files correctly'
+  # Test that plotf_to_file handles multiple files correctly
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   testfiles = ['test1.png', 'test2.png']
@@ -95,7 +95,8 @@ def testPlotfToFile2():
 @gen_needs_ggplot
 @gen_on_inf_prim("plotf_to_file")
 def testPlotfToFileBadArgs():
-  'Test that an error occurs if the number of basenames != the number of plot specs'
+  # Test that an error occurs if the number of basenames != the number
+  # of plot specs
   for basenames, specs in [('test1', '(h0 lcd0d)'),
                            ('(test1 test2)', 'h0'),
                            ('(test1 test2 test3)', '(h0 lcd0d)')]:
@@ -119,7 +120,7 @@ def checkPlotfToFileBadArgs(basenames, specs):
 
 @on_inf_prim("collect")
 def testIteration():
-  'Check that the iteration counter prints correctly'
+  # Check that the iteration counter prints correctly
   ripl = get_ripl()
   ripl.assume('x', '(normal 0 1)')
   program = """[infer

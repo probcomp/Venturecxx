@@ -70,7 +70,8 @@ def testResamplingSmoke3():
 @statisticalTest
 @on_inf_prim("resample")
 def testResamplingSmoke4():
-  "Check that limiting the number of processes doesn't screw up inference too much."
+  # Check that limiting the number of processes doesn't screw up
+  # inference too much.
   n = default_num_samples()
   r = get_ripl()
   r.infer("(resample_multiprocess %s %s)" % (n, n/2)) # Limit the number of processes
@@ -80,7 +81,8 @@ def testResamplingSmoke4():
 
 @on_inf_prim("resample_serializing")
 def testSerializingTracesWithRandomSPs():
-  "Check that the presence of random variables that are SPs does not mess up resampling."
+  # Check that the presence of random variables that are SPs does not
+  # mess up resampling.
   raise SkipTest("Still can't serialize random SPs")
   r = get_ripl()
   r.infer("(resample_serializing 2)")

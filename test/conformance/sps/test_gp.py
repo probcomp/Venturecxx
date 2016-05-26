@@ -101,10 +101,10 @@ def testHyperparameterInferenceSmoke():
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
 def testGPLogscore1():
-  """Is this actually a valid test? The real solution to this problem
-  (and to the corresponding bug with unincorporate) is to wrap the gp
-  in a mem. This could be done automatically I suppose, or better
-  through a library function."""
+  # Is this actually a valid test? The real solution to this problem
+  # (and to the corresponding bug with unincorporate) is to wrap the
+  # gp in a mem. This could be done automatically I suppose, or better
+  # through a library function.
 
   raise SkipTest("GP logDensity is broken for multiple samples of the same input.")
 
@@ -118,9 +118,9 @@ def testGPLogscore1():
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
 def testGPAux():
-  """Make sure the GP's aux is properly maintained.  It should be an array of
-  all pairs (x,y) such that the GP has been called with input x and returned
-  output y."""
+  # Make sure the GP's aux is properly maintained.  It should be an
+  # array of all pairs (x,y) such that the GP has been called with
+  # input x and returned output y.
 
   ripl = get_ripl()
   prep_ripl(ripl)

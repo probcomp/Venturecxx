@@ -99,8 +99,8 @@ def checkHPYMem1(baseline, topC, botC):
 
 @statisticalTest
 def testHPYLanguageModel1():
-  """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
-     Checks that it learns that 1 follows 0"""
+  # Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
+  # Checks that it learns that 1 follows 0
   ripl = get_ripl()
 
   loadPYMem(ripl)

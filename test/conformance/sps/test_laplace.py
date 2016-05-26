@@ -26,7 +26,7 @@ from venture.test.stats import statisticalTest
 @statisticalTest
 @broken_in('puma', "Laplace distribution not implemented in Puma")
 def testLaplace1():
-  "Test that laplace distribution does what it should"
+  # Test that laplace distribution does what it should
   ripl = get_ripl()
   # samples
   ripl.assume("a","(laplace -3 2)", label="pid")

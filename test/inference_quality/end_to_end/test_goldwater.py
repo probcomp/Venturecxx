@@ -27,7 +27,8 @@ from venture.test.config import on_inf_prim
 @attr("slow")
 @on_inf_prim("mh")
 def testGoldwater1():
-  """Fairly complicated program. Just checks to make sure it runs without crashing."""
+  # Fairly complicated program. Just checks to make sure it runs
+  # without crashing.
   raise SkipTest("This test blocked the inference quality suite for 9 hours once.  Issue: https://app.asana.com/0/11127829865276/12392223521813")
   ripl = get_ripl()
 

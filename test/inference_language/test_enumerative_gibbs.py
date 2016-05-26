@@ -35,7 +35,7 @@ def testEnumerativeGibbsBasic1():
 
 @statisticalTest
 def checkEnumerativeGibbsBasic1(in_parallel):
-  """Basic sanity test"""
+  # Basic sanity test
   ripl = get_ripl()
   ripl.predict("(bernoulli)", label="pid")
   infer = "(gibbs default one %s %s)" % \
@@ -52,7 +52,7 @@ def testEnumerativeGibbsBasic2():
 
 @statisticalTest
 def checkEnumerativeGibbsBasic2(in_parallel):
-  """Basic sanity test"""
+  # Basic sanity test
   ripl = get_ripl()
   ripl.assume("x", "(flip 0.1)", label="pid")
   infer = "(gibbs default one %s %s)" % \
@@ -67,8 +67,8 @@ def testEnumerativeGibbsGotcha():
   yield checkEnumerativeGibbsGotcha, "true"
 
 def checkEnumerativeGibbsGotcha(in_parallel):
-  """Enumeration should not break on things that look like they're in
-the support but aren't."""
+  # Enumeration should not break on things that look like they're in
+  # the support but aren't.
   ripl = get_ripl()
   ripl.predict("(bernoulli 1)")
   ripl.predict("(bernoulli 0)")
@@ -78,8 +78,8 @@ the support but aren't."""
 @statisticalTest
 @on_inf_prim("gibbs")
 def testEnumerativeGibbsBoostThrashExact():
-  """Enumerating two choices with the same posterior probability should
-not thrash."""
+  # Enumerating two choices with the same posterior probability should
+  # not thrash.
   ripl = get_ripl()
   ripl.assume("x", "(flip 0.1)", label="pid")
   ripl.observe("(flip (if x .9 .1))", "true")
@@ -94,8 +94,8 @@ def testEnumerativeGibbsBoostThrashClose():
 
 @statisticalTest
 def checkEnumerativeGibbsBoostThrashClose(in_parallel):
-  """Enumerating two choices with almost the same posterior probability
-should mix well."""
+  # Enumerating two choices with almost the same posterior probability
+  # should mix well.
   ripl = get_ripl()
   ripl.assume("x", "(flip 0.1)", label="pid")
   ripl.observe("(flip (if x .91 .09))", "true")
@@ -108,7 +108,7 @@ should mix well."""
 @statisticalTest
 @on_inf_prim("gibbs")
 def testEnumerativeGibbsCategorical1():
-  """Tests mixing when the prior is far from the posterior."""
+  # Tests mixing when the prior is far from the posterior.
   ripl = get_ripl()
   ripl.assume('x', '(categorical (simplex 0.1 0.9) (array 0 1))', label="pid")
   ripl.observe('(flip (if (= x 0) 0.9 0.1))', "true")
@@ -124,9 +124,9 @@ def testEnumerativeGibbsXOR1():
 
 @statisticalTest
 def checkEnumerativeGibbsXOR1(in_parallel):
-  """Tests that an XOR chain mixes with enumerative gibbs.
-     Note that with RESET=True, this will seem to mix with MH.
-     The next test accounts for that."""
+  # Tests that an XOR chain mixes with enumerative gibbs.
+  # Note that with RESET=True, this will seem to mix with MH.
+  # The next test accounts for that."""
   ripl = get_ripl()
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.001))", label="pid")
@@ -146,7 +146,7 @@ def testEnumerativeGibbsXOR2():
 
 @statisticalTest
 def checkEnumerativeGibbsXOR2(in_parallel):
-  """Tests that an XOR chain mixes with enumerative gibbs."""
+  # Tests that an XOR chain mixes with enumerative gibbs.
   ripl = get_ripl()
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.0015))", label="pid")
@@ -166,7 +166,7 @@ def testEnumerativeGibbsXOR3():
 
 @statisticalTest
 def checkEnumerativeGibbsXOR3(in_parallel):
-  """A regression catching a mysterious math domain error."""
+  # A regression catching a mysterious math domain error.
   ripl = get_ripl()
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.0015))", label="pid")
@@ -188,10 +188,9 @@ def checkEnumerativeGibbsXOR3(in_parallel):
 @statisticalTest
 @on_inf_prim("gibbs") # Also rejection, but really testing Gibbs
 def testEnumerativeGibbsBrushRandomness():
-    """Test that Gibbs targets the correct stationary distribution, even
-    when there may be random choices downstream of variables being
-    enumerated.
-    """
+    # Test that Gibbs targets the correct stationary distribution,
+    # even when there may be random choices downstream of variables
+    # being enumerated.
     ripl = get_ripl()
     ripl.assume("z", "(tag 'z 0 (flip))")
     ripl.assume("x", "(if z 0 (normal 0 10))")

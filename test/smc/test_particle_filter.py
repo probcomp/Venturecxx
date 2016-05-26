@@ -31,7 +31,7 @@ sys.setrecursionlimit(10000)
 
 @on_inf_prim("resample")
 def testIncorporateDoesNotCrash():
-  """A sanity test for stack handling of incorporate"""
+  # A sanity test for stack handling of incorporate
 
   ripl = get_ripl()
   P = 60
@@ -73,7 +73,8 @@ def testResampling1(P=10):
 @statisticalTest
 @attr("slow")
 def testResampling2(P=20):
-  "This differs from testResampling1 by an extra resample step, which is supposed to be harmless"
+  # This differs from testResampling1 by an extra resample step, which
+  # is supposed to be harmless
   ripl = get_ripl()
   def a_sample():
     ripl.clear()
@@ -108,7 +109,7 @@ def initBasicPFripl1():
 @statisticalTest
 @attr("slow")
 def testBasicParticleFilter1(P = 10):
-  """A sanity test for particle filtering (discrete)"""
+  # A sanity test for particle filtering (discrete)
 
   N = default_num_samples()
   predictions = []
@@ -151,7 +152,7 @@ def initBasicPFripl2():
 @statisticalTest
 @attr("slow")
 def testBasicParticleFilter2(P = 10):
-  """A sanity test for particle filtering (continuous)"""
+  # A sanity test for particle filtering (continuous)
 
   N = default_num_samples()
   predictions = []

@@ -24,14 +24,14 @@ from venture.test.stats import statisticalTest
 
 @on_inf_prim("assume")
 def testVentureScriptProgram():
-  """At one point execute_program crashed with VentureScript."""
+  # At one point execute_program crashed with VentureScript.
   ripl = get_ripl()
   ripl.set_mode("venture_script")
   ripl.execute_program("assume a = proc() {1}")
 
 @on_inf_prim("none")
 def testVentureScriptUnparseExpException():
-  """At one point execute_program crashed with VentureScript."""
+  # At one point execute_program crashed with VentureScript.
   ripl = get_ripl()
   ripl.set_mode("venture_script")
   try:
