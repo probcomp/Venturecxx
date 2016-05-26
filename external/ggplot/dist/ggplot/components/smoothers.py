@@ -3,10 +3,6 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 from pandas.lib import Timestamp
 import pandas as pd
-import statsmodels.api as sm
-from statsmodels.nonparametric.smoothers_lowess import lowess as smlowess
-from statsmodels.sandbox.regression.predstd import wls_prediction_std
-from statsmodels.stats.outliers_influence import summary_table
 import scipy.stats as stats
 
 _isdate = lambda x: isinstance(x, Timestamp)
@@ -24,6 +20,9 @@ def plot_friendly(value):
 
 def lm(x, y, alpha=ALPHA):
     "fits an OLS from statsmodels. returns tuple."
+    import statsmodels.api as sm
+    from statsmodels.sandbox.regression.predstd import wls_prediction_std
+    from statsmodels.stats.outliers_influence import summary_table
     x, y = map(plot_friendly, [x,y])
     if _isdate(x[0]):
         x = np.array([i.toordinal() for i in x])
@@ -47,6 +46,7 @@ def lowess(x, y, span=SPAN):
     for more see
         statsmodels.nonparametric.smoothers_lowess.lowess
     """
+    from statsmodels.nonparametric.smoothers_lowess import lowess as smlowess
     x, y = map(plot_friendly, [x,y])
     if _isdate(x[0]):
         x = np.array([i.toordinal() for i in x])
