@@ -339,7 +339,6 @@ install_requires = parse_req_file("install_requires.txt")
 tests_require = [
     'nose>=1.3',
     'nose-testconfig>=0.9',
-    'nose-ignore-docstring>=0.2',
     'nose-cov>=1.6',
     'flaky',
     'pexpect',
