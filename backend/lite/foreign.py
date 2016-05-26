@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 import random
 
 import numpy.random as npr
@@ -45,10 +46,18 @@ def fromStackDict(thing):
 def asStackDict(thing):
     # proxy for VentureValue.asStackDict that handles SPs by wrapping them
     if isinstance(thing, VentureSPRecord):
-        return {"type": "foreign_sp", "value": thing.show(),
-                "sp": ForeignLiteSP(thing.sp), "aux": thing.spAux}
+        return OrderedDict([
+            ("type", "foreign_sp"),
+            ("value", thing.show()),
+            ("sp", ForeignLiteSP(thing.sp)),
+            ("aux", thing.spAux),
+        ])
     elif isinstance(thing, Request):
-        return {"type": "request", "value": {"esrs": thing.esrs, "lsrs": thing.lsrs}}
+        return OrderedDict([
+            ("type", "request"),
+            ("value",
+             OrderedDict([("esrs", thing.esrs), ("lsrs", thing.lsrs)])),
+        ])
     else:
         return thing.asStackDict()
 

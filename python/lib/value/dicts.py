@@ -20,6 +20,8 @@
 
 import numbers
 
+from collections import OrderedDict
+
 python_list = list
 python_dict = dict
 

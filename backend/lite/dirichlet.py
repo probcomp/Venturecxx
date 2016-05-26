@@ -102,12 +102,12 @@ class DirCatSP(SP):
       CSymDirCatOutputPSP: 'sym_dir_cat',
       USymDirCatOutputPSP: 'uc_sym_dir_cat'
     }
-    return {
-      'type': types[type(self.outputPSP.psp)],
-      'alpha': self.alpha,
-      'n': self.n,
-      'counts': spaux.counts.leaves()
-    }
+    return OrderedDict([
+      ('type', types[type(self.outputPSP.psp)]),
+      ('alpha', self.alpha),
+      ('n', self.n),
+      ('counts', spaux.counts.leaves()),
+    ])
 
 
 #### Collapsed dirichlet categorical

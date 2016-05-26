@@ -17,6 +17,7 @@
 
 import random
 import numpy.random as npr
+from collections import OrderedDict
 
 from venture.lite.sp import VentureSPRecord
 from venture.lite.trace import Trace
@@ -59,8 +60,9 @@ class Particle(Trace):
     self.np_rng = npr.RandomState(prng.randint(1, 2**31 - 1))
 
     # (2) Maps to things that change outside of particle methods
-    self.madeSPAuxs = { node : spaux.copy()
-                        for node, spaux in particle.madeSPAuxs.iteritems() }
+    self.madeSPAuxs = OrderedDict(
+      (node, spaux.copy())
+      for node, spaux in particle.madeSPAuxs.iteritems())
 
   def initFromTrace(self, trace):
     self.base = trace
@@ -87,7 +89,7 @@ class Particle(Trace):
     self.np_rng = npr.RandomState(prng.randint(1, 2**31 - 1))
 
     # (2) Maps to things that change outside of particle methods
-    self.madeSPAuxs = {}
+    self.madeSPAuxs = OrderedDict()
 
 
   ### Random choices and scopes

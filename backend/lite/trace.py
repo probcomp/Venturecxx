@@ -20,6 +20,8 @@ import math
 import numpy.random as npr
 import random
 
+from collections import OrderedDict
+
 from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
@@ -45,6 +47,7 @@ from venture.lite.node import isLookupNode
 from venture.lite.node import isOutputNode
 from venture.lite.node import TraceNodeArgs
 from venture.lite.omegadb import OmegaDB
+from venture.lite.orderedset import OrderedSet
 from venture.lite.psp import ESRRefOutputPSP
 from venture.lite.regen import constrain
 from venture.lite.regen import evalFamily
@@ -77,12 +80,12 @@ class Trace(object):
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
 
-    self.rcs = set()
-    self.ccs = set()
-    self.aes = set()
-    self.unpropagatedObservations = {} # {node:val}
-    self.families = {}
-    self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
+    self.rcs = OrderedSet()
+    self.ccs = OrderedSet()
+    self.aes = OrderedSet()
+    self.unpropagatedObservations = OrderedDict() # {node:val}
+    self.families = OrderedDict()
+    self.scopes = OrderedDict() # :: {scope-name:smap{block-id:set(node)}}
 
     self.profiling_enabled = False
     self.stats = []
@@ -120,7 +123,7 @@ class Trace(object):
   def registerRandomChoiceInScope(self, scope, block, node, unboxed=False):
     if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if scope not in self.scopes: self.scopes[scope] = SamplableMap()
-    if block not in self.scopes[scope]: self.scopes[scope][block] = set()
+    if block not in self.scopes[scope]: self.scopes[scope][block] = OrderedSet()
     assert node not in self.scopes[scope][block]
     self.scopes[scope][block].add(node)
     assert scope != "default" or len(self.scopes[scope][block]) == 1
@@ -321,9 +324,9 @@ class Trace(object):
   def getAllNodesInScope(self, scope):
     blocks = [self.getNodesInBlock(scope, block) for block in self.getScope(scope).keys()]
     if len(blocks) == 0: # Guido, WTF?
-      return set()
+      return OrderedSet()
     else:
-      return set.union(*blocks)
+      return OrderedSet.union(*blocks)
 
   def getOrderedSetsInScope(self, scope, interval=None):
     if interval is None:
@@ -340,7 +343,7 @@ class Trace(object):
     nodes = self.scopes[scope][block]
     if scope == "default": return nodes
     else:
-      pnodes = set()
+      pnodes = OrderedSet()
       for node in nodes: self.addRandomChoicesInBlock(scope, block, pnodes, node)
       return pnodes
 
@@ -383,7 +386,7 @@ class Trace(object):
     assert id not in self.families
     (_, self.families[id]) = evalFamily(
       self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
-      Scaffold(), False, OmegaDB(), {})
+      Scaffold(), False, OmegaDB(), OrderedDict())
 
   def bindInGlobalEnv(self, sym, id):
     try:
@@ -409,10 +412,10 @@ class Trace(object):
     for node, val in self.unpropagatedObservations.iteritems():
       appNode = self.getConstrainableNode(node)
 #      print "PROPAGATE", node, appNode
-      scaffold = constructScaffold(self, [set([appNode])])
+      scaffold = constructScaffold(self, [OrderedSet([appNode])])
       rhoWeight, _ = detachAndExtract(self, scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode), val)
-      xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
+      xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
       # If xiWeight is -inf, we are in an impossible state, but that might be ok.
       # Finish constraining, to avoid downstream invariant violations.
       node.observe(val)
@@ -636,7 +639,7 @@ class Trace(object):
       return 0.0
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
     (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
     # Old state restored, don't need to do anything else
     return xiWeight
 
@@ -653,7 +656,7 @@ class Trace(object):
     currentValues = getCurrentValues(self, pnodes)
     registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
     (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
     # Old state restored, don't need to do anything else
     return xiWeight
 
@@ -663,7 +666,7 @@ class Trace(object):
     # return values when this was writen.
     scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
     (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, {})
+    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, OrderedDict())
     # Always "accept"
     return xiWeight
 
@@ -711,10 +714,10 @@ function.
     return detachAndExtract(self, scaffold)
 
   def just_regen(self, scaffold):
-    return regenAndAttach(self, scaffold, False, OmegaDB(), {})
+    return regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
 
   def just_restore(self, scaffold, rhoDB):
-    return regenAndAttach(self, scaffold, True, rhoDB, {})
+    return regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
 
   def detach_for_proposal(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()
@@ -730,7 +733,7 @@ function.
     assert len(values) == len(pnodes), "Tried to propose %d values, but subproblem accepts %d values" % (len(values), len(pnodes))
     from infer.mh import registerDeterministicLKernels, unregisterDeterministicLKernels
     registerDeterministicLKernels(self, scaffold, pnodes, values)
-    xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
+    xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
     # de-mutate the scaffold in case it is used for subsequent operations
     unregisterDeterministicLKernels(self, scaffold, pnodes)
     return xiWeight
@@ -742,7 +745,7 @@ function.
     rcs = copy.copy(self.rcs)
     ccs = copy.copy(self.ccs)
     aes = copy.copy(self.aes)
-    scopes = {}
+    scopes = OrderedDict()
     for (scope_name, scope) in self.scopes.iteritems():
       new_scope = SamplableMap()
       for (block_name, block) in scope.iteritems():
@@ -759,20 +762,20 @@ function.
     assert len(self.scopes) == 1, "Global detach left random choices in non-default scope %s" % self.scopes
     assert len(self.scopes['default']) == 0, "Global detach left random choices in default scope %s" % self.scopes['default']
 
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
 
     assert rcs == self.rcs, "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
     assert ccs == self.ccs, "Global detach/restore changed the registered constrained choices from %s to %s" % (ccs, self.ccs)
     assert aes == self.aes, "Global detach/restore changed the registered AEKernels from %s to %s" % (aes, self.aes)
 
-    for scope_name in set(scopes.keys()).union(self.scopes.keys()):
+    for scope_name in OrderedSet(scopes.keys()).union(self.scopes.keys()):
       if scope_name in scopes and scope_name not in self.scopes:
         assert False, "Global detach/restore destroyed scope %s with blocks %s" % (scope_name, scopes[scope_name])
       if scope_name not in scopes and scope_name in self.scopes:
         assert False, "Global detach/restore created scope %s with blocks %s" % (scope_name, self.scopes[scope_name])
       scope = scopes[scope_name]
       new_scope = self.scopes[scope_name]
-      for block_name in set(scope.keys()).union(new_scope.keys()):
+      for block_name in OrderedSet(scope.keys()).union(new_scope.keys()):
         if block_name in scope and block_name not in new_scope:
           assert False, "Global detach/restore destroyed block %s, %s with nodes %s" % (scope_name, block_name, scope[block_name])
         if block_name not in scope and block_name in new_scope:
@@ -837,13 +840,13 @@ the scaffold determined by the given expression."""
 
   def restore(self, id, db):
     assert id in self.families
-    restore(self, self.families[id], Scaffold(), db, {})
+    restore(self, self.families[id], Scaffold(), db, OrderedDict())
 
   def evalAndRestore(self, id, exp, db):
     assert id not in self.families
     (_, self.families[id]) = evalFamily(
       self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
-      Scaffold(), True, db, {})
+      Scaffold(), True, db, OrderedDict())
 
   def has_own_prng(self): return True
   def set_seed(self, seed):

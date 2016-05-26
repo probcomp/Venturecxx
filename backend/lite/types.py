@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numbers
+from collections import OrderedDict
 
 import numpy as np
 
@@ -410,11 +411,11 @@ class HomogeneousDictType(VentureType):
     self.valtype = valtype
     self._name = name
   def asVentureValue(self, thing):
-    return vv.VentureDict(dict([(self.keytype.asVentureValue(key),
+    return vv.VentureDict(OrderedDict([(self.keytype.asVentureValue(key),
                                  self.valtype.asVentureValue(val))
                                 for (key, val) in thing.iteritems()]))
   def asPython(self, vthing):
-    return dict([(self.keytype.asPython(key),
+    return OrderedDict([(self.keytype.asPython(key),
                   self.valtype.asPython(val))
                  for (key, val) in vthing.getDict().iteritems()])
   def __contains__(self, vthing):

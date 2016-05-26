@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from venture.lite.consistency import assertTorus
 from venture.lite.consistency import assertTrace
 from venture.lite.detach import detachAndExtract
@@ -73,7 +75,7 @@ class EnumerativeGibbsOperator(object):
       registerDeterministicLKernels(trace, scaffold, pnodes, newValues)
       xiParticles.append(xiParticle)
       xiWeights.append(
-        regenAndAttach(xiParticle, scaffold, shouldRestore, omegaDB, {}))
+        regenAndAttach(xiParticle, scaffold, shouldRestore, omegaDB, OrderedDict()))
       # if shouldRestore:
       #   assert_almost_equal(xiWeights[-1], rhoWeight)
     return (xiParticles, xiWeights)
@@ -99,7 +101,7 @@ class EnumerativeGibbsOperator(object):
     return self.scaffold.numAffectedNodes()
 
   def reject(self):
-    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, {})
+    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, OrderedDict())
     return self.scaffold.numAffectedNodes()
 
   def name(self): return "enumerative gibbs"
@@ -145,7 +147,7 @@ class EnumerativeDiversify(EnumerativeGibbsOperator):
       assertTorus(scaffold)
       registerDeterministicLKernelsByAddress(
         xiParticle, scaffold, newValuesWithAddresses)
-      xiWeight = regenAndAttach(xiParticle, scaffold, False, OmegaDB(), {})
+      xiWeight = regenAndAttach(xiParticle, scaffold, False, OmegaDB(), OrderedDict())
       xiParticles.append(xiParticle)
       # CONSIDER What to do with the rhoWeight.  Subtract off the
       # likelihood?  Subtract off the prior and the likelihood?  Do

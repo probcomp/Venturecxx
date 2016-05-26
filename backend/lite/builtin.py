@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 # Importing for re-export pylint:disable=unused-import
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.sp_registry import builtInSPs
@@ -48,5 +50,8 @@ import venture.lite.gp
 # pylint: disable=no-member
 
 def builtInValues():
-  return { "true" : v.VentureBool(True), "false" : v.VentureBool(False),
-           "nil" : v.VentureNil() }
+  return OrderedDict([
+    ("true", v.VentureBool(True)),
+    ("false", v.VentureBool(False)),
+    ("nil", v.VentureNil()),
+  ])
