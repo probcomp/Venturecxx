@@ -19,10 +19,15 @@ import random
 import numpy.random as npr
 from collections import OrderedDict
 
+from venture.lite.node import Node
 from venture.lite.sp import VentureSPRecord
 from venture.lite.trace import Trace
 from venture.lite.wttree import PMap
 from venture.lite.wttree import PSet
+
+def node_key(node):
+  assert isinstance(node, Node)
+  return (node.address, str(type(node)))
 
 class Particle(Trace):
 
@@ -68,21 +73,21 @@ class Particle(Trace):
     self.base = trace
 
     # (1) Persistent stuff
-    self.rcs = PSet() # PSet Node
-    self.ccs = PSet() # PSet Node
-    self.aes = PSet() # PSet Node
+    self.rcs = PSet(node_key) # PSet Node
+    self.ccs = PSet(node_key) # PSet Node
+    self.aes = PSet(node_key) # PSet Node
 
-    self.values = PMap()  # PMap Node VentureValue
-    self.madeSPs = PMap() # PMap Node SP
+    self.values = PMap(node_key)  # PMap Node VentureValue
+    self.madeSPs = PMap(node_key) # PMap Node SP
 
     self.scopes = PMap()  # PMap scopeid (PMap blockid (PSet Node))
     # mutable list ok here b/c only touched by one particle
-    self.esrParents = PMap() # PMap Node [Node]
-    self.numRequests = PMap() # PMap Node Int
-    self.regenCounts = PMap() # PMap Node int
-    self.newMadeSPFamilies = PMap() # PMap Node (PMap id Node)
-    self.newChildren = PMap() # PMap Node (PSet Node)
-    self.discardedAAAMakerNodes = PSet() # PSet Node
+    self.esrParents = PMap(node_key) # PMap Node [Node]
+    self.numRequests = PMap(node_key) # PMap Node Int
+    self.regenCounts = PMap(node_key) # PMap Node int
+    self.newMadeSPFamilies = PMap(node_key) # PMap Node (PMap id Node)
+    self.newChildren = PMap(node_key) # PMap Node (PSet Node)
+    self.discardedAAAMakerNodes = PSet(node_key) # PSet Node
 
     prng = trace.py_rng
     self.py_rng = random.Random(prng.randint(1, 2**31 - 1))
@@ -113,7 +118,7 @@ class Particle(Trace):
       self.scopes = self.scopes.insert(scope, PMap())
     if block not in self.scopes.lookup(scope):
       def ins_b(blocks):
-        return blocks.insert(block, PSet())
+        return blocks.insert(block, PSet(node_key))
       self.scopes = self.scopes.adjust(scope, ins_b)
     def ins_n(blocks):
       return blocks.adjust(block, lambda pnodes: pnodes.insert(node))
@@ -182,7 +187,7 @@ class Particle(Trace):
 
   def addChildAt(self, node, child):
     if node not in self.newChildren:
-      self.newChildren = self.newChildren.insert(node, PSet())
+      self.newChildren = self.newChildren.insert(node, PSet(node_key))
     def ins(children):
       return children.insert(child)
     self.newChildren = self.newChildren.adjust(node, ins)
