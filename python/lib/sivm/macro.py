@@ -189,6 +189,18 @@ def DoExpand(exp):
       template = ["let", [["var", "expr"]], ["do"] + rest_vars]
     elif (type(statement) is list and len(statement) == 3 and
           type(statement[0]) is dict and
+          statement[0]["value"] == "let_values"):
+      # Let_values statement
+      n = len(statement[1])
+      lst_name = "__lst_%d__" % random.randint(10000, 99999)
+      let_vars = ["var_%d" % i for i in range(n)]
+      let_exps = [[var, ["deref", ["lookup", lst_name, v.integer(i)]]]
+                   for (i, var) in enumerate(let_vars)]
+      pattern = ["do", ["let_values", let_vars, "lst_expr"]] + rest_vars
+      template = ["let", [[lst_name, "lst_expr"]] + let_exps,
+                  ["do"] + rest_vars]
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
           statement[0]["value"] == "letrec"):
       # Letrec statement
       mutrec = 0
