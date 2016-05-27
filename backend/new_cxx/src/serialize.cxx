@@ -24,7 +24,7 @@
 #include "detach.h"
 #include "regen.h"
 
-OrderedDB::OrderedDB(Trace * trace, vector<VentureValuePtr> values) :
+OrderedDB::OrderedDB(Trace * trace, const vector<VentureValuePtr> & values) :
   trace(trace),
   stack(values) {}
 
@@ -53,7 +53,7 @@ VentureValuePtr OrderedDB::getValue(Node * node)
   }
 }
 
-void OrderedDB::registerValue(Node * node, VentureValuePtr value)
+void OrderedDB::registerValue(Node * node, const VentureValuePtr & value)
 {
   DB::registerValue(node, value);
 
