@@ -26,8 +26,9 @@ Particle::Particle(ConcreteTrace * outerTrace, unsigned long seed):
   rng->set_seed(seed);
 }
 
-Particle::Particle(boost::shared_ptr<Particle> outerParticle,
-		   unsigned long seed):
+Particle::Particle(
+    const boost::shared_ptr<Particle> & outerParticle,
+    unsigned long seed):
   baseTrace(outerParticle->baseTrace),
   unconstrainedChoices(outerParticle->unconstrainedChoices),
   constrainedChoices(outerParticle->constrainedChoices),
@@ -81,8 +82,8 @@ void Particle::registerUnconstrainedChoice(Node * node)
       node);
 }
 
-void Particle::registerUnconstrainedChoiceInScope(ScopeID scope,
-                                                  BlockID block, Node * node)
+void Particle::registerUnconstrainedChoiceInScope(
+    const ScopeID & scope, const BlockID & block, Node * node)
 {
   assert(block);
   if (!scopes.contains(scope)) {
@@ -111,14 +112,15 @@ void Particle::unregisterUnconstrainedChoice(Node * node)
   assert(false);
 }
 
-void Particle::unregisterUnconstrainedChoiceInScope(ScopeID scope,
-                                                    BlockID block, Node * node)
+void Particle::unregisterUnconstrainedChoiceInScope(
+    const ScopeID & scope, const BlockID & block, Node * node)
 {
   assert(false);
 }
 
 /* Regen mutations */
-void Particle::addESREdge(RootOfFamily esrRoot, OutputNode * outputNode)
+void Particle::addESREdge(
+    const RootOfFamily & esrRoot, OutputNode * outputNode)
 {
   // Note: this mutates, because it never crosses a particle
   assert(baseTrace->getESRParents(outputNode).empty());
@@ -142,7 +144,7 @@ void Particle::reconnectLookup(LookupNode * lookupNode)
   addChild(lookupNode->sourceNode, lookupNode);
 }
 
-void Particle::incNumRequests(RootOfFamily root)
+void Particle::incNumRequests(const RootOfFamily & root)
 {
   if (!numRequests.contains(root)) {
     numRequests = numRequests.insert(root, baseTrace->getNumRequests(root));
@@ -150,7 +152,8 @@ void Particle::incNumRequests(RootOfFamily root)
   numRequests = numRequests.insert(root, numRequests.lookup(root) + 1);
 }
 
-void Particle::incRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node)
+void Particle::incRegenCount(
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   if (!regenCounts.contains(node)) {
     regenCounts = regenCounts.insert(node, 0);
@@ -159,20 +162,23 @@ void Particle::incRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node)
 }
 
 
-bool Particle::hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node)
+bool Particle::hasLKernel(
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   if (lkernels.contains(node)) { return true; }
   else { return baseTrace->hasLKernel(scaffold, node); }
 }
 
-void Particle::registerLKernel(boost::shared_ptr<Scaffold> scaffold,
-                               Node * node, boost::shared_ptr<LKernel> lkernel)
+void Particle::registerLKernel(
+    const boost::shared_ptr<Scaffold> & scaffold,
+    Node * node,
+    const boost::shared_ptr<LKernel> & lkernel)
 {
   lkernels = lkernels.insert(node, lkernel);
 }
 
 boost::shared_ptr<LKernel> Particle::getLKernel(
-    boost::shared_ptr<Scaffold> scaffold, Node * node)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   if (lkernels.contains(node)) { return lkernels.lookup(node); }
   else { return baseTrace->getLKernel(scaffold, node); }
@@ -224,7 +230,8 @@ vector<RootOfFamily> Particle::getESRParents(Node * node)
   else { return baseTrace->getESRParents(node); }
 }
 
-int Particle::getRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node)
+int Particle::getRegenCount(
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   assert(baseTrace->getRegenCount(scaffold, node) == 0);
   if (regenCounts.contains(node)) { return regenCounts.lookup(node); }
@@ -234,15 +241,15 @@ int Particle::getRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node)
 
 
 /* Primitive setters */
-void Particle::setValue(Node * node, VentureValuePtr value)
+void Particle::setValue(Node * node, const VentureValuePtr & value)
 {
   //  assert(!baseTrace->values.count(node)); // TODO might not work
   values = values.insert(node, value);
 }
 
 
-void Particle::setMadeSPRecord(Node * makerNode,
-                               boost::shared_ptr<VentureSPRecord> spRecord)
+void Particle::setMadeSPRecord(
+    Node * makerNode, const boost::shared_ptr<VentureSPRecord> & spRecord)
 {
   madeSPs = madeSPs.insert(makerNode, spRecord->sp);
   madeSPAuxs[makerNode] = spRecord->spAux;
@@ -251,14 +258,15 @@ void Particle::setMadeSPRecord(Node * makerNode,
 }
 
 
-void Particle::setMadeSP(Node * makerNode, boost::shared_ptr<SP> sp)
+void Particle::setMadeSP(Node * makerNode, const boost::shared_ptr<SP> & sp)
 {
   assert(!madeSPs.contains(makerNode));
   assert(!baseTrace->getMadeSP(makerNode));
   madeSPs = madeSPs.insert(makerNode, sp);
 }
 
-void Particle::setMadeSPAux(Node * makerNode, boost::shared_ptr<SPAux> spAux)
+void Particle::setMadeSPAux(
+    Node * makerNode, const boost::shared_ptr<SPAux> & spAux)
 {
   assert(!madeSPAuxs.count(makerNode));
   assert(!baseTrace->getMadeSPAux(makerNode));
@@ -267,8 +275,8 @@ void Particle::setMadeSPAux(Node * makerNode, boost::shared_ptr<SPAux> spAux)
 
 
 /* SPFamily operations */
-void Particle::registerMadeSPFamily(Node * makerNode, FamilyID id,
-                                    RootOfFamily esrRoot)
+void Particle::registerMadeSPFamily(
+    Node * makerNode, const FamilyID & id, const RootOfFamily & esrRoot)
 {
   if (!newMadeSPFamilies.contains(makerNode)) {
     newMadeSPFamilies = newMadeSPFamilies.insert(
@@ -278,7 +286,7 @@ void Particle::registerMadeSPFamily(Node * makerNode, FamilyID id,
       makerNode, newMadeSPFamilies.lookup(makerNode).insert(id, esrRoot));
 }
 
-bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id)
+bool Particle::containsMadeSPFamily(Node * makerNode, const FamilyID & id)
 {
   if (newMadeSPFamilies.contains(makerNode)) {
     if (newMadeSPFamilies.lookup(makerNode).contains(id)) { return true; }
@@ -288,7 +296,8 @@ bool Particle::containsMadeSPFamily(Node * makerNode, FamilyID id)
   return false;
 }
 
-RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
+RootOfFamily Particle::getMadeSPFamilyRoot(
+    Node * makerNode, const FamilyID & id)
 {
   if (newMadeSPFamilies.contains(makerNode) &&
       newMadeSPFamilies.lookup(makerNode).contains(id)) {
@@ -299,7 +308,7 @@ RootOfFamily Particle::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 }
 
 /* Inference (computing reverse weight) */
-int Particle::numBlocksInScope(ScopeID scope)
+int Particle::numBlocksInScope(const ScopeID & scope)
 {
   if (scope->hasSymbol() && scope->getSymbol() == "default") {
     // This should use the copy constructor of set
@@ -491,8 +500,8 @@ boost::shared_ptr<SPAux> Particle::getAAAMadeSPAux(OutputNode * makerNode)
 
 /* The following should never be called on particles */
 
-void Particle::registerAAAMadeSPAux(OutputNode * makerNode,
-                                    boost::shared_ptr<SPAux> spAux)
+void Particle::registerAAAMadeSPAux(
+    OutputNode * makerNode, const boost::shared_ptr<SPAux> & spAux)
 { assert(false); }
 
 RootOfFamily Particle::popLastESRParent(OutputNode * outputNode)
@@ -501,10 +510,11 @@ RootOfFamily Particle::popLastESRParent(OutputNode * outputNode)
 void Particle::disconnectLookup(LookupNode * lookupNode)
 { assert(false); throw "should never be called"; }
 
-void Particle::decNumRequests(RootOfFamily root)
+void Particle::decNumRequests(const RootOfFamily & root)
 { assert(false); throw "should never be called"; }
 
-void Particle::decRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node)
+void Particle::decRegenCount(
+  const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 { assert(false); throw "should never be called"; }
 
 void Particle::removeChild(Node * node, Node * child)
@@ -516,13 +526,13 @@ void Particle::unregisterAEKernel(Node * node)
 void Particle::unregisterConstrainedChoice(Node * node)
 { assert(false); throw "should never be called"; }
 
-int Particle::getNumRequests(RootOfFamily root)
+int Particle::getNumRequests(const RootOfFamily & root)
 { assert(false); throw "should never be called"; }
 
 void Particle::destroyMadeSPRecord(Node * makerNode)
 { assert(false); }
 
-void Particle::unregisterMadeSPFamily(Node * makerNode, FamilyID id)
+void Particle::unregisterMadeSPFamily(Node * makerNode, const FamilyID & id)
 { assert(false); }
 
 void Particle::clearValue(Node * node)
@@ -530,15 +540,15 @@ void Particle::clearValue(Node * node)
 
 
 /* Probably not called */
-void Particle::setChildren(Node * node, set<Node*> children)
+void Particle::setChildren(Node * node, const set<Node*> & children)
 { assert(false); }
 
-void Particle::setESRParents(Node * node,
-                             const vector<RootOfFamily> & esrRoots)
+void Particle::setESRParents(
+    Node * node, const vector<RootOfFamily> & esrRoots)
 { assert(false); }
 
 bool Particle::isConstrained(Node * node)
 { assert(false); }
 
-void Particle::setNumRequests(RootOfFamily node, int num)
+void Particle::setNumRequests(const RootOfFamily & node, int num)
 { assert(false); }

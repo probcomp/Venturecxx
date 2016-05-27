@@ -21,14 +21,15 @@
 #include "args.h"
 #include "sps/scope.h"
 
-ConstantNode * Trace::createConstantNode(VentureValuePtr value)
+ConstantNode * Trace::createConstantNode(const VentureValuePtr & value)
 {
   ConstantNode * constantNode = new ConstantNode(value);
   setValue(constantNode, value);
   return constantNode;
 }
 
-LookupNode * Trace::createLookupNode(Node * sourceNode, VentureValuePtr sym)
+LookupNode * Trace::createLookupNode(
+  Node * sourceNode, const VentureValuePtr & sym)
 {
   LookupNode * lookupNode = new LookupNode(sourceNode, sym);
   setValue(lookupNode, getValue(sourceNode));
@@ -38,7 +39,11 @@ LookupNode * Trace::createLookupNode(Node * sourceNode, VentureValuePtr sym)
 }
 
 
-pair<RequestNode*, OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env, VentureValuePtr exp)
+pair<RequestNode*, OutputNode*> Trace::createApplicationNodes(
+  Node * operatorNode,
+  const vector<Node*> & operandNodes,
+  const boost::shared_ptr<VentureEnvironment> & env,
+  const VentureValuePtr & exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
@@ -139,4 +144,7 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
 }
 
 
-double Trace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }
+double Trace::logDensityOfBlock(const ScopeID & scope)
+{
+  return -1 * log(numBlocksInScope(scope));
+}
