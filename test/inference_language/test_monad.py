@@ -225,6 +225,13 @@ def testDoLetrec():
     (= (x) (y)))
 """)
 
+@on_inf_prim("none")
+def testDoLetValues():
+  assert get_ripl().evaluate("""\
+(do (let_values (x y) (values_list 1 2))
+    (= 3 (+ x y)))
+""")
+
 @needs_backend("lite")
 @needs_backend("puma")
 @on_inf_prim("new_model")
