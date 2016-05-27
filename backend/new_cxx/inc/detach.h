@@ -28,43 +28,53 @@ struct ApplicationNode;
 struct OutputNode;
 struct RequestNode;
 
-pair<double, boost::shared_ptr<DB> >
-detachAndExtract(ConcreteTrace * trace,
-                 const vector<Node*> & border,
-                 boost::shared_ptr<Scaffold> scaffold);
+pair<double, boost::shared_ptr<DB> > detachAndExtract(
+    ConcreteTrace * trace,
+    const vector<Node*> & border,
+    const boost::shared_ptr<Scaffold> & scaffold);
 double unconstrain(ConcreteTrace * trace, OutputNode * node);
-double detach(ConcreteTrace * trace, ApplicationNode * node,
-              boost::shared_ptr<Scaffold> scaffold,
-              boost::shared_ptr<DB> db);
-double extractParents(ConcreteTrace * trace, Node * node,
-                      boost::shared_ptr<Scaffold> scaffold,
-                      boost::shared_ptr<DB> db);
-double extractESRParents(ConcreteTrace * trace, Node * node,
-                         boost::shared_ptr<Scaffold> scaffold,
-                         boost::shared_ptr<DB> db);
-double extract(ConcreteTrace * trace,
-               Node * node,
-               boost::shared_ptr<Scaffold> scaffold,
-               boost::shared_ptr<DB> db);
-double unevalFamily(ConcreteTrace * trace,
-                    Node * node,
-                    boost::shared_ptr<Scaffold> scaffold,
-                    boost::shared_ptr<DB> db);
-double unapply(ConcreteTrace * trace,
-               OutputNode * node,
-               boost::shared_ptr<Scaffold> scaffold,
-               boost::shared_ptr<DB> db);
-void teardownMadeSP(ConcreteTrace * trace,
-                    Node * node,
-                    bool isAAA,
-                    boost::shared_ptr<DB> db);
-double unapplyPSP(ConcreteTrace * trace,
-                  ApplicationNode * node,
-                  boost::shared_ptr<Scaffold> scaffold,
-                  boost::shared_ptr<DB> db);
-double unevalRequests(ConcreteTrace * trace,
-                      RequestNode * node,
-                      boost::shared_ptr<Scaffold> scaffold,
-                      boost::shared_ptr<DB> db);
+double detach(
+    ConcreteTrace * trace,
+    ApplicationNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+double extractParents(
+    ConcreteTrace * trace, Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+double extractESRParents(
+    ConcreteTrace * trace, Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+double extract(
+    ConcreteTrace * trace,
+    Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+double unevalFamily(
+    ConcreteTrace * trace,
+    Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+double unapply(
+    ConcreteTrace * trace,
+    OutputNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+void teardownMadeSP(
+    ConcreteTrace * trace,
+    Node * node,
+    bool isAAA,
+    const boost::shared_ptr<DB> & db);
+double unapplyPSP(
+    ConcreteTrace * trace,
+    ApplicationNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
+double unevalRequests(
+    ConcreteTrace * trace,
+    RequestNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db);
 
 #endif
