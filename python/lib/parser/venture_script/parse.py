@@ -344,7 +344,7 @@ class Semantics(object):
             [e] = es
             return locbracket(o, c, e['value'])
         else:
-            construction = [locmap(loctoken1(o, 'list'), val.symbol)] + es
+            construction = [locmap(loctoken1(o, 'values_list'), val.symbol)] + es
             return locbracket(o, c, construction)
     def p_primary_brace(self, o, e, c):
         assert isloc(e)
