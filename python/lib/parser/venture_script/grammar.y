@@ -60,6 +60,8 @@ statement(let)		::= K_LET(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
 statement(letrec)	::= K_LETREC(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(mutrec)	::= K_AND(l) L_NAME(n) T_EQDEF(eq) expression(e).
+statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
+				T_EQDEF(eq) expression(e).
 statement(labelled)	::= labelled(d).
 statement(none)	::= expression(e).
 
