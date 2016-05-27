@@ -288,7 +288,7 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace,
   return stackDict;
 }
 
-void PyTrace::bindPythonSP(const string& sym, boost::python::object sp)
+void PyTrace::bindPythonSP(const string& sym, const boost::python::object & sp)
 {
   Node* node = trace->bindPrimitiveSP(sym, new ForeignLiteSP(sp));
   trace->boundForeignSPNodes.insert(shared_ptr<Node>(node));
