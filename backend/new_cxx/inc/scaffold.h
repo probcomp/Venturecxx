@@ -61,7 +61,8 @@ struct Scaffold
   bool isAbsorbing(Node * node);
   bool isAAA(Node * node);
   bool hasLKernel(Node * node);
-  void registerLKernel(Node * node, boost::shared_ptr<LKernel> lkernel);
+  void registerLKernel(
+    Node * node, const boost::shared_ptr<LKernel> & lkernel);
   boost::shared_ptr<LKernel> getLKernel(Node * node);
   int numAffectedNodes();
   string showSizes();
