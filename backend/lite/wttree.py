@@ -37,6 +37,9 @@ Chris Hanson and Taylor Campbell.'''
 # Style note: all node keys and subtress are always listed in function
 # arguments in-order.
 
+def identity(x):
+  return x
+
 class EmptyNode(object): #pylint: disable=W0232
   def size(self): return 0
   def isEmpty(self): return True
@@ -108,51 +111,55 @@ def node_popmin(node):
     (mink, minv, newl) = node_popmin(node.left)
     return (mink, minv, t_join(newl, node.key, node.value, node.right))
 
-def node_lookup(node, key):
+def node_lookup(node, key_, keyfn):
   if node.isEmpty():
     return None
-  elif key < node.key:
-    return node_lookup(node.left, key)
-  elif node.key < key:
-    return node_lookup(node.right, key)
+  node_key_ = keyfn(node.key)
+  if key_ < node_key_:
+    return node_lookup(node.left, key_, keyfn)
+  elif node_key_ < key_:
+    return node_lookup(node.right, key_, keyfn)
   else:
     return node.value
 
-def node_insert(node, key, value):
+def node_insert(node, key, key_, keyfn, value):
   if node.isEmpty():
     return Node(EmptyNode(), key, value, EmptyNode())
-  elif key < node.key:
-    return t_join(node_insert(node.left, key, value),
+  node_key_ = keyfn(node.key)
+  if key_ < node_key_:
+    return t_join(node_insert(node.left, key, key_, keyfn, value),
                   node.key, node.value, node.right)
-  elif node.key < key:
+  elif node_key_ < key_:
     return t_join(node.left, node.key, node.value,
-                  node_insert(node.right, key, value))
+                  node_insert(node.right, key, key_, keyfn, value))
   else:
     return Node(node.left, key, value, node.right)
 
-def node_adjust(node, key, f):
+def node_adjust(node, key, key_, keyfn, f):
   if node.isEmpty():
     # TODO Optimize the not-found case by not reconstructing the tree
     # on the way up?
     return node
-  elif key < node.key:
-    return Node(node_adjust(node.left, key, f),
+  node_key_ = keyfn(node.key)
+  if key_ < node_key_:
+    return Node(node_adjust(node.left, key, key_, keyfn, f),
                 node.key, node.value, node.right)
-  elif node.key < key:
+  elif node_key_ < key_:
     return Node(node.left, node.key, node.value,
-                node_adjust(node.right, key, f))
+                node_adjust(node.right, key, key_, keyfn, f))
   else:
     return Node(node.left, key, f(node.value), node.right)
 
-def node_delete(node, key):
+def node_delete(node, key_, keyfn):
   if node.isEmpty():
     return node
-  elif key < node.key:
-    return t_join(node_delete(node.left, key),
+  node_key_ = keyfn(node.key)
+  if key_ < node_key_:
+    return t_join(node_delete(node.left, key_, keyfn),
                   node.key, node.value, node.right)
-  elif node.key < key:
+  elif node_key_ < key_:
     return t_join(node.left, node.key, node.value,
-                  node_delete(node.right, key))
+                  node_delete(node.right, key_, keyfn))
   else:
     # Deleting the key at this node
     if node.right.isEmpty():
@@ -180,14 +187,20 @@ class PMap(object):
 
   The lookup method returns None if the key is not found.  Do not
   insert None as a value or you will get confused."""
-  def __init__(self, root=None):
+  def __init__(self, keyfn=None, root=None):
+    if keyfn is None:
+      keyfn = identity
+    self._keyfn = keyfn
     self.root = root if root is not None else EmptyNode()
   def lookup(self, key):
-    return node_lookup(self.root, key)
+    keyfn = self._keyfn
+    return node_lookup(self.root, keyfn(key), keyfn)
   def __contains__(self, key):
-    return node_lookup(self.root, key) is not None
+    keyfn = self._keyfn
+    return node_lookup(self.root, keyfn(key), keyfn) is not None
   def insert(self, key, value):
-    return PMap(node_insert(self.root, key, value))
+    keyfn = self._keyfn
+    return PMap(keyfn, node_insert(self.root, key, keyfn(key), keyfn, value))
   def adjust(self, key, f):
     """adjust :: (PMap k v) -> k -> (v -> v) -> PMap k v
 
@@ -195,9 +208,11 @@ class PMap(object):
     function to the value at the given key.  Returns the original PMap
     unchanged if the key is not present.  The name is chosen by
     analogy to Data.PMap.adjust from the Haskell standard library."""
-    return PMap(node_adjust(self.root, key, f))
+    keyfn = self._keyfn
+    return PMap(keyfn, node_adjust(self.root, key, keyfn(key), keyfn, f))
   def delete(self, key):
-    return PMap(node_delete(self.root, key))
+    keyfn = self._keyfn
+    return PMap(keyfn, node_delete(self.root, keyfn(key), keyfn))
 
   def __len__(self): return self.root.size()
   def __iter__(self):
@@ -211,14 +226,20 @@ class PSet(object):
   At present, happens to be implemented just like a PMap, but with the
   values always being True.  In principle could be impemented more
   efficiently by specializing the nodes not to store values at all."""
-  def __init__(self, root=None):
+  def __init__(self, keyfn=None, root=None):
+    if keyfn is None:
+      keyfn = identity
+    self._keyfn = keyfn
     self.root = root if root is not None else EmptyNode()
   def __contains__(self, key):
-    return node_lookup(self.root, key) is not None
+    keyfn = self._keyfn
+    return node_lookup(self.root, keyfn(key), keyfn) is not None
   def insert(self, key):
-    return PSet(node_insert(self.root, key, True))
+    keyfn = self._keyfn
+    return PSet(keyfn, node_insert(self.root, key, keyfn(key), keyfn, True))
   def delete(self, key):
-    return PSet(node_delete(self.root, key))
+    keyfn = self._keyfn
+    return PSet(keyfn, node_delete(self.root, keyfn(key), keyfn))
 
   def __len__(self): return self.root.size()
   def __iter__(self):
