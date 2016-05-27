@@ -68,13 +68,22 @@ struct ForeignLiteSPAux : SPAux
 
 struct ForeignLiteLKernel : LKernel
 {
-  ForeignLiteLKernel(boost::python::object lkernel): lkernel(lkernel) {}
-  VentureValuePtr forwardSimulate(Trace * trace, VentureValuePtr oldValue,
-                                  shared_ptr<Args> args, gsl_rng * rng);
-  double forwardWeight(Trace * trace, VentureValuePtr newValue,
-                       VentureValuePtr oldValue, shared_ptr<Args> args);
-  double reverseWeight(Trace * trace, VentureValuePtr oldValue,
-                       shared_ptr<Args> args);
+  ForeignLiteLKernel(const boost::python::object & lkernel):
+    lkernel(lkernel) {}
+  VentureValuePtr forwardSimulate(
+      Trace * trace,
+      const VentureValuePtr & oldValue,
+      const shared_ptr<Args> & args,
+      gsl_rng * rng);
+  double forwardWeight(
+      Trace * trace,
+      const VentureValuePtr & newValue,
+      const VentureValuePtr & oldValue,
+      const shared_ptr<Args> & args);
+  double reverseWeight(
+      Trace * trace,
+      const VentureValuePtr & oldValue,
+      const shared_ptr<Args> & args);
 
   boost::python::object lkernel;
 };

@@ -20,7 +20,8 @@
 #include "sp.h"
 #include "sprecord.h"
 
-VentureValuePtr DeterministicMakerAAALKernel::simulate(Trace * trace, boost::shared_ptr<Args> args, gsl_rng * rng)
+VentureValuePtr DeterministicMakerAAALKernel::simulate(
+    Trace * trace, const boost::shared_ptr<Args> & args, gsl_rng * rng)
 {
   boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args, rng));
 
@@ -28,19 +29,28 @@ VentureValuePtr DeterministicMakerAAALKernel::simulate(Trace * trace, boost::sha
   return spRecord;
 }
 
-double DeterministicMakerAAALKernel::weight(Trace * trace, VentureValuePtr value, boost::shared_ptr<Args> args)
+double DeterministicMakerAAALKernel::weight(
+    Trace * trace,
+    const VentureValuePtr & value,
+    const boost::shared_ptr<Args> & args)
 {
   boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
   assert(spRecord);
   return spRecord->sp->outputPSP->logDensityOfData(spRecord->spAux);
 }
 
-VentureValuePtr DeterministicLKernel::simulate(Trace * trace, boost::shared_ptr<Args> args, gsl_rng * rng)
+VentureValuePtr DeterministicLKernel::simulate(
+    Trace * trace,
+    const boost::shared_ptr<Args> & args,
+    gsl_rng * rng)
 {
   return value;
 }
 
-double DeterministicLKernel::weight(Trace * trace, VentureValuePtr value, boost::shared_ptr<Args> args)
+double DeterministicLKernel::weight(
+    Trace * trace,
+    const VentureValuePtr & value,
+    const boost::shared_ptr<Args> & args)
 {
   return psp->logDensity(value, args);
 }

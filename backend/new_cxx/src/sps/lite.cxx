@@ -164,10 +164,11 @@ ForeignLiteSPAux* ForeignLiteSPAux::copy_help(ForwardingMap* m) const
   return answer;
 }
 
-VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
-                                                    VentureValuePtr oldValue,
-                                                    shared_ptr<Args> args,
-                                                    gsl_rng * rng)
+VentureValuePtr ForeignLiteLKernel::forwardSimulate(
+    Trace * trace,
+    const VentureValuePtr & oldValue,
+    const shared_ptr<Args> & args,
+    gsl_rng * rng)
 {
   boost::python::object foreignOldValue;
   if (oldValue) {
@@ -178,10 +179,11 @@ VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLiteLKernel::forwardWeight(Trace * trace,
-                                         VentureValuePtr newValue,
-                                         VentureValuePtr oldValue,
-                                         shared_ptr<Args> args)
+double ForeignLiteLKernel::forwardWeight(
+    Trace * trace,
+    const VentureValuePtr & newValue,
+    const VentureValuePtr & oldValue,
+    const shared_ptr<Args> & args)
 {
   boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
   boost::python::object foreignOldValue;
@@ -193,7 +195,10 @@ double ForeignLiteLKernel::forwardWeight(Trace * trace,
   return boost::python::extract<double>(foreignWeight);
 }
 
-double ForeignLiteLKernel::reverseWeight(Trace * trace, VentureValuePtr oldValue, shared_ptr<Args> args)
+double ForeignLiteLKernel::reverseWeight(
+    Trace * trace,
+    const VentureValuePtr & oldValue,
+    const shared_ptr<Args> & args)
 {
   boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
