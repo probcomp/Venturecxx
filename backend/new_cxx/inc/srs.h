@@ -25,7 +25,9 @@ struct VentureEnvironment;
 
 struct ESR
 {
-  ESR(FamilyID id, VentureValuePtr exp, boost::shared_ptr<VentureEnvironment> env) :
+  ESR(const FamilyID & id,
+      const VentureValuePtr & exp,
+      const boost::shared_ptr<VentureEnvironment> & env) :
     id(id), exp(exp), env(env) {};
   FamilyID id;
   VentureValuePtr exp;
