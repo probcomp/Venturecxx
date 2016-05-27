@@ -134,6 +134,12 @@ def LetRecExpand(exp):
   template = ['eval', ['quote', 'body'], template]
   return SyntaxRule(pattern, template).expand(exp)
 
+def ValuesExpand(exp):
+  vals = ["__val_%d__" % i for i in range(len(exp)-1)]
+  pattern = ["values_list"] + vals
+  template = ["list"] + [["ref", val] for val in vals]
+  return SyntaxRule(pattern, template).expand(exp)
+
 def arg0(name):
   def applies(exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
@@ -381,6 +387,14 @@ letrecMacro = Macro(arg0("letrec"), LetRecExpand, desc="""\
 
   No concrete syntax is provided (yet).
 """)
+
+valuesMacro = Macro(arg0("values_list"), ValuesExpand, desc="""\
+.. _values:
+.. object:: values_list(<exp>, <exp>, ...)
+
+  Returns a list of references (see `ref`) corresponding to the
+  results of evaluating each of its arguments.
+  """)
 
 # Do is not directly a SyntaxRule because the pattern language does
 # not support repetition or alternatives.  Instead, expansion of a do
@@ -740,7 +754,8 @@ For example::
 """)
 
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
-          letMacro, letrecMacro, doMacro, beginMacro, actionMacro, qqMacro,
+          letMacro, letrecMacro, valuesMacro,
+          doMacro, beginMacro, actionMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, assume_valuesMacro, observeMacro,
           predictMacro, predictAllMacro, forceMacro,
