@@ -59,7 +59,7 @@ struct EGibbsWorker
 };
 
 pair<Trace*, double> EnumerativeGibbsGKernel::propose(ConcreteTrace * trace,
-    boost::shared_ptr<Scaffold> scaffold)
+    const boost::shared_ptr<Scaffold> & scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
