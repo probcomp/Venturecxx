@@ -21,20 +21,24 @@
 #include "concrete_trace.h"
 #include "stop-and-copy.h"
 
-bool SPFamilies::containsFamily(FamilyID id) { return families.count(id); }
-RootOfFamily SPFamilies::getRootOfFamily(FamilyID id)
+bool SPFamilies::containsFamily(const FamilyID & id)
+{
+  return families.count(id);
+}
+
+RootOfFamily SPFamilies::getRootOfFamily(const FamilyID & id)
 {
   assert(families.count(id));
   return families[id];
 }
 
-void SPFamilies::registerFamily(FamilyID id, RootOfFamily root)
+void SPFamilies::registerFamily(const FamilyID & id, const RootOfFamily & root)
 {
   assert(!families.count(id));
   families[id] = root;
 }
 
-void SPFamilies::unregisterFamily(FamilyID id)
+void SPFamilies::unregisterFamily(const FamilyID & id)
 {
   assert(families.count(id));
   families.erase(id);
