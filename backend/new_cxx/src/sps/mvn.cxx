@@ -34,7 +34,8 @@ using std::isfinite;
    We have two options: change the code to sample directly to use Eigen instead of GSL,
    or change Eigen to GSL everywhere. */
 
-VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr MVNormalPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("normal", args, 2);
 

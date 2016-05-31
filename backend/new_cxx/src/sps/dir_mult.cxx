@@ -32,8 +32,8 @@ boost::python::object DirCatSPAux::toPython(Trace * trace) const
 // Collapsed Asymmetric
 
 /* MakeDirCatOutputPSP */
-VentureValuePtr MakeDirCatOutputPSP::simulate(shared_ptr<Args> args,
-                                               gsl_rng * rng) const
+VentureValuePtr MakeDirCatOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("make_dir_cat", args, 1);
 
@@ -50,8 +50,8 @@ VentureValuePtr MakeDirCatOutputPSP::simulate(shared_ptr<Args> args,
 }
 
 /* DirCatOutputPSP */
-VentureValuePtr DirCatOutputPSP::simulate(shared_ptr<Args> args,
-                                           gsl_rng * rng) const
+VentureValuePtr DirCatOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("dir_cat", args, 0);
 
@@ -143,8 +143,8 @@ double DirCatOutputPSP::logDensityOfData(shared_ptr<SPAux> spAux) const
 // Collapsed Symmetric
 
 /* MakeSymDirCatOutputPSP */
-VentureValuePtr MakeSymDirCatOutputPSP::simulate(shared_ptr<Args> args,
-                                                  gsl_rng * rng) const
+VentureValuePtr MakeSymDirCatOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("make_sym_dir_cat", args, 2);
 
@@ -177,8 +177,8 @@ boost::python::dict SymDirCatSP::toPython(Trace * trace,
 
 // Uncollapsed Asymmetric
 
-VentureValuePtr MakeUCDirCatOutputPSP::simulate(shared_ptr<Args> args,
-                                                 gsl_rng * rng) const
+VentureValuePtr MakeUCDirCatOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   // TODO optional 2nd argument
   checkArgsLength("make_uc_dir_cat", args, 1);
@@ -262,8 +262,8 @@ UCDirCatSP* UCDirCatSP::copy_help(ForwardingMap* forward) const
   return answer;
 }
 
-VentureValuePtr UCDirCatOutputPSP::simulate(shared_ptr<Args> args,
-                                             gsl_rng * rng) const
+VentureValuePtr UCDirCatOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("uc_dir_cat", args, 0);
 
@@ -331,8 +331,8 @@ vector<VentureValuePtr> UCDirCatOutputPSP::enumerateValues(
 
 // Uncollapsed Symmetric
 
-VentureValuePtr MakeUCSymDirCatOutputPSP::simulate(shared_ptr<Args> args,
-                                                    gsl_rng * rng) const
+VentureValuePtr MakeUCSymDirCatOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   // TODO optional 3rd argument
   checkArgsLength("make_uc_sym_dir_cat", args, 2);

@@ -47,7 +47,8 @@ CRPSPAux* CRPSPAux::copy_help(ForwardingMap* m) const
 }
 
 // Maker
-VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MakeCRPOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("make_crp", args, 1, 2);
 
@@ -81,7 +82,8 @@ boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) cons
   return value;
 }
 
-VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr CRPOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("crp", args, 0);
 

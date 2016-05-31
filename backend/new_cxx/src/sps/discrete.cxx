@@ -25,8 +25,8 @@
 #include "numerical_helpers.h"
 
 
-VentureValuePtr FlipOutputPSP::simulate(shared_ptr<Args> args,
-                                        gsl_rng * rng) const
+VentureValuePtr FlipOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("flip", args, 0, 1);
   double p = 0.5;
@@ -65,8 +65,8 @@ vector<VentureValuePtr> FlipOutputPSP::enumerateValues(
   return vs;
 }
 
-VentureValuePtr BernoulliOutputPSP::simulate(shared_ptr<Args> args,
-                                             gsl_rng * rng) const
+VentureValuePtr BernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("bernoulli", args, 0, 1);
   double p = 0.5;
@@ -106,8 +106,8 @@ vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(
 }
 
 
-VentureValuePtr UniformDiscreteOutputPSP::simulate(shared_ptr<Args> args,
-                                                   gsl_rng * rng) const
+VentureValuePtr UniformDiscreteOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("uniform_discrete", args, 2);
 
@@ -147,8 +147,8 @@ vector<VentureValuePtr> UniformDiscreteOutputPSP::enumerateValues(
 }
 
 
-VentureValuePtr BinomialOutputPSP::simulate(shared_ptr<Args> args,
-                                            gsl_rng * rng) const
+VentureValuePtr BinomialOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
@@ -169,8 +169,8 @@ double BinomialOutputPSP::logDensity(VentureValuePtr value,
 }
 
 
-VentureValuePtr CategoricalOutputPSP::simulate(shared_ptr<Args> args,
-                                               gsl_rng * rng) const
+VentureValuePtr CategoricalOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("categorical", args, 1, 2);
   const Simplex& ps = args->operandValues[0]->getSimplex();
@@ -221,8 +221,8 @@ vector<VentureValuePtr> CategoricalOutputPSP::enumerateValues(
   return vs;
 }
 
-VentureValuePtr LogCategoricalOutputPSP::simulate(shared_ptr<Args> args,
-                                                  gsl_rng * rng) const
+VentureValuePtr LogCategoricalOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("log_categorical", args, 1, 2);
   vector<double> ps =
@@ -265,8 +265,8 @@ vector<VentureValuePtr> LogCategoricalOutputPSP::enumerateValues(
   }
 }
 
-VentureValuePtr SymmetricDirichletOutputPSP::simulate(shared_ptr<Args> args,
-                                                      gsl_rng * rng) const
+VentureValuePtr SymmetricDirichletOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
@@ -291,8 +291,8 @@ double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,
                                  &alphaVector[0], &theta[0]);
 }
 
-VentureValuePtr DirichletOutputPSP::simulate(shared_ptr<Args> args,
-                                             gsl_rng * rng) const
+VentureValuePtr DirichletOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("dirichlet", args, 1);
   vector<VentureValuePtr> vs = args->operandValues[0]->getArray();
@@ -315,8 +315,8 @@ double DirichletOutputPSP::logDensity(VentureValuePtr value,
 }
 
 /* Poisson */
-VentureValuePtr PoissonOutputPSP::simulate(shared_ptr<Args> args,
-                                           gsl_rng * rng)  const
+VentureValuePtr PoissonOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   int ans = gsl_ran_poisson(rng, args->operandValues[0]->getDouble());
   return VentureValuePtr(new VentureInteger(ans));

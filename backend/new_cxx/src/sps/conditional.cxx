@@ -18,7 +18,8 @@
 #include "sps/conditional.h"
 #include "utils.h"
 
-VentureValuePtr BiplexOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr BiplexOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("if", args, 3);
   if (args->operandValues[0]->getBool()) { return args->operandValues[1]; }

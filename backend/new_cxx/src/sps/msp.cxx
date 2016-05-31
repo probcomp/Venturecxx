@@ -21,7 +21,8 @@
 #include "expressions.h"
 #include "utils.h"
 
-VentureValuePtr MakeMSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MakeMSPOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("mem", args, 1);
   return VentureValuePtr(new VentureSPRecord(new SP(new MSPRequestPSP(args->operandNodes[0]), new ESRRefOutputPSP())));
@@ -29,7 +30,8 @@ VentureValuePtr MakeMSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
 
 MSPRequestPSP::MSPRequestPSP(Node * sharedOperatorNode) : sharedOperatorNode(sharedOperatorNode) {}
 
-VentureValuePtr MSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MSPRequestPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   vector<VentureValuePtr> exp;
   exp.push_back(shared_ptr<VentureSymbol>(new VentureSymbol("memoizedSP")));

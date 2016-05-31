@@ -23,7 +23,7 @@
 
 struct FlipOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
@@ -33,7 +33,7 @@ struct FlipOutputPSP : RandomPSP
 
 struct BernoulliOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
@@ -43,7 +43,7 @@ struct BernoulliOutputPSP : RandomPSP
 
 struct UniformDiscreteOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
@@ -52,7 +52,7 @@ struct UniformDiscreteOutputPSP : RandomPSP
 
 struct CategoricalOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
@@ -61,7 +61,7 @@ struct CategoricalOutputPSP : RandomPSP
 
 struct LogCategoricalOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
@@ -70,25 +70,25 @@ struct LogCategoricalOutputPSP : RandomPSP
 
 struct SymmetricDirichletOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
 struct DirichletOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
 struct BinomialOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
 struct PoissonOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 

@@ -28,7 +28,8 @@
 
 #include <boost/math/special_functions/binomial.hpp>
 
-VentureValuePtr MakeBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MakeBetaBernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("make_beta_bernoulli", args, 2);
 
@@ -42,7 +43,8 @@ VentureValuePtr MakeBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_
 
 // BetaBernoulliOutputPSP
 
-VentureValuePtr BetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr BetaBernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   shared_ptr<SuffBernoulliSPAux> aux = dynamic_pointer_cast<SuffBernoulliSPAux>(args->spAux);
   double a = alpha + aux->heads;
@@ -93,7 +95,8 @@ double BetaBernoulliOutputPSP::logDensityOfData(shared_ptr<SPAux> aux) const
 
 // MakeUncollapsed
 
-VentureValuePtr MakeUBetaBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MakeUBetaBernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   assert(args->operandValues.size() == 2);
 
@@ -150,7 +153,8 @@ UBetaBernoulliSP* UBetaBernoulliSP::copy_help(ForwardingMap* forward) const
 
 // Uncollapsed PSP
 
-VentureValuePtr SuffBernoulliOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr SuffBernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   shared_ptr<USuffBernoulliSPAux> aux = dynamic_pointer_cast<USuffBernoulliSPAux>(args->spAux);
   int n = gsl_ran_bernoulli(rng, aux->p);

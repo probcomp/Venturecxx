@@ -36,7 +36,7 @@ struct SuffBernoulliSPAux : SPAux
 
 struct MakeBetaBernoulliOutputPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -45,7 +45,7 @@ struct BetaBernoulliOutputPSP : RandomPSP
 {
   BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -69,7 +69,7 @@ struct USuffBernoulliSPAux : SuffBernoulliSPAux
 // Uncollapsed
 struct MakeUBetaBernoulliOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
@@ -86,7 +86,7 @@ struct SuffBernoulliOutputPSP : RandomPSP
 {
   SuffBernoulliOutputPSP() {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;

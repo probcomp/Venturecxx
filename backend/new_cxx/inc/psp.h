@@ -29,7 +29,8 @@ struct ApplicationNode;
 
 struct PSP
 {
-  virtual VentureValuePtr simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const =0;
+  virtual VentureValuePtr simulate(
+      const boost::shared_ptr<Args> & args, gsl_rng * rng) const =0;
   virtual double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args) const { return 0; }
   virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const {}
   virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const {}
@@ -64,13 +65,15 @@ struct PSP
 
 struct NullRequestPSP : PSP
 {
-  VentureValuePtr simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(
+      const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
 };
 
 struct ESRRefOutputPSP : PSP
 {
-  VentureValuePtr simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(
+      const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
 };
 

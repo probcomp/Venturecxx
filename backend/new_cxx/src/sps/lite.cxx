@@ -77,8 +77,8 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
   return foreignArgs;
 }
 
-VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args,
-                                         gsl_rng * rng) const
+VentureValuePtr ForeignLitePSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignResult = psp.attr("simulate")(foreignArgs);

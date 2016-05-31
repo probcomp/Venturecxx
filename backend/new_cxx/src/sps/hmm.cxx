@@ -33,8 +33,8 @@ VectorXd normalizedVectorXd(VectorXd & v);
 
 /* MakeUncollapsedHMMSP */
 
-VentureValuePtr MakeUncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,
-                                                      gsl_rng * rng) const
+VentureValuePtr MakeUncollapsedHMMOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   MatrixXd p0 = args->operandValues[0]->getMatrix();
   MatrixXd T = args->operandValues[1]->getMatrix();
@@ -186,8 +186,8 @@ UncollapsedHMMSP* UncollapsedHMMSP::copy_help(ForwardingMap* forward) const
 UncollapsedHMMOutputPSP::UncollapsedHMMOutputPSP(MatrixXd O): O(O) {}
 
 
-VentureValuePtr UncollapsedHMMOutputPSP::simulate(shared_ptr<Args> args,
-                                                  gsl_rng * rng) const
+VentureValuePtr UncollapsedHMMOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
@@ -246,8 +246,8 @@ void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,
 
 /* UncollapsedHMMRequestPSP */
 
-VentureValuePtr UncollapsedHMMRequestPSP::simulate(shared_ptr<Args> args,
-                                                   gsl_rng * rng) const
+VentureValuePtr UncollapsedHMMRequestPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   int in = args->operandValues[0]->getInt();
   vector<shared_ptr<LSR> > lsrs;

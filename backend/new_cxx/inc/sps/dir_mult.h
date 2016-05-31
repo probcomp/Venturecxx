@@ -37,7 +37,7 @@ struct DirCatSPAux : SPAux
 // Collapsed Asymmetric
 struct MakeDirCatOutputPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -46,7 +46,7 @@ struct DirCatOutputPSP : RandomPSP
   DirCatOutputPSP(const vector<double>& alpha, double total):
     alpha(alpha), total(total) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -64,7 +64,7 @@ private:
 // Collapsed Symmetric
 struct MakeSymDirCatOutputPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -89,7 +89,7 @@ struct UCDirCatSPAux : DirCatSPAux
 // Uncollapsed Asymmetric
 struct MakeUCDirCatOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 
@@ -107,7 +107,7 @@ struct UCDirCatOutputPSP : RandomPSP
 {
   UCDirCatOutputPSP(size_t n) : n(n) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -122,7 +122,7 @@ private:
 // Uncollapsed Symmetric
 struct MakeUCSymDirCatOutputPSP : RandomPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
 };
 

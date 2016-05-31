@@ -54,7 +54,7 @@ struct HMMLatentDB : LatentDB
 
 struct MakeUncollapsedHMMOutputPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 
@@ -82,7 +82,7 @@ struct UncollapsedHMMSP : SP
 struct UncollapsedHMMOutputPSP : RandomPSP
 {
   UncollapsedHMMOutputPSP(MatrixXd O);
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -92,7 +92,7 @@ struct UncollapsedHMMOutputPSP : RandomPSP
 
 struct UncollapsedHMMRequestPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 

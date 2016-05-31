@@ -37,7 +37,7 @@ struct CRPSPAux : SPAux
 
 struct MakeCRPOutputPSP : PSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -54,7 +54,7 @@ struct CRPOutputPSP : RandomPSP
 {
   CRPOutputPSP(double alpha, double d) : alpha(alpha), d(d) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
