@@ -100,6 +100,12 @@ struct TriviallyAssessablePSP : virtual PSP
     const { return 0; }
 };
 
+struct RandomPSP : virtual PSP
+  , AlwaysAssessablePSP
+{
+  bool isRandom() const { return true; }
+};
+
 struct NullRequestPSP : virtual PSP
   , AlwaysAssessablePSP
   , DefaultIncorporatePSP
@@ -116,12 +122,6 @@ struct ESRRefOutputPSP : virtual PSP
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
-};
-
-struct RandomPSP : virtual PSP
-  , AlwaysAssessablePSP
-{
-  bool isRandom() const { return true; }
 };
 
 #endif
