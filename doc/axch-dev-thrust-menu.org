@@ -287,12 +287,13 @@ Specific micro-benchmarks:
   + resimulation MH stresses just detach and regen
   + slice also checks slice logic
   + pgibbs stresses particles, pgibbs logic
-- long simple Markov chain on simple model (normal-normal) in Lite
-  - resimulation MH
-  - slice
-  - pgibbs
-  - nesterov
-  - HMC
++ long simple Markov chain on simple model (normal-normal) in Lite
+  + resimulation MH
+  + slice
+  + pgibbs
+  x nesterov
+  + HMC
+  + rejection
 - big likelihood weighting run on simple model in Puma
 - big likelihood weighting run on simple model in Lite
   - Is rejection sampling the same thing?
