@@ -256,6 +256,26 @@ def test_lj_effects():
 
 @on_inf_prim("none")
 @broken_in("puma", "Puma is nondeterministic")
+def test_ll_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer("global_log_likelihood")
+  s.infer("global_log_likelihood")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic")
+def test_lj_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer("global_log_joint")
+  s.infer("global_log_joint")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic")
 def test_infer_sample_determinism():
   r = pablo(3)
   s = pablo(3)
@@ -321,6 +341,30 @@ def test_infer_lj_effects():
   r.infer('default_markov_chain(10)')
   s.infer('default_markov_chain(10)')
   r.infer("global_log_joint")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic")
+def test_infer_ll_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  r.infer("global_log_likelihood")
+  s.infer("global_log_likelihood")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic")
+def test_infer_lj_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  r.infer("global_log_joint")
+  s.infer("global_log_joint")
   assert np.array_equal(
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
