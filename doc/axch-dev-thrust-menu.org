@@ -284,8 +284,8 @@ Summary of extant results, as given to Dan Roy on Flowdock on May 13,
 *** Project: Start a suite of micro-benchmarks (ideally with baselines)
 Specific micro-benchmarks:
 - long simple Markov chain on simple model (normal-normal) in Puma.
-  - resimulation MH stresses just detach and regen
-  - slice also checks slice logic
+  + resimulation MH stresses just detach and regen
+  + slice also checks slice logic
   - pgibbs stresses particles, pgibbs logic
 - long simple Markov chain on simple model (normal-normal) in Lite
   - resimulation MH

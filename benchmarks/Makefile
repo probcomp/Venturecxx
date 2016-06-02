@@ -10,3 +10,11 @@ puma-normal-normal-mh.prof: Makefile
 	     infer mh(default, one, 300000);"
 	@echo "View with, e.g."
 	@echo "google-pprof --cum --evince /usr/bin/python $@"
+
+puma-normal-normal-slice.prof: Makefile
+	time ../pythenv.sh python -m yep -o $@ -- ../script/venture puma -e \
+	    "assume x = normal(0, 1); \
+	     observe normal(x, 1) = 2; \
+	     infer slice(default, one, 0.25, 10, 30000);"
+	@echo "View with, e.g."
+	@echo "google-pprof --cum --evince /usr/bin/python $@"
