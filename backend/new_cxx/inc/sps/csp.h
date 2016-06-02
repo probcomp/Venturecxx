@@ -23,17 +23,19 @@
 
 struct MakeCSPOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 struct CSPRequestPSP : virtual PSP
+  , AlwaysAssessablePSP
   , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
   CSPRequestPSP(const vector<string>& symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment);
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
   CSPRequestPSP* copy_help(ForwardingMap* m) const;
 
 private:

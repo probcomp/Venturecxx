@@ -31,12 +31,15 @@ struct PSP
 {
   virtual VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const =0;
-  virtual double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args) const { return 0; }
+  virtual double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
   virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
   virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
 
   virtual bool isRandom() const { return false; }
-  virtual bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return false; }
+  virtual bool canAbsorb(
+      ConcreteTrace * trace,
+      ApplicationNode * appNode,
+      Node * parentNode) const =0;
 
   virtual bool childrenCanAAA() const { return false; }
   virtual boost::shared_ptr<LKernel> const getAAALKernel();
@@ -71,16 +74,44 @@ struct DefaultIncorporatePSP : virtual PSP
     const {}
 };
 
+struct NonAssessablePSP : virtual PSP
+{
+  bool canAbsorb(
+      ConcreteTrace * trace,
+      ApplicationNode * appNode,
+      Node * node)
+    const { return false; }
+  double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args)
+    const { throw "logDensity on non-assessable PSP"; }
+};
+
+struct AlwaysAssessablePSP : virtual PSP
+{
+  bool canAbsorb(
+      ConcreteTrace * trace,
+      ApplicationNode * appNode,
+      Node * node)
+    const { return true; }
+};
+
+struct TriviallyAssessablePSP : virtual PSP
+{
+  double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args)
+    const { return 0; }
+};
+
 struct NullRequestPSP : virtual PSP
+  , AlwaysAssessablePSP
   , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
 };
 
 struct ESRRefOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
@@ -88,9 +119,9 @@ struct ESRRefOutputPSP : virtual PSP
 };
 
 struct RandomPSP : virtual PSP
+  , AlwaysAssessablePSP
 {
   bool isRandom() const { return true; }
-  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
 };
 
 #endif

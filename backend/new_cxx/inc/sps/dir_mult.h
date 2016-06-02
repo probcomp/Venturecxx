@@ -37,6 +37,7 @@ struct DirCatSPAux : SPAux
 // Collapsed Asymmetric
 struct MakeDirCatOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
@@ -65,6 +66,7 @@ private:
 // Collapsed Symmetric
 struct MakeSymDirCatOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }

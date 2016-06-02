@@ -22,6 +22,7 @@
 
 struct BiplexOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };

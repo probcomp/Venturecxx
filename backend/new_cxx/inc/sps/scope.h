@@ -22,6 +22,7 @@
 
 struct TagOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
@@ -29,6 +30,7 @@ struct TagOutputPSP : virtual PSP
 
 struct TagExcludeOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;

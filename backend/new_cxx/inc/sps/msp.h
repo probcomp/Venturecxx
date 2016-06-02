@@ -23,12 +23,14 @@
 
 struct MakeMSPOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 struct MSPRequestPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   MSPRequestPSP(Node * sharedOperatorNode);
 

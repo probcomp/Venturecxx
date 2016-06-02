@@ -54,6 +54,7 @@ struct HMMLatentDB : LatentDB
 
 struct MakeUncollapsedHMMOutputPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
@@ -93,6 +94,7 @@ struct UncollapsedHMMOutputPSP : RandomPSP
 
 struct UncollapsedHMMRequestPSP : virtual PSP
   , DefaultIncorporatePSP
+  , NonAssessablePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
