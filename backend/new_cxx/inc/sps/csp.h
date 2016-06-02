@@ -22,8 +22,7 @@
 #include "args.h"
 
 struct MakeCSPOutputPSP : virtual PSP
-  , DefaultIncorporatePSP
-  , NonAssessablePSP
+  , DeterministicPSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
@@ -37,6 +36,8 @@ struct CSPRequestPSP : virtual PSP
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   CSPRequestPSP* copy_help(ForwardingMap* m) const;
+
+  bool isRandom() const { return false; }
 
 private:
   vector<string> symbols;

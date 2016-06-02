@@ -26,6 +26,7 @@ struct TagOutputPSP : virtual PSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
 
 struct TagExcludeOutputPSP : virtual PSP
@@ -34,5 +35,6 @@ struct TagExcludeOutputPSP : virtual PSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
 #endif

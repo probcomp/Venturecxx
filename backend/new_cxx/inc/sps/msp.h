@@ -22,15 +22,13 @@
 #include "args.h"
 
 struct MakeMSPOutputPSP : virtual PSP
-  , DefaultIncorporatePSP
-  , NonAssessablePSP
+  , DeterministicPSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 struct MSPRequestPSP : virtual PSP
-  , DefaultIncorporatePSP
-  , NonAssessablePSP
+  , DeterministicPSP
 {
   MSPRequestPSP(Node * sharedOperatorNode);
 

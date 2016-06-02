@@ -35,8 +35,7 @@ struct SuffBernoulliSPAux : SPAux
 };
 
 struct MakeBetaBernoulliOutputPSP : virtual PSP
-  , DefaultIncorporatePSP
-  , NonAssessablePSP
+  , DeterministicMakerAAAPSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }

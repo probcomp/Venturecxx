@@ -35,7 +35,7 @@ struct PSP
   virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
   virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
 
-  virtual bool isRandom() const { return false; }
+  virtual bool isRandom() const =0;
   virtual bool canAbsorb(
       ConcreteTrace * trace,
       ApplicationNode * appNode,
@@ -106,6 +106,18 @@ struct RandomPSP : virtual PSP
   bool isRandom() const { return true; }
 };
 
+struct DeterministicPSP : virtual PSP
+  , DefaultIncorporatePSP
+  , NonAssessablePSP
+{
+  bool isRandom() const { return false; }
+};
+
+struct DeterministicMakerAAAPSP : virtual PSP
+  , DeterministicPSP
+{
+};
+
 struct NullRequestPSP : virtual PSP
   , AlwaysAssessablePSP
   , DefaultIncorporatePSP
@@ -113,6 +125,7 @@ struct NullRequestPSP : virtual PSP
 {
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
+  bool isRandom() const { return false; }
 };
 
 struct ESRRefOutputPSP : virtual PSP
@@ -122,6 +135,7 @@ struct ESRRefOutputPSP : virtual PSP
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
 
 #endif
