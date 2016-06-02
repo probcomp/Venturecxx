@@ -286,7 +286,7 @@ Specific micro-benchmarks:
 - long simple Markov chain on simple model (normal-normal) in Puma.
   + resimulation MH stresses just detach and regen
   + slice also checks slice logic
-  - pgibbs stresses particles, pgibbs logic
+  + pgibbs stresses particles, pgibbs logic
 - long simple Markov chain on simple model (normal-normal) in Lite
   - resimulation MH
   - slice
