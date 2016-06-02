@@ -72,8 +72,9 @@ VentureValuePtr DirCatOutputPSP::simulate(
   return simulateCategorical(weights, os, rng);
 }
 
-double DirCatOutputPSP::logDensity(VentureValuePtr value,
-                                    shared_ptr<Args> args) const
+double DirCatOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<DirCatSPAux> aux =
     dynamic_pointer_cast<DirCatSPAux>(args->spAux);
@@ -205,8 +206,9 @@ VentureValuePtr MakeUCDirCatOutputPSP::simulate(
   return VentureValuePtr(new VentureSPRecord(sp, spAux));
 }
 
-double MakeUCDirCatOutputPSP::logDensity(VentureValuePtr value,
-                                          shared_ptr<Args> args) const
+double MakeUCDirCatOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   // TODO optional 2nd argument
   checkArgsLength("make_uc_dir_cat", args, 1);
@@ -282,8 +284,9 @@ VentureValuePtr UCDirCatOutputPSP::simulate(
   return VentureValuePtr();
 }
 
-double UCDirCatOutputPSP::logDensity(VentureValuePtr value,
-                                      shared_ptr<Args> args) const
+double UCDirCatOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<UCDirCatSPAux> aux =
     dynamic_pointer_cast<UCDirCatSPAux>(args->spAux);
@@ -353,8 +356,9 @@ VentureValuePtr MakeUCSymDirCatOutputPSP::simulate(
   return VentureValuePtr(new VentureSPRecord(sp, spAux));
 }
 
-double MakeUCSymDirCatOutputPSP::logDensity(VentureValuePtr value,
-                                             shared_ptr<Args> args) const
+double MakeUCSymDirCatOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("make_uc_sym_dir_cat", args, 2);
 

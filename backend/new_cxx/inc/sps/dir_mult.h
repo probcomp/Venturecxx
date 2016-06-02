@@ -48,7 +48,9 @@ struct DirCatOutputPSP : RandomPSP
     alpha(alpha), total(total) {}
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
@@ -93,7 +95,9 @@ struct MakeUCDirCatOutputPSP : virtual RandomPSP
   , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 };
 
 struct UCDirCatSP : SP
@@ -111,7 +115,9 @@ struct UCDirCatOutputPSP : RandomPSP
   UCDirCatOutputPSP(size_t n) : n(n) {}
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
@@ -127,7 +133,9 @@ struct MakeUCSymDirCatOutputPSP : virtual RandomPSP
   , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 };
 
 struct UCSymDirCatSP : SP

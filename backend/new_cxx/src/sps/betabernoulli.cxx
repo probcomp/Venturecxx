@@ -53,7 +53,9 @@ VentureValuePtr BetaBernoulliOutputPSP::simulate(
   return VentureValuePtr(new VentureBool(gsl_ran_flat(rng, 0.0, 1.0) < w));
 }
 
-double BetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double BetaBernoulliOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<SuffBernoulliSPAux> aux = dynamic_pointer_cast<SuffBernoulliSPAux>(args->spAux);
   double a = alpha + aux->heads;
@@ -111,7 +113,9 @@ VentureValuePtr MakeUBetaBernoulliOutputPSP::simulate(
   return VentureValuePtr(new VentureSPRecord(new UBetaBernoulliSP(requestPSP, outputPSP), aux));
 }
 
-double MakeUBetaBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double MakeUBetaBernoulliOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   assert(args->operandValues.size() == 2);
 
@@ -163,7 +167,9 @@ VentureValuePtr SuffBernoulliOutputPSP::simulate(
   else { assert(false); }
 }
 
-double SuffBernoulliOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double SuffBernoulliOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<USuffBernoulliSPAux> aux = dynamic_pointer_cast<USuffBernoulliSPAux>(args->spAux);
   double p = aux->p;

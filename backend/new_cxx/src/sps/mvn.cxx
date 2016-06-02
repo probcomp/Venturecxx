@@ -63,7 +63,9 @@ VentureValuePtr MVNormalPSP::simulate(
 }
 
 
-double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double MVNormalPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong

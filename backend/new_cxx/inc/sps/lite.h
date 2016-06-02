@@ -39,7 +39,9 @@ struct ForeignLitePSP : PSP
   ForeignLitePSP(boost::python::object psp): psp(psp) {}
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;

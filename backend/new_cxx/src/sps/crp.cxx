@@ -113,7 +113,9 @@ VentureValuePtr CRPOutputPSP::simulate(
 }
 
 
-double CRPOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double CRPOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);

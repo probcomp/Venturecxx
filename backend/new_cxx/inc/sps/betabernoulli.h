@@ -47,7 +47,9 @@ struct BetaBernoulliOutputPSP : virtual RandomPSP
   BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 
@@ -72,7 +74,9 @@ struct MakeUBetaBernoulliOutputPSP : virtual RandomPSP
   , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 };
 
 struct UBetaBernoulliSP : SP
@@ -89,7 +93,9 @@ struct SuffBernoulliOutputPSP : virtual RandomPSP
   SuffBernoulliOutputPSP() {}
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
   void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
   void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
 

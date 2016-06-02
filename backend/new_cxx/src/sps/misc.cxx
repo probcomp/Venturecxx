@@ -26,7 +26,9 @@ VentureValuePtr ExactlyOutputPSP::simulate(
   return args->operandValues[0];
 }
 
-double ExactlyOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ExactlyOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   VentureValuePtr in = args->operandValues[0];
   if (in->equals(value)) { return 0; }

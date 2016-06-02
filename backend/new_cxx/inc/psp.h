@@ -31,7 +31,9 @@ struct PSP
 {
   virtual VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const =0;
-  virtual double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
+  virtual double logDensity(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args) const =0;
   virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
   virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
 
@@ -81,7 +83,9 @@ struct NonAssessablePSP : virtual PSP
       ApplicationNode * appNode,
       Node * node)
     const { return false; }
-  double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args)
+  double logDensity(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args)
     const { throw "logDensity on non-assessable PSP"; }
 };
 
@@ -96,7 +100,9 @@ struct AlwaysAssessablePSP : virtual PSP
 
 struct TriviallyAssessablePSP : virtual PSP
 {
-  double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args)
+  double logDensity(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args)
     const { return 0; }
 };
 

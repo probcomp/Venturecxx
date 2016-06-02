@@ -197,8 +197,9 @@ VentureValuePtr UncollapsedHMMOutputPSP::simulate(
   return VentureValuePtr(new VentureInteger(sampleVector(O * aux->xs[index], rng)));
 }
 
-double UncollapsedHMMOutputPSP::logDensity(VentureValuePtr value,
-                                           shared_ptr<Args> args) const
+double UncollapsedHMMOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);

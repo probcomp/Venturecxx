@@ -54,7 +54,9 @@ double NormalPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) co
   return x;
 }
 
-double NormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double NormalPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double mu = args->operandValues[0]->getDouble();
   double sigma = args->operandValues[1]->getDouble();
@@ -113,7 +115,9 @@ VentureValuePtr GammaPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double GammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double GammaPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -134,7 +138,9 @@ VentureValuePtr InvGammaPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double InvGammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double InvGammaPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -154,7 +160,9 @@ VentureValuePtr ExponentialPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double ExponentialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ExponentialPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double theta = args->operandValues[0]->getDouble();
   double x = value->getDouble();
@@ -174,7 +182,9 @@ VentureValuePtr UniformContinuousPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double UniformContinuousPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double UniformContinuousPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -205,7 +215,9 @@ double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) cons
   return x;
 }
 
-double BetaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double BetaPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -270,7 +282,9 @@ VentureValuePtr StudentTPSP::simulate(
   return VentureValuePtr(new VentureNumber((shape * x) + loc));
 }
 
-double StudentTPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double StudentTPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double nu = args->operandValues[0]->getDouble();
   double loc = 0; if (args->operandValues.size() > 1) { loc = args->operandValues[1]->getDouble(); }
@@ -293,7 +307,9 @@ VentureValuePtr ChiSquaredPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double ChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ChiSquaredPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double nu = args->operandValues[0]->getDouble();
   double x = value->getDouble();
@@ -311,7 +327,9 @@ VentureValuePtr InvChiSquaredPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double InvChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double InvChiSquaredPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double nu = args->operandValues[0]->getDouble();
   double x = value->getDouble();
@@ -337,7 +355,9 @@ VentureValuePtr ApproximateBinomialPSP::simulate(
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double ApproximateBinomialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ApproximateBinomialPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double n = args->operandValues[0]->getDouble();
   double p = args->operandValues[1]->getDouble();

@@ -38,8 +38,9 @@ VentureValuePtr FlipOutputPSP::simulate(
   return VentureValuePtr(new VentureBool(n));
 }
 
-double FlipOutputPSP::logDensity(VentureValuePtr value,
-                                 shared_ptr<Args> args) const
+double FlipOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double p = 0.5;
   if (!args->operandValues.empty()) {
@@ -78,8 +79,9 @@ VentureValuePtr BernoulliOutputPSP::simulate(
   return VentureValuePtr(new VentureInteger(n));
 }
 
-double BernoulliOutputPSP::logDensity(VentureValuePtr value,
-                                      shared_ptr<Args> args) const
+double BernoulliOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double p = 0.5;
   if (!args->operandValues.empty()) {
@@ -118,8 +120,9 @@ VentureValuePtr UniformDiscreteOutputPSP::simulate(
   return VentureValuePtr(new VentureInteger(lower + n));
 }
 
-double UniformDiscreteOutputPSP::logDensity(VentureValuePtr value,
-                                            shared_ptr<Args> args) const
+double UniformDiscreteOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("uniform_discrete", args, 2);
 
@@ -157,8 +160,9 @@ VentureValuePtr BinomialOutputPSP::simulate(
   return VentureValuePtr(new VentureNumber(val));
 }
 
-double BinomialOutputPSP::logDensity(VentureValuePtr value,
-                                     shared_ptr<Args> args) const
+double BinomialOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("binomial", args, 2);
   int n = args->operandValues[0]->getInt();
@@ -183,8 +187,9 @@ VentureValuePtr CategoricalOutputPSP::simulate(
   return simulateCategorical(ps, os, rng);
 }
 
-double CategoricalOutputPSP::logDensity(VentureValuePtr value,
-                                        shared_ptr<Args> args) const
+double CategoricalOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("categorical", args, 1, 2);
   if (args->operandValues.size() == 1) {
@@ -234,8 +239,9 @@ VentureValuePtr LogCategoricalOutputPSP::simulate(
   } else { return args->operandValues[1]->getArray()[sample]; }
 }
 
-double LogCategoricalOutputPSP::logDensity(VentureValuePtr value,
-                                           shared_ptr<Args> args) const
+double LogCategoricalOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("log_categorical", args, 1, 2);
 
@@ -278,8 +284,9 @@ VentureValuePtr SymmetricDirichletOutputPSP::simulate(
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
-double SymmetricDirichletOutputPSP::logDensity(VentureValuePtr value,
-                                               shared_ptr<Args> args) const
+double SymmetricDirichletOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("symmetric_dirichlet", args, 2);
   double alpha = args->operandValues[0]->getDouble();
@@ -303,8 +310,9 @@ VentureValuePtr DirichletOutputPSP::simulate(
   return VentureValuePtr(new VentureSimplex(theta));;
 }
 
-double DirichletOutputPSP::logDensity(VentureValuePtr value,
-                                      shared_ptr<Args> args) const
+double DirichletOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   checkArgsLength("dirichlet", args, 1);
   vector<VentureValuePtr> vs = args->operandValues[0]->getArray();
@@ -322,8 +330,9 @@ VentureValuePtr PoissonOutputPSP::simulate(
   return VentureValuePtr(new VentureInteger(ans));
 }
 
-double PoissonOutputPSP::logDensity(VentureValuePtr value,
-                                    shared_ptr<Args> args)  const
+double PoissonOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   return PoissonDistributionLogLikelihood(value->getInt(),
                                           args->operandValues[0]->getDouble());

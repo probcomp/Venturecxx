@@ -85,8 +85,9 @@ VentureValuePtr ForeignLitePSP::simulate(
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLitePSP::logDensity(VentureValuePtr value,
-                                  shared_ptr<Args> args) const
+double ForeignLitePSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
