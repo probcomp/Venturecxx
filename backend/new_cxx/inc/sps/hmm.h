@@ -52,7 +52,8 @@ struct HMMLatentDB : LatentDB
 };
 
 
-struct MakeUncollapsedHMMOutputPSP : PSP
+struct MakeUncollapsedHMMOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
@@ -90,7 +91,8 @@ struct UncollapsedHMMOutputPSP : RandomPSP
   const MatrixXd O;
 };
 
-struct UncollapsedHMMRequestPSP : PSP
+struct UncollapsedHMMRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };

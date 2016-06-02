@@ -35,7 +35,8 @@ struct DirCatSPAux : SPAux
 };
 
 // Collapsed Asymmetric
-struct MakeDirCatOutputPSP : PSP
+struct MakeDirCatOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
@@ -62,7 +63,8 @@ private:
 };
 
 // Collapsed Symmetric
-struct MakeSymDirCatOutputPSP : PSP
+struct MakeSymDirCatOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
@@ -87,7 +89,8 @@ struct UCDirCatSPAux : DirCatSPAux
 };
 
 // Uncollapsed Asymmetric
-struct MakeUCDirCatOutputPSP : RandomPSP
+struct MakeUCDirCatOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -120,7 +123,8 @@ private:
 };
 
 // Uncollapsed Symmetric
-struct MakeUCSymDirCatOutputPSP : RandomPSP
+struct MakeUCSymDirCatOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;

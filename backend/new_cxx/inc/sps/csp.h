@@ -21,12 +21,14 @@
 #include "psp.h"
 #include "args.h"
 
-struct MakeCSPOutputPSP : PSP
+struct MakeCSPOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct CSPRequestPSP : PSP
+struct CSPRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   CSPRequestPSP(const vector<string>& symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment);
 

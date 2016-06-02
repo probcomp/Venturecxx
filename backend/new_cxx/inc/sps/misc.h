@@ -21,7 +21,8 @@
 #include "psp.h"
 #include "args.h"
 
-struct ExactlyOutputPSP : RandomPSP
+struct ExactlyOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;

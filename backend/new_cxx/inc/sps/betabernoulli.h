@@ -34,14 +34,15 @@ struct SuffBernoulliSPAux : SPAux
   int tails;
 };
 
-struct MakeBetaBernoulliOutputPSP : PSP
+struct MakeBetaBernoulliOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
 
-struct BetaBernoulliOutputPSP : RandomPSP
+struct BetaBernoulliOutputPSP : virtual RandomPSP
 {
   BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
 
@@ -67,7 +68,8 @@ struct USuffBernoulliSPAux : SuffBernoulliSPAux
 };
 
 // Uncollapsed
-struct MakeUBetaBernoulliOutputPSP : RandomPSP
+struct MakeUBetaBernoulliOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -82,7 +84,7 @@ struct UBetaBernoulliSP : SP
   UBetaBernoulliSP* copy_help(ForwardingMap* m) const;
 };
 
-struct SuffBernoulliOutputPSP : RandomPSP
+struct SuffBernoulliOutputPSP : virtual RandomPSP
 {
   SuffBernoulliOutputPSP() {}
 

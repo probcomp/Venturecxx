@@ -20,34 +20,40 @@
 
 #include "psp.h"
 
-struct SimplexOutputPSP : PSP
+struct SimplexOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsSimplexOutputPSP : PSP
+struct IsSimplexOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ToSimplexOutputPSP : PSP
+struct ToSimplexOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 /* Polymorphic operators */
 
-struct LookupOutputPSP : PSP
+struct LookupOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ContainsOutputPSP : PSP
+struct ContainsOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct SizeOutputPSP : PSP
+struct SizeOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
@@ -55,44 +61,52 @@ struct SizeOutputPSP : PSP
 
 /* Dicts */
 
-struct DictOutputPSP : PSP
+struct DictOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsDictOutputPSP : PSP
+struct IsDictOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 /* Arrays */
 
-struct ArrayOutputPSP : PSP
+struct ArrayOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ToArrayOutputPSP : PSP
+struct ToArrayOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct PrependOutputPSP : PSP
+struct PrependOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct AppendOutputPSP : PSP
+struct AppendOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ConcatOutputPSP : PSP
+struct ConcatOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsArrayOutputPSP : PSP
+struct IsArrayOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
@@ -100,74 +114,88 @@ struct IsArrayOutputPSP : PSP
 
 /* Lists */
 
-struct PairOutputPSP : PSP
+struct PairOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsPairOutputPSP : PSP
+struct IsPairOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ListOutputPSP : PSP
+struct ListOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct FirstOutputPSP : PSP
+struct FirstOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct SecondOutputPSP : PSP
+struct SecondOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct RestOutputPSP : PSP // TODO ought to allow dotted lists
+struct RestOutputPSP : virtual PSP
+  , DefaultIncorporatePSP // TODO ought to allow dotted lists
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 /* Functional */
 
-struct ApplyRequestPSP : PSP
+struct ApplyRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct FixRequestPSP : PSP
+struct FixRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct FixOutputPSP : PSP
+struct FixOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ArrayMapRequestPSP : PSP
+struct ArrayMapRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IndexedArrayMapRequestPSP : PSP
+struct IndexedArrayMapRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ESRArrayOutputPSP : PSP
+struct ESRArrayOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ArangeOutputPSP : PSP
+struct ArangeOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct RepeatOutputPSP : PSP
+struct RepeatOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };

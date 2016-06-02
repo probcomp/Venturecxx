@@ -21,7 +21,8 @@
 #include "psp.h"
 
 /* Continuous scalar random SPs. */
-struct NormalPSP : RandomPSP
+struct NormalPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
 
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
@@ -39,7 +40,8 @@ struct NormalPSP : RandomPSP
 
 };
 
-struct GammaPSP : RandomPSP
+struct GammaPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -49,7 +51,8 @@ struct GammaPSP : RandomPSP
 
 };
 
-struct InvGammaPSP : RandomPSP
+struct InvGammaPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -59,7 +62,8 @@ struct InvGammaPSP : RandomPSP
 
 };
 
-struct ExponentialPSP : RandomPSP
+struct ExponentialPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -69,7 +73,8 @@ struct ExponentialPSP : RandomPSP
 
 };
 
-struct UniformContinuousPSP : RandomPSP
+struct UniformContinuousPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -82,7 +87,8 @@ struct UniformContinuousPSP : RandomPSP
 
 };
 
-struct BetaPSP : RandomPSP
+struct BetaPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double simulateNumeric(const vector<double> & args, gsl_rng * rng) const;
@@ -100,7 +106,8 @@ struct BetaPSP : RandomPSP
 
 };
 
-struct StudentTPSP : RandomPSP
+struct StudentTPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -110,17 +117,8 @@ struct StudentTPSP : RandomPSP
 };
 
 
-struct ChiSquaredPSP : RandomPSP
-{
-  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
-
-  bool isContinuous() const { return true; }
-  double getSupportLowerBound() const { return 0; }
-
-};
-
-struct InvChiSquaredPSP : RandomPSP
+struct ChiSquaredPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
@@ -130,7 +128,19 @@ struct InvChiSquaredPSP : RandomPSP
 
 };
 
-struct ApproximateBinomialPSP : RandomPSP
+struct InvChiSquaredPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+
+  bool isContinuous() const { return true; }
+  double getSupportLowerBound() const { return 0; }
+
+};
+
+struct ApproximateBinomialPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;

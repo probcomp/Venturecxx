@@ -35,7 +35,8 @@ struct CRPSPAux : SPAux
   map<uint32_t, uint32_t> tableCounts;
 };
 
-struct MakeCRPOutputPSP : PSP
+struct MakeCRPOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }

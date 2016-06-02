@@ -20,27 +20,32 @@
 
 #include "psp.h"
 
-struct EvalRequestPSP : PSP
+struct EvalRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct GetCurrentEnvOutputPSP : PSP
+struct GetCurrentEnvOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct GetEmptyEnvOutputPSP : PSP
+struct GetEmptyEnvOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ExtendEnvOutputPSP : PSP
+struct ExtendEnvOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsEnvOutputPSP : PSP
+struct IsEnvOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };

@@ -32,8 +32,8 @@ struct PSP
   virtual VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const =0;
   virtual double logDensity(VentureValuePtr value, boost::shared_ptr<Args> args) const { return 0; }
-  virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const {}
-  virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const {}
+  virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
+  virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
 
   virtual bool isRandom() const { return false; }
   virtual bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return false; }
@@ -63,21 +63,31 @@ struct PSP
   virtual ~PSP() {}
 };
 
-struct NullRequestPSP : PSP
+struct DefaultIncorporatePSP : virtual PSP
+{
+  void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args)
+    const {}
+  void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args)
+    const {}
+};
+
+struct NullRequestPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
 };
 
-struct ESRRefOutputPSP : PSP
+struct ESRRefOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(
       const boost::shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
 };
 
-struct RandomPSP : PSP
+struct RandomPSP : virtual PSP
 {
   bool isRandom() const { return true; }
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
