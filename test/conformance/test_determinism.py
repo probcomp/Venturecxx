@@ -208,14 +208,14 @@ def test_sample_determinism():
 @broken_in("puma", "Puma is nondeterministic")
 def test_ll_determinism1():
   r = pablo(3)
-  assert np.array_equal(
+  assert np.allclose(
     r.infer("global_log_likelihood"), r.infer("global_log_likelihood"))
 
 @on_inf_prim("none")
 @broken_in("puma", "Puma is nondeterministic")
 def test_lj_determinism1():
   r = pablo(3)
-  assert np.array_equal(
+  assert np.allclose(
     r.infer("global_log_joint"), r.infer("global_log_joint"))
 
 @on_inf_prim("none")
@@ -267,7 +267,7 @@ def test_infer_sample_determinism():
 def test_infer_ll_determinism1():
   r = pablo(3)
   r.infer('default_markov_chain(10)')
-  assert np.array_equal(
+  assert np.allclose(
     r.infer("global_log_likelihood"), r.infer("global_log_likelihood"))
 
 @on_inf_prim("none")
@@ -275,7 +275,7 @@ def test_infer_ll_determinism1():
 def test_infer_lj_determinism1():
   r = pablo(3)
   r.infer('default_markov_chain(10)')
-  assert np.array_equal(
+  assert np.allclose(
     r.infer("global_log_joint"), r.infer("global_log_joint"))
 
 @on_inf_prim("none")
