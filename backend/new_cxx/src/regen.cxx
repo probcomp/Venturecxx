@@ -226,8 +226,8 @@ pair<double, Node*> evalFamily(
 {
   if (isVariable(exp)) {
     double weight = 0;
-    boost::shared_ptr<VentureSymbol> symbol = dynamic_pointer_cast<VentureSymbol>(exp);
-    Node * sourceNode = env->lookupSymbol(symbol);
+    Node * sourceNode =
+      env->lookupSymbol(dynamic_cast<VentureSymbol *>(exp.get()));
     weight = regen(trace, sourceNode, scaffold, shouldRestore, db, gradients);
 
     return make_pair(weight, trace->createLookupNode(sourceNode, exp));

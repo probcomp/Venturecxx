@@ -64,8 +64,7 @@ void VentureEnvironment::fillBinding(const string& sym, Node * node)
   frame[sym] = node;
 }
 
-Node * VentureEnvironment::lookupSymbol(
-    const boost::shared_ptr<VentureSymbol> & sym)
+Node * VentureEnvironment::lookupSymbol(VentureSymbol * sym)
 {
   return lookupSymbol(sym->s);
 }
