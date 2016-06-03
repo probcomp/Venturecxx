@@ -283,10 +283,11 @@ Summary of extant results, as given to Dan Roy on Flowdock on May 13,
   corpus, but I haven't seen that reproduced.
 *** Project: Start a suite of micro-benchmarks (ideally with baselines)
 Specific micro-benchmarks:
-- long simple Markov chain on simple model (normal-normal) in Puma.
++ long simple Markov chain on simple model (normal-normal) in Puma.
   + resimulation MH stresses just detach and regen
   + slice also checks slice logic
   + pgibbs stresses particles, pgibbs logic
+  - egibbs on coin flips
 + long simple Markov chain on simple model (normal-normal) in Lite
   + resimulation MH
   + slice
@@ -294,6 +295,7 @@ Specific micro-benchmarks:
   x nesterov
   + HMC
   + rejection
+  - egibbs on coin flips
 - big likelihood weighting run on simple model in Puma
 - big likelihood weighting run on simple model in Lite
   - Is rejection sampling the same thing?
