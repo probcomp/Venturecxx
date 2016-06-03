@@ -87,8 +87,9 @@ double DirCatOutputPSP::logDensity(
   return log(num/denom);
 }
 
-void DirCatOutputPSP::incorporate(VentureValuePtr value,
-                                   shared_ptr<Args> args) const
+void DirCatOutputPSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<DirCatSPAux> aux =
     dynamic_pointer_cast<DirCatSPAux>(args->spAux);
@@ -100,8 +101,9 @@ void DirCatOutputPSP::incorporate(VentureValuePtr value,
   aux->total++;
 }
 
-void DirCatOutputPSP::unincorporate(VentureValuePtr value,
-                                     shared_ptr<Args> args) const
+void DirCatOutputPSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<DirCatSPAux> aux =
     dynamic_pointer_cast<DirCatSPAux>(args->spAux);
@@ -296,8 +298,9 @@ double UCDirCatOutputPSP::logDensity(
   return log(aux->theta[value->getInt()]);
 }
 
-void UCDirCatOutputPSP::incorporate(VentureValuePtr value,
-                                     shared_ptr<Args> args) const
+void UCDirCatOutputPSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<DirCatSPAux> aux =
     dynamic_pointer_cast<DirCatSPAux>(args->spAux);
@@ -308,8 +311,9 @@ void UCDirCatOutputPSP::incorporate(VentureValuePtr value,
   aux->counts[index]++;
 }
 
-void UCDirCatOutputPSP::unincorporate(VentureValuePtr value,
-                                       shared_ptr<Args> args) const
+void UCDirCatOutputPSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<DirCatSPAux> aux =
     dynamic_pointer_cast<DirCatSPAux>(args->spAux);

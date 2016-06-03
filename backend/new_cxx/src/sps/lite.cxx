@@ -95,14 +95,18 @@ double ForeignLitePSP::logDensity(
   return boost::python::extract<double>(foreignLogDensity);
 }
 
-void ForeignLitePSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void ForeignLitePSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   psp.attr("incorporate")(foreignValue, foreignArgs);
 }
 
-void ForeignLitePSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void ForeignLitePSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);

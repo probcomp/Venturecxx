@@ -43,8 +43,12 @@ struct ForeignLitePSP : PSP
       const VentureValuePtr & value,
       const shared_ptr<Args> & args) const;
 
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   bool isRandom() const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode,

@@ -213,8 +213,9 @@ double UncollapsedHMMOutputPSP::logDensity(
   return log(dist[out]);
 }
 
-void UncollapsedHMMOutputPSP::incorporate(VentureValuePtr value,
-                                          shared_ptr<Args> args) const
+void UncollapsedHMMOutputPSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);
@@ -226,8 +227,9 @@ void UncollapsedHMMOutputPSP::incorporate(VentureValuePtr value,
   aux->os[in].push_back(out);
 }
 
-void UncollapsedHMMOutputPSP::unincorporate(VentureValuePtr value,
-                                            shared_ptr<Args> args) const
+void UncollapsedHMMOutputPSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<HMMSPAux> aux = dynamic_pointer_cast<HMMSPAux>(args->spAux);
   assert(aux);

@@ -128,7 +128,9 @@ double CRPOutputPSP::logDensity(
   }
 }
 
-void CRPOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void CRPOutputPSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
@@ -144,7 +146,9 @@ void CRPOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) con
   }
 }
 
-void CRPOutputPSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void CRPOutputPSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);

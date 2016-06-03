@@ -59,8 +59,12 @@ struct CRPOutputPSP : RandomPSP
   double logDensity(
       const VentureValuePtr & value,
       const shared_ptr<Args> & args) const;
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   double logDensityOfData(shared_ptr<SPAux> spAux) const;
 

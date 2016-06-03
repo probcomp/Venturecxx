@@ -34,8 +34,12 @@ struct PSP
   virtual double logDensity(
       const VentureValuePtr & value,
       const boost::shared_ptr<Args> & args) const =0;
-  virtual void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
-  virtual void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args) const =0;
+  virtual void incorporate(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args) const =0;
+  virtual void unincorporate(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args) const =0;
 
   virtual bool isRandom() const =0;
   virtual bool canAbsorb(
@@ -70,9 +74,13 @@ struct PSP
 
 struct DefaultIncorporatePSP : virtual PSP
 {
-  void incorporate(VentureValuePtr value, boost::shared_ptr<Args> args)
+  void incorporate(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args)
     const {}
-  void unincorporate(VentureValuePtr value, boost::shared_ptr<Args> args)
+  void unincorporate(
+      const VentureValuePtr & value,
+      const boost::shared_ptr<Args> & args)
     const {}
 };
 
