@@ -81,7 +81,7 @@ double detach(
   boost::shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
 
-  if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];
@@ -242,7 +242,7 @@ double unapplyPSP(
 
 
   // TODO Tag
-  if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];

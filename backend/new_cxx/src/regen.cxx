@@ -102,7 +102,7 @@ void propagateConstraint(
   if (lookupNode) { trace->setValue(lookupNode, value); }
   else if (requestNode) {
     boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(requestNode))->getPSP(requestNode);
-    if (!dynamic_pointer_cast<NullRequestPSP>(psp)) { throw "Cannot make requests downstream of a node that gets constrained during regen"; }
+    if (!dynamic_cast<NullRequestPSP *>(psp.get())) { throw "Cannot make requests downstream of a node that gets constrained during regen"; }
   } else {
     assert(outputNode);
     boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
@@ -135,7 +135,7 @@ double attach(
   weight += psp->logDensity(groundValue, args);
   psp->incorporate(groundValue, args);
 
-  if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];
@@ -345,19 +345,19 @@ double applyPSP(
   }
 
   if (dynamic_cast<RequestNode*>(node)) {
-    assert(dynamic_pointer_cast<VentureRequest>(newValue));
+    assert(dynamic_cast<VentureRequest *>(newValue.get()));
   }
 
   trace->setValue(node, newValue);
 
   psp->incorporate(newValue, args);
 
-  if (dynamic_pointer_cast<VentureSPRecord>(newValue)) {
+  if (dynamic_cast<VentureSPRecord *>(newValue.get())) {
     processMadeSP(trace, node, scaffold->isAAA(node), shouldRestore, db);
   }
   if (psp->isRandom()) { trace->registerUnconstrainedChoice(node); }
 
-  if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];

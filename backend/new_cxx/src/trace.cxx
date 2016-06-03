@@ -133,10 +133,10 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
 
   boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
 
-  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp)) {
+  if (dynamic_cast<ESRRefOutputPSP *>(psp.get())) {
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
-  } else if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  } else if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
   } else {
     return node;
