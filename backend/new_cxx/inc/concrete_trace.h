@@ -78,8 +78,8 @@ struct ConcreteTrace : Trace
   /* Primitive getters */
   gsl_rng * getRNG();
   const gsl_rng * getRNG() const;
-  VentureValuePtr getValue(Node * node) {
-    VentureValuePtr answer = values[node];
+  const VentureValuePtr & getValue(Node * node) {
+    const VentureValuePtr & answer = values[node];
     assert(answer);
     return answer;
   };

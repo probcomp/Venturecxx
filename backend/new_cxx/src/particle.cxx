@@ -201,7 +201,7 @@ gsl_rng * Particle::getRNG()
   return rng->get_rng();
 }
 
-VentureValuePtr Particle::getValue(Node * node)
+const VentureValuePtr & Particle::getValue(Node * node)
 {
   if (values.contains(node)) { return values.lookup(node); }
   else { return baseTrace->getValue(node); }

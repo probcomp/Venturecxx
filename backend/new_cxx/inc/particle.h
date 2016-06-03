@@ -76,7 +76,7 @@ struct Particle : Trace
 
   /* Primitive getters */
   gsl_rng * getRNG();
-  VentureValuePtr getValue(Node * node);
+  const VentureValuePtr & getValue(Node * node);
   shared_ptr<SP> getMadeSP(Node * makerNode);
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
   vector<RootOfFamily> getESRParents(Node * node);

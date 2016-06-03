@@ -88,7 +88,7 @@ struct Trace
   virtual void removeChild(Node * node, Node * child) =0;
 
   /* Primitive getters */
-  virtual VentureValuePtr getValue(Node * node) =0;
+  virtual const VentureValuePtr & getValue(Node * node) =0;
   virtual vector<RootOfFamily> getESRParents(Node * node) =0;
   virtual set<Node*> getChildren(Node * node) =0;
   virtual int getNumRequests(const RootOfFamily & root) =0;
