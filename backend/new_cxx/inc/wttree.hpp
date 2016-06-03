@@ -168,7 +168,7 @@ struct Node
   }
 
   template <typename Comp>
-  static Value node_lookup(const NodePtr& node, const Key& key, const Comp& comp)
+  static const Value & node_lookup(const NodePtr& node, const Key& key, const Comp& comp)
   {
     if (node->isEmpty()) {
       assert(false);
