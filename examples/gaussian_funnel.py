@@ -25,33 +25,34 @@ DISCLAIMER: This code relied on an older version of plotf, and so will no
 longer run as written.
 '''
 
-from venture.shortcuts import make_lite_church_prime_ripl
+from os import path
+from time import time
+import argparse
+import cPickle as pkl
+import os
+import random
+import shutil
+
 from scipy.stats import norm
+import numpy as np
+
+from venture import shortcuts
 from venture.lite.psp import RandomPSP
 from venture.lite.sp_help import typed_nr
-import random
 import venture.lite.types as t
-import numpy as np
-from numpy import linalg as npla
-from venture import shortcuts
-from time import time
-from os import path
-import os, shutil
-import cPickle as pkl
-import argparse
 
 class GaussianFunnel(RandomPSP):
-  def simulate(self, args):
+  def simulate(self, _args):
     # Doesn't matter
     return random.random()
 
-  def logDensity(self, x, args):
+  def logDensity(self, _x, args):
     # x doesn't matter, the inputs do.
     v, actual_x = self.__parse_args__(args)
     return (norm.logpdf(v, loc = 0, scale = 3) +
             (norm.logpdf(actual_x, loc = 0, scale = np.sqrt(np.exp(v)))).sum())
 
-  def gradientOfLogDensity(self, x, args):
+  def gradientOfLogDensity(self, _x, args):
     # gradient with respect to x is 0
     # gradient with respect to args is what we care about
     v, actual_x = self.__parse_args__(args)
@@ -117,7 +118,7 @@ def build_ripl(backend, model):
     ripl.execute_instruction(force_x(i))
   return ripl
 
-def build_ripl_alt(backend, model):
+def build_ripl_alt(backend, _model):
   ripl = shortcuts.backend(backend).make_church_prime_ripl()
   ripl.assume('v', '(tag (quote data) 0 (normal 0 3))')
   ripl.force('v', 0.0)
@@ -141,8 +142,8 @@ def assemble_infer_cycle(infer_method, infer_args_v, infer_args_x, nupdate):
     x = '({0} (quote data) {1}{2}1)'.format(infer_method,
                                             str(i), make_str_args(infer_args_x))
     x_cycle.append(x)
-  x_cycle = ' '.join(x_cycle)
-  infer_cycle = '(iterate (do {0}) {1})'.format(v_cycle + ' ' + x_cycle, nupdate)
+  x_cycle_str = ' '.join(x_cycle)
+  infer_cycle = '(iterate (do {0}) {1})'.format(v_cycle + ' ' + x_cycle_str, nupdate)
   return infer_cycle
 
 def assemble_infer_statement(infer_type, infer_method, infer_args_v,
@@ -163,7 +164,6 @@ def assemble_infer_statement(infer_type, infer_method, infer_args_v,
   return infer_statement
 
 def annotate_plotf(plotf_output, elapsed, niter):
-  from IPython.core.debugger import Pdb; import sys; Pdb('Linux').set_trace(sys._getframe().f_back)
   timefig, vfig = plotf_output.draw()
   tax = timefig.axes[0]
   tax.set_xlim([0,niter])
@@ -227,8 +227,4 @@ def make_parser():
   return kwargs
 
 if __name__ == '__main__':
-  kwargs = make_parser()
-  run_experiment(**kwargs)
-
-
-
+  run_experiment(**make_parser())
