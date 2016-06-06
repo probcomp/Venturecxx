@@ -3,6 +3,9 @@
 # and yep.py (included).  The latter was downloaded from
 # https://github.com/fabianp/yep and slightly modified.
 
+all: puma-profs lite-profs
+
+puma-profs: puma-normal-normal-mh.prof
 puma-normal-normal-mh.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m yep -o $@ -- ../script/venture puma -e \
 	    "assume x = normal(0, 1); \
@@ -12,6 +15,7 @@ puma-normal-normal-mh.prof: Makefile
 	@echo "View with, e.g."
 	@echo "google-pprof --cum --evince /usr/bin/python $@"
 
+puma-profs: puma-normal-normal-slice.prof
 puma-normal-normal-slice.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m yep -o $@ -- ../script/venture puma -e \
 	    "assume x = normal(0, 1); \
@@ -21,6 +25,7 @@ puma-normal-normal-slice.prof: Makefile
 	@echo "View with, e.g."
 	@echo "google-pprof --cum --evince /usr/bin/python $@"
 
+puma-profs: puma-normal-normal-pgibbs.prof
 puma-normal-normal-pgibbs.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m yep -o $@ -- ../script/venture puma -e \
 	    "assume x = normal(0, 1); \
@@ -30,6 +35,7 @@ puma-normal-normal-pgibbs.prof: Makefile
 	@echo "View with, e.g."
 	@echo "google-pprof --cum --evince /usr/bin/python $@"
 
+lite-profs: lite-normal-normal-mh.prof
 lite-normal-normal-mh.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m cProfile -o $@ -- ../script/venture lite -e \
 	    "assume x = normal(0, 1); \
@@ -38,6 +44,7 @@ lite-normal-normal-mh.prof: Makefile
 	@cat $@.time
 	python -c 'import pstats; s = pstats.Stats("$@"); s.sort_stats("cumtime"); s.print_stats(0.1)'
 
+lite-profs: lite-normal-normal-slice.prof
 lite-normal-normal-slice.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m cProfile -o $@ -- ../script/venture lite -e \
 	    "assume x = normal(0, 1); \
@@ -46,6 +53,7 @@ lite-normal-normal-slice.prof: Makefile
 	@cat $@.time
 	python -c 'import pstats; s = pstats.Stats("$@"); s.sort_stats("cumtime"); s.print_stats(0.1)'
 
+lite-profs: lite-normal-normal-pgibbs.prof
 lite-normal-normal-pgibbs.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m cProfile -o $@ -- ../script/venture lite -e \
 	    "assume x = normal(0, 1); \
@@ -54,6 +62,7 @@ lite-normal-normal-pgibbs.prof: Makefile
 	@cat $@.time
 	python -c 'import pstats; s = pstats.Stats("$@"); s.sort_stats("cumtime"); s.print_stats(0.1)'
 
+lite-profs: lite-normal-normal-hmc.prof
 lite-normal-normal-hmc.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m cProfile -o $@ -- ../script/venture lite -e \
 	    "assume x = normal(0, 1); \
@@ -62,6 +71,7 @@ lite-normal-normal-hmc.prof: Makefile
 	@cat $@.time
 	python -c 'import pstats; s = pstats.Stats("$@"); s.sort_stats("cumtime"); s.print_stats(0.1)'
 
+lite-profs: lite-normal-normal-rejection.prof
 lite-normal-normal-rejection.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m cProfile -o $@ -- ../script/venture lite -e \
 	    "assume x = normal(0, 1); \
