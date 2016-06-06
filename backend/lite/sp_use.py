@@ -31,8 +31,6 @@ class MockArgs(IArgs):
   (Which is most of them)."""
 
   def __init__(self, vals, aux, py_rng=None, np_rng=None, madeSPAux=None):
-    assert py_rng is not None
-    assert np_rng is not None
     super(MockArgs, self).__init__()
     if py_rng is None:
       py_rng = random.Random()
