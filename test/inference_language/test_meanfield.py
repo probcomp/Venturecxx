@@ -32,7 +32,7 @@ def testMeanFieldBasic():
 
 @statisticalTest
 def checkMeanFieldBasic1(infer):
-  "Basic sanity test for meanfield"
+  # Basic sanity test for meanfield
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
@@ -40,7 +40,8 @@ def checkMeanFieldBasic1(infer):
 
 @statisticalTest
 def checkMeanFieldNormalWithObserve1(infer):
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   ripl.observe("(normal a 1.0)", 14.0)

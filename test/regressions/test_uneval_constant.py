@@ -20,8 +20,8 @@ from venture.test.config import on_inf_prim
 
 @on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndForget():
-  """Check that unevaling a constant node does not produce a trace the
-copying of which would be invalid."""
+  # Check that unevaling a constant node does not produce a trace the
+  # copying of which would be invalid.
   ripl = get_ripl()
   ripl.predict("(if (flip) 0 1)", label="pid")
   ripl.infer(10)
@@ -32,8 +32,8 @@ copying of which would be invalid."""
 
 @on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndFreeze():
-  """Check that unevaling a constant node does not produce a trace the
-copying of which would be invalid."""
+  # Check that unevaling a constant node does not produce a trace the
+  # copying of which would be invalid.
   ripl = get_ripl()
   ripl.assume("foo", "(if (flip) 0 1)", label="pid")
   ripl.infer(10)
@@ -44,8 +44,8 @@ copying of which would be invalid."""
 
 @on_inf_prim("resample") # And MH, but it's testing resample more
 def testUnevalConstantAndFreezeWithObservations():
-  """Check that unevaling a constant node does not produce an invalid
-trace (even when transitions are rejected)."""
+  # Check that unevaling a constant node does not produce an invalid
+  # trace (even when transitions are rejected).
   ripl = get_ripl()
   ripl.assume("foo", "(if (flip) 0 1)", label="pid")
   ripl.observe("(normal foo 0.1)", 1)

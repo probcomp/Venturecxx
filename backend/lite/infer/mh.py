@@ -26,10 +26,13 @@ from ..lkernel import DeterministicLKernel
 def getCurrentValues(trace, pnodes):
   return [trace.valueAt(pnode) for pnode in pnodes]
 
-def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues):
+def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues,
+    unconditional=None):
+  if unconditional is None:
+    unconditional = False
   for (pnode, currentValue) in zip(pnodes, currentValues):
     assert not isinstance(currentValue, list)
-    if pnode in scaffold.brush:
+    if not unconditional and pnode in scaffold.brush:
       raise Exception("Cannot deterministically propose values for nodes " \
                       "whose existence is conditional")
     scaffold.lkernels[pnode] = \
@@ -94,7 +97,6 @@ def mixMH(trace, indexer, operator):
       operator = operator.name(),
       indexer = indexer.name(),
       time = time.time() - start,
-      logscore = trace.getGlobalLogScore(),
       current = current,
       proposed = proposed,
       accepted = accepted,

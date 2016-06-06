@@ -135,8 +135,8 @@ def testBasicRejection3():
 @statisticalTest
 @on_inf_prim("mh")
 def testCycleKernel():
-  """Same example as testBlockingExample0,
-but a cycle kernel that covers everything should solve it"""
+  # Same example as testBlockingExample0, but a cycle kernel that
+  # covers everything should solve it
   ripl = get_ripl()
 
   ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")

@@ -39,7 +39,7 @@ def testQuoteSmoke4():
 
 @on_inf_prim("none")
 def testQuoteIf():
-  "Quote should suppress macroexpansion"
+  # Quote should suppress macroexpansion
   raise SkipTest("This fails because the stack's \"desugaring\" is applied even to quoted expressions.  Oops.  Issue: https://app.asana.com/0/9277419963067/10442847514597")
   eq_(get_ripl().predict("(lookup (quote (if (flip) 0 1)) 0)"), "if")
 

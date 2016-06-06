@@ -55,8 +55,8 @@ def testFreezeSanityCheck2():
 
 @on_inf_prim("mh")
 def testFreezeSanityCheck3():
-  """Check that a frozen value no longer changes under inference, even
-though unfrozen ones do."""
+  # Check that a frozen value no longer changes under inference, even
+  # though unfrozen ones do.
   ripl = get_ripl()
   ripl.assume("x", "(normal 0.0 1.0)")
   ripl.assume("y", "(normal 0.0 1.0)")

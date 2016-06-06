@@ -22,10 +22,9 @@ from venture.test.config import on_inf_prim
 @on_inf_prim("gibbs")
 @broken_in("puma", "Strings turn into symbols when passed to Puma")
 def testStringScopeGibbs():
-  """Check that using unnormalized values (like strings) as scope
-  identifiers doesn't cause Gibbs to crash due to failed PMap
-  lookup.
-  """
+  # Check that using unnormalized values (like strings) as scope
+  # identifiers doesn't cause Gibbs to crash due to failed PMap
+  # lookup.
   ripl = get_ripl()
   ripl.predict('(tag "z" 0 (flip))')
   ripl.infer('(gibbs "z" one 10)')

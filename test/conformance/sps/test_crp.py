@@ -55,7 +55,8 @@ def testCRP1():
   return reportKnownDiscrete(ans, replaceWithDefault(predictions, [1, 2], "other"))
 
 def testCRPCounter():
-  "Make sure that the next table counter doesn't get stuck on an existing value."
+  # Make sure that the next table counter doesn't get stuck on an
+  # existing value.
   for i in range(1, 6):
     yield checkCRPCounter, i
 
@@ -72,10 +73,9 @@ def checkCRPCounter(n):
 
 @gen_on_inf_prim("none")
 def testLogDensityOfData():
-  """Ensures that the logDensityOfData of the CRP (represented by the
-  global_log_likelihood) is equal to the sum of the predictive logDensity(table)
-  returned by the sequnce of obesrvations.
-  """
+  # Ensures that the logDensityOfData of the CRP (represented by the
+  # global_log_likelihood) is equal to the sum of the predictive
+  # logDensity(table) returned by the sequnce of obesrvations.
   yield checkLogDensityOfData, "(make_crp a)"
   yield checkLogDensityOfData, "(make_crp a d)"
 
