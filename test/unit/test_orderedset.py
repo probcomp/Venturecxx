@@ -20,6 +20,9 @@ from __future__ import division
 import scipy.stats
 import random
 
+from nose import SkipTest
+from nose.tools import assert_raises
+
 from venture.lite.orderedset import OrderedFrozenSet
 from venture.lite.orderedset import OrderedSet
 
@@ -343,3 +346,126 @@ def test_copy(prng, klass, generator):
     sc = s.copy()
     assert type(sc) == klass
     assert sc == s
+
+@checkem
+def test_ior(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements, s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca, \
+      s_abc, s_acb, s_bac, s_bca, s_cab, s_cba = \
+        pick_subsets(prng, klass, generator)
+    for si in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+        for sj in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+            si_ = klass(si)
+            si_ |= sj
+            assert si_ == si | sj
+            for sk in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+                si_ = klass(si)
+                si_.update(sj, sk)
+                assert si_ == si | sj | sk
+
+@checkem
+def test_iand(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements, s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca, \
+      s_abc, s_acb, s_bac, s_bca, s_cab, s_cba = \
+        pick_subsets(prng, klass, generator)
+    for si in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+        for sj in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+            si_ = klass(si)
+            si_ &= sj
+            assert si_ == si & sj
+            for sk in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+                si_ = klass(si)
+                si_.intersection_update(sj, sk)
+                assert si_ == si & sj & sk
+
+@checkem
+def test_isub(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements, s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca, \
+      s_abc, s_acb, s_bac, s_bca, s_cab, s_cba = \
+        pick_subsets(prng, klass, generator)
+    for si in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+        for sj in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+            si_ = klass(si)
+            si_ -= sj
+            assert si_ == si - sj
+            for sk in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+                si_ = klass(si)
+                si_.difference_update(sj, sk)
+                assert si_ == si - sj - sk
+
+@checkem
+def test_ixor(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements, s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca, \
+      s_abc, s_acb, s_bac, s_bca, s_cab, s_cba = \
+        pick_subsets(prng, klass, generator)
+    for si in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+        for sj in (s_a, s_b, s_c, s_ab, s_ba, s_bc, s_cb, s_ac, s_ca):
+            si_ = klass(si)
+            si_ ^= sj
+            assert si_ == si ^ sj
+            si_ = klass(si)
+            si_.symmetric_difference_update(sj)
+            assert si_ == si ^ sj
+
+@checkem
+def test_addremove(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, 1 + pick_length(prng), generator)
+    s = klass(elements[1:])
+    x = elements[0]
+    assert x not in s
+    s.add(x)
+    assert x in s
+    s.remove(x)
+    assert x not in s
+
+@checkem
+def test_remove(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, 1 + pick_length(prng), generator)
+    s = klass(elements[1:])
+    x = elements[0]
+    assert x not in s
+    assert_raises(KeyError, s.remove, x)
+
+@checkem
+def test_discard(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, 1 + pick_length(prng), generator)
+    s = klass(elements[1:])
+    x = elements[0]
+    assert x not in s
+    s.discard(x)
+    assert x not in s
+
+@checkem
+def test_pop(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, pick_length(prng), generator)
+    s = klass(elements)
+    for x in elements:
+        y = s.pop()
+        assert x == y
+
+@checkem
+def test_clear(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, 1 + pick_length(prng), generator)
+    s = klass(elements)
+    assert s
+    assert 0 < len(s)
+    s.clear()
+    assert not s
+    assert 0 == len(s)

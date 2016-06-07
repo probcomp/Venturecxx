@@ -157,6 +157,7 @@ class OrderedSet(OrderedFrozenSet):
     def __ior__(self, other):
         for x in other:
             self.add(x)
+        return self
 
     def intersection_update(self, *others):
         for other in others:
@@ -166,6 +167,7 @@ class OrderedSet(OrderedFrozenSet):
         for x in self:
             if x not in other:
                 self.remove(x)
+        return self
 
     def difference_update(self, *others):
         for other in others:
@@ -174,12 +176,14 @@ class OrderedSet(OrderedFrozenSet):
     def __isub__(self, other):
         for x in other:
             self.discard(x)
+        return self
 
     def symmetric_difference_update(self, other):
         self ^= other
 
     def __ixor__(self, other):
         self._dict = (self ^ other)._dict
+        return self
 
     def add(self, x):
         self._dict[x] = 1
@@ -192,7 +196,7 @@ class OrderedSet(OrderedFrozenSet):
             self.remove(x)
 
     def pop(self):
-        x, _ = self._dict.pop()
+        x, _ = self._dict.popitem(last=False)
         return x
 
     def clear(self):
