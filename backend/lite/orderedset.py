@@ -78,6 +78,16 @@ class OrderedFrozenSet(object):
             return False
         return True
 
+    def __eq__(self, other):
+        if not self <= other:
+            return False
+        if not other <= self:
+            return False
+        for x, y in zip(self, other):
+            if x != y:
+                return False
+        return True
+
     def union(self, *others):
         def union():
             for x in self:
@@ -126,6 +136,10 @@ class OrderedFrozenSet(object):
 
     def copy(self):
         return type(self)(self)
+
+    def __repr__(self):
+        return '%s([%s])' % \
+            (type(self).__name__, ', '.join('%r' % (x,) for x in self))
 
 
 class OrderedSet(OrderedFrozenSet):
