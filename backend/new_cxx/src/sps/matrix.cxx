@@ -23,7 +23,8 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MatrixOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("matrix", args, 1);
 
@@ -60,7 +61,8 @@ VentureValuePtr MatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   return VentureValuePtr(new VentureMatrix(M));
 }
 
-VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr IdentityMatrixOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("id_matrix", args, 1);
 
@@ -69,14 +71,16 @@ VentureValuePtr IdentityMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng
   return VentureValuePtr(new VentureMatrix(MatrixXd::Identity(dim, dim)));
 }
 
-VentureValuePtr IsMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr IsMatrixOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("is_matrix", args, 1);
 
   return VentureValuePtr(new VentureBool(NULL != dynamic_pointer_cast<VentureMatrix>(args->operandValues[0])));
 }
 
-VentureValuePtr TransposeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr TransposeOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("transpose", args, 1);
 
@@ -88,7 +92,8 @@ VentureValuePtr TransposeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
 
 ////////////// Vector
 
-VentureValuePtr VectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr VectorOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   vector<VentureValuePtr> row = args->operandValues;
 
@@ -101,7 +106,8 @@ VentureValuePtr VectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) 
   }
 }
 
-VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr IsVectorOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("is_vector", args, 1);
 
@@ -119,7 +125,8 @@ VentureValuePtr IsVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
   return VentureValuePtr(new VentureBool(true));
 }
 
-VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ToVectorOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("to_vector", args, 1);
 
@@ -138,7 +145,8 @@ VentureValuePtr ToVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng
 
 // Arithmetic
 
-VentureValuePtr VectorAddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr VectorAddOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("vector_add", args, 2);
 
@@ -147,7 +155,8 @@ VentureValuePtr VectorAddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   return VentureValuePtr(new VentureVector(v1+v2));
 }
 
-VentureValuePtr MatrixAddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MatrixAddOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("matrix_add", args, 2);
 
@@ -156,7 +165,8 @@ VentureValuePtr MatrixAddOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   return VentureValuePtr(new VentureMatrix(m1+m2));
 }
 
-VentureValuePtr ScaleVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ScaleVectorOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("scale_vector", args, 2);
 
@@ -165,7 +175,8 @@ VentureValuePtr ScaleVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * 
   return VentureValuePtr(new VentureVector(s*v));
 }
 
-VentureValuePtr ScaleMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ScaleMatrixOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("scale_matrix", args, 2);
 
@@ -174,7 +185,8 @@ VentureValuePtr ScaleMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * 
   return VentureValuePtr(new VentureMatrix(s*m));
 }
 
-VentureValuePtr VectorDotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr VectorDotOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("vector_dot", args, 2);
 
@@ -183,7 +195,8 @@ VentureValuePtr VectorDotOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   return VentureValuePtr(new VentureNumber(v1.dot(v2)));
 }
 
-VentureValuePtr MatrixMulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MatrixMulOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("matrix_mul", args, 2);
 
@@ -193,7 +206,8 @@ VentureValuePtr MatrixMulOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rn
   return VentureValuePtr(new VentureMatrix(ans));
 }
 
-VentureValuePtr MatrixTimesVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MatrixTimesVectorOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("matrix_times_vector", args, 2);
 
@@ -203,7 +217,8 @@ VentureValuePtr MatrixTimesVectorOutputPSP::simulate(shared_ptr<Args> args, gsl_
   return VentureValuePtr(new VentureVector(ans));
 }
 
-VentureValuePtr VectorTimesMatrixOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr VectorTimesMatrixOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("vector_times_matrix", args, 2);
 

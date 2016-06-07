@@ -651,26 +651,26 @@ string VentureSimplex::asExpression() const {
 
 ///// Lookup methods
 
-VentureValuePtr VenturePair::lookup(VentureValuePtr index) const
+VentureValuePtr VenturePair::lookup(const VentureValuePtr & index) const
 {
   if (index->getInt() == 0) { return car; }
   else { return cdr->lookup(VentureValuePtr(new VentureInteger(index->getInt() - 1))); }
 }
 
-VentureValuePtr VentureDictionary::lookup(VentureValuePtr index) const
+VentureValuePtr VentureDictionary::lookup(const VentureValuePtr & index) const
 {
   if (dict.count(index)) { return dict.at(index); }
   throw "Key " + index->toString() + " not found in VentureDictionary.";
 }
 
-VentureValuePtr VentureMatrix::lookup(VentureValuePtr index) const
+VentureValuePtr VentureMatrix::lookup(const VentureValuePtr & index) const
 {
   return VentureValuePtr(new VentureNumber(m(index->getFirst()->getInt(), index->getRest()->getInt())));
 }
 
 ///// Contains methods
 
-bool VenturePair::contains(VentureValuePtr item) const
+bool VenturePair::contains(const VentureValuePtr & item) const
 {
   if (car->equals(item)) {
     return true;
@@ -679,7 +679,7 @@ bool VenturePair::contains(VentureValuePtr item) const
   }
 }
 
-bool VentureArray::contains(VentureValuePtr item) const
+bool VentureArray::contains(const VentureValuePtr & item) const
 {
   for (size_t i = 0; i < xs.size(); ++i) {
     if (xs[i]->equals(item)) { return true; }
@@ -687,7 +687,7 @@ bool VentureArray::contains(VentureValuePtr item) const
   return false;
 }
 
-bool VentureSimplex::contains(VentureValuePtr item) const
+bool VentureSimplex::contains(const VentureValuePtr & item) const
 {
   double target = item->getDouble();
   for (size_t i = 0; i < ps.size(); ++i) {
@@ -696,7 +696,7 @@ bool VentureSimplex::contains(VentureValuePtr item) const
   return false;
 }
 
-bool VentureVector::contains(VentureValuePtr item) const
+bool VentureVector::contains(const VentureValuePtr & item) const
 {
   double target = item->getDouble();
   for (int i = 0; i < v.size(); ++i) {

@@ -52,16 +52,23 @@ double logSumExp(const vector<double>& xs);
 double sumVector(const vector<double> & xs);
 Simplex normalizeVector(const vector<double> & xs);
 
-size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec);
+size_t findVVPtr(
+    const VentureValuePtr & val, const vector<VentureValuePtr>& vec);
 
-VentureValuePtr simulateCategorical(const Simplex & ps, const vector<VentureValuePtr> & os, gsl_rng * rng);
+VentureValuePtr simulateCategorical(
+    const Simplex & ps, const vector<VentureValuePtr> & os, gsl_rng * rng);
 
-double logDensityCategorical(VentureValuePtr val, const Simplex & ps);
-double logDensityCategorical(VentureValuePtr val, const Simplex & ps, const vector<VentureValuePtr> & os);
+double logDensityCategorical(const VentureValuePtr & val, const Simplex & ps);
+double logDensityCategorical(
+    const VentureValuePtr & val,
+    const Simplex & ps,
+    const vector<VentureValuePtr> & os);
 
 template <typename T>
-vector<vector<T> > cartesianProduct(vector<vector<T> > sequences)
+vector<vector<T> > cartesianProduct(const vector<vector<T> > & sequences_)
 {
+  /* Copy for pop_back (XXX can do this without copying...).  */
+  vector<vector<T> > sequences = sequences_;
   vector<vector<T> > products;
   if (sequences.empty()) {
     products.push_back(vector<T>());
@@ -108,7 +115,14 @@ boost::python::list toPythonList(Trace * trace, const vector<T>& vec)
   return list;
 }
 
-void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t expected);
-void checkArgsLength(const string& sp, const shared_ptr<Args> args, size_t lower, size_t upper);
+void checkArgsLength(
+    const string& sp,
+    const shared_ptr<Args> & args,
+    size_t expected);
+void checkArgsLength(
+    const string& sp,
+    const shared_ptr<Args> & args,
+    size_t lower,
+    size_t upper);
 
 #endif

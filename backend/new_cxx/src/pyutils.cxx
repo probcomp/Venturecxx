@@ -28,7 +28,7 @@ using std::endl;
 using namespace boost::python;
 using boost::python::str;
 
-VentureValuePtr parseList(object value)
+VentureValuePtr parseList(const object & value)
 {
   extract<list> getList(value);
   if (!getList.check()) throw "Not a list: " + str(value);
@@ -45,7 +45,7 @@ VentureValuePtr parseList(object value)
   return tail;
 }
 
-VentureValuePtr parseImproperList(object value)
+VentureValuePtr parseImproperList(const object & value)
 {
   extract<list> getList(value[0]);
   if (!getList.check()) throw "Not a list: " + str(value[0]);
@@ -62,7 +62,7 @@ VentureValuePtr parseImproperList(object value)
   return tail;
 }
 
-VentureValuePtr parseArray(object value)
+VentureValuePtr parseArray(const object & value)
 {
   extract<list> getList(value);
   if (!getList.check()) throw "Not a list: " + str(value);
@@ -81,13 +81,13 @@ VentureValuePtr parseArray(object value)
 // TODO: Puma doesn't have general unboxed arrays, because this
 // involves complication with types and templates.
 // For now, support only numeric unboxed arrays backed by VectorXd.
-VentureValuePtr parseVector(object value);
-VentureValuePtr parseArrayUnboxed(object value, object subtype)
+VentureValuePtr parseVector(const object & value);
+VentureValuePtr parseArrayUnboxed(const object & value, const object & subtype)
 {
   return parseVector(value);
 }
 
-VentureValuePtr parseSimplex(object value)
+VentureValuePtr parseSimplex(const object & value)
 {
   extract<numeric::array> getNumpyArray(value);
   list l;
@@ -109,7 +109,7 @@ VentureValuePtr parseSimplex(object value)
   return VentureValuePtr(new VentureSimplex(s));
 }
 
-VentureValuePtr parseVector(object value)
+VentureValuePtr parseVector(const object & value)
 {
   extract<numeric::array> getNumpyArray(value);
   list l;
@@ -131,7 +131,7 @@ VentureValuePtr parseVector(object value)
   return VentureValuePtr(new VentureVector(v));
 }
 
-VentureValuePtr parseDict(object value)
+VentureValuePtr parseDict(const object & value)
 {
   extract<list> getItems(value);
 
@@ -157,7 +157,7 @@ VentureValuePtr parseDict(object value)
   return VentureValuePtr(new VentureDictionary(m));
 }
 
-VentureValuePtr parseMatrix(object value)
+VentureValuePtr parseMatrix(const object & value)
 {
   extract<numeric::array> getNumpyArray(value);
   if (!getNumpyArray.check()) {
@@ -181,19 +181,19 @@ VentureValuePtr parseMatrix(object value)
   return VentureValuePtr(new VentureMatrix(M));
 }
 
-VentureValuePtr parseSymmetricMatrix(object value)
+VentureValuePtr parseSymmetricMatrix(const object & value)
 {
   return VentureValuePtr(
     new VentureSymmetricMatrix(parseMatrix(value)->getSymmetricMatrix()));
 }
 
-VentureValuePtr parseValueO(object o)
+VentureValuePtr parseValueO(const object & o)
 {
   extract<dict> d(o);
   return parseValue(d);
 }
 
-VentureValuePtr parseValue(dict d)
+VentureValuePtr parseValue(const dict & d)
 {
   string type = extract<string>(d["type"]);
 
@@ -235,7 +235,7 @@ VentureValuePtr parseValue(dict d)
   else { throw "Unknown type '" + type + "'"; }
 }
 
-VentureValuePtr parseExpression(object o)
+VentureValuePtr parseExpression(const object & o)
 {
   extract<dict> getDict(o);
   if (getDict.check()) { return VentureValuePtr(parseValue(getDict())); }

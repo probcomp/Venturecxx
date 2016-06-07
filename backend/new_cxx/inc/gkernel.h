@@ -28,7 +28,8 @@ struct Trace;
 struct GKernel
 {
   virtual pair<Trace*, double>
-  propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold) =0;
+  propose(
+      ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold) =0;
 
   virtual int accept() =0;
   virtual int reject() =0;
@@ -38,7 +39,7 @@ struct GKernel
 
 
 void registerDeterministicLKernels(Trace * trace,
-  boost::shared_ptr<Scaffold> scaffold,
+  const boost::shared_ptr<Scaffold> & scaffold,
   const vector<ApplicationNode*>& applicationNodes,
   const vector<VentureValuePtr>& values);
 

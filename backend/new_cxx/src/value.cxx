@@ -180,12 +180,12 @@ size_t VentureValue::hash() const
   assert(false); assert(false); throw "no return";
 }
 
-VentureValuePtr VentureValue::lookup(VentureValuePtr index) const
+VentureValuePtr VentureValue::lookup(const VentureValuePtr & index) const
 {
   throw "Cannot look things up in " + toString();
 }
 
-bool VentureValue::contains(VentureValuePtr index) const
+bool VentureValue::contains(const VentureValuePtr & index) const
 {
   throw "Cannot look for things in " + toString();
 }

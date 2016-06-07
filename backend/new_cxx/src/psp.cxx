@@ -29,13 +29,15 @@ using std::endl;
 
 boost::shared_ptr<LKernel> const PSP::getAAALKernel() { return boost::shared_ptr<LKernel>(new DeterministicMakerAAALKernel(this)); }
 
-VentureValuePtr NullRequestPSP::simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr NullRequestPSP::simulate(
+    const boost::shared_ptr<Args> & args, gsl_rng * rng) const
 {
   return boost::shared_ptr<VentureRequest>(new VentureRequest(vector<ESR>(), vector<boost::shared_ptr<LSR> >()));
 }
 
 
-VentureValuePtr ESRRefOutputPSP::simulate(boost::shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ESRRefOutputPSP::simulate(
+    const boost::shared_ptr<Args> & args, gsl_rng * rng) const
 {
 //  cout << "ESRRefOutputPSP::simulate(" << args->node << ")" << endl;
   assert(args->esrParentNodes.size() == 1);

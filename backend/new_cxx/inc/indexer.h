@@ -26,10 +26,15 @@ struct Trace;
 
 struct ScaffoldIndexer
 {
-  ScaffoldIndexer(ScopeID scope, BlockID block);
-  ScaffoldIndexer(ScopeID scope, BlockID block, BlockID minBlock, BlockID maxBlock);
+  ScaffoldIndexer(const ScopeID & scope, const BlockID & block);
+  ScaffoldIndexer(
+      const ScopeID & scope,
+      const BlockID & block,
+      const BlockID & minBlock,
+      const BlockID & maxBlock);
   boost::shared_ptr<Scaffold> sampleIndex(ConcreteTrace * trace) const;
-  double logDensityOfIndex(Trace * trace, boost::shared_ptr<Scaffold> scaffold) const;
+  double logDensityOfIndex(
+      Trace * trace, const boost::shared_ptr<Scaffold> & scaffold) const;
 
   ScopeID scope;
   BlockID block;

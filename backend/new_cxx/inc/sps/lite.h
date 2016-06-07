@@ -38,11 +38,17 @@ struct ForeignLitePSP : PSP
 {
   ForeignLitePSP(boost::python::object psp): psp(psp) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   bool isRandom() const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode,
@@ -68,13 +74,22 @@ struct ForeignLiteSPAux : SPAux
 
 struct ForeignLiteLKernel : LKernel
 {
-  ForeignLiteLKernel(boost::python::object lkernel): lkernel(lkernel) {}
-  VentureValuePtr forwardSimulate(Trace * trace, VentureValuePtr oldValue,
-                                  shared_ptr<Args> args, gsl_rng * rng);
-  double forwardWeight(Trace * trace, VentureValuePtr newValue,
-                       VentureValuePtr oldValue, shared_ptr<Args> args);
-  double reverseWeight(Trace * trace, VentureValuePtr oldValue,
-                       shared_ptr<Args> args);
+  ForeignLiteLKernel(const boost::python::object & lkernel):
+    lkernel(lkernel) {}
+  VentureValuePtr forwardSimulate(
+      Trace * trace,
+      const VentureValuePtr & oldValue,
+      const shared_ptr<Args> & args,
+      gsl_rng * rng);
+  double forwardWeight(
+      Trace * trace,
+      const VentureValuePtr & newValue,
+      const VentureValuePtr & oldValue,
+      const shared_ptr<Args> & args);
+  double reverseWeight(
+      Trace * trace,
+      const VentureValuePtr & oldValue,
+      const shared_ptr<Args> & args);
 
   boost::python::object lkernel;
 };
