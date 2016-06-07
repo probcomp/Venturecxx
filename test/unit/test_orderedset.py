@@ -153,6 +153,9 @@ def test_iter(prng, klass, generator):
 
 @checkem
 def test_len(prng, klass, generator):
+    assert klass([0])
+    assert not klass()
+    assert not klass([])
     elements = pick_elements(prng, pick_length(prng), generator)
     s = klass(elements)
     assert len(s) == len(elements)
