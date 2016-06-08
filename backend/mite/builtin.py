@@ -6,6 +6,7 @@ from venture.mite.sp_registry import builtInSPs
 # These modules actually define the SPs.
 # Import them for their effect on the registry.
 # pylint:disable=unused-import
+import venture.mite.traces
 import venture.mite.sps.lite_sp
 import venture.mite.sps.mem
 import venture.mite.sps.dpmem
