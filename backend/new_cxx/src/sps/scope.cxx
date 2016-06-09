@@ -18,7 +18,8 @@
 #include "sps/scope.h"
 #include "node.h"
 
-VentureValuePtr TagOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr TagOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   return args->operandValues[2];
 }
@@ -28,7 +29,8 @@ bool TagOutputPSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, N
   return parentNode != appNode->operandNodes[2];
 }
 
-VentureValuePtr TagExcludeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr TagExcludeOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   return args->operandValues[1];
 }

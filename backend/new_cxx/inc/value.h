@@ -114,8 +114,8 @@ struct VentureValue
   virtual size_t hash() const;
 
   // Generic container methods
-  virtual VentureValuePtr lookup(VentureValuePtr index) const;
-  virtual bool contains(VentureValuePtr index) const;
+  virtual VentureValuePtr lookup(const VentureValuePtr & index) const;
+  virtual bool contains(const VentureValuePtr & index) const;
   virtual int size() const;
 
   // For stop_and_copy

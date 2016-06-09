@@ -100,7 +100,7 @@ double SliceGKernel::sliceSample(double x0, double w, int m,
 }
 
 pair<Trace*, double> SliceGKernel::propose(
-    ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold)
+    ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;

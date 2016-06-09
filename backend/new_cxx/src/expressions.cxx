@@ -18,17 +18,17 @@
 #include "expressions.h"
 #include "values.h"
 
-bool isVariable(VentureValuePtr exp)
+bool isVariable(const VentureValuePtr & exp)
 {
   return dynamic_pointer_cast<VentureSymbol>(exp) != NULL;
 }
 
-bool isSelfEvaluating(VentureValuePtr exp)
+bool isSelfEvaluating(const VentureValuePtr & exp)
 {
   return !exp->hasArray() || dynamic_pointer_cast<VentureVector>(exp);
 }
 
-bool isQuotation(VentureValuePtr exp)
+bool isQuotation(const VentureValuePtr & exp)
 {
   assert(exp->hasArray());
   vector<VentureValuePtr> xs = exp->getArray();
@@ -36,7 +36,7 @@ bool isQuotation(VentureValuePtr exp)
   return xs[0]->hasSymbol() && xs[0]->getSymbol() == "quote";
 }
 
-VentureValuePtr textOfQuotation(VentureValuePtr exp)
+VentureValuePtr textOfQuotation(const VentureValuePtr & exp)
 {
   assert(exp->hasArray());
   vector<VentureValuePtr> xs = exp->getArray();
@@ -44,7 +44,7 @@ VentureValuePtr textOfQuotation(VentureValuePtr exp)
   return xs[1];
 }
 
-VentureValuePtr quote(VentureValuePtr exp)
+VentureValuePtr quote(const VentureValuePtr & exp)
 {
   VentureValuePtr q = VentureValuePtr(new VentureSymbol("quote"));
   vector<VentureValuePtr> items;

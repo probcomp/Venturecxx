@@ -29,9 +29,10 @@ using std::cout;
 using std::endl;
 using std::flush;
 
-int mixMH(ConcreteTrace * trace,
-          boost::shared_ptr<ScaffoldIndexer> indexer,
-          boost::shared_ptr<GKernel> gKernel)
+int mixMH(
+    ConcreteTrace * trace,
+    const boost::shared_ptr<ScaffoldIndexer> & indexer,
+    const boost::shared_ptr<GKernel> & gKernel)
 {
   boost::shared_ptr<Scaffold> index = indexer->sampleIndex(trace);
 

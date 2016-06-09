@@ -44,7 +44,8 @@ PyTrace::PyTrace() : trace(new ConcreteTrace())
 }
 PyTrace::~PyTrace() {}
 
-void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
+void PyTrace::evalExpression(
+    DirectiveID did, const boost::python::object & object)
 {
   VentureValuePtr exp = parseExpression(object);
   pair<double, Node*> p = evalFamily(trace.get(),
@@ -68,7 +69,7 @@ void PyTrace::unevalDirectiveID(DirectiveID did)
  trace->families.erase(did);
 }
 
-void PyTrace::observe(DirectiveID did, boost::python::object valueExp)
+void PyTrace::observe(DirectiveID did, const boost::python::object & valueExp)
 {
   assert(trace->families.count(did));
   RootOfFamily root = trace->families[did];
@@ -169,7 +170,10 @@ struct Inferer
   size_t transitions;
   vector<boost::shared_ptr<Inferer> > subkernels;
 
-  Inferer(boost::shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
+  Inferer(
+      const boost::shared_ptr<ConcreteTrace> & trace,
+      const boost::python::dict & params)
+    : trace(trace)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
     if (kernel == "mh") {
@@ -240,7 +244,7 @@ struct Inferer
   }
 };
 
-double PyTrace::primitive_infer(boost::python::dict params)
+double PyTrace::primitive_infer(const boost::python::dict & params)
 {
   Inferer inferer(trace, params);
   return inferer.infer();
@@ -264,13 +268,19 @@ void PyTrace::registerConstraints()
   trace->registerConstraints();
 }
 
-double PyTrace::logLikelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
+double PyTrace::logLikelihoodAt(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
+{
   ScopeID scope = parseValueO(pyscope);
   BlockID block = parseValueO(pyblock);
   return trace->logLikelihoodAt(scope, block);
 }
 
-double PyTrace::logJointAt(boost::python::object pyscope, boost::python::object pyblock) {
+double PyTrace::logJointAt(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
+{
   ScopeID scope = parseValueO(pyscope);
   BlockID block = parseValueO(pyblock);
   return trace->logJointAt(scope, block);
@@ -281,14 +291,16 @@ double PyTrace::likelihoodWeight()
   return trace->likelihoodWeight();
 }
 
-int PyTrace::numNodesInBlock(boost::python::object pyscope, boost::python::object pyblock)
+int PyTrace::numNodesInBlock(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
 {
   ScopeID scope = parseValueO(pyscope);
   BlockID block = parseValueO(pyblock);
   return trace->getNodesInBlock(scope, block).size();
 }
 
-int PyTrace::numBlocksInScope(boost::python::object pyscope)
+int PyTrace::numBlocksInScope(const boost::python::object & pyscope)
 {
   ScopeID scope = parseValueO(pyscope);
   return trace->numBlocksInScope(scope);

@@ -21,18 +21,23 @@
 #include "psp.h"
 #include "args.h"
 
-struct MakeCSPOutputPSP : PSP
+struct MakeCSPOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct CSPRequestPSP : PSP
+struct CSPRequestPSP : virtual PSP
+  , AlwaysAssessablePSP
+  , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
   CSPRequestPSP(const vector<string>& symbols, VentureValuePtr expression, shared_ptr<VentureEnvironment> environment);
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const { return true; }
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   CSPRequestPSP* copy_help(ForwardingMap* m) const;
+
+  bool isRandom() const { return false; }
 
 private:
   vector<string> symbols;

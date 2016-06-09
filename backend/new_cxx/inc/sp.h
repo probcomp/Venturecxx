@@ -54,10 +54,10 @@ struct SPFamilies
   SPFamilies(const MapVVPtrRootOfFamily & families): families(families) {}
 
   MapVVPtrRootOfFamily families;
-  bool containsFamily(FamilyID id);
-  RootOfFamily getRootOfFamily(FamilyID id);
-  void registerFamily(FamilyID id, RootOfFamily root);
-  void unregisterFamily(FamilyID id);
+  bool containsFamily(const FamilyID & id);
+  RootOfFamily getRootOfFamily(const FamilyID & id);
+  void registerFamily(const FamilyID & id, const RootOfFamily & root);
+  void unregisterFamily(const FamilyID & id);
   SPFamilies* copy_help(ForwardingMap* m) const;
 };
 

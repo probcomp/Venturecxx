@@ -20,9 +20,10 @@
 
 #include "psp.h"
 
-struct BiplexOutputPSP : PSP
+struct BiplexOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 

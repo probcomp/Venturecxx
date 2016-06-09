@@ -47,7 +47,8 @@ CRPSPAux* CRPSPAux::copy_help(ForwardingMap* m) const
 }
 
 // Maker
-VentureValuePtr MakeCRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MakeCRPOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("make_crp", args, 1, 2);
 
@@ -81,7 +82,8 @@ boost::python::dict CRPSP::toPython(Trace * trace, shared_ptr<SPAux> spAux) cons
   return value;
 }
 
-VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr CRPOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("crp", args, 0);
 
@@ -111,7 +113,9 @@ VentureValuePtr CRPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) con
 }
 
 
-double CRPOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double CRPOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
@@ -124,7 +128,9 @@ double CRPOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) co
   }
 }
 
-void CRPOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void CRPOutputPSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
@@ -140,7 +146,9 @@ void CRPOutputPSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) con
   }
 }
 
-void CRPOutputPSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void CRPOutputPSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   shared_ptr<CRPSPAux> aux = dynamic_pointer_cast<CRPSPAux>(args->spAux);
   assert(aux);
