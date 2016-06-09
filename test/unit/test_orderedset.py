@@ -151,6 +151,7 @@ def test_iter(prng, klass, generator):
     for x, y in zip(elements, s):
         assert x == y
     check_order(elements, s)
+    assert s == klass(s)
 
 @checkem
 def test_len(prng, klass, generator):
