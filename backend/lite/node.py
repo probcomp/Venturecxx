@@ -23,6 +23,7 @@ from venture.lite.value import VentureValue
 
 class Node(object):
   def __init__(self, address):
+    assert address is not None
     self.address = address
     self.value = None
     self.children = OrderedSet()
