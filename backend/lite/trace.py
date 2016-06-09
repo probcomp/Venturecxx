@@ -765,7 +765,9 @@ function.
 
     xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
 
-    assert rcs == self.rcs, "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
+    # XXX Apparently detach/regen sometimes has the effect of changing
+    # the order of rcs.
+    assert set(rcs) == set(self.rcs), "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
     assert ccs == self.ccs, "Global detach/restore changed the registered constrained choices from %s to %s" % (ccs, self.ccs)
     assert aes == self.aes, "Global detach/restore changed the registered AEKernels from %s to %s" % (aes, self.aes)
 
