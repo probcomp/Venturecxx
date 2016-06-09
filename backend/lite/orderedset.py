@@ -16,6 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import copy
+
 from collections import OrderedDict
 
 
@@ -136,6 +138,16 @@ class OrderedFrozenSet(object):
 
     def copy(self):
         return type(self)(self)
+
+    def __copy__(self):
+        return type(self)(self)
+
+    def __deepcopy__(self, memo):
+        c = type(self)()
+        memo[id(self)] = c
+        for x in self:
+            c._dict[copy.deepcopy(x, memo)] = 1
+        return c
 
     def __repr__(self):
         return '%s([%s])' % \

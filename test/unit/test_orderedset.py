@@ -17,8 +17,9 @@
 
 from __future__ import division
 
-import scipy.stats
+import copy
 import random
+import scipy.stats
 
 from nose import SkipTest
 from nose.tools import assert_raises
@@ -349,6 +350,60 @@ def test_copy(prng, klass, generator):
     sc = s.copy()
     assert type(sc) == klass
     assert sc == s
+    sc = copy.copy(s)
+    assert type(sc) == klass
+    assert sc == s
+    sc = copy.deepcopy(s)
+    assert type(sc) == klass
+    assert sc == s
+
+@checkem
+def test_copy_mutation(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, 1 + pick_length(prng), generator)
+    x = elements[0]
+    s = klass(elements[1:])
+    sc = s.copy()
+    sc.add(x)
+    assert x in sc
+    assert x not in s
+    sc = copy.copy(s)
+    sc.add(x)
+    assert x in sc
+    assert x not in s
+    sc = copy.deepcopy(s)
+    sc.add(x)
+    assert x in sc
+    assert x not in s
+
+@checkem
+def test_deepcopy(prng, klass, generator):
+    if klass == OrderedFrozenSet:
+        raise SkipTest('destructive operations')
+    elements = pick_elements(prng, 1 + pick_length(prng), generator)
+    class C(object):
+        def __init__(self, s=None):
+            self.s = s
+        def __deepcopy__(self, memo):
+            c = C()
+            memo[id(self)] = c
+            c.s = copy.deepcopy(self.s, memo)
+            return c
+    s = klass(elements[1:])
+    c = C(s)
+    s.add(c)
+    assert c in s
+    assert c.s is s
+    cc = copy.deepcopy(c)
+    assert isinstance(cc, C)
+    assert isinstance(cc.s, klass)
+    assert cc in cc.s
+    assert c is not cc
+    assert c.s is not cc.s
+    cc.s.add(elements[0])
+    assert elements[0] in cc.s
+    assert elements[0] not in s
 
 @checkem
 def test_ior(prng, klass, generator):
