@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division
+
 import scipy.stats
+
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
@@ -35,3 +38,18 @@ def test_beta_tail():
     samples = collectSamples(ripl, 'p', nsamples)
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr=expression)
+
+def test_beta_thagomizer():
+    # Check that Beta with spiky tails yields sane samples, not NaN.
+    v = (1, 1/2, 1e-5, 1e-15, 1e-20, 1e-299, 1e-301)
+    nsamples = default_num_samples()
+    for a in v:
+        for b in v:
+            expression = '(beta %r %r)' % (a, b)
+            ripl = get_ripl()
+            for _ in xrange(nsamples):
+                sample = ripl.sample(expression)
+                assert 0 <= sample
+                assert sample <= 1
+                if a < 1e-16 or b < 1e-16:
+                    assert sample < 1e-16 or sample == 1
