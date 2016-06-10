@@ -1,5 +1,8 @@
 import copy
+import random
+import numpy as np
 
+from venture.lite.address import Address, List
 import venture.lite.types as t
 import venture.lite.exp as e
 from venture.lite.env import VentureEnvironment
@@ -35,8 +38,9 @@ class TraceActionSP(SimulationSP):
     return t.Pair(t.Blob, t.Blob).asVentureValue((result, trace))
 
 class BlankTraceSP(SimulationSP):
-  def simulate(self, _args):
-    return t.Blob.asVentureValue(BlankTrace())
+  def simulate(self, args):
+    seed = args.py_prng().randint(1, 2**31 - 1)
+    return t.Blob.asVentureValue(BlankTrace(seed))
 
 registerBuiltinSP("trace_property", TracePropertySP())
 registerBuiltinSP("trace_action", TraceActionSP())
@@ -73,7 +77,6 @@ class AbstractTrace(ITrace):
 
   def next_base_address(self):
     self.directive_counter += 1
-    from venture.lite.address import Address, List
     return Address(List(self.directive_counter))
 
   def eval_request(self, addr, exp, env):
@@ -103,15 +106,15 @@ class AbstractTrace(ITrace):
       value = self.register_made_sp(addr, sp)
     else:
       # SP application
-      values = []
+      nodes = []
       for index, subexp in enumerate(exp):
         subaddr = addr.extend(index)
         w, v = self.eval_family(subaddr, subexp, env)
         weight += w
-        values.append(v)
+        nodes.append(Node(subaddr, v))
 
-      sp_node = self.deref_sp(values[0])
-      args = values[1:]
+      sp_node = self.deref_sp(nodes[0])
+      args = nodes[1:]
 
       handle = self.construct_trace_handle(addr, sp_node, args)
       w, value = self.apply_sp(sp_node.value, handle)
@@ -162,13 +165,15 @@ class AbstractTrace(ITrace):
 
 
 class BlankTrace(AbstractTrace):
-  def __init__(self):
+  def __init__(self, seed):
     super(BlankTrace, self).__init__()
+    rng = random.Random(seed)
+    self.np_prng = np.random.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_prng = random.Random(rng.randint(1, 2**31 - 1))
     self.global_env = VentureEnvironment(self.builtin_environment())
     self.results = {}
 
   def builtin_environment(self):
-    from venture.lite.address import Address, List
     from venture.mite.builtin import builtInSPs
     from venture.mite.builtin import builtInValues
     builtin_env = VentureEnvironment()
@@ -186,21 +191,20 @@ class BlankTrace(AbstractTrace):
   def register_request(self, addr, exp, env): pass
 
   def register_response(self, addr, value):
-    if addr.rest.isEmpty() and addr.last.rest.isEmpty():
-      base_id = addr.last.last
-      self.results[base_id] = value
+    assert addr.last.rest.isEmpty()
+    base_id = addr.last.last
+    self.results[base_id] = value
 
   def register_constant(self, addr, value): pass
   def register_lookup(self, addr, orig_addr): pass
   def register_application(self, addr, arity, value): pass
   def register_made_sp(self, addr, sp): return SPRef((addr, sp))
-  def deref_sp(self, sp):
-    (addr, sp) = sp.makerNode
+  def deref_sp(self, sp_node):
+    (addr, sp) = sp_node.value.makerNode
     return Node(addr, sp)
 
   def construct_trace_handle(self, app_addr, sp_addr, args):
-    from venture.lite.sp_use import MockArgs
-    return MockArgs(args, None)
+    return TraceHandle(self, app_addr, sp_addr, args)
 
   def apply_sp(self, sp, args):
     return (0, sp.apply(args))
@@ -213,8 +217,53 @@ class BlankTrace(AbstractTrace):
     raise NotImplementedError
 
   def value_at(self, addr):
-    assert addr.rest.isEmpty() and addr.last.rest.isEmpty()
+    assert addr.last.rest.isEmpty()
     base_id = addr.last.last
     return self.results[base_id]
 
 
+# TODO: this signature retains backward compatibility with Args for now,
+# but we should remove that
+from venture.lite.psp import IArgs
+class TraceHandle(IArgs):
+  def __init__(self, trace, app_addr, sp_addr, args):
+    self.trace = trace
+    self.app_addr = self.node = app_addr
+    self.sp_addr = sp_addr
+    self.operandNodes = args
+    self.env = None
+
+  def operandValues(self):
+    return [node.value for node in self.operandNodes]
+
+  def py_prng(self):
+    return self.trace.py_prng
+
+  def np_prng(self):
+    return self.trace.np_prng
+
+  def request_address(self, request_id):
+    return self.app_addr.request(List((self.sp_addr, request_id)))
+
+  def newRequest(self, request_id, exp, env):
+    # TODO return Node(value, address) so that SPs don't have to use
+    # requestedValue all the time; this way the untraced interpreter
+    # doesn't have to retain requests with non-repeatable request_ids.
+    addr = self.request_address(request_id)
+    w, _ = self.trace.eval_request(addr, exp, env)
+    assert w == 0
+    return request_id
+
+  def incRequest(self, request_id):
+    # TODO remove ref-counting from trace layer
+    return request_id
+
+  def hasRequest(self, request_id):
+    # TODO remove ref-counting from trace layer
+    # XXX for now, this breaks the trace abstraction
+    addr = self.request_address(request_id)
+    return addr in self.trace.results
+
+  def requestedValue(self, request_id):
+    addr = self.request_address(request_id)
+    return self.trace.value_at(addr)
