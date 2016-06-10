@@ -142,6 +142,11 @@ class Puma(Backend):
 
 class Mite(Backend):
     """An instance of this class represents the Mite backend."""
+    def make_engine(self, persistent_inference_trace=True, seed=None):
+        from venture.mite import engine
+        seed = _seed(seed)
+        assert persistent_inference_trace
+        return engine.Engine(self, seed)
     def trace_constructor(self):
         from venture.mite import trace
         return trace.Trace
