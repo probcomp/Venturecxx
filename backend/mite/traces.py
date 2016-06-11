@@ -78,6 +78,14 @@ class CheckConsistentSP(TraceActionSP):
   def do_action(self, trace):
     return trace.check_consistent(), trace
 
+class SplitTraceSP(TraceActionSP):
+  result_type = t.Blob
+
+  def do_action(self, trace):
+    new_trace = copy.copy(trace)
+    new_trace.reseed(trace)
+    return new_trace, trace
+
 registerBuiltinSP("blank_trace", BlankTraceSP())
 registerBuiltinSP("next_base_address_f", NextBaseAddressSP())
 registerBuiltinSP("global_env_f", GlobalEnvSP())
@@ -85,6 +93,7 @@ registerBuiltinSP("eval_request_f", EvalRequestSP())
 registerBuiltinSP("bind_global_f", BindGlobalSP())
 registerBuiltinSP("register_observation_f", RegisterObservationSP())
 registerBuiltinSP("check_consistent_f", CheckConsistentSP())
+registerBuiltinSP("split_trace_f", SplitTraceSP())
 
 class ITrace(object):
   # external trace interface exposed to VentureScript
@@ -116,11 +125,16 @@ class AbstractTrace(ITrace):
 
   def __init__(self, seed):
     super(AbstractTrace, self).__init__()
-    rng = random.Random(seed)
-    self.np_prng = np.random.RandomState(rng.randint(1, 2**31 - 1))
-    self.py_prng = random.Random(rng.randint(1, 2**31 - 1))
+    prng = random.Random(seed)
+    self.np_prng = np.random.RandomState(prng.randint(1, 2**31 - 1))
+    self.py_prng = random.Random(prng.randint(1, 2**31 - 1))
     self.directive_counter = 0
     self.global_env = VentureEnvironment(self.builtin_environment())
+
+  def reseed(self, other):
+    prng = other.py_prng
+    self.np_prng = np.random.RandomState(prng.randint(1, 2**31 - 1))
+    self.py_prng = random.Random(prng.randint(1, 2**31 - 1))
 
   def builtin_environment(self):
     from venture.mite.builtin import builtInSPs
