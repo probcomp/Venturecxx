@@ -67,6 +67,9 @@ class ITrace(object):
   def value_at(self, address):
     raise NotImplementedError
 
+  def check_consistent(self):
+    raise NotImplementedError
+
 class AbstractTrace(ITrace):
   # common implementation of trace interface
   # defines internal interface for concrete trace representations
@@ -183,6 +186,9 @@ class AbstractTrace(ITrace):
   def value_at(self, addr):
     raise NotImplementedError
 
+  def check_consistent(self):
+    raise NotImplementedError
+
 
 class BlankTrace(AbstractTrace):
   def __init__(self, seed):
@@ -220,6 +226,10 @@ class BlankTrace(AbstractTrace):
     assert addr.last.rest.isEmpty()
     base_id = addr.last.last
     return self.results[base_id]
+
+  def check_consistent(self):
+    return all(self.results[id] == self.observations[id]
+               for id in self.observations)
 
 
 # TODO: this signature retains backward compatibility with Args for now,
