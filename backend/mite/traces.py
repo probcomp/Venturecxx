@@ -177,7 +177,7 @@ class AbstractTrace(ITrace):
     value = self.value_at(addr)
     self.global_env.addBinding(symbol, Node(addr, value))
 
-  def register_observation(self, exp, value):
+  def register_observation(self, addr, value):
     raise NotImplementedError
 
   def value_at(self, addr):
@@ -188,6 +188,7 @@ class BlankTrace(AbstractTrace):
   def __init__(self, seed):
     super(BlankTrace, self).__init__(seed)
     self.results = {}
+    self.observations = {}
 
   def register_request(self, addr, exp, env): pass
 
@@ -210,8 +211,10 @@ class BlankTrace(AbstractTrace):
   def apply_sp(self, sp, args):
     return (0, sp.apply(args))
 
-  def register_observation(self, exp, value):
-    raise NotImplementedError
+  def register_observation(self, addr, value):
+    assert addr.last.rest.isEmpty()
+    base_id = addr.last.last
+    self.observations[base_id] = value
 
   def value_at(self, addr):
     assert addr.last.rest.isEmpty()
