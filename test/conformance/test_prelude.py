@@ -107,6 +107,16 @@ class TestPrelude(TestCase):
     res = '({0} {1})'.format(container, ' '.join(res))
     return res
 
+  def _mk_random_list(self):
+    return self.mk_random_data('list', 'mixed')
+  def _mk_random_vector(self):
+    return self.mk_random_data('vector', 'mixed')
+  def _mk_random_simplex(self):
+    length = random.choice(range(*self.container_length))
+    data = np.random.uniform(0, 1, length)
+    data1 = data/np.sum(data)
+    return '(simplex %s)' % (' '.join('%.17e' % (datum,) for datum in data1),)
+
   @run_containers
   @on_inf_prim("none")
   def test_is_empty(self, container):
@@ -126,10 +136,14 @@ class TestPrelude(TestCase):
     # Check that to_list converts vectors and arrays properly. The
     # python representations pre and post conversion should agree, and
     # post-conversion the object should satisfy "is_pair"
-    for container in ['vector', 'array']:
+    for container, maker in (
+        ('vector', self._mk_random_vector),
+        ('list', self._mk_random_list),
+        ('simplex', self._mk_random_simplex),
+    ):
       self.reset_ripl()
       # make the data, check it's not a list to start
-      x = self.mk_random_data(container, 'mixed')
+      x = maker()
       x_python = self.array_to_list(self.r.assume('x', x), container)
       # convert, check that it does the right thing
       y_python = self.r.assume('y', ('(to_list x)'))
@@ -267,9 +281,9 @@ class TestPrelude(TestCase):
     self.assertEqual(self.r.sample('(abs -2.1)'), 2.1)
 
   def array_to_list(self, x, container):
-    # Vectors are returned as numpy arrays in lite backend; need to
-    # convert to lists to enable comparisons
-    if (container == 'vector') and (self.r.backend() == 'lite'):
+    # Vectors and simplices are returned as numpy arrays in lite
+    # backend; need to convert to lists to enable comparisons
+    if (container in ('vector', 'simplex')) and (self.r.backend() == 'lite'):
       return x.tolist()
     else:
       return x

@@ -887,6 +887,17 @@ are also supposed to sum to 1, but we are not checking that.
     from venture.lite.types import NumberType
     return VentureArrayUnboxed([f(p) for p in self.simplex], NumberType())
 
+  def asPythonList(self, elt_type=None):
+    from venture.lite.types import ProbabilityType
+    if elt_type is None:
+      return [ProbabilityType().asVentureValue(val) for val in self.simplex]
+    else:
+      if elt_type == ProbabilityType():
+        return self.simplex
+      else:
+        return [elt_type.asPython(ProbabilityType().asVentureValue(val))
+                for val in self.simplex]
+
 class VentureDict(VentureValue):
   def __init__(self,d):
     self.dict = d
