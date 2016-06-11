@@ -5,7 +5,7 @@ import numpy as np
 from venture.lite.address import Address, List
 import venture.lite.types as t
 import venture.lite.exp as e
-from venture.lite.env import VentureEnvironment
+from venture.lite.env import VentureEnvironment, EnvironmentType
 from venture.lite.value import SPRef
 
 from venture.untraced.node import Node, normalize
@@ -14,37 +14,77 @@ from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
 
-class TracePropertySP(SimulationSP):
-  def simulate(self, args):
-    values = args.operandValues()
-    trace = t.Blob.asPython(values[0])
-    prop_name = t.Symbol.asPython(values[1])
-    result = getattr(trace, prop_name)
-    return t.Pair(t.Blob, t.Blob).asVentureValue((result, trace))
-
-class TraceActionSP(SimulationSP):
-  def simulate(self, args):
-    values = args.operandValues()
-    trace = copy.deepcopy(t.Blob.asPython(values[0]))
-    method_name = t.Symbol.asPython(values[1])
-    def unbox(x):
-      if x in t.Blob:
-        return t.Blob.asPython(x)
-      else:
-        return t.Exp.asPython(x)
-    args = map(unbox, values[2:])
-    method = getattr(trace, method_name)
-    result = method(*args)
-    return t.Pair(t.Blob, t.Blob).asVentureValue((result, trace))
-
 class BlankTraceSP(SimulationSP):
   def simulate(self, args):
     seed = args.py_prng().randint(1, 2**31 - 1)
     return t.Blob.asVentureValue(BlankTrace(seed))
 
-registerBuiltinSP("trace_property", TracePropertySP())
-registerBuiltinSP("trace_action", TraceActionSP())
+class TraceActionSP(SimulationSP):
+  arg_types = []
+  result_type = t.Nil
+
+  def simulate(self, args):
+    values = args.operandValues()
+    trace = t.Blob.asPython(values[0])
+    args = [arg_t.asPython(value) for arg_t, value in
+            zip(self.arg_types, values[1:])]
+    result = self.do_action(trace, *args)
+    return t.Pair(self.result_type, t.Blob).asVentureValue(result)
+
+  def do_action(self, trace, *args):
+    raise NotImplementedError
+
+class NextBaseAddressSP(TraceActionSP):
+  result_type = t.Blob
+
+  def do_action(self, trace):
+    trace = copy.copy(trace)
+    address = trace.next_base_address()
+    return address, trace
+
+class GlobalEnvSP(TraceActionSP):
+  result_type = EnvironmentType()
+
+  def do_action(self, trace):
+    return trace.global_env, trace
+
+class EvalRequestSP(TraceActionSP):
+  arg_types = [t.Blob, t.Exp, EnvironmentType()]
+
+  def do_action(self, trace, addr, expr, env):
+    trace = copy.deepcopy(trace)
+    trace.eval_request(addr, expr, env)
+    return None, trace
+
+class BindGlobalSP(TraceActionSP):
+  arg_types = [t.Symbol, t.Blob]
+
+  def do_action(self, trace, symbol, addr):
+    trace = copy.deepcopy(trace)
+    trace.bind_global(symbol, addr)
+    return None, trace
+
+class RegisterObservationSP(TraceActionSP):
+  arg_types = [t.Blob, t.Object]
+
+  def do_action(self, trace, addr, value):
+    trace = copy.deepcopy(trace)
+    trace.register_observation(addr, value)
+    return None, trace
+
+class CheckConsistentSP(TraceActionSP):
+  result_type = t.Bool
+
+  def do_action(self, trace):
+    return trace.check_consistent(), trace
+
 registerBuiltinSP("blank_trace", BlankTraceSP())
+registerBuiltinSP("next_base_address_f", NextBaseAddressSP())
+registerBuiltinSP("global_env_f", GlobalEnvSP())
+registerBuiltinSP("eval_request_f", EvalRequestSP())
+registerBuiltinSP("bind_global_f", BindGlobalSP())
+registerBuiltinSP("register_observation_f", RegisterObservationSP())
+registerBuiltinSP("check_consistent_f", CheckConsistentSP())
 
 class ITrace(object):
   # external trace interface exposed to VentureScript
