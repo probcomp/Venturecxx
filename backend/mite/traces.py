@@ -71,9 +71,28 @@ class AbstractTrace(ITrace):
   # common implementation of trace interface
   # defines internal interface for concrete trace representations
 
-  def __init__(self):
+  def __init__(self, seed):
     super(AbstractTrace, self).__init__()
+    rng = random.Random(seed)
+    self.np_prng = np.random.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_prng = random.Random(rng.randint(1, 2**31 - 1))
     self.directive_counter = 0
+    self.global_env = VentureEnvironment(self.builtin_environment())
+
+  def builtin_environment(self):
+    from venture.mite.builtin import builtInSPs
+    from venture.mite.builtin import builtInValues
+    builtin_env = VentureEnvironment()
+    for name, value in builtInValues().iteritems():
+      addr = Address(List(name))
+      self.register_constant(addr, value)
+      builtin_env.addBinding(name, Node(addr, value))
+    for name, sp in builtInSPs().iteritems():
+      addr = Address(List(name))
+      self.register_constant(addr, sp)
+      value = self.register_made_sp(addr, sp)
+      builtin_env.addBinding(name, Node(addr, value))
+    return builtin_env
 
   def next_base_address(self):
     self.directive_counter += 1
@@ -155,7 +174,8 @@ class AbstractTrace(ITrace):
     raise NotImplementedError
 
   def bind_global(self, symbol, addr):
-    raise NotImplementedError
+    value = self.value_at(addr)
+    self.global_env.addBinding(symbol, Node(addr, value))
 
   def register_observation(self, exp, value):
     raise NotImplementedError
@@ -166,27 +186,8 @@ class AbstractTrace(ITrace):
 
 class BlankTrace(AbstractTrace):
   def __init__(self, seed):
-    super(BlankTrace, self).__init__()
-    rng = random.Random(seed)
-    self.np_prng = np.random.RandomState(rng.randint(1, 2**31 - 1))
-    self.py_prng = random.Random(rng.randint(1, 2**31 - 1))
-    self.global_env = VentureEnvironment(self.builtin_environment())
+    super(BlankTrace, self).__init__(seed)
     self.results = {}
-
-  def builtin_environment(self):
-    from venture.mite.builtin import builtInSPs
-    from venture.mite.builtin import builtInValues
-    builtin_env = VentureEnvironment()
-    for name, value in builtInValues().iteritems():
-      addr = Address(List(name))
-      self.register_constant(addr, value)
-      builtin_env.addBinding(name, Node(addr, value))
-    for name, sp in builtInSPs().iteritems():
-      addr = Address(List(name))
-      self.register_constant(addr, sp)
-      value = self.register_made_sp(addr, sp)
-      builtin_env.addBinding(name, Node(addr, value))
-    return builtin_env
 
   def register_request(self, addr, exp, env): pass
 
@@ -208,10 +209,6 @@ class BlankTrace(AbstractTrace):
 
   def apply_sp(self, sp, args):
     return (0, sp.apply(args))
-
-  def bind_global(self, symbol, addr):
-    value = self.value_at(addr)
-    self.global_env.addBinding(symbol, Node(addr, value))
 
   def register_observation(self, exp, value):
     raise NotImplementedError
