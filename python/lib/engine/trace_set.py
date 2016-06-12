@@ -40,6 +40,7 @@ class TraceSet(object):
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
+    assert seed is not None
     self._py_rng = random.Random(seed)
     seed = self._py_rng.randint(1, 2**31 - 1)
     trace = tr.Trace(self.backend.trace_constructor()(seed))

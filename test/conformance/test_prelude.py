@@ -107,10 +107,20 @@ class TestPrelude(TestCase):
     res = '({0} {1})'.format(container, ' '.join(res))
     return res
 
+  def _mk_random_list(self):
+    return self.mk_random_data('list', 'mixed')
+  def _mk_random_vector(self):
+    return self.mk_random_data('vector', 'mixed')
+  def _mk_random_simplex(self):
+    length = random.choice(range(*self.container_length))
+    data = np.random.uniform(0, 1, length)
+    data1 = data/np.sum(data)
+    return '(simplex %s)' % (' '.join('%.17e' % (datum,) for datum in data1),)
+
   @run_containers
   @on_inf_prim("none")
   def test_is_empty(self, container):
-    'Make sure that is_empty does what we expect.'
+    # Make sure that is_empty does what we expect.
     self.reset_ripl()
     cmd_str = '(is_empty ({0}))'.format(container)
     res = self.r.sample(cmd_str)
@@ -123,15 +133,17 @@ class TestPrelude(TestCase):
 
   @on_inf_prim("none")
   def test_to_list(self):
-    '''
-    Check that to_list converts vectors and arrays properly. The python
-    representations pre and post conversion should agree, and post-conversion
-    the object should satisfy "is_pair"
-    '''
-    for container in ['vector', 'array']:
+    # Check that to_list converts vectors and arrays properly. The
+    # python representations pre and post conversion should agree, and
+    # post-conversion the object should satisfy "is_pair"
+    for container, maker in (
+        ('vector', self._mk_random_vector),
+        ('list', self._mk_random_list),
+        ('simplex', self._mk_random_simplex),
+    ):
       self.reset_ripl()
       # make the data, check it's not a list to start
-      x = self.mk_random_data(container, 'mixed')
+      x = maker()
       x_python = self.array_to_list(self.r.assume('x', x), container)
       # convert, check that it does the right thing
       y_python = self.r.assume('y', ('(to_list x)'))
@@ -140,9 +152,7 @@ class TestPrelude(TestCase):
 
   @on_inf_prim("none")
   def test_from_list(self):
-    '''
-    Check that to_array and to_vector convert lists properly.
-    '''
+    # Check that to_array and to_vector convert lists properly.
     for container in ['vector', 'array']:
       self.reset_ripl()
       # vectors can only store numeric data
@@ -157,10 +167,10 @@ class TestPrelude(TestCase):
   @run_containers
   @on_inf_prim("none")
   def test_map(self, container):
-    '''
-    Test that applying "map" in Venture does the same thing as applying it
-    in Python; make sure it returns data of correct type.
-    '''
+    # Test that applying "map" in Venture does the same thing as
+    # applying it in Python; make sure it returns data of correct
+    # type.
+
     # list of functions to apply (2-tuple; first is Python, second Venture)
     fncs = [(lambda x: x + 2, '(lambda (x) (+ x 2))'),
             (lambda x: x - 2, '(lambda (x) (- x 2))'),
@@ -181,9 +191,8 @@ class TestPrelude(TestCase):
   @run_containers
   @on_inf_prim("none")
   def test_reduce(self, container):
-    '''
-    Test that applying "reduce" in Venture does same thing as in Python.
-    '''
+    # Test that applying "reduce" in Venture does same thing as in Python.
+
     # list of functions to apply, identity elements for the functions
     fncs = [(operator.add, '+', 0),
             (operator.mul, '*', 1)]
@@ -197,9 +206,7 @@ class TestPrelude(TestCase):
   @run_containers
   @on_inf_prim("none")
   def test_math(self, container):
-    '''
-    Test the "sum", "product", "mean" vector aggregators.
-    '''
+    # Test the "sum", "product", "mean" vector aggregators.
     fncs = [(np.sum, 'sum'), (np.prod, 'prod'), (np.mean, 'mean')]
     for f_py, f_ven in fncs:
       self.reset_ripl()
@@ -210,9 +217,7 @@ class TestPrelude(TestCase):
 
   @on_inf_prim("none")
   def test_negate(self):
-    '''
-    Make sure the Venture "negate" gives the negate of a number.
-    '''
+    # Make sure the Venture "negate" gives the negate of a number.
     self.reset_ripl()
     x = self.r.assume('x', np.random.randn())
     neg_x = self.r.sample('(negate x)')
@@ -220,9 +225,7 @@ class TestPrelude(TestCase):
 
   @on_inf_prim("none")
   def test_logit_logistic(self):
-    '''
-    Test that the logit and logistic functions do what they say.
-    '''
+    # Test that the logit and logistic functions do what they say.
     fncs = [(lambda x: 1 / (1 + np.exp(-x)), 'logistic', np.random.randn),
             (lambda x: np.log(x / (1 - x)), 'logit', np.random.uniform)]
     for f_py, f_ven, rand_fun in fncs:
@@ -235,7 +238,7 @@ class TestPrelude(TestCase):
   @run_containers
   @on_inf_prim("none")
   def test_scalar_mult(self, container):
-    'Test that multiplying by a scalar matches Python'
+    # Test that multiplying by a scalar matches Python
     self.reset_ripl()
     x = self.r.assume('x', self.mk_random_data(container, 'numeric'))
     y = self.r.assume('y', '(uniform_continuous 0 10)')
@@ -247,7 +250,7 @@ class TestPrelude(TestCase):
 
   @on_inf_prim("none")
   def test_range(self):
-    'Test that range function matches python'
+    # Test that range function matches python
     self.reset_ripl()
     start = int(self.r.assume('start', '(* 1 (uniform_discrete 1 10))'))
     stop = int(self.r.assume('stop', '(* 1 (uniform_discrete (+ 1 start) (+ 1 10)))'))
@@ -257,7 +260,7 @@ class TestPrelude(TestCase):
 
   @on_inf_prim("none")
   def test_matrices(self):
-    'Test that diagonal and identity matrices are as expected'
+    # Test that diagonal and identity matrices are as expected
     for fname in ['id_matrix', 'diag_matrix']:
       self.reset_ripl()
       D = self.r.assume('D', '(* 1 (uniform_discrete 1 10))')
@@ -278,19 +281,15 @@ class TestPrelude(TestCase):
     self.assertEqual(self.r.sample('(abs -2.1)'), 2.1)
 
   def array_to_list(self, x, container):
-    '''
-    Vectors are returned as numpy arrays in lite backend; need to convert to
-    lists to enable comparisons
-    '''
-    if (container == 'vector') and (self.r.backend() == 'lite'):
+    # Vectors and simplices are returned as numpy arrays in lite
+    # backend; need to convert to lists to enable comparisons
+    if (container in ('vector', 'simplex')) and (self.r.backend() == 'lite'):
       return x.tolist()
     else:
       return x
 
   def check_type(self, in_type, varname):
-    '''
-    Check that the type of the output variable is what we expect
-    '''
+    # Check that the type of the output variable is what we expect
     if in_type == 'list':
       self.assertTrue(self.r.sample('(is_pair {0})'.format(varname)))
     elif in_type == 'array':

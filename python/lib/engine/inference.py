@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from copy import copy
 import time
 
@@ -155,18 +156,15 @@ class Infer(object):
 
   def collect(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, None)
-    answer = {} # Map from column name to list of values; the values
-                # are parallel to the particles
-    std_names = ['iter', 'prt. id', 'time (s)', 'log score',
+    answer = OrderedDict() # Map from column name to list of values; the values
+                           # are parallel to the particles
+    std_names = ['iter', 'prt. id', 'time (s)',
                  'prt. log wgt.', 'prt. prob.']
     def collect_std_streams(engine):
       the_time = time.time() - engine.creation_time
       answer['iter'] = [1] * engine.num_traces()
       answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
-      # TODO Replace this by explicit references to
-      # (global_log_likelihood), because the current implementation is wrong
-      answer['log score'] = engine.logscore_all()
       log_weights = copy(engine.model.log_weights)
       answer['prt. log wgt.'] = log_weights
       answer['prt. prob.'] = logWeightsToNormalizedDirect(log_weights)
@@ -298,7 +296,7 @@ Dataset which is the result of the merge. """
     if other.ind_names is None:
       return self
     self._check_compat(other)
-    answer = {}
+    answer = OrderedDict()
     for (key, vals) in self.data.iteritems():
       if key == "iter" and len(vals) > 0:
         nxt = max(vals)
@@ -315,7 +313,7 @@ into it."""
     if self.ind_names is None:
       self.ind_names = other.ind_names
       self.std_names = other.std_names
-      self.data = dict([name, []] for name in self.ind_names + self.std_names)
+      self.data = OrderedDict([name, []] for name in self.ind_names + self.std_names)
     self._check_compat(other)
     for key in self.data.keys():
       if key == "iter" and len(self.data[key]) > 0:

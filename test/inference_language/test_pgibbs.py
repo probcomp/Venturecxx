@@ -34,7 +34,7 @@ def testPGibbsBasic1():
 
 @statisticalTest
 def checkPGibbsBasic1(in_parallel):
-  """Basic sanity test"""
+  # Basic sanity test
   ripl = get_ripl()
   ripl.predict("(bernoulli)",label="pid")
   infer = "(pgibbs default one 2 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
@@ -50,7 +50,7 @@ def testPGibbsBasic2():
 
 @statisticalTest
 def checkPGibbsBasic2(in_parallel):
-  """Basic sanity test"""
+  # Basic sanity test
   ripl = get_ripl()
   ripl.assume("x","(flip 0.1)",label="pid")
   infer = "(pgibbs default one 2 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
@@ -69,7 +69,8 @@ def testFuncPGibbsBlockingMHHMM1():
 
 @statisticalTest
 def checkPGibbsBlockingMHHMM1(operator):
-  """The point of this is that it should give reasonable results in very few transitions but with a large number of particles."""
+  # The point of this is that it should give reasonable results in
+  # very few transitions but with a large number of particles.
   ripl = get_ripl()
 
   ripl.assume("x0","(tag 0 0 (normal 0.0 1.0))")

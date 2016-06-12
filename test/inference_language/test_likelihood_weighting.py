@@ -29,7 +29,8 @@ from venture.test.stats import statisticalTest
 @statisticalTest
 @on_inf_prim("likelihood_weight")
 def testNormalWithObserve1():
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -53,19 +54,19 @@ def collectLikelihoodWeighted(ripl, address):
 
 @on_inf_prim("likelihood_weight")
 def testMultiprocessingRegression():
-  """Checking for a strange bug in likelihood_weight when using parallel particles.
+  # Checking for a strange bug in likelihood_weight when using
+  # parallel particles.
+  #
+  # The bug manifested as likelihood_weight producing a zero weight
+  # for the distinguished particle every time.
+  #
+  # The problem actually was that the dump method of
+  # engine.trace.Trace had the side-effect of unincorporating all
+  # observations from the trace being dumped.  This would happen to
+  # the distinguished trace at the beginning of every infer command,
+  # because the Engine would request the distinguished trace in order
+  # to perpetrate the self-evaluating scope hack.
 
-The bug manifested as likelihood_weight producing a zero weight for
-the distinguished particle every time.
-
-The problem actually was that the dump method of engine.trace.Trace had the
-side-effect of unincorporating all observations from the trace being
-dumped.  This would happen to the distinguished trace at the beginning
-of every infer command, because the Engine would request the
-distinguished trace in order to perpetrate the self-evaluating scope
-hack.
-
-  """
   ripl = get_ripl()
   ripl.infer('(resample_multiprocess 2)')
   ripl.assume('x', '(normal 0 1)')

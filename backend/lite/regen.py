@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numbers
+from collections import OrderedDict
 
 from venture.exception import VentureException
 from venture.lite.consistency import assertTorus
@@ -45,7 +46,7 @@ def regenAndAttach(trace, scaffold, shouldRestore, omegaDB, gradients):
 def regenAndAttachAtBorder(trace, border, scaffold,
                            shouldRestore, omegaDB, gradients):
   weight = 0
-  constraintsToPropagate = {}
+  constraintsToPropagate = OrderedDict()
   for node in border:
 #    print "regenAndAttach...", node
     if scaffold.isAbsorbing(node):

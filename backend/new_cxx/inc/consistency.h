@@ -23,8 +23,8 @@
 struct Scaffold;
 struct Trace;
 
-void assertTorus(shared_ptr<Scaffold> scaffold);
-void assertTrace(Trace * trace, shared_ptr<Scaffold> scaffold);
+void assertTorus(const shared_ptr<Scaffold> & scaffold);
+void assertTrace(Trace * trace, const shared_ptr<Scaffold> & scaffold);
 
 
 

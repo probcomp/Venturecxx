@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from copy import deepcopy
 import math
 
 from scipy.special import digamma, gammaln
 
+from venture.lite.orderedset import OrderedSet
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -50,9 +52,9 @@ with the valid domains will results in dangerous behavior.
 
 class CRPSPAux(SPAux):
   def __init__(self):
-    self.tableCounts = {}
+    self.tableCounts = OrderedDict()
     self.nextTable = 1
-    self.freeTables = set()
+    self.freeTables = OrderedSet()
     self.numTables = 0
     self.numCustomers = 0
 
@@ -74,10 +76,10 @@ class CRPSP(SP):
     return CRPSPAux()
 
   def show(self, spaux):
-    return {
-      'type' : 'crp',
-      'counts': spaux.tableCounts,
-    }
+    return OrderedDict([
+      ('type', 'crp'),
+      ('counts', spaux.tableCounts),
+    ])
 
 class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):

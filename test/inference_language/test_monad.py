@@ -52,7 +52,7 @@ def testMonadicSmoke():
 
 @on_inf_prim("sample")
 def testMonadicSmoke2():
-  """Same as above, but in venture script"""
+  # Same as above, but in venture script
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.set_mode("venture_script")
   ripl.execute_program("""

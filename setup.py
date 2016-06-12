@@ -149,6 +149,16 @@ ext_modules = []
 packages = [
     "venture",
     "venture.engine",
+    "venture.ggplot",
+    "venture.ggplot.components",
+    "venture.ggplot.coords",
+    "venture.ggplot.exampledata",
+    "venture.ggplot.geoms",
+    "venture.ggplot.scales",
+    "venture.ggplot.stats",
+    "venture.ggplot.tests",
+    "venture.ggplot.themes",
+    "venture.ggplot.utils",
     "venture.lite",
     "venture.lite.infer",
     "venture.untraced",
@@ -329,7 +339,6 @@ install_requires = parse_req_file("install_requires.txt")
 tests_require = [
     'nose>=1.3',
     'nose-testconfig>=0.9',
-    'nose-ignore-docstring>=0.2',
     'nose-cov>=1.6',
     'flaky',
     'pexpect',
@@ -371,13 +380,24 @@ setup (
     packages = packages,
     package_dir = {
         "venture": "python/lib/",
+        "venture.ggplot": "external/ggplot/dist/ggplot",
         "venture.lite": "backend/lite/",
         "venture.untraced": "backend/untraced/",
         "venture.plex": "external/plex/dist/Plex/",
         "venture.puma": "backend/new_cxx/",
         "venture.test": "test/",
     },
-    package_data = {'':['*.vnt']},
+    package_data = {
+        '': ['*.vnt'],
+        'venture.ggplot': [
+            'tests/baseline_images/%s/*' % (x,)
+            for x in os.listdir(
+                    'external/ggplot/dist/ggplot/tests/baseline_images')
+        ] + [
+            'exampledata/*.csv',
+            'geoms/*.png',
+        ],
+    },
     ext_modules = ext_modules,
     scripts = ['script/venture', 'script/vendoc'],
     cmdclass={

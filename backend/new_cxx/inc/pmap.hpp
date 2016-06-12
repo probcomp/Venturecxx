@@ -44,19 +44,19 @@ class PMap
 public:
   PMap() : root(new Node<Key, Value>()) {}
 
-  bool contains(const Key& key)
+  bool contains(const Key& key) const
   {
     //      cout << "pmap::contains" << endl;
     return Node<Key, Value>::node_contains(root, key, comp);
   }
 
-  Value lookup(const Key& key)
+  const Value & lookup(const Key& key) const
   {
     //      cout << "pmap::lookup" << endl;
     return Node<Key, Value>::node_lookup(root, key, comp);
   }
 
-  PMap insert(const Key& key, const Value& value)
+  PMap insert(const Key& key, const Value& value) const
   {
     //      cout << "pmap::insert" << endl;
     return PMap(Node<Key, Value>::node_insert(root, key, value, comp));
@@ -71,24 +71,24 @@ public:
   analogy to Data.PMap.adjust from the Haskell standard library.
   */
   template <class Function>
-  PMap adjust(const Key& key, const Function& f)
+  PMap adjust(const Key& key, const Function& f) const
   {
     return PMap(Node<Key, Value>::node_adjust(root, key, f, comp));
   }
 
-  PMap remove(const Key& key)
+  PMap remove(const Key& key) const
   {
     return PMap(Node<Key, Value>::node_remove(root, key, comp));
   }
 
-  size_t size() { return root->size; }
+  size_t size() const { return root->size; }
 
-  vector<Key> keys()
+  vector<Key> keys() const
   {
     return Node<Key, Value>::node_traverse_keys_in_order(root);
   }
 
-  vector<pair<Key, Value> > items() {
+  vector<pair<Key, Value> > items() const {
     return Node<Key, Value>::node_traverse_items_in_order(root);
   }
 };

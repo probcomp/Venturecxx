@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from venture.lite.exception import VentureError
 from venture.lite.value import VentureValue
 from venture.lite.value import registerVentureType
@@ -31,7 +33,7 @@ from venture.lite.types import standard_venture_type
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
-    self.frame = {}
+    self.frame = OrderedDict()
     if ids:
       for sym in ids:
         assert isinstance(sym, str)
@@ -77,7 +79,7 @@ class VentureEnvironment(VentureValue):
 
   def asStackDict(self, _trace=None):
     # Methinks environments can be pretty opaque things for now.
-    return {"type":"environment", "value":self}
+    return OrderedDict([("type", "environment"), ("value", self)])
   @staticmethod
   def fromStackDict(thing): return thing["value"]
 

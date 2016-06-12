@@ -34,7 +34,8 @@ using std::isfinite;
    We have two options: change the code to sample directly to use Eigen instead of GSL,
    or change Eigen to GSL everywhere. */
 
-VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr MVNormalPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("normal", args, 2);
 
@@ -62,7 +63,9 @@ VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  con
 }
 
 
-double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double MVNormalPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong

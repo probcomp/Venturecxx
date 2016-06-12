@@ -58,7 +58,7 @@ def test_profiling1():
 @broken_in('puma', "Profiler only implemented for Lite")
 @on_inf_prim("none") # Does not test inference quality of anything
 def test_profiling_likelihoodfree():
-  "Make sure profiling doesn't break with likelihood-free SP's"
+  # Make sure profiling doesn't break with likelihood-free SP's
   class TestPSP(LikelihoodFreePSP):
     def simulate(self, args):
       x = args.operandValues()[0]

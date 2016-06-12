@@ -20,12 +20,12 @@
 
 #include "types.h"
 
-bool isVariable(VentureValuePtr exp);
-bool isSelfEvaluating(VentureValuePtr exp);
-bool isQuotation(VentureValuePtr exp);
+bool isVariable(const VentureValuePtr & exp);
+bool isSelfEvaluating(const VentureValuePtr & exp);
+bool isQuotation(const VentureValuePtr & exp);
 
-VentureValuePtr textOfQuotation(VentureValuePtr exp);
-VentureValuePtr quote(VentureValuePtr exp);
+VentureValuePtr textOfQuotation(const VentureValuePtr & exp);
+VentureValuePtr quote(const VentureValuePtr & exp);
 
 
 #endif

@@ -62,7 +62,11 @@ bool Scaffold::isResampling(Node * node) { return regenCounts.count(node); }
 bool Scaffold::isAbsorbing(Node * node) { return absorbing.count(node); }
 bool Scaffold::isAAA(Node * node) { return aaa.count(node); }
 bool Scaffold::hasLKernel(Node * node) { return lkernels.count(node); }
-void Scaffold::registerLKernel(Node * node, boost::shared_ptr<LKernel> lkernel) { lkernels[node] = lkernel; }
+void Scaffold::registerLKernel(
+    Node * node, const boost::shared_ptr<LKernel> & lkernel)
+{
+  lkernels[node] = lkernel;
+}
 
 boost::shared_ptr<LKernel> Scaffold::getLKernel(Node * node)
 {

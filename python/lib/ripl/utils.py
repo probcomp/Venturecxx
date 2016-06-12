@@ -17,6 +17,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
+
 def strip_types(value):
     if isinstance(value, dict) and "type" in value and "value" in value:
         return strip_types(value['value'])
@@ -27,7 +29,7 @@ def strip_types(value):
     return value
 
 def strip_types_from_dict_values(value):
-    return dict([(k, strip_types(v)) for (k,v) in value.iteritems()])
+    return OrderedDict([(k, strip_types(v)) for (k,v) in value.iteritems()])
 
 # This list of functions defines the public REST API
 # of the Ripl server and client

@@ -55,7 +55,7 @@ def myCollectSamples(ripl, method):
 
 @statisticalTest
 def checkSliceBasic1(slice_method):
-  "Basic sanity test for slice"
+  # Basic sanity test for slice
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
@@ -111,7 +111,7 @@ def checkSliceNormalWithObserve2b(slice_method):
 
 @statisticalTest
 def checkSliceStudentT1(slice_method):
-  "Simple program involving simulating from a student_t"
+  # Simple program involving simulating from a student_t
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
@@ -134,7 +134,7 @@ def checkSliceStudentT1(slice_method):
 
 @statisticalTest
 def checkSliceStudentT2(slice_method):
-  "Simple program involving simulating from a student_t"
+  # Simple program involving simulating from a student_t
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()
@@ -158,7 +158,7 @@ def checkSliceStudentT2(slice_method):
 
 @statisticalTest
 def checkSliceL(slice_method):
-  "Checks slice sampling on an L-shaped distribution."
+  # Checks slice sampling on an L-shaped distribution.
   if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl()

@@ -18,13 +18,15 @@
 """An example of Geweke testing a simple Gaussian model."""
 
 import os
-from venture.shortcuts import make_lite_church_prime_ripl
-import numpy as np
-import pandas as pd
+
 from matplotlib import pyplot as plt
-import seaborn as sns
 from scipy.stats import norm
 from statsmodels.distributions import ECDF
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+from venture.shortcuts import make_lite_church_prime_ripl
 
 VERBOSE = False
 NSAMPLE = 1000

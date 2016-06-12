@@ -17,6 +17,7 @@
 
 import math
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
@@ -31,7 +32,7 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
       # The particle is a way to regen without clobbering the underlying trace
       # TODO Do repeated regens along the same scaffold actually work?
-      return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),{})
+      return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),OrderedDict())
   return f
 
 class SliceOperator(object):
@@ -79,7 +80,7 @@ class SliceOperator(object):
     xiLD = f(proposedValue)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
-    xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
+    xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,OrderedDict())
 
     # Cancel out weight compensation.  From Puma's "slice.cxx":
     #  "This is subtle. We cancel out the weight compensation that we got
@@ -93,7 +94,7 @@ class SliceOperator(object):
 
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
-    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,OrderedDict())
     return self.scaffold.numAffectedNodes()
 
 

@@ -32,6 +32,7 @@ import venture.value.dicts as v
 class Engine(object):
 
   def __init__(self, backend, seed, persistent_inference_trace=True):
+    assert seed is not None
     self._py_rng = random.Random(seed)
     self.model = self.new_model(backend)
     self.directiveCounter = 0

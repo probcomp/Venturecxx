@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 import random
 
-import numpy.random
+import numpy.random as npr
 
 from venture.lite.request import Request
 from venture.lite.sp import VentureSPRecord
@@ -45,20 +46,30 @@ def fromStackDict(thing):
 def asStackDict(thing):
     # proxy for VentureValue.asStackDict that handles SPs by wrapping them
     if isinstance(thing, VentureSPRecord):
-        return {"type": "foreign_sp", "value": thing.show(),
-                "sp": ForeignLiteSP(thing.sp), "aux": thing.spAux}
+        return OrderedDict([
+            ("type", "foreign_sp"),
+            ("value", thing.show()),
+            ("sp", ForeignLiteSP(thing.sp)),
+            ("aux", thing.spAux),
+        ])
     elif isinstance(thing, Request):
-        return {"type": "request", "value": {"esrs": thing.esrs, "lsrs": thing.lsrs}}
+        return OrderedDict([
+            ("type", "request"),
+            ("value",
+             OrderedDict([("esrs", thing.esrs), ("lsrs", thing.lsrs)])),
+        ])
     else:
         return thing.asStackDict()
 
 def asArgsObject(args):
-    prng = random.Random(args['seed'])
+    seed = args['seed']
+    assert seed is not None
+    prng = random.Random(seed)
     return MockArgs(
         map(fromStackDict, args.get('operandValues')),
         args.get('spaux'),
         py_rng=random.Random(prng.randint(1, 2**31 - 1)),
-        np_rng=numpy.random.RandomState(prng.randint(1, 2**31 - 1)),
+        np_rng=npr.RandomState(prng.randint(1, 2**31 - 1)),
         madeSPAux=args.get('madeSPAux'))
 
 class ForeignLitePSP(object):
@@ -170,7 +181,8 @@ class ForeignLiteSP(object):
     def hasAEKernel(self):
         return self.sp.hasAEKernel()
     def AEInfer(self, aux, seed):
-        np_rng = numpy.random.RandomState(seed)
+        assert seed is not None
+        np_rng = npr.RandomState(seed)
         return self.sp.AEInfer(aux, np_rng)
 
     def show(self, spaux):

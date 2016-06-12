@@ -21,14 +21,15 @@
 #include "args.h"
 #include "sps/scope.h"
 
-ConstantNode * Trace::createConstantNode(VentureValuePtr value)
+ConstantNode * Trace::createConstantNode(const VentureValuePtr & value)
 {
   ConstantNode * constantNode = new ConstantNode(value);
   setValue(constantNode, value);
   return constantNode;
 }
 
-LookupNode * Trace::createLookupNode(Node * sourceNode, VentureValuePtr sym)
+LookupNode * Trace::createLookupNode(
+  Node * sourceNode, const VentureValuePtr & sym)
 {
   LookupNode * lookupNode = new LookupNode(sourceNode, sym);
   setValue(lookupNode, getValue(sourceNode));
@@ -38,7 +39,11 @@ LookupNode * Trace::createLookupNode(Node * sourceNode, VentureValuePtr sym)
 }
 
 
-pair<RequestNode*, OutputNode*> Trace::createApplicationNodes(Node * operatorNode, const vector<Node*>& operandNodes, const boost::shared_ptr<VentureEnvironment>& env, VentureValuePtr exp)
+pair<RequestNode*, OutputNode*> Trace::createApplicationNodes(
+  Node * operatorNode,
+  const vector<Node*> & operandNodes,
+  const boost::shared_ptr<VentureEnvironment> & env,
+  const VentureValuePtr & exp)
 {
   RequestNode * requestNode = new RequestNode(operatorNode, operandNodes, env);
   OutputNode * outputNode = new OutputNode(operatorNode, operandNodes, requestNode, env, exp);
@@ -128,10 +133,10 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
 
   boost::shared_ptr<PSP> psp = getMadeSP(getOperatorSPMakerNode(outputNode))->getPSP(outputNode);
 
-  if (dynamic_pointer_cast<ESRRefOutputPSP>(psp)) {
+  if (dynamic_cast<ESRRefOutputPSP *>(psp.get())) {
     assert(getESRParents(outputNode).size() == 1);
     return getOutermostNonReferenceNode(getESRParents(outputNode)[0].get());
-  } else if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  } else if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     return getOutermostNonReferenceNode(outputNode->operandNodes[2]);
   } else {
     return node;
@@ -139,4 +144,7 @@ Node * Trace::getOutermostNonReferenceNode(Node * node)
 }
 
 
-double Trace::logDensityOfBlock(ScopeID scope) { return -1 * log(numBlocksInScope(scope)); }
+double Trace::logDensityOfBlock(const ScopeID & scope)
+{
+  return -1 * log(numBlocksInScope(scope));
+}

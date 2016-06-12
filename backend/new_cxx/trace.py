@@ -78,6 +78,7 @@ class Trace(object):
 
   def has_own_prng(self): return True
   def set_seed(self, seed):
+    assert seed is not None
     prng = random.Random(seed)
     # XXX It is unclear why 0 and >=2^31 are not allowed here, but it
     # will be better to fix this when we replace all seeds by 32-byte

@@ -25,7 +25,7 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testPoisson1():
-  "Check that Poisson simulates and absorbs without crashing."
+  # Check that Poisson simulates and absorbs without crashing.
   ripl = get_ripl()
 
   ripl.assume("lambda","(gamma 1 1)",label="pid")
@@ -36,7 +36,7 @@ def testPoisson1():
 
 @statisticalTest
 def testPoisson2():
-  "Check that Poisson simulates correctly."
+  # Check that Poisson simulates correctly.
   ripl = get_ripl()
 
   ripl.assume("lambda","5")

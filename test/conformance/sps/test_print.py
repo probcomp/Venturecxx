@@ -32,7 +32,7 @@ def extract_integer(captured):
 @broken_in("puma", "TODO: implement in-model debug print in puma")
 @on_inf_prim("none")
 def test_print1():
-  'Make sure that print prints the correct values by intercepting output'
+  # Make sure that print prints the correct values by intercepting output
   ripl = get_ripl()
   x = ripl.assume('x', '(uniform_discrete 1 10)')
   y = ripl.assume('y', '(uniform_discrete 1 10)')
@@ -47,7 +47,7 @@ def test_print1():
 @broken_in("puma", "TODO: implement in-model debug print in puma")
 @on_inf_prim("none")
 def test_print2():
-  'Another test for consistency by intercepting output'
+  # Another test for consistency by intercepting output
   ripl = get_ripl()
   program = '''(sample (+ (debug 'x (uniform_discrete 1 10))
                           (debug 'y (uniform_discrete 1 10))))'''
