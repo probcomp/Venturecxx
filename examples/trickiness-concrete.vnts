@@ -24,23 +24,23 @@ assume weight = if (is_tricky) {
 } else {
   0.5
 };
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_prior_trick_mar), quote( h0)));
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_prior_weight_mar), quote(h0)));
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_prior_joint), quote(p0d1d)));
+plotf_to_file("concrete_prior_trick_mar", "h0", run(collect(is_tricky)));
+plotf_to_file("concrete_prior_weight_mar", "h0", run(collect(weight)));
+plotf_to_file("concrete_prior_joint", "p0d1d", run(collect(is_tricky, weight)));
 observe bernoulli(weight) = 1;
 observe bernoulli(weight) = 1;
 observe bernoulli(weight) = 1;
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_obs_trick_mar), quote(h0)));
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_obs_weight_mar), quote(h0)));
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_obs_joint), quote(p0d1d)));
+plotf_to_file("concrete_obs_trick_mar", "h0", run(collect(is_tricky)));
+plotf_to_file("concrete_obs_weight_mar", "h0", run(collect(weight)));
+plotf_to_file("concrete_obs_joint", "p0d1d", run(collect(is_tricky, weight)));
 infer mh(default, one, 3);
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_trick_mar), quote(h0)));
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_weight_mar), quote(h0)));
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_joint), quote(p0d1d)));
+plotf_to_file("concrete_trick_mar", "h0", run(collect(is_tricky)));
+plotf_to_file("concrete_weight_mar", "h0", run(collect(weight)));
+plotf_to_file("concrete_joint", "p0d1d", run(collect(is_tricky, weight)));
 observe bernoulli(weight) = 1;
 observe bernoulli(weight) = 1;
 observe bernoulli(weight) = 1;
 infer mh(default, one, 3);
-infer bind(collect(is_tricky), curry3(plotf_to_file, quote(concrete_more_data_trick_mar), quote(h0)));
-infer bind(collect(weight), curry3(plotf_to_file, quote(concrete_more_data_weight_mar), quote(h0)));
-infer bind(collect(is_tricky, weight), curry3(plotf_to_file, quote(concrete_more_data_joint), quote(p0d1d)));
+plotf_to_file("concrete_more_data_trick_mar", "h0", run(collect(is_tricky)));
+plotf_to_file("concrete_more_data_weight_mar", "h0", run(collect(weight)));
+plotf_to_file("concrete_more_data_joint", "p0d1d", run(collect(is_tricky, weight)));
