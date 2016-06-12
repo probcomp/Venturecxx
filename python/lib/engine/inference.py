@@ -42,6 +42,22 @@ class Infer(object):
     self.engine = engine
 
   @staticmethod
+  def _canonicalize(fn):
+    if isinstance(fn, VentureString):
+      return fn.getString()
+    else:
+      return fn
+
+  @staticmethod
+  def _canonicalize_tree(thing):
+    if isinstance(thing, basestring):
+      return thing
+    elif isinstance(thing, VentureString):
+      return thing.getString()
+    elif isinstance(thing, list):
+      return [Infer._canonicalize_tree(t) for t in thing]
+
+  @staticmethod
   def _format_filenames(filenames,spec):
     if isinstance(filenames, basestring) or \
        isinstance(filenames, VentureString):
@@ -54,7 +70,7 @@ class Infer(object):
           'The number of specs must match the number of filenames.')
     else:
       if isinstance(spec, list) and len(spec) == len(filenames):
-        return [filename + '.png' for filename in filenames]
+        return [Infer._canonicalize(filename) + '.png' for filename in filenames]
       else:
         raise VentureValueError(
           'The number of specs must match the number of filenames.')
@@ -132,10 +148,12 @@ class Infer(object):
   def printf(self, dataset): print dataset.asPandas()
   def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
+    spec = self._canonicalize_tree(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
+    spec = self._canonicalize_tree(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
                         self._format_filenames(filenames, spec))
   def sweep(self, dataset):
