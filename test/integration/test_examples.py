@@ -56,16 +56,6 @@ def testVentureExamplesPuma():
   for ex in ["venture puma -f examples/plotting/bimodal.vnt",
              "venture puma -f examples/plotting/dice_plot.vnt",
              "venture puma -f examples/plotting/normal_plot.vnt",
-             "venture puma -f examples/trickiness-concrete.vnts",
-             "venture puma -f examples/trickiness-concrete-2.vnts",
-  ]:
-    yield checkVentureExample, ex
-
-@gen_in_backend("none")
-@gen_needs_backend("lite")
-@gen_needs_ggplot
-def testVentureExamplesLitePlot():
-  for ex in ["venture lite -f examples/trickiness-ideal.vnts",
   ]:
     yield checkVentureExample, ex
 
@@ -105,6 +95,29 @@ def temp_directory(suffix):
   finally:
     if temp_dir is not None:
       shutil.rmtree(temp_dir)
+
+def checkVentureExampleRude(command):
+  with temp_directory("plotpen") as plotpen:
+    assert s.call(command, cwd=plotpen, shell=True) == 0
+
+@gen_in_backend("none")
+@gen_needs_backend("lite")
+@gen_needs_ggplot
+def testVentureExamplesLitePlot():
+  my_dir = os.path.abspath(os.path.dirname(__file__))
+  for ex in ["venture lite -f %s/../../examples/trickiness-ideal.vnts" % (my_dir,),
+  ]:
+    yield checkVentureExampleRude, ex
+
+@gen_in_backend("none")
+@gen_needs_backend("puma")
+@gen_needs_ggplot
+def testVentureExamplesPumaPlot():
+  my_dir = os.path.abspath(os.path.dirname(__file__))
+  for ex in ["venture puma -f %s/../../examples/trickiness-concrete.vnts" % (my_dir,),
+             "venture puma -f %s/../../examples/trickiness-concrete-2.vnts" % (my_dir,),
+  ]:
+    yield checkVentureExampleRude, ex
 
 @in_backend("none")
 @needs_backend("lite")
