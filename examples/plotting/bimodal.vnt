@@ -30,4 +30,4 @@
 
 [infer (do
   (mh default one 1)
-  (plotf "p0d1dr" (run (collect x y))))]
+  (plotf_to_file "bimodal" "p0d1dr" (run (collect x y))))]

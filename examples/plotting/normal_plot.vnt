@@ -23,4 +23,7 @@
    (do (repeat 100
         (do (mh default all 1)
             (into d (run (collect x y (abs (- y x)))))))
-       (plotf (quote (lctl pc0r h0 h1)) d)))]
+       (plotf_to_file
+        (list "normal1" "normal2" "normal3" "normal4")
+        (list "lctl" "pc0r" "h0" "h1")
+        d)))]
