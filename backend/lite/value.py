@@ -19,6 +19,7 @@
 
 The design currently lives in doc/type-system.md
 """
+from collections import OrderedDict
 from numbers import Number
 import hashlib
 import operator
@@ -900,6 +901,7 @@ are also supposed to sum to 1, but we are not checking that.
 
 class VentureDict(VentureValue):
   def __init__(self,d):
+    assert isinstance(d, OrderedDict)
     self.dict = d
 
   def getDict(self):
@@ -911,7 +913,7 @@ class VentureDict(VentureValue):
   @staticmethod
   def fromStackDict(thing):
     f = VentureValue.fromStackDict
-    return VentureDict({f(key):f(val) for (key, val) in thing["value"]})
+    return VentureDict(OrderedDict((f(key), f(val)) for (key, val) in thing["value"]))
 
   def equalSameType(self, other):
     return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0
@@ -1086,27 +1088,27 @@ venture_types = [
 
 venture_numeric_types = [VentureNumber, VentureInteger]
 
-stackable_types = {
-  "number": VentureNumber,
-  "real": VentureNumber,
-  "integer": VentureInteger,
-  "probability": VentureNumber, # TODO Eliminate this stack dict type?
-  "atom": VentureAtom,
-  "boolean": VentureBool,
-  "symbol": VentureSymbol,
-  "string": VentureString,
-  "blob": VentureForeignBlob,
-  "list": VenturePair,
-  "improper_list": VenturePair,
-  "vector": VentureArrayUnboxed,
-  "array": VentureArray,
-  "array_unboxed": VentureArrayUnboxed,
-  "simplex": VentureSimplex,
-  "dict": VentureDict,
-  "matrix": VentureMatrix,
-  "symmetric_matrix": VentureSymmetricMatrix,
-  "SP": SPRef, # As opposed to VentureSPRecord?
-  }
+stackable_types = OrderedDict([
+  ("number", VentureNumber),
+  ("real", VentureNumber),
+  ("integer", VentureInteger),
+  ("probability", VentureNumber), # TODO Eliminate this stack dict type?
+  ("atom", VentureAtom),
+  ("boolean", VentureBool),
+  ("symbol", VentureSymbol),
+  ("string", VentureString),
+  ("blob", VentureForeignBlob),
+  ("list", VenturePair),
+  ("improper_list", VenturePair),
+  ("vector", VentureArrayUnboxed),
+  ("array", VentureArray),
+  ("array_unboxed", VentureArrayUnboxed),
+  ("simplex", VentureSimplex),
+  ("dict", VentureDict),
+  ("matrix", VentureMatrix),
+  ("symmetric_matrix", VentureSymmetricMatrix),
+  ("SP", SPRef), # As opposed to VentureSPRecord?
+])
 
 def registerVentureType(t, name = None):
   if t in venture_types: pass

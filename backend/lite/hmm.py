@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+from collections import OrderedDict
 from copy import copy
 
 import numpy as np
@@ -46,12 +47,12 @@ class HMMSPAux(SPAux):
   def __init__(self):
     super(HMMSPAux, self).__init__()
     self.xs = [] # [ x_n ],
-    self.os = {} #  { n => [o_n1, ... ,o_nK] }
+    self.os = OrderedDict() #  { n => [o_n1, ... ,o_nK] }
 
   def copy(self):
     ans = HMMSPAux()
     ans.xs = copy(self.xs)
-    ans.os = {k:copy(v) for k, v in self.os.iteritems()}
+    ans.os = OrderedDict((k, copy(v)) for k, v in self.os.iteritems())
     return ans
 
 class MakeUncollapsedHMMOutputPSP(RandomPSP):
@@ -113,7 +114,7 @@ class UncollapsedHMMSP(SP):
     self.O = O
 
   def constructSPAux(self): return HMMSPAux()
-  def constructLatentDB(self): return {} # { n => x_n }
+  def constructLatentDB(self): return OrderedDict() # { n => x_n }
   def show(self, spaux): return spaux.xs, spaux.os
 
   # lsr: the index of the observation needed

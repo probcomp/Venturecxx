@@ -15,29 +15,40 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from venture.lite.detach import unapplyPSP
 from venture.lite.node import isLookupNode
 from venture.lite.node import isOutputNode
 from venture.lite.node import isRequestNode
 from venture.lite.omegadb import OmegaDB
+from venture.lite.orderedset import OrderedFrozenSet
+from venture.lite.orderedset import OrderedSet
 from venture.lite.regen import applyPSP
 from venture.lite.value import SPRef
 
 class Scaffold(object):
   def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None,drg=None):
     self.setsOfPNodes = setsOfPNodes if setsOfPNodes else [] # [Set Node]
-    self.regenCounts = regenCounts if regenCounts else {} # {Node:Int}
-    self.absorbing = absorbing if absorbing else set() # Set Node
-    self.aaa = aaa if aaa else set() # Set Node
+    assert all(isinstance(pnodes, OrderedFrozenSet) for pnodes in self.setsOfPNodes)
+    self.regenCounts = regenCounts if regenCounts else OrderedDict() # {Node:Int}
+    assert isinstance(self.regenCounts, OrderedDict)
+    self.absorbing = absorbing if absorbing else OrderedFrozenSet() # Set Node
+    assert isinstance(self.absorbing, OrderedFrozenSet)
+    self.aaa = aaa if aaa else OrderedFrozenSet() # Set Node
+    assert isinstance(self.aaa, OrderedFrozenSet)
     self.border = border if border else [] # [[Node]]
-    self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
-    self.brush = brush if brush else set() # Set Node
-    self.drg = drg if drg else set() # Set Node
+    self.lkernels = lkernels if lkernels else OrderedDict() # {Node:LKernel}
+    assert isinstance(self.lkernels, OrderedDict)
+    self.brush = brush if brush else OrderedFrozenSet() # Set Node
+    assert isinstance(self.brush, OrderedFrozenSet)
+    self.drg = drg if drg else OrderedFrozenSet() # Set Node
+    assert isinstance(self.drg, OrderedFrozenSet)
     # Store the drg for introspection; not directly read by regen/detach
 
   def getPrincipalNodes(self):
     # Return a list so that repeated traversals have the same order
-    return [n for n in set.union(*self.setsOfPNodes)]
+    return [n for n in OrderedSet.union(*self.setsOfPNodes)]
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1
@@ -133,7 +144,7 @@ def update(trace, node):
   scaffold = Scaffold()
   omegaDB = OmegaDB()
   unapplyPSP(trace, node, scaffold, omegaDB)
-  applyPSP(trace,node,scaffold,False,omegaDB,{})
+  applyPSP(trace,node,scaffold,False,omegaDB,OrderedDict())
 
 
 def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArgs=None, hardBorder=None, updateValues=False):
@@ -141,11 +152,11 @@ def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArg
     hardBorder = []
   assert len(hardBorder) <= 1
 
-  cDRG,cAbsorbing,cAAA = set(),set(),set()
-  indexAssignments = {}
+  cDRG,cAbsorbing,cAAA = OrderedSet(),OrderedSet(),OrderedSet()
+  indexAssignments = OrderedDict()
   assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
-    assert isinstance(setsOfPNodes[i],set)
+    assert isinstance(setsOfPNodes[i],OrderedFrozenSet)
     extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i,hardBorder)
 
   brush = findBrush(trace,cDRG)
@@ -158,7 +169,7 @@ def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArg
   scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush,drg)
 
   if updateValues:
-    updateValuesAtScaffold(trace,scaffold,set())
+    updateValuesAtScaffold(trace,scaffold,OrderedSet())
 
   return scaffold
 
@@ -208,9 +219,9 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,ha
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
 
 def findBrush(trace,cDRG):
-  disableCounts = {}
-  disabledRequests = set()
-  brush = set()
+  disableCounts = OrderedDict()
+  disabledRequests = OrderedSet()
+  brush = OrderedSet()
   for node in cDRG:
     if isRequestNode(node):
       disableRequests(trace,node,disableCounts,disabledRequests,brush)
@@ -259,7 +270,7 @@ def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
     regenCounts[value.makerNode] += 1
 
 def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
-  regenCounts = {}
+  regenCounts = OrderedDict()
   for node in drg:
     if node in aaa:
       regenCounts[node] = 1 # will be added to shortly
@@ -286,7 +297,8 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
   return regenCounts
 
 def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
-  lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
+  lkernels = OrderedDict(
+    (node, trace.pspAt(node).getAAALKernel()) for node in aaa)
   if useDeltaKernels:
     for node in drg - aaa:
       if not isOutputNode(node): continue

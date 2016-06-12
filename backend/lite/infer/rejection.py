@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+from collections import OrderedDict
 
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
@@ -76,7 +77,7 @@ class RejectionOperator(InPlaceOperator):
     accept = False
     attempt = 0
     while not accept and (self.trials is None or self.trials > attempt):
-      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
       assert xiWeight <= logBound, \
         "Detected regen weight %s not at most weight bound %s" % (xiWeight, logBound)
       accept = trace.py_rng.random() < math.exp(xiWeight - logBound)
@@ -86,7 +87,7 @@ class RejectionOperator(InPlaceOperator):
     if not accept:
       # Ran out of attempts
       print "Warning: rejection hit attempt bound of %s" % self.trials
-      regenAndAttach(trace, scaffold, True, self.rhoDB, {})
+      regenAndAttach(trace, scaffold, True, self.rhoDB, OrderedDict())
     return trace, 0
 
   def name(self): return "rejection"
@@ -99,7 +100,7 @@ If the start state is already possible, don't move."""
   def propose(self, trace, scaffold):
     while True:
       rhoWeight = self.prepare(trace, scaffold)
-      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
       if rhoWeight > float("-inf"):
         # The original state was possible; force rejecting the
         # transition

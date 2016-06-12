@@ -47,6 +47,7 @@ Typical usage begins by using one of the factory functions in the
 
 '''
 
+from collections import OrderedDict
 import cStringIO as StringIO
 import numbers
 import os
@@ -71,8 +72,8 @@ class Ripl():
         self.sivm = sivm
         self.parsers = parsers
         self._compute_search_paths(extra_search_paths or [])
-        self.directive_id_to_stringable_instruction = {}
-        self.directive_id_to_mode = {}
+        self.directive_id_to_stringable_instruction = OrderedDict()
+        self.directive_id_to_mode = OrderedDict()
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
         self._do_not_annotate = False
@@ -461,7 +462,7 @@ class Ripl():
         scaffold.show()
         print ""
 
-        by_did = {}
+        by_did = OrderedDict()
         def mark(nodes, base_color, only_bottom=False):
             for node in nodes:
                 color = color_app(base_color)
@@ -501,7 +502,7 @@ class Ripl():
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
         print "\n*** Cumulative subproblem nodes ***\n"
-        by_did = {}
+        by_did = OrderedDict()
         mark(pnodes, 'red', only_bottom=False)
         mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=False)
         mark(scaffold.absorbing, 'blue', only_bottom=False)

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.orderedset import OrderedSet
 from venture.lite.psp import IArgs
 from venture.lite.request import Request
 from venture.lite.types import ExpressionType
@@ -22,9 +23,10 @@ from venture.lite.value import VentureValue
 
 class Node(object):
   def __init__(self, address):
+    assert address is not None
     self.address = address
     self.value = None
-    self.children = set()
+    self.children = OrderedSet()
     self.isObservation = False
     self.madeSPRecord = None
     self.aaaMadeSPAux = None

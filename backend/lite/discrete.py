@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+from collections import OrderedDict
 
 import scipy
 import scipy.special
@@ -563,12 +564,12 @@ class SuffPoissonOutputPSP(DiscretePSP):
     return scipy.stats.poisson.logpmf(xsum, mu = ctN * self.mu)
 
   def show(self, spaux):
-    return {
-      'type': 'suff_stat_poisson',
-      'mu': self.mu,
-      'ctN': spaux.ctN,
-      'xsum': spaux.xsum
-      }
+    return OrderedDict([
+      ('type', 'suff_stat_poisson'),
+      ('mu', self.mu),
+      ('ctN', spaux.ctN),
+      ('xsum', spaux.xsum),
+    ])
 
 
 # Uncollapsed Gamma Poisson PSP.
@@ -579,14 +580,14 @@ class UGammaPoissonOutputPSP(SuffPoissonOutputPSP):
     self.beta = beta
 
   def show(self, spaux):
-    return {
-      'type': 'uc_gamma_poisson',
-      'mu': self.mu,
-      'alpha': self.alpha,
-      'beta': self.beta,
-      'ctN': spaux.ctN,
-      'xsum': spaux.xsum
-      }
+    return OrderedDict([
+      ('type', 'uc_gamma_poisson'),
+      ('mu', self.mu),
+      ('alpha', self.alpha),
+      ('beta', self.beta),
+      ('ctN', spaux.ctN),
+      ('xsum', spaux.xsum),
+    ])
 
 
 # Collapsed Gamma Poisson PSP.
@@ -635,15 +636,15 @@ class CGammaPoissonOutputPSP(DiscretePSP):
 
   def show(self, spaux):
     (alpha_n, beta_n) = self.updatedParams(spaux)
-    return {
-      'type': 'gamma_poisson',
-      'alpha_0': self.alpha,
-      'beta_0': self.beta,
-      'alpha_n': alpha_n,
-      'beta_n': beta_n,
-      'ctN': spaux.ctN,
-      'xsum': spaux.xsum
-      }
+    return OrderedDict([
+      ('type', 'gamma_poisson'),
+      ('alpha_0', self.alpha),
+      ('beta_0', self.beta),
+      ('alpha_n', alpha_n),
+      ('beta_n', beta_n),
+      ('ctN', spaux.ctN),
+      ('xsum', spaux.xsum),
+    ])
 
 
 class MakerCGammaPoissonOutputPSP(DeterministicMakerAAAPSP):

@@ -185,6 +185,7 @@ class MasterBase(object):
         self.chunk_offsets.append(i)
 
   def reset_seeds(self, seed):
+    assert seed is not None
     rng = random.Random(seed)
     for i in range(len(self.processes)):
       seeds = [rng.randint(1, 2**31 - 1) for _ in range(self.chunk_sizes[i])]
@@ -378,6 +379,7 @@ class WorkerBase(object):
     # The truly parallel case is handled by the subclass MultiprocessingWorker.
     did_set_global_prng = False
     for (obj, seed) in zip(self.objs, seeds):
+      assert seed is not None
       if hasattr(obj, "has_own_prng") and obj.has_own_prng():
         obj.set_seed(seed)
       elif not did_set_global_prng and self.should_set_global_prng():
