@@ -20,6 +20,9 @@
 
 // Data obtained from: https://github.com/cran/Flury/blob/master/data/
 
+// Run me with, for example,
+// venture puma -f pipits.vnts -e '{ resample(5); plotf("p0d1d", run(do_sweeps(5))) }'
+
 // Female average
 assume mu_f = tag("param", "mu_f", normal(86, 1));
 
