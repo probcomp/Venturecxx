@@ -197,7 +197,7 @@ def testFuturesDiverge2():
   assert x3 != x4
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_sample_determinism():
   r = pablo(3)
   s = pablo(3)
@@ -205,21 +205,21 @@ def test_sample_determinism():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_ll_determinism1():
   r = pablo(3)
   assert np.allclose(
     r.infer("global_log_likelihood"), r.infer("global_log_likelihood"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_lj_determinism1():
   r = pablo(3)
   assert np.allclose(
     r.infer("global_log_joint"), r.infer("global_log_joint"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_ll_determinism2():
   r = pablo(3)
   s = pablo(3)
@@ -227,7 +227,7 @@ def test_ll_determinism2():
     r.infer("global_log_likelihood"), s.infer("global_log_likelihood"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_lj_determinism2():
   r = pablo(3)
   s = pablo(3)
@@ -236,7 +236,7 @@ def test_lj_determinism2():
 
 @on_inf_prim("none")
 @broken_in("lite", "Lite's global_log_likelihood has side effects")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_ll_effects():
   r = pablo(3)
   s = pablo(3)
@@ -246,7 +246,7 @@ def test_ll_effects():
 
 @on_inf_prim("none")
 @broken_in("lite", "Lite's global_log_joint has side effects")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_lj_effects():
   r = pablo(3)
   s = pablo(3)
@@ -255,7 +255,7 @@ def test_lj_effects():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_ll_effects_determinism():
   r = pablo(3)
   s = pablo(3)
@@ -265,7 +265,7 @@ def test_ll_effects_determinism():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_lj_effects_determinism():
   r = pablo(3)
   s = pablo(3)
@@ -275,7 +275,7 @@ def test_lj_effects_determinism():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_sample_determinism():
   r = pablo(3)
   s = pablo(3)
@@ -285,7 +285,7 @@ def test_infer_sample_determinism():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_ll_determinism1():
   r = pablo(3)
   r.infer('default_markov_chain(10)')
@@ -293,7 +293,7 @@ def test_infer_ll_determinism1():
     r.infer("global_log_likelihood"), r.infer("global_log_likelihood"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_lj_determinism1():
   r = pablo(3)
   r.infer('default_markov_chain(10)')
@@ -301,7 +301,7 @@ def test_infer_lj_determinism1():
     r.infer("global_log_joint"), r.infer("global_log_joint"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_ll_determinism2():
   r = pablo(3)
   s = pablo(3)
@@ -311,7 +311,7 @@ def test_infer_ll_determinism2():
     r.infer("global_log_likelihood"), s.infer("global_log_likelihood"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_lj_determinism2():
   r = pablo(3)
   s = pablo(3)
@@ -322,7 +322,7 @@ def test_infer_lj_determinism2():
 
 @on_inf_prim("none")
 @broken_in("lite", "Lite's global_log_likelihood has side effects")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_ll_effects():
   r = pablo(3)
   s = pablo(3)
@@ -334,7 +334,7 @@ def test_infer_ll_effects():
 
 @on_inf_prim("none")
 @broken_in("lite", "Lite's global_log_joint has side effects")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_lj_effects():
   r = pablo(3)
   s = pablo(3)
@@ -345,7 +345,7 @@ def test_infer_lj_effects():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_ll_effects_determinism():
   r = pablo(3)
   s = pablo(3)
@@ -357,7 +357,7 @@ def test_infer_ll_effects_determinism():
     r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
 
 @on_inf_prim("none")
-@broken_in("puma", "Puma is nondeterministic")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
 def test_infer_lj_effects_determinism():
   r = pablo(3)
   s = pablo(3)
