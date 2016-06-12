@@ -35,9 +35,9 @@ from venture.test.config import needs_seaborn
 def testVentureExamplesLite():
   for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e 'infer exact_filtering()'",
   ]:
-    yield checkVentureExampleComplete, ex
+    yield checkVentureExample, ex
 
-def checkVentureExampleComplete(command):
+def checkVentureExample(command):
   assert s.call(command, shell=True) == 0
 
 @gen_in_backend("none")
@@ -46,7 +46,7 @@ def testVentureExamplesPumaComplete():
   lda_cmd = "'do(model(2, 2), data(3, 4), mh(default, one, 500))'"
   for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test",
              "venture puma -f examples/lda.vnt -e " + lda_cmd  ]:
-    yield checkVentureExampleComplete, ex
+    yield checkVentureExample, ex
 
 @contextlib.contextmanager
 def extra_module_path(path):
