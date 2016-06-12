@@ -23,41 +23,12 @@ import subprocess as s
 import sys
 import tempfile
 
-from distutils.spawn import find_executable
-from unittest import SkipTest
-
 from venture.test.config import gen_in_backend
 from venture.test.config import gen_needs_backend
 from venture.test.config import gen_needs_ggplot
 from venture.test.config import in_backend
 from venture.test.config import needs_backend
 from venture.test.config import needs_seaborn
-
-def findTimeout():
-  '''
-  Find the timeout shell command. If not present, skip the test.
-  '''
-  if find_executable('timeout'):
-    return 'timeout'
-  elif find_executable('gtimeout'):
-    return 'gtimeout'
-  else:
-    errstr = '"timeout" command line executable not found; skipping.'
-    raise SkipTest(errstr)
-
-def checkVentureExample(command):
-  timeout = findTimeout()
-  assert s.call("%s 1.5s %s" % (timeout, command), shell=True) == 124
-
-@gen_in_backend("none")
-@gen_needs_backend("puma")
-@gen_needs_ggplot
-def testVentureExamplesPuma():
-  for ex in ["venture puma -f examples/plotting/bimodal.vnt",
-             "venture puma -f examples/plotting/dice_plot.vnt",
-             "venture puma -f examples/plotting/normal_plot.vnt",
-  ]:
-    yield checkVentureExample, ex
 
 @gen_in_backend("none")
 @gen_needs_backend("lite")
@@ -114,8 +85,13 @@ def testVentureExamplesLitePlot():
 @gen_needs_ggplot
 def testVentureExamplesPumaPlot():
   my_dir = os.path.abspath(os.path.dirname(__file__))
-  for ex in ["venture puma -f %s/../../examples/trickiness-concrete.vnts" % (my_dir,),
-             "venture puma -f %s/../../examples/trickiness-concrete-2.vnts" % (my_dir,),
+  root = os.path.dirname(os.path.dirname(my_dir))
+  for ex in [
+    "venture puma -f %s/examples/plotting/bimodal.vnt" % (root,),
+    "venture puma -f %s/examples/plotting/dice_plot.vnt" % (root,),
+    "venture puma -f %s/examples/plotting/normal_plot.vnt" % (root,),
+    "venture puma -f %s/examples/trickiness-concrete.vnts" % (root,),
+    "venture puma -f %s/examples/trickiness-concrete-2.vnts" % (root,),
   ]:
     yield checkVentureExampleRude, ex
 
