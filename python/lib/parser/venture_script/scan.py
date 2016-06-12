@@ -168,8 +168,17 @@ class Scanner(Plex.Scanner):
         (Plex.Str('|]'), grammar.T_ROXFORD),
         (Plex.Str('$'), grammar.T_LDOLLAR),
         (Plex.Str('='), grammar.T_EQDEF),
+        # Hack ~ to mean = everywhere but be available for reasons of
+        # code style.  If we later want to adjust the system to
+        # differentiate them, new tokens and grammar changes will be
+        # needed.
+        (Plex.Str('~'), grammar.T_EQDEF),
         (Plex.Str('<-'), grammar.T_LARR),
+        # Also <~ for <-.
+        (Plex.Str('<~'), grammar.T_LARR),
         (Plex.Str('->'), grammar.T_RARR),
+        # Also ~> for ->.
+        (Plex.Str('~>'), grammar.T_RARR),
         (Plex.Str('||'), grammar.T_AND),
         (Plex.Str('&&'), grammar.T_OR),
         (Plex.Str('=='), grammar.T_EQ),

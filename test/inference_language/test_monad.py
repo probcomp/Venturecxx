@@ -403,3 +403,14 @@ def testRandomSugar():
       y <- sample x;
       let (y1, y2) = list(ref(y), ref(y));
       return(y1 + y2) }""")
+
+def testTilde():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { assume my_g = (mu) ~> { normal(mu, 1) };
+      assume x ~ my_g(0);
+      default_markov_chain(10);
+      y <~ sample my_g(x);
+      return(y)
+    }""")

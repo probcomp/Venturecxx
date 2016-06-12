@@ -268,7 +268,8 @@ class Semantics(object):
         assert isloc(e)
         n = loctoken(n)
         # XXX Yes, this remains infix, for the macro expander to handle...
-        return locmerge(n, e, [n, locmap(loctoken(op), val.symbol), e])
+        # XXX Convert <~ to <- for the macro expander's sake
+        return locmerge(n, e, [n, locmap(loctoken(op), lambda s: val.symbol("<-")), e])
     def p_action_directive(self, d):
         assert isloc(d)
         return d
