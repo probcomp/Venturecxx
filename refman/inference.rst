@@ -15,8 +15,76 @@ VentureScript inference programs are effectively evaluated in a context
 where the underlying model trace is available as a reified object, on
 which built-in inference procedures can operate. [#]_
 
-Scopes, Blocks, and the Local Posterior
----------------------------------------
+Block Structure
+---------------
+
+Like JavaScript, the organizing syntactic element of VentureScript is
+the _block_: a list of _statements_ surrounded by curly braces and
+separated by parentheses.  VentureScript has the following kinds of
+statements:
+
+.. _let_binding:
+.. object:: let <var> = <expression>;
+
+  Bind the variable on the left hand side to the value of the
+  expression on the right hand side for the remainder of the block.
+
+  Note 1: This is not assignment: if the variable was already in
+  scope, it is shadowed, not mutated; at the end of the block, the old
+  value will be visible again.
+
+  Note 2: If the expression produces an inference action, that action
+  is not performed, but stored in the variable for later use.  See
+  `<-`.
+
+.. _monad_binding:
+.. object:: <var> <- <action>;
+
+  Perform the inference action on the right hand side and bind the
+  returned value to the variable on the left hand side.
+
+  Note 1: This is not assignment: if the variable was already in
+  scope, it is shadowed, not mutated; at the end of the block, the old
+  value will be visible again.
+
+  Note 2: It is an error for the expression to produce a value that is
+  not an inference action.  For binding the results of pure
+  computations, see `let`.
+
+.. _mv_binding:
+.. object:: let (<var1>, <var2>, ...) = <expression>;
+
+  Multiple value bind.  The expression must return a list of `ref` s
+  of the same length as the number of variables.  See also `values_list`.
+
+.. _letrec_binding:
+.. object:: letrec <var1> = <expression1>;
+               and <var2> = <expression2>;
+               ...
+
+  Mutually recursive binding.  The contiguous chain of `and`
+  statements are grouped together with the `letrec` statement at the
+  beginning, and all the variables are in scope in all the defining
+  expressions and the rest of the block, analogously to the same
+  construct in Scheme.  The name stands for "let, recursively".  This
+  is useful for defining mutually recursive procedures::
+
+      letrec even = (n) -> { if (n == 0) { true  } else {  odd(n - 1) } };
+         and odd  = (n) -> { if (n == 0) { false } else { even(n - 1) } };
+
+.. _effect:
+.. object:: <action>
+
+  Just evaluate the expression.  If this is the last statement of the
+  block, the return value of the whole block is the result of
+  evaluating the expression.
+
+Note that all of these affordances appear as expressions as well.  In
+fact, the block structure in VentureScript is just syntactic sugar for
+nested binding expressions of various kinds.
+
+Variable Scopes, Variable Blocks, and the Local Posterior
+---------------------------------------------------------
 
 VentureScript defines the notion of `inference scope` to allow the
 programmer to control the parts of their model on which to apply
@@ -25,7 +93,8 @@ collection of related random choices (for example, the states of a
 hidden Markov model could be one scope, and the hyperparameters could
 be another); and each scope is further subdivided into `block` s,
 which are choices that ought to be reproposed together (the name is
-meant to evoke the idea of block proposals).
+meant to evoke the idea of block proposals, not to be confused with
+curly-brace-delimited syntax blocks).
 
 Any given random choice in an execution history can exist in an
 arbitrary number of scopes; but for each scope it is in it must be in

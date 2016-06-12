@@ -134,6 +134,12 @@ def LetRecExpand(exp):
   template = ['eval', ['quote', 'body'], template]
   return SyntaxRule(pattern, template).expand(exp)
 
+def ValuesExpand(exp):
+  vals = ["__val_%d__" % i for i in range(len(exp)-1)]
+  pattern = ["values_list"] + vals
+  template = ["list"] + [["ref", val] for val in vals]
+  return SyntaxRule(pattern, template).expand(exp)
+
 def arg0(name):
   def applies(exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == name
@@ -175,6 +181,41 @@ def DoExpand(exp):
       # Binding statement, venturescript form
       pattern = ["do", ["<-", "var", "expr"]] + rest_vars
       template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
+          statement[0]["value"] == "let"):
+      # Let statement
+      pattern = ["do", ["let", "var", "expr"]] + rest_vars
+      template = ["let", [["var", "expr"]], ["do"] + rest_vars]
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
+          statement[0]["value"] == "let_values"):
+      # Let_values statement
+      n = len(statement[1])
+      lst_name = "__lst_%d__" % random.randint(10000, 99999)
+      let_vars = ["var_%d" % i for i in range(n)]
+      let_exps = [[var, ["deref", ["lookup", lst_name, v.integer(i)]]]
+                   for (i, var) in enumerate(let_vars)]
+      pattern = ["do", ["let_values", let_vars, "lst_expr"]] + rest_vars
+      template = ["let", [[lst_name, "lst_expr"]] + let_exps,
+                  ["do"] + rest_vars]
+    elif (type(statement) is list and len(statement) == 3 and
+          type(statement[0]) is dict and
+          statement[0]["value"] == "letrec"):
+      # Letrec statement
+      mutrec = 0
+      for next_statement in rest:
+        if (type(next_statement) is list and len(next_statement) == 3 and
+            type(next_statement[0]) is dict and
+            next_statement[0]["value"] == "mutrec"):
+          mutrec += 1
+        else:
+          break
+      mutrec_vars = [["var_%d" % i, "expr_%d" % i] for i in range(mutrec)]
+      pattern = (["do", ["letrec", "var", "expr"]] +
+                 [["mutrec"] + e for e in mutrec_vars] +
+                 rest_vars[mutrec:])
+      template = ["letrec", [["var", "expr"]] + mutrec_vars, ["do"] + rest_vars[mutrec:]]
     else:
       # Non-binding statement
       pattern = ["do", "stmt"] + rest_vars
@@ -359,6 +400,14 @@ letrecMacro = Macro(arg0("letrec"), LetRecExpand, desc="""\
   No concrete syntax is provided (yet).
 """)
 
+valuesMacro = Macro(arg0("values_list"), ValuesExpand, desc="""\
+.. _values:
+.. object:: values_list(<exp>, <exp>, ...)
+
+  Returns a list of references (see `ref`) corresponding to the
+  results of evaluating each of its arguments.
+  """)
+
 # Do is not directly a SyntaxRule because the pattern language does
 # not support repetition or alternatives.  Instead, expansion of a do
 # form computes a ground pattern and template pair of the right shape
@@ -369,26 +418,38 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
 
   Sequence actions that may return results.
 
-  Note: The above template is abstract syntax.  Concrete syntax for `do`
-  is under development.
+  Note: The above template is abstract syntax.  `do` is what
+  curly-delimited blocks expand to.
 
-  Each <stmt> except the last may either be
+  Each <stmt> except the last may be
 
-    - a kernel, in which case it is performed and any value it returns
+    - an action, in which case it is performed and any value it returns
       is dropped, or
 
-    - a binder of the form ``(<variable> <- <kernel>)`` in which case the
-      kernel is performed and its value is made available to the remainder
-      of the `do` form by being bound to the variable.
+    - a binder of the form ``(<variable> <- <action>)`` in which case the
+      action is performed and its value is made available to the remainder
+      of the `do` form by being bound to the variable, or
 
-  The last <stmt> may not be a binder and must be a kernel.  The whole
-  `do` expression is then a single compound heterogeneous kernel,
+    - a let binder of the form ``(let <variable> <expression>)`` in which
+      case the value of the expression is just bound to the variable (without
+      performing any actions), or
+
+    - a multivalue binder of the form ``(let_values (<var1> <var2> ...) <expression>)``
+      in which case the expression is expected to return a list of `ref` s,
+      whose values are unpacked into the variables, or
+
+    - a letrec or mutrec binder of the form ``(letrec <var> <exp>)`` or ``(mutrec <var> <exp>)``.
+      All mutrec binders headed by a single letrec form a block, which functions
+      like letrec in scheme, with the rest of the `do` expression as its body.
+
+  The last <stmt> may not be a binder and must be an action.  The whole
+  `do` expression is then a single compound heterogeneous action,
   whose value is the value returned by the last <stmt>.
 
-  If you need a kernel that produces a value without doing anything, use
-  ``return(<value>)`` (see `return`).  If you need a kernel that
+  If you need an action that produces a value without doing anything, use
+  ``return(<value>)`` (see `return`).  If you need an action that
   evaluates an expression and returns its value, use ``action(<exp>)``
-  (see `action`).  If you need a kernel that does nothing and produces
+  (see `action`).  If you need an action that does nothing and produces
   no useful value, you can use `pass`.
 
   For example, to make a kernel that does inference until some variable
@@ -406,7 +467,7 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
 
   Line 2 is a binder for the `do`, which makes
   ``finish`` a variable usable by the remainder of the procedure.  The
-  `if` starting on line 3 is a kernel, and is the last statement of
+  `if` starting on line 3 is an action, and is the last statement of
   the outer `do`.  Line 6 is a non-binder statement for the inner
   `do`.
 
@@ -520,7 +581,8 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
 
 assumeMacro = quasiquotation_macro("assume",
     min_size = 3, max_size = 4, desc="""\
-.. function:: assume(<symbol>, <model-expression>, [<label>])
+.. _assume:
+.. object:: [<label>:] assume <symbol> = <model-expression>;
 
   Programmatically add an assumption.
 
@@ -534,14 +596,15 @@ assumeMacro = quasiquotation_macro("assume",
 
 assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
     desc="""\
-.. function:: assume_values((<symbol> ...), <model-expression>)
+.. _assume_values:
+.. object:: assume_values (<symbol> ...) = <model-expression>;
 
   Multiple-value `assume`.
 
   The expression is expected to produce a list of references (see
   `ref`) of the same length as the list of symbols given to
   ``assume_values``.  ``assume_values`` binds those symbols to the
-  `deref`s of the corresponding references.
+  `deref` s of the corresponding references.
 
   For example::
 
@@ -559,10 +622,11 @@ assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
     (assume b (normal 0 1))
 
   `assume_values` does not accept a custom ``label`` argument.
-""")
+""", intended_for_inference=True)
 
 observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
-.. function:: observe(<model-expression>, <value>, [<label>])
+.. _observe:
+.. object:: [<label>:] observe <model-expression> = <value>;
 
   Programmatically add an observation.
 
@@ -579,7 +643,8 @@ observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
 forceMacro = SyntaxRule(["force", "exp", "val"],
                         ["_force", ["quasiquote", "exp"], "val"],
                         desc="""\
-.. function:: force(<model-expression>, <value>)
+.. _force
+.. object:: force <model-expression> = <value>;
 
   Programatically force the state of the model.
 
@@ -591,7 +656,8 @@ forceMacro = SyntaxRule(["force", "exp", "val"],
 
 predictMacro = quasiquotation_macro("predict",
     min_size = 2, max_size = 3, desc="""\
-.. function:: predict(<model-expression>, [<label>])
+.. _predict:
+.. object:: [<label>:] predict <model-expression>;
 
   Programmatically add a prediction.
 
@@ -619,7 +685,8 @@ predictAllMacro = quasiquotation_macro("predict_all",
 
 sampleMacro = quasiquotation_macro("sample",
     min_size = 2, max_size = 2, desc="""\
-.. function:: sample(<model-expression>)
+.. _sample:
+.. object:: sample <model-expression>
 
   Programmatically sample from the model.
 
@@ -717,7 +784,8 @@ For example::
 """)
 
 for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
-          letMacro, letrecMacro, doMacro, beginMacro, actionMacro, qqMacro,
+          letMacro, letrecMacro, valuesMacro,
+          doMacro, beginMacro, actionMacro, qqMacro,
           callBackMacro, collectMacro,
           assumeMacro, assume_valuesMacro, observeMacro,
           predictMacro, predictAllMacro, forceMacro,

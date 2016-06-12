@@ -59,9 +59,9 @@ def testMonadicSmoke2():
 define foo = proc() {
   do(x <- sample(flip()),
      if (x) {
-       assume(y, true)
+       assume y = true
      } else {
-       assume(y, false)
+       assume y = false
      })}
 """)
   ripl.infer("foo()")
@@ -152,6 +152,19 @@ def testPerModelLabelNamespaceForget():
 """)
 
 @on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetVS():
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  ripl.execute_program("""
+{ foo: observe normal(0, 1) = 3;
+  m <- new_model();
+  in_model(m, { foo: observe gamma(1, 1) = 2; });
+  forget(quote(foo));
+  in_model(m, forget(quote(foo)))
+}
+""")
+
+@on_inf_prim("in_model")
 def testPerModelLabelNamespaceForgetAssume():
   ripl = get_ripl()
   ripl.execute_program("""
@@ -172,11 +185,12 @@ def testPerModelLabelNamespaceForgetAssume2():
   ripl.execute_program("""
 define env = run(new_model());
 
-infer in_model(env, do(
-    assume(foo, normal(0, 1)),
-    observe(foo, 1.123, foo_obs),
-    assume(bar, normal(0, 1)),
-    observe(bar, 4.24, bar_obs)));
+infer in_model(env, {
+    assume foo = normal(0, 1);
+    foo_obs: observe foo = 1.123;
+    assume bar = normal(0, 1);
+    bar_obs: observe bar = 4.24;
+});
 
 infer in_model(env, do(
     forget(quote(bar_obs)),
@@ -207,6 +221,29 @@ def testEagerReturn():
   (do (r1 <- act)
       (r2 <- act)
       (return (= r1 r2))))
+""")
+
+@on_inf_prim("none")
+def testDoLet():
+  assert get_ripl().evaluate("""\
+(do (let x 1)
+    (let y x)
+    (= x y))
+""")
+
+@on_inf_prim("none")
+def testDoLetrec():
+  assert get_ripl().evaluate("""\
+(do (letrec x (lambda () (y)))
+    (mutrec y (lambda () 1))
+    (= (x) (y)))
+""")
+
+@on_inf_prim("none")
+def testDoLetValues():
+  assert get_ripl().evaluate("""\
+(do (let_values (x y) (values_list 1 2))
+    (= 3 (+ x y)))
 """)
 
 @needs_backend("lite")
@@ -346,3 +383,34 @@ def testInferenceWorkCounting():
   eq_([1], r.infer("(mh default one 1)"))
   r.observe("(normal x 1)", 2)
   eq_([2], r.infer("(mh default one 1)"))
+
+def testLetrecSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  eq_(True, r.evaluate(""" {
+      letrec even = (n) -> { if (n == 0) { true  } else {  odd(n - 1) } };
+         and odd  = (n) -> { if (n == 0) { false } else { even(n - 1) } };
+      odd(5) }
+"""))
+
+def testRandomSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { assume x = normal(0, 1);
+      frob: observe normal(x, 1) = 5;
+      default_markov_chain(10);
+      y <- sample x;
+      let (y1, y2) = list(ref(y), ref(y));
+      return(y1 + y2) }""")
+
+def testTilde():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { assume my_g = (mu) ~> { normal(mu, 1) };
+      assume x ~ my_g(0);
+      default_markov_chain(10);
+      y <~ sample my_g(x);
+      return(y)
+    }""")

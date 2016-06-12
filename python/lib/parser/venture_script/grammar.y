@@ -38,35 +38,50 @@ instructions(some)	::= instructions(insts) instruction_opt(inst) T_SEMI.
 instruction_opt(none)	::= .
 instruction_opt(some)	::= instruction(inst).
 
-instruction(labelled)	::= L_NAME(l) T_COLON directive(d).
-instruction(unlabelled)	::= directive(d).
 instruction(command)	::= command(c).
-instruction(expression)	::= expression(e).
+instruction(statement)	::= statement(e).
 
-directive(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
+labelled(directive)	::= L_NAME(l) T_COLON directive(d).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
+command(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 command(infer)		::= K_INFER(k) expression(e).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
-body(let)		::= let(l) T_SEMI(semi) expression(e).
+body(do)		::= statements(ss) T_SEMI(semi) expression_opt(e).
 body(exp)		::= expression(e).
-let(one)		::= let1(l).
-let(many)		::= let(ls) T_SEMI(semi) let1(l).
-let1(l)			::= L_NAME(n) T_EQDEF(eq) expression(e).
+statements(one)	::= statement(s).
+statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
+
+/* TODO deprecate "assign" in favor of let */
+statement(let)		::= K_LET(l) L_NAME(n) T_EQDEF(eq) expression(e).
+statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
+statement(letrec)	::= K_LETREC(l) L_NAME(n) T_EQDEF(eq) expression(e).
+statement(mutrec)	::= K_AND(l) L_NAME(n) T_EQDEF(eq) expression(e).
+statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
+				T_EQDEF(eq) expression(e).
+statement(labelled)	::= labelled(d).
+statement(none)	::= expression(e).
+
+expression_opt(none)	::= .
+expression_opt(some)	::= expression(e).
 
 expression(top)		::= do_bind(e).
 
 do_bind(bind)		::= L_NAME(n) T_LARR(op) expression(e).
-do_bind(none)		::= force(e).
+do_bind(none)		::= action(e).
 
-force(some)		::= K_FORCE(k) boolean_and(e1) T_EQDEF(eq) boolean_and(e2).
-force(none)		::= sample(e).
+action(directive)	::= directive(d).
+action(force)		::= K_FORCE(k) expression(e1) T_EQDEF(eq) expression(e2).
+action(sample)		::= K_SAMPLE(k) expression(e).
+action(none)		::= arrow(e).
 
-sample(some)		::= K_SAMPLE(k) boolean_and(e).
-sample(none)		::= boolean_and(e).
+arrow(one)		::= L_NAME(param) T_RARR(op) expression(body).
+arrow(tuple)		::= T_LROUND(po) arraybody(params) T_RROUND(pc)
+				T_RARR(op) expression(body).
+arrow(none)		::= boolean_and(e).
 
 /* XXX This AND/OR precedence is backwards from everyone else!  */
 boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).
@@ -98,6 +113,7 @@ exponential(none)	::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND(o) arglist(args)
 				T_RROUND(c).
+applicative(lookup)	::= applicative(a) T_LSQUARE(o) expression(index) T_RSQUARE(c).
 applicative(none)	::= primary(e).
 
 arglist(none)		::= .
@@ -108,9 +124,8 @@ args(many)		::= args(args) T_COMMA tagged(arg).
 tagged(none)		::= expression(e).
 tagged(kw)		::= L_NAME(name) T_COLON(colon) expression(e).
 
-primary(paren)		::= T_LROUND(o) body(e) T_RROUND(c).
-primary(brace)		::= T_LCURLY(o) let(l) T_SEMI(semi) expression(e)
-				T_RCURLY(c).
+primary(paren)		::= T_LROUND(o) arraybody(es) T_RROUND(c).
+primary(brace)		::= T_LCURLY(o) body(e) T_RCURLY(c).
 primary(proc)		::= K_PROC(k)
 				T_LROUND(po) paramlist(params) T_RROUND(pc)
 				T_LCURLY(bo) body(body) T_RCURLY(bc).
@@ -119,7 +134,7 @@ primary(if)		::= K_IF(k) T_LROUND(po) body(p) T_RROUND(pc)
 				K_ELSE(ke)
 				T_LCURLY(ao) body(a) T_RCURLY(ac).
 primary(qquote)		::= T_LOXFORD(o) body(b) T_ROXFORD(c).
-primary(unquote)	::= T_LDOLLAR_CURLY(o) body(b) T_RCURLY(c).
+primary(unquote)	::= T_LDOLLAR(op) primary(e).
 primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
@@ -131,8 +146,8 @@ params(many)		::= params(params) T_COMMA(c) L_NAME(param).
 
 arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
-arrayelts(one)		::= body(e).
-arrayelts(many)		::= arrayelts(es) T_COMMA(c) body(e).
+arrayelts(one)		::= expression(e).
+arrayelts(many)		::= arrayelts(es) T_COMMA(c) expression(e).
 
 literal(true)		::= T_TRUE(t).
 literal(false)		::= T_FALSE(f).
