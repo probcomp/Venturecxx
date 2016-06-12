@@ -30,15 +30,15 @@ from venture.test.config import in_backend
 from venture.test.config import needs_backend
 from venture.test.config import needs_seaborn
 
+def checkVentureExample(command):
+  assert s.call(command, shell=True) == 0
+
 @gen_in_backend("none")
 @gen_needs_backend("lite")
 def testVentureExamplesLite():
   for ex in ["venture lite -L examples/hmm_plugin.py -f examples/hmm.vnt -e 'infer exact_filtering()'",
   ]:
     yield checkVentureExample, ex
-
-def checkVentureExample(command):
-  assert s.call(command, shell=True) == 0
 
 @gen_in_backend("none")
 @gen_needs_backend("puma")
@@ -47,15 +47,6 @@ def testVentureExamplesPumaComplete():
   for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test",
              "venture puma -f examples/lda.vnt -e " + lda_cmd  ]:
     yield checkVentureExample, ex
-
-@contextlib.contextmanager
-def extra_module_path(path):
-  root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-  exs_path = os.path.join(root, path)
-  old_path = copy.copy(sys.path)
-  sys.path.append(exs_path)
-  yield
-  sys.path = old_path
 
 @contextlib.contextmanager
 def temp_directory(suffix):
@@ -94,6 +85,15 @@ def testVentureExamplesPumaPlot():
     "venture puma -f %s/examples/trickiness-concrete-2.vnts" % (root,),
   ]:
     yield checkVentureExampleRude, ex
+
+@contextlib.contextmanager
+def extra_module_path(path):
+  root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+  exs_path = os.path.join(root, path)
+  old_path = copy.copy(sys.path)
+  sys.path.append(exs_path)
+  yield
+  sys.path = old_path
 
 @in_backend("none")
 @needs_backend("lite")
