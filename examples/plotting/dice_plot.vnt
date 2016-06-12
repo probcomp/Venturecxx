@@ -23,5 +23,5 @@
  (let ((d (empty)))
    (do (repeat 100
         (do (mh 0 one 1)
-            (bind (collect a b c (+ a b c)) (curry into d))))
+            (into d (run (collect a b c (+ a b c))))))
        (plotf (quote (p0d1d2 p0d1dt c3)) d)))]
