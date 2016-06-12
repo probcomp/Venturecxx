@@ -590,7 +590,7 @@ assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
   The expression is expected to produce a list of references (see
   `ref`) of the same length as the list of symbols given to
   ``assume_values``.  ``assume_values`` binds those symbols to the
-  `deref`s of the corresponding references.
+  `deref` s of the corresponding references.
 
   For example::
 
