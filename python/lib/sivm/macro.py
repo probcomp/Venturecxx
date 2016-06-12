@@ -581,7 +581,8 @@ collectMacro = quasiquotation_macro("collect", min_size = 2, desc="""\
 
 assumeMacro = quasiquotation_macro("assume",
     min_size = 3, max_size = 4, desc="""\
-.. function:: assume(<symbol>, <model-expression>, [<label>])
+.. _assume:
+.. object:: [<label>:] assume <symbol> = <model-expression>;
 
   Programmatically add an assumption.
 
@@ -595,7 +596,8 @@ assumeMacro = quasiquotation_macro("assume",
 
 assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
     desc="""\
-.. function:: assume_values((<symbol> ...), <model-expression>)
+.. _assume_values:
+.. object:: assume_values (<symbol> ...) = <model-expression>;
 
   Multiple-value `assume`.
 
@@ -620,10 +622,11 @@ assume_valuesMacro = Macro(arg0("assume_values"), Assume_valuesExpand,
     (assume b (normal 0 1))
 
   `assume_values` does not accept a custom ``label`` argument.
-""")
+""", intended_for_inference=True)
 
 observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
-.. function:: observe(<model-expression>, <value>, [<label>])
+.. _observe:
+.. object:: [<label>:] observe <model-expression> = <value>;
 
   Programmatically add an observation.
 
@@ -640,7 +643,8 @@ observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
 forceMacro = SyntaxRule(["force", "exp", "val"],
                         ["_force", ["quasiquote", "exp"], "val"],
                         desc="""\
-.. function:: force(<model-expression>, <value>)
+.. _force
+.. object:: force <model-expression> = <value>;
 
   Programatically force the state of the model.
 
@@ -652,7 +656,8 @@ forceMacro = SyntaxRule(["force", "exp", "val"],
 
 predictMacro = quasiquotation_macro("predict",
     min_size = 2, max_size = 3, desc="""\
-.. function:: predict(<model-expression>, [<label>])
+.. _predict:
+.. object:: [<label>:] predict <model-expression>;
 
   Programmatically add a prediction.
 
@@ -680,7 +685,8 @@ predictAllMacro = quasiquotation_macro("predict_all",
 
 sampleMacro = quasiquotation_macro("sample",
     min_size = 2, max_size = 2, desc="""\
-.. function:: sample(<model-expression>)
+.. _sample:
+.. object:: sample <model-expression>
 
   Programmatically sample from the model.
 
