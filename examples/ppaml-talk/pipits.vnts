@@ -58,7 +58,8 @@ run(pyexec("ripl.define('num_birds', sum(counts.values()))"));
 
 // Inference program
 define do_sweeps = proc(n) {
-  accumulate_dataset(n, do(gibbs("z", one, num_birds),
-                           mh("param", one, 10),
-                           collect(mu_m, mu_f, sigma_m, sigma_f, phi)))
+  accumulate_dataset(n, {
+    gibbs("z", one, num_birds);
+    mh("param", one, 10);
+    collect(mu_m, mu_f, sigma_m, sigma_f, phi)})
 }
