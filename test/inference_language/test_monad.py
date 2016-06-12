@@ -383,3 +383,12 @@ def testInferenceWorkCounting():
   eq_([1], r.infer("(mh default one 1)"))
   r.observe("(normal x 1)", 2)
   eq_([2], r.infer("(mh default one 1)"))
+
+def testLetrecSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  eq_(True, r.evaluate(""" {
+      letrec even = (n) -> { if (n == 0) { true  } else {  odd(n - 1) } };
+         and odd  = (n) -> { if (n == 0) { false } else { even(n - 1) } };
+      odd(5) }
+"""))
