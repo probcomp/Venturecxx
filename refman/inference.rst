@@ -52,7 +52,7 @@ statements:
   computations, see `let`.
 
 .. _mv_binding:
-.. object:: (<var1>, <var2>, ...) = <expression>;
+.. object:: let (<var1>, <var2>, ...) = <expression>;
 
   Multiple value bind.  The expression must return a list of `ref` s
   of the same length as the number of variables.  See also `values_list`.

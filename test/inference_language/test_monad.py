@@ -392,3 +392,14 @@ def testLetrecSugar():
          and odd  = (n) -> { if (n == 0) { false } else { even(n - 1) } };
       odd(5) }
 """))
+
+def testRandomSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { assume x = normal(0, 1);
+      frob: observe normal(x, 1) = 5;
+      default_markov_chain(10);
+      y <- sample x;
+      let (y1, y2) = list(ref(y), ref(y));
+      return(y1 + y2) }""")
