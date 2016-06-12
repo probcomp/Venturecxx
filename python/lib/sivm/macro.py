@@ -418,26 +418,38 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
 
   Sequence actions that may return results.
 
-  Note: The above template is abstract syntax.  Concrete syntax for `do`
-  is under development.
+  Note: The above template is abstract syntax.  `do` is what
+  curly-delimited blocks expand to.
 
-  Each <stmt> except the last may either be
+  Each <stmt> except the last may be
 
-    - a kernel, in which case it is performed and any value it returns
+    - an action, in which case it is performed and any value it returns
       is dropped, or
 
-    - a binder of the form ``(<variable> <- <kernel>)`` in which case the
-      kernel is performed and its value is made available to the remainder
-      of the `do` form by being bound to the variable.
+    - a binder of the form ``(<variable> <- <action>)`` in which case the
+      action is performed and its value is made available to the remainder
+      of the `do` form by being bound to the variable, or
 
-  The last <stmt> may not be a binder and must be a kernel.  The whole
-  `do` expression is then a single compound heterogeneous kernel,
+    - a let binder of the form ``(let <variable> <expression>)`` in which
+      case the value of the expression is just bound to the variable (without
+      performing any actions), or
+
+    - a multivalue binder of the form ``(let_values (<var1> <var2> ...) <expression>)``
+      in which case the expression is expected to return a list of `ref` s,
+      whose values are unpacked into the variables, or
+
+    - a letrec or mutrec binder of the form ``(letrec <var> <exp>)`` or ``(mutrec <var> <exp>)``.
+      All mutrec binders headed by a single letrec form a block, which functions
+      like letrec in scheme, with the rest of the `do` expression as its body.
+
+  The last <stmt> may not be a binder and must be an action.  The whole
+  `do` expression is then a single compound heterogeneous action,
   whose value is the value returned by the last <stmt>.
 
-  If you need a kernel that produces a value without doing anything, use
-  ``return(<value>)`` (see `return`).  If you need a kernel that
+  If you need an action that produces a value without doing anything, use
+  ``return(<value>)`` (see `return`).  If you need an action that
   evaluates an expression and returns its value, use ``action(<exp>)``
-  (see `action`).  If you need a kernel that does nothing and produces
+  (see `action`).  If you need an action that does nothing and produces
   no useful value, you can use `pass`.
 
   For example, to make a kernel that does inference until some variable
@@ -455,7 +467,7 @@ doMacro = Macro(arg0("do"), DoExpand, desc="""\
 
   Line 2 is a binder for the `do`, which makes
   ``finish`` a variable usable by the remainder of the procedure.  The
-  `if` starting on line 3 is a kernel, and is the last statement of
+  `if` starting on line 3 is an action, and is the last statement of
   the outer `do`.  Line 6 is a non-binder statement for the inner
   `do`.
 
