@@ -433,3 +433,13 @@ def testInventLabel():
       sample bar;
     }""")
   r.report('foo')
+
+def testInventLabel2():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { label = quote(foo);
+      val <- $label : assume bar ~ normal(0, 1);
+      return(val);
+    }""")
+  r.report('foo')

@@ -282,6 +282,12 @@ class Semantics(object):
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
         return locmerge(n, e, [n, locmap(loctoken(op), lambda s: val.symbol("<-")), e])
+    def p_do_bind_labelled(self, n, op, l):
+        assert isloc(l)
+        n = loctoken(n)
+        # XXX Yes, this remains infix, for the macro expander to handle...
+        # XXX Convert <~ to <- for the macro expander's sake
+        return locmerge(n, l, [n, locmap(loctoken(op), lambda s: val.symbol("<-")), l])
     def p_action_directive(self, d):
         assert isloc(d)
         return d

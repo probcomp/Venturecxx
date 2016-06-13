@@ -73,6 +73,7 @@ expression_opt(some)	::= expression(e).
 expression(top)		::= do_bind(e).
 
 do_bind(bind)		::= L_NAME(n) T_LARR(op) expression(e).
+do_bind(labelled)	::= L_NAME(n) T_LARR(op) labelled(l).
 do_bind(none)		::= action(e).
 
 action(directive)	::= directive(d).
