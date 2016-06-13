@@ -163,6 +163,12 @@ class Semantics(object):
         s = locmap(loctoken(n), val.symbol)
         app = [i, s, e]
         return locmerge(i, e, app)
+    def p_directive_assume_prog(self, k, dol, sym_exp, eq, e):
+        assert isloc(e)
+        assert isloc(sym_exp)
+        i = loctoken1(k, val.symbol('assume'))
+        app = [i, locmerge(loctoken(dol), sym_exp, val.unquote(sym_exp)), e]
+        return locmerge(i, e, app)
     def p_directive_observe(self, k, e, eq, e1):
         assert isloc(e)
         assert isloc(e1)

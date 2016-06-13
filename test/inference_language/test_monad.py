@@ -414,3 +414,12 @@ def testTilde():
       y <~ sample my_g(x);
       return(y)
     }""")
+
+def testInventName():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { name = quote(foo);
+      assume $name ~ normal(0, 1);
+      sample foo;
+    }""")
