@@ -42,6 +42,7 @@ instruction(command)	::= command(c).
 instruction(statement)	::= statement(e).
 
 labelled(directive)	::= L_NAME(l) T_COLON directive(d).
+labelled(directive_prog)	::= T_LDOLLAR(dol) primary(lab_exp) T_COLON directive(d).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(assume_prog)	::= K_ASSUME(k) T_LDOLLAR(dol) primary(sym_exp) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).

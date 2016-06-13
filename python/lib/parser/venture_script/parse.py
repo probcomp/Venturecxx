@@ -155,6 +155,12 @@ class Semantics(object):
         new_exp = exp + [label]
         new_d = locmerge(label, d, new_exp)
         return new_d
+    def p_labelled_directive_prog(self, dol, lab_exp, d):
+        label = locmerge(loctoken(dol), lab_exp, val.unquote(lab_exp))
+        exp = d['value']
+        new_exp = exp + [label]
+        new_d = locmerge(label, d, new_exp)
+        return new_d
 
     # directive: Return located expression.
     def p_directive_assume(self, k, n, eq, e):

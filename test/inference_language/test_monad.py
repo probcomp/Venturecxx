@@ -423,3 +423,13 @@ def testInventName():
       assume $name ~ normal(0, 1);
       sample foo;
     }""")
+
+def testInventLabel():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { label = quote(foo);
+      $label : assume bar ~ normal(0, 1);
+      sample bar;
+    }""")
+  r.report('foo')
