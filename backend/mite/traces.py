@@ -2,7 +2,7 @@ import copy
 import random
 import numpy as np
 
-from venture.lite.address import Address, List
+import venture.mite.address as addresses
 import venture.lite.types as t
 import venture.lite.exp as e
 from venture.lite.env import VentureEnvironment, EnvironmentType
@@ -141,11 +141,11 @@ class AbstractTrace(ITrace):
     from venture.mite.builtin import builtInValues
     builtin_env = VentureEnvironment()
     for name, value in builtInValues().iteritems():
-      addr = Address(List(name))
+      addr = addresses.builtin(name)
       self.register_constant(addr, value)
       builtin_env.addBinding(name, Node(addr, value))
     for name, sp in builtInSPs().iteritems():
-      addr = Address(List(name))
+      addr = addresses.builtin(name)
       self.register_constant(addr, sp)
       value = self.register_made_sp(addr, sp)
       builtin_env.addBinding(name, Node(addr, value))
@@ -153,7 +153,7 @@ class AbstractTrace(ITrace):
 
   def next_base_address(self):
     self.directive_counter += 1
-    return Address(List(self.directive_counter))
+    return addresses.directive(self.directive_counter)
 
   def eval_request(self, addr, exp, env):
     self.register_request(addr, exp, env)
@@ -184,7 +184,7 @@ class AbstractTrace(ITrace):
       # SP application
       nodes = []
       for index, subexp in enumerate(exp):
-        subaddr = addr.extend(index)
+        subaddr = addresses.subexpression(index, addr)
         w, v = self.eval_family(subaddr, subexp, env)
         weight += w
         nodes.append(Node(subaddr, v))
@@ -192,7 +192,7 @@ class AbstractTrace(ITrace):
       sp_node = self.deref_sp(nodes[0])
       args = nodes[1:]
 
-      handle = self.construct_trace_handle(addr, sp_node, args)
+      handle = self.construct_trace_handle(addr, sp_node.address, args)
       w, value = self.apply_sp(sp_node.value, handle)
       weight += w
 
@@ -253,9 +253,7 @@ class BlankTrace(AbstractTrace):
   def register_request(self, addr, exp, env): pass
 
   def register_response(self, addr, value):
-    assert addr.last.rest.isEmpty()
-    base_id = addr.last.last
-    self.results[base_id] = value
+    self.results[addr] = value
 
   def register_constant(self, addr, value): pass
   def register_lookup(self, addr, orig_addr): pass
@@ -272,14 +270,10 @@ class BlankTrace(AbstractTrace):
     return (0, sp.apply(args))
 
   def register_observation(self, addr, value):
-    assert addr.last.rest.isEmpty()
-    base_id = addr.last.last
-    self.observations[base_id] = value
+    self.observations[addr] = value
 
   def value_at(self, addr):
-    assert addr.last.rest.isEmpty()
-    base_id = addr.last.last
-    return self.results[base_id]
+    return self.results[addr]
 
   def check_consistent(self):
     return all(self.results[id] == self.observations[id]
@@ -292,7 +286,7 @@ from venture.lite.psp import IArgs
 class TraceHandle(IArgs):
   def __init__(self, trace, app_addr, sp_addr, args):
     self.trace = trace
-    self.app_addr = self.node = app_addr
+    self.node = app_addr
     self.sp_addr = sp_addr
     self.operandNodes = args
     self.env = None
@@ -307,7 +301,7 @@ class TraceHandle(IArgs):
     return self.trace.np_prng
 
   def request_address(self, request_id):
-    return self.app_addr.request(List((self.sp_addr, request_id)))
+    return addresses.request(self.sp_addr, request_id)
 
   def newRequest(self, request_id, exp, env):
     # TODO return Node(value, address) so that SPs don't have to use
