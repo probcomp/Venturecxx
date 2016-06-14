@@ -81,6 +81,13 @@ def delocust(l):
     else:
         return l['value']
 
+def adjlocust(l, o):
+    start, end = l['loc']
+    v = l['value']
+    if isinstance(v, list) or isinstance(v, tuple):
+        v = [adjlocust(u, o) for u in v]
+    return {'loc': [start + o, end + o], 'value': v}
+
 operators = {
     '+':        'add',
     '-':        'sub',
@@ -402,6 +409,12 @@ class Semantics(object):
         return l
     def p_primary_symbol(self, s):
         return locmap(loctoken(s), val.symbol)
+    def p_primary_language(self, ll):
+        l, start, _end = ll
+        assert isloc(l), '%r' % (l,)
+        l_ = adjlocust(l, start)
+        print 'language %r' % (l_,)
+        return l_
 
     # paramlist, params: Return list of located symbols.
     def p_paramlist_none(self):                 return []
@@ -470,8 +483,8 @@ class Semantics(object):
     def p_json_dict_entry_e(self, key, value):  return (tokval(key), value)
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
-def parse(f, context):
-    scanner = scan.Scanner(f, context)
+def parse(f, context, languages=None):
+    scanner = scan.Scanner(f, context, languages)
     semantics = Semantics()
     parser = grammar.Parser(semantics)
     while True:
@@ -491,9 +504,9 @@ def parse(f, context):
         assert isloc(i)
     return semantics.answer
 
-def parse_string(string):
+def parse_string(string, languages=None):
     try:
-        return parse(StringIO.StringIO(string), '(string)')
+        return parse(StringIO.StringIO(string), '(string)', languages)
     except VentureException as e:
         assert 'instruction_string' not in e.data
         if 'text_index' in e.data:
@@ -510,8 +523,9 @@ def parse_string(string):
             e.data['text_index'] = [start - lstart, end - lstart]
         raise e
 
-def string_complete_p(string):
-    scanner = scan.Scanner(StringIO.StringIO(string), '(string)')
+def string_complete_p(string, languages=None):
+    # XXX This protocol won't work very well with embedded languages.
+    scanner = scan.Scanner(StringIO.StringIO(string), '(string)', languages)
     semantics = Semantics()
     parser = grammar.Parser(semantics)
     while True:
@@ -532,17 +546,17 @@ def string_complete_p(string):
             else:
                 parser.feed(token)
 
-def parse_instructions(string):
-    return parse_string(string)
+def parse_instructions(string, languages=None):
+    return parse_string(string, languages)
 
-def parse_instruction(string):
-    ls = parse_instructions(string)
+def parse_instruction(string, languages=None):
+    ls = parse_instructions(string, languages)
     if len(ls) != 1:
         raise VentureException('text_parse', 'Expected a single instruction')
     return ls[0]
 
-def parse_expression(string):
-    inst = parse_instruction(string)['value']
+def parse_expression(string, languages=None):
+    inst = parse_instruction(string, languages)['value']
     if not inst['instruction']['value'] == 'evaluate':
         raise VentureException('text_parse', 'Expected an expression')
     return inst['expression']
@@ -622,19 +636,25 @@ class VentureScriptParser(object):
             the_parser = VentureScriptParser()
         return the_parser
 
-    def parse_instruction(self, string):
+    # XXX Rather than having a global VentureScriptParser instance
+    # with methods that take an optional embedded language set, we
+    # should perhaps pass the embedded language set as an instance
+    # variable of VentureScriptParser.
+
+    def parse_instruction(self, string, languages=None):
         '''Parse STRING as a single instruction.'''
-        l = parse_instruction(string)
+        l = parse_instruction(string, languages)
         return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
-    def parse_locexpression(self, string):
+    def parse_locexpression(self, string, languages=None):
         '''Parse STRING as an expression, and include location records.'''
-        return parse_expression(string)
+        return parse_expression(string, languages)
 
-    def parse_expression(self, string):
+    def parse_expression(self, string, languages=None):
         '''Parse STRING as an expression.'''
-        return delocust(parse_expression(string))
+        return delocust(parse_expression(string, languages))
 
+    # XXX Unparse embedded languages?
     def unparse_expression(self, expression):
         '''Unparse EXPRESSION into a string.'''
         if isinstance(expression, dict):
@@ -742,14 +762,14 @@ class VentureScriptParser(object):
         return float(string) if '.' in string else int(string)
 
     # XXX ???
-    def split_program(self, string):
+    def split_program(self, string, languages=None):
         '''Split STRING into a sequence of instructions.
 
         Return a two-element list containing
         [0] a list of substrings, one for each instruction; and
         [1] a list of [start, end] positions of each instruction in STRING.
         '''
-        ls = parse_instructions(string)
+        ls = parse_instructions(string, languages)
         locs = [l['loc'] for l in ls]
         # XXX + 1?
         strings = [string[loc[0] : loc[1] + 1] for loc in locs]
@@ -759,14 +779,14 @@ class VentureScriptParser(object):
         return [strings, sortlocs]
 
     # XXX ???
-    def split_instruction(self, string):
+    def split_instruction(self, string, languages=None):
         '''Split STRING into a dict of instruction operands.
 
         Return a two-element list containing
         [0] a dict mapping operand keys to substrings of STRING; and
         [1] a dict mapping operand keys to [start, end] positions.
         '''
-        l = parse_instruction(string)
+        l = parse_instruction(string, languages)
         locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
         # XXX + 1?
         strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in
@@ -776,7 +796,7 @@ class VentureScriptParser(object):
         # XXX List???
         return [strings, sortlocs]
 
-    def expression_index_to_text_index(self, string, index):
+    def expression_index_to_text_index(self, string, index, languages=None):
         '''Return position of expression in STRING indexed by INDEX.
 
         - STRING is a string of an expression.
@@ -785,7 +805,7 @@ class VentureScriptParser(object):
 
         Return [start, end] position of the last nested subexpression.
         '''
-        l = parse_expression(string)
+        l = parse_expression(string, languages)
         return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
 
     def _expression_index_to_text_index_in_parsed_expression(self, l, index, string):
@@ -796,7 +816,8 @@ class VentureScriptParser(object):
             l = l['value'][index[i]]
         return l['loc']
 
-    def expression_index_to_text_index_in_instruction(self, string, index):
+    def expression_index_to_text_index_in_instruction(self, string, index,
+            languages=None):
         '''Return position of expression in STRING indexed by INDEX.
 
         - STRING is a string of an instruction that has a unique expression.
@@ -805,7 +826,7 @@ class VentureScriptParser(object):
 
         Return [start, end] position of the last nested subexpression.
         '''
-        inst = parse_instruction(string)
+        inst = parse_instruction(string, languages)
         l = inst['value']['expression']
         return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
 

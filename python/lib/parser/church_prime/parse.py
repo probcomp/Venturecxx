@@ -275,7 +275,8 @@ class Semantics(object):
     def p_json_dict_entry_e(self, key, value):  return (tokval(key), value)
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
-def parse_church_prime(f, context):
+def parse_church_prime(f, context, languages=None):
+    assert languages is None
     scanner = scan.Scanner(f, context)
     semantics = Semantics()
     parser = grammar.Parser(semantics)
@@ -290,9 +291,10 @@ def parse_church_prime(f, context):
     assert semantics.answer is not None
     return semantics.answer
 
-def parse_church_prime_string(string):
+def parse_church_prime_string(string, languages=None):
     try:
-        return parse_church_prime(StringIO.StringIO(string), '(string)')
+        return parse_church_prime(StringIO.StringIO(string), '(string)',
+            languages)
     except VentureException as e:
         assert 'instruction_string' not in e.data
         if 'text_index' in e.data:
@@ -310,7 +312,8 @@ def parse_church_prime_string(string):
         raise e
 
 
-def string_complete_p(string):
+def string_complete_p(string, languages=None):
+    assert languages is None
     scanner = scan.Scanner(StringIO.StringIO(string), '(string)')
     semantics = Semantics()
     parser = grammar.Parser(semantics)
@@ -330,18 +333,18 @@ def string_complete_p(string):
             else:
                 parser.feed(token)
 
-def parse_instructions(string):
-    return parse_church_prime_string(string)
+def parse_instructions(string, languages=None):
+    return parse_church_prime_string(string, languages)
 
-def parse_instruction(string):
-    ls = parse_instructions(string)
+def parse_instruction(string, languages=None):
+    ls = parse_instructions(string, languages)
     if len(ls) != 1:
         msg = 'Expected %s to parse as a single instruction, got %s' % (string, ls)
         raise VentureException('parse', msg)
     return ls[0]
 
-def parse_expression(string):
-    inst = parse_instruction(string)['value']
+def parse_expression(string, languages=None):
+    inst = parse_instruction(string, languages)['value']
     if inst['instruction']['value'] != 'evaluate':
         raise VentureException('parse', 'Expected an expression')
     return inst['expression']
@@ -421,18 +424,18 @@ class ChurchPrimeParser(object):
             the_parser = ChurchPrimeParser()
         return the_parser
 
-    def parse_instruction(self, string):
+    def parse_instruction(self, string, languages=None):
         '''Parse STRING as a single instruction.'''
-        l = parse_instruction(string)
+        l = parse_instruction(string, languages)
         return dict((k, delocust(v)) for k, v in l['value'].iteritems())
 
-    def parse_locexpression(self, string):
+    def parse_locexpression(self, string, languages=None):
         '''Parse STRING as an expression, and include location records.'''
-        return parse_expression(string)
+        return parse_expression(string, languages)
 
-    def parse_expression(self, string):
+    def parse_expression(self, string, languages=None):
         '''Parse STRING as an expression.'''
-        return delocust(parse_expression(string))
+        return delocust(parse_expression(string, languages))
 
     def unparse_expression(self, expression):
         '''Unparse EXPRESSION into a string.'''
@@ -541,14 +544,14 @@ class ChurchPrimeParser(object):
         return float(string) if '.' in string else int(string)
 
     # XXX ???
-    def split_program(self, string):
+    def split_program(self, string, languages=None):
         '''Split STRING into a sequence of instructions.
 
         Return a two-element list containing
         [0] a list of substrings, one for each instruction; and
         [1] a list of [start, end] positions of each instruction in STRING.
         '''
-        ls = parse_instructions(string)
+        ls = parse_instructions(string, languages)
         locs = [l['loc'] for l in ls]
         # XXX + 1?
         strings = [string[loc[0] : loc[1] + 1] for loc in locs]
@@ -558,14 +561,14 @@ class ChurchPrimeParser(object):
         return [strings, sortlocs]
 
     # XXX ???
-    def split_instruction(self, string):
+    def split_instruction(self, string, languages=None):
         '''Split STRING into a dict of instruction operands.
 
         Return a two-element list containing
         [0] a dict mapping operand keys to substrings of STRING; and
         [1] a dict mapping operand keys to [start, end] positions.
         '''
-        l = parse_instruction(string)
+        l = parse_instruction(string, languages)
         locs = dict((k, v['loc']) for k, v in l['value'].iteritems())
         # XXX + 1?
         strings = dict((k, string[loc[0] : loc[1] + 1]) for k, loc in
@@ -575,7 +578,7 @@ class ChurchPrimeParser(object):
         # XXX List???
         return [strings, sortlocs]
 
-    def expression_index_to_text_index(self, string, index):
+    def expression_index_to_text_index(self, string, index, languages=None):
         '''Return position of expression in STRING indexed by INDEX.
 
         - STRING is a string of an expression.
@@ -584,7 +587,7 @@ class ChurchPrimeParser(object):
 
         Return [start, end] position of the last nested subexpression.
         '''
-        l = parse_expression(string)
+        l = parse_expression(string, languages)
         return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
 
     def _expression_index_to_text_index_in_parsed_expression(self, l, index, string):
@@ -595,7 +598,8 @@ class ChurchPrimeParser(object):
             l = l['value'][index[i]]
         return l['loc']
 
-    def expression_index_to_text_index_in_instruction(self, string, index):
+    def expression_index_to_text_index_in_instruction(self, string, index,
+            languages=None):
         '''Return position of expression in STRING indexed by INDEX.
 
         - STRING is a string of an instruction that has a unique expression.
@@ -604,7 +608,7 @@ class ChurchPrimeParser(object):
 
         Return [start, end] position of the last nested subexpression.
         '''
-        inst = parse_instruction(string)
+        inst = parse_instruction(string, languages)
         l = inst['value']['expression']
         return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
 

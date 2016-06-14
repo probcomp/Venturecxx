@@ -68,7 +68,7 @@ PRELUDE_FILE = 'prelude.vnt'
 class Ripl():
     '''The Read, Infer, Predict Layer of one running Venture instance.'''
 
-    def __init__(self, sivm, parsers, extra_search_paths = None):
+    def __init__(self, sivm, parsers, extra_search_paths=None):
         self.sivm = sivm
         self.parsers = parsers
         self._compute_search_paths(extra_search_paths or [])
@@ -77,6 +77,7 @@ class Ripl():
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
         self._do_not_annotate = False
+        self._languages = OrderedDict()
         # TODO Loading the prelude currently (6/26/14) slows the test
         # suite to a crawl
         # self.load_prelude()
@@ -114,6 +115,19 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
+    def register_language(self, name, language):
+        if name in self._languages:
+            raise ValueError('Language already registered: %r' % (name,))
+        self._languages[name] = language
+
+    def deregister_language(self, name, language):
+        assert self._languages[name] is language
+        del self._languages[name]
+
+    @property
+    def languages(self):
+        return self._languages
+
     ############################################
     # Backend
     ############################################
@@ -128,6 +142,7 @@ class Ripl():
 
     def execute_instructions(self, instructions=None):
         p = self._cur_parser()
+        languages = self._languages
         try:
             strings, _locs = self.split_program(instructions)
         except VentureException as e:
@@ -140,7 +155,7 @@ class Ripl():
                 ret_value = None
                 for string in strings:
                     stringable_instruction = string
-                    parsed_instruction = p.parse_instruction(string)
+                    parsed_instruction = p.parse_instruction(string, languages)
                     ret_value = \
                         self._execute_parsed_instruction(parsed_instruction,
                             stringable_instruction)
@@ -152,11 +167,13 @@ class Ripl():
 
     def execute_instruction(self, instruction=None):
         p = self._cur_parser()
+        languages = self._languages
         try: # execute instruction, and handle possible exception
             if isinstance(instruction, basestring):
                 stringable_instruction = instruction
                 # parse instruction
-                parsed_instruction = p.parse_instruction(stringable_instruction)
+                parsed_instruction = \
+                    p.parse_instruction(stringable_instruction, languages)
             else:
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
@@ -204,6 +221,8 @@ class Ripl():
             e.annotated = True
             return e
 
+        languages = self.languages
+
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
         # instruction string instead of the actual data the caller
@@ -221,7 +240,7 @@ class Ripl():
         if e.exception == 'parse':
             try:
                 text_index = p.expression_index_to_text_index_in_instruction(
-                    instruction_string, e.data['expression_index'])
+                    instruction_string, e.data['expression_index'], languages)
             except VentureException as e2:
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
@@ -231,7 +250,7 @@ class Ripl():
         # results in an exception
         if e.exception == 'text_parse':
             try:
-                p.parse_instruction(instruction_string)
+                p.parse_instruction(instruction_string, languages)
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
@@ -240,7 +259,7 @@ class Ripl():
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
-            _, arg_ranges = p.split_instruction(instruction_string)
+            _, arg_ranges = p.split_instruction(instruction_string, languages)
             arg = e.data['argument']
             if arg in arg_ranges:
                 # Instruction unparses and reparses to structured
@@ -261,7 +280,8 @@ class Ripl():
 
     def parse_program(self, program_string):
         p = self._cur_parser()
-        instructions, positions = p.split_program(program_string)
+        languages = self._languages
+        instructions, positions = p.split_program(program_string, languages)
         return [self._ensure_parsed(i) for i in instructions], positions
 
     def execute_program(self, program_string, type=True):
@@ -299,7 +319,8 @@ class Ripl():
 
     def split_program(self,program_string):
         p = self._cur_parser()
-        return p.split_program(program_string)
+        languages = self._languages
+        return p.split_program(program_string, languages)
 
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
@@ -313,8 +334,10 @@ class Ripl():
         return candidate
 
     def _ensure_parsed(self, partially_parsed_instruction):
+        languages = self._languages
         if isinstance(partially_parsed_instruction, basestring):
-            return self._cur_parser().parse_instruction(partially_parsed_instruction)
+            return self._cur_parser().parse_instruction(
+                partially_parsed_instruction, languages)
         elif isinstance(partially_parsed_instruction, dict):
             return self._ensure_parsed_dict(partially_parsed_instruction)
         else:
@@ -342,8 +365,9 @@ class Ripl():
         return dict([(key, by_key(key, value)) for key, value in partial_dict.iteritems()])
 
     def _ensure_parsed_expression(self, expr):
+        languages = self._languages
         if isinstance(expr, basestring):
-            answer = self._cur_parser().parse_expression(expr)
+            answer = self._cur_parser().parse_expression(expr, languages)
             if isinstance(answer, basestring):
                 # Was a symbol; wrap it in a stack dict to prevent it
                 # from being processed again.
