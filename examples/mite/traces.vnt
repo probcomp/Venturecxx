@@ -1,0 +1,111 @@
+;; monad ops from inference prelude
+
+(assume bind
+  (lambda (act next)
+    (inference_action
+     (lambda (t)
+       (let ((res ((action_func act) t)))
+         ((action_func (next (first res))) (rest res)))))))
+
+(assume bind_
+  (lambda (act next)
+    (bind act (lambda (_) (next)))))
+
+(assume return
+  (lambda (val)
+    (inference_action
+     (lambda (t) (pair val t)))))
+
+(assume run
+  (lambda (act state)
+    (let ((result ((action_func act) state)))
+      (first result))))
+
+;; trace interface
+
+;; (assume blank_trace
+;;   (dict (list "counter" "global_env" "results")
+;;         (list 0 (get_current_environment) (dict nil nil))))
+
+(assume next_base_address
+  (inference_action next_base_address_f))
+
+(assume global_env
+  (inference_action global_env_f))
+
+(assume eval_request
+  (lambda (addr expr env)
+    (inference_action
+     (lambda (trace) (eval_request_f trace addr expr env)))))
+
+(assume bind_global
+  (lambda (symbol addr)
+    (inference_action
+     (lambda (trace) (bind_global_f trace symbol addr)))))
+
+(assume register_observation
+  (lambda (addr value)
+    (inference_action
+     (lambda (trace) (register_observation_f trace addr value)))))
+
+(assume check_consistent
+  (inference_action check_consistent_f))
+
+(assume split_trace
+  (inference_action split_trace_f))
+
+(assume eval_toplevel
+  (lambda (addr expr)
+    (do (env <- global_env)
+        (eval_request addr expr env))))
+
+(assume _assume
+  (lambda (symbol expr)
+    (do (addr <- next_base_address)
+        (eval_toplevel addr expr)
+        (bind_global symbol addr)
+        (return addr))))
+
+(assume _observe
+  (lambda (expr value)
+    (do (addr <- next_base_address)
+        (eval_toplevel addr expr)
+        (register_observation addr value)
+        (return addr))))
+
+(assume _predict
+  (lambda (expr)
+    (do (addr <- next_base_address)
+        (eval_toplevel addr expr)
+        (return addr))))
+
+(assume example1
+  (lambda ()
+    (run (do (assume slope (normal 0 1))
+             (assume intercept (normal 0 1))
+             (assume f (mem (lambda (x) (+ (* slope x) intercept))))
+             (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1)))))
+         (blank_trace))))
+
+(assume rejection_loop
+  (let ((reset_trace
+         (lambda (t) (inference_action (lambda (_) (pair nil t))))))
+    (lambda (prog)
+      (do (t <- split_trace)
+          (result <- prog)
+          (consistent <- check_consistent)
+          (if consistent
+              (return result)
+              (do (reset_trace t) (rejection_loop prog)))))))
+
+(assume example2
+  (lambda ()
+    (run (rejection_loop
+          (do (assume theta (beta 1 1))
+              (observe (flip theta) true)
+              (observe (flip theta) true)
+              (observe (flip theta) true)
+              (observe (flip theta) true)
+              (predict (debug 'theta theta))))
+         (blank_trace))))
+
