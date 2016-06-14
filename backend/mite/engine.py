@@ -1,22 +1,31 @@
-import random
 from venture.engine import engine
-
-class Engine(object):
-
-  def __init__(self, backend, seed):
-    self.engine = engine.Engine(backend, seed)
-
-  def __getattr__(self, attr):
-    print 'Engine method:', attr
-    return getattr(self.engine, attr)
-
-  def __setattr__(self, attr, val):
-    if attr != "engine":
-      return setattr(self.engine, attr, val)
-    else:
-      return object.__setattr__(self, attr, val)
+from venture.lite.value import VentureValue
+from venture.lite.types import ExpressionType
+from venture.mite.traces import BlankTrace
 
 class Engine(engine.Engine):
+  def new_model(self, backend=None):
+    return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
+
   def init_inference_trace(self):
-    import venture.mite.trace as trace
-    return trace.Trace(self._py_rng.randint(1, 2**31 - 1))
+    return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
+
+  def define(self, symbol, expr):
+    (addr, val) = self._do_evaluate(expr)
+    self.infer_trace.bind_global(symbol, addr)
+    return (addr.directive_id, val)
+
+  def evaluate(self, expr):
+    (addr, val) = self._do_evaluate(expr)
+    return (addr.directive_id, val)
+
+  def _do_evaluate(self, expr):
+    trace = self.infer_trace
+    addr = self.infer_trace.next_base_address()
+    expr = ExpressionType().asPython(VentureValue.fromStackDict(expr))
+    trace.eval_request(addr, expr, trace.global_env)
+    return (addr, trace.value_at(addr))
+
+  # make the stack happy
+  def predictNextDirectiveId(self):
+    return self.infer_trace.directive_counter + 1
