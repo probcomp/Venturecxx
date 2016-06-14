@@ -16,3 +16,7 @@ class Engine(object):
     else:
       return object.__setattr__(self, attr, val)
 
+class Engine(engine.Engine):
+  def init_inference_trace(self):
+    import venture.mite.trace as trace
+    return trace.Trace(self._py_rng.randint(1, 2**31 - 1))
