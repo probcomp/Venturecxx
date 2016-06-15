@@ -20,6 +20,11 @@ class BlankTraceSP(SimulationSP):
     seed = args.py_prng().randint(1, 2**31 - 1)
     return t.Blob.asVentureValue(BlankTrace(seed))
 
+class FlatTraceSP(SimulationSP):
+  def simulate(self, args):
+    seed = args.py_prng().randint(1, 2**31 - 1)
+    return t.Blob.asVentureValue(FlatTrace(seed))
+
 class TraceActionSP(SimulationSP):
   arg_types = []
   result_type = t.Nil
@@ -88,6 +93,7 @@ class SplitTraceSP(TraceActionSP):
     return new_trace, trace
 
 registerBuiltinSP("blank_trace", BlankTraceSP())
+registerBuiltinSP("flat_trace", BlankTraceSP())
 registerBuiltinSP("next_base_address_f", NextBaseAddressSP())
 registerBuiltinSP("global_env_f", GlobalEnvSP())
 registerBuiltinSP("eval_request_f", EvalRequestSP())
@@ -203,6 +209,13 @@ class AbstractTrace(ITrace):
 
 
 class BlankTrace(AbstractTrace):
+  """Record only the final results of requested expressions.
+
+  This corresponds to "untraced" evaluation, and supports forward
+  evaluation and rejection sampling only.
+
+  """
+
   def __init__(self, seed):
     super(BlankTrace, self).__init__(seed)
     self.results = {}
@@ -232,3 +245,69 @@ class BlankTrace(AbstractTrace):
                for id in self.observations)
 
 
+class FlatTrace(AbstractTrace):
+  """Maintain a flat lookup table of random choices, keyed by address.
+
+  This corresponds to the "random database" implementation approach
+  from Wingate et al (2011).
+
+  """
+
+  def __init__(self, seed):
+    super(FlatTrace, self).__init__(seed)
+    self.requests = {}
+    self.results = {}
+    self.observations = {}
+
+  def register_request(self, addr, exp, env):
+    self.requests[addr] = (exp, env)
+
+  def register_response(self, addr, value):
+    assert self.results[addr] == value
+
+  def register_constant(self, addr, value):
+    self.results[addr] = value
+
+  def register_lookup(self, addr, orig_addr):
+    self.results[addr] = self.results[orig_addr]
+
+  def register_application(self, addr, arity, value):
+    self.results[addr] = value
+
+  def register_made_sp(self, addr, sp):
+    assert self.results[addr] == sp
+    return SPRef(addr)
+
+  def deref_sp(self, sp_ref):
+    addr = sp_ref.makerNode
+    sp = self.results[addr]
+    return Node(addr, sp)
+
+  def register_observation(self, addr, value):
+    self.observations[addr] = value
+
+  def value_at(self, addr):
+    return self.results[addr]
+
+  def check_consistent(self):
+    return all(self.results[id] == self.observations[id]
+               for id in self.observations)
+
+  def detach(self):
+    # return a copy?
+    return (0, self.results)
+
+  def restore(self, subtrace):
+    self.results = subtrace
+    return 0
+
+  def regen(self, subtrace):
+    from venture.mite.evaluator import Restorer
+    new_trace = FlatTrace(self.py_prng.randint(1, 2**31 - 1))
+    for addr, (exp, env) in subtrace.requests.iteritems():
+      if isinstance(addr, addresses.DirectiveAddress):
+        Restorer(new_trace, subtrace).eval_family(addr, exp, env)
+    self.requests = new_trace.requests
+    self.results = new_trace.results
+    self.global_env = new_trace.global_env
+    return 0
