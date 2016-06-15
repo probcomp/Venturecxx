@@ -49,7 +49,7 @@ class Evaluator(object):
         weight += w
         nodes.append(Node(subaddr, v))
 
-      sp_node = self.trace.deref_sp(nodes[0])
+      sp_node = self.trace.deref_sp(nodes[0].value)
       args = nodes[1:]
 
       handle = self.construct_trace_handle(addr, sp_node.address, args)

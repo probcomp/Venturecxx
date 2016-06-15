@@ -189,7 +189,7 @@ class AbstractTrace(ITrace):
   def register_made_sp(self, addr, value):
     raise NotImplementedError
 
-  def deref_sp(self, sp):
+  def deref_sp(self, sp_ref):
     raise NotImplementedError
 
   def register_observation(self, addr, value):
@@ -217,8 +217,8 @@ class BlankTrace(AbstractTrace):
   def register_lookup(self, addr, orig_addr): pass
   def register_application(self, addr, arity, value): pass
   def register_made_sp(self, addr, sp): return SPRef((addr, sp))
-  def deref_sp(self, sp_node):
-    (addr, sp) = sp_node.value.makerNode
+  def deref_sp(self, sp_ref):
+    (addr, sp) = sp_ref.makerNode
     return Node(addr, sp)
 
   def register_observation(self, addr, value):
