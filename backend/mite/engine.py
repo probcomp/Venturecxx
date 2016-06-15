@@ -1,5 +1,5 @@
 from venture.engine import engine
-from venture.lite.value import VentureValue
+from venture.lite.value import VentureValue, SPRef
 from venture.lite.types import ExpressionType
 from venture.mite.traces import BlankTrace
 
@@ -24,7 +24,10 @@ class Engine(engine.Engine):
     addr = self.infer_trace.next_base_address()
     expr = ExpressionType().asPython(VentureValue.fromStackDict(expr))
     trace.eval_request(addr, expr, trace.global_env)
-    return (addr, trace.value_at(addr))
+    val = trace.value_at(addr)
+    if isinstance(val, SPRef):
+      val = trace.deref_sp(val).value
+    return (addr, val.asStackDict())
 
   # make the stack happy
   def predictNextDirectiveId(self):
