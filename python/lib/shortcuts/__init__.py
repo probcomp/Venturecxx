@@ -142,6 +142,11 @@ class Puma(Backend):
 
 class Mite(Backend):
     """An instance of this class represents the Mite backend."""
+    def make_combined_ripl(self, *args, **kwargs):
+        import venture.mite
+        r = super(Mite, self).make_combined_ripl(*args, **kwargs)
+        r.execute_program_from_file(venture.mite.__path__[0] + '/prelude.vnt')
+        return r
     def make_engine(self, persistent_inference_trace=True, seed=None):
         from venture.mite import engine
         seed = _seed(seed)
