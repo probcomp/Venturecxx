@@ -17,6 +17,7 @@
 
 import cPickle as pickle
 import contextlib
+import copy
 import random
 
 import numpy.random as npr
@@ -396,6 +397,8 @@ if freeze has been used.
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
     self.mode = other.mode
     self.create_trace_pool(traces, other.log_weights)
+    self._did_to_label = copy.copy(other._did_to_label)
+    self._label_to_did = copy.copy(other._label_to_did)
 
   def set_profiling(self, enabled=True):
       self.traces.map('set_profiling', enabled)
