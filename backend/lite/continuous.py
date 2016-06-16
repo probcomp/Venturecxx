@@ -528,6 +528,15 @@ class BetaOutputPSP(RandomPSP):
       # described below.
       return 0. if np_rng.uniform() < alpha/(alpha + beta) else 1.
 
+    if 1 < alpha or 1 < beta:
+      # Easy case: at least one of the pseudocounts exceeds 1.  Use
+      # the well-known relation to independent Gamma distributions:
+      # for independent G ~ Gamma(alpha) and H ~ Gamma(beta), we have
+      # G/(G + H) ~ Beta(alpha, beta).
+      G = np_rng.gamma(shape=alpha)
+      H = np_rng.gamma(shape=beta)
+      return G/(G + H)
+
     # Johnk's algorithm: Given u, v uniform on [0, 1], let x =
     # u^(1/alpha) and y = v^(1/beta); if x + y <= 1, yield x/(x + y).
     while True:
