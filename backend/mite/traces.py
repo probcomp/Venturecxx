@@ -78,6 +78,13 @@ class RegisterObservationSP(TraceActionSP):
     trace.register_observation(addr, value)
     return None, trace
 
+class ValueAtSP(TraceActionSP):
+  arg_types = [t.Blob]
+  result_type = t.Object
+
+  def do_action(self, trace, addr):
+    return trace.value_at(addr), trace
+
 class CheckConsistentSP(TraceActionSP):
   result_type = t.Bool
 
@@ -99,6 +106,7 @@ registerBuiltinSP("global_env_f", GlobalEnvSP())
 registerBuiltinSP("eval_request_f", EvalRequestSP())
 registerBuiltinSP("bind_global_f", BindGlobalSP())
 registerBuiltinSP("register_observation_f", RegisterObservationSP())
+registerBuiltinSP("value_at_f", ValueAtSP())
 registerBuiltinSP("check_consistent_f", CheckConsistentSP())
 registerBuiltinSP("split_trace_f", SplitTraceSP())
 
