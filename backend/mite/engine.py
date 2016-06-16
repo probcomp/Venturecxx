@@ -1,3 +1,5 @@
+import venture.value.dicts as v
+
 from venture.engine import engine
 from venture.lite.value import VentureValue, SPRef
 from venture.lite.types import ExpressionType
@@ -14,6 +16,22 @@ class Engine(engine.Engine):
     (addr, val) = self._do_evaluate(expr)
     self.infer_trace.bind_global(symbol, addr)
     return (addr.directive_id, val)
+
+  def assume(self, symbol, expr):
+    return self.run(v.app(v.sym('_assume'), v.quote(v.sym(symbol)), v.quote(expr)))
+
+  def observe(self, expr, value):
+    return self.run(v.app(v.sym('_observe'), v.quote(expr), v.quote(value)))
+
+  def predict(self, expr):
+    return self.run(v.app(v.sym('_predict'), v.quote(expr)))
+
+  def run(self, action_expr):
+    (addr, val) = self.evaluate(v.app(
+      v.sym('run_in'), action_expr, v.blob(self.model)))
+    ([result], next_model) = val['value']
+    self.model = next_model['value']
+    return (addr, result)
 
   def evaluate(self, expr):
     (addr, val) = self._do_evaluate(expr)
