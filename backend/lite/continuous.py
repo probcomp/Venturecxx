@@ -582,6 +582,12 @@ class BetaOutputPSP(RandomPSP):
       #         < 2^-1021 <<< 2^-256.
       #
       # This will never happen unless the PRNG is broken.
+      #
+      # XXX Is numpy's PRNG broken?  Unclear: many alleged `uniform
+      # [0, 1]' samplers actually give probability 2^-64 or 2^-52 of
+      # yielding zero, e.g. by drawing an integer in {0, 1, 2, ...,
+      # 2^52 - 1} and dividing by 2^52.  This is not what numpy's PRNG
+      # does but it's not too far off either.
 
       assert 0 < u
       assert 0 < v
