@@ -132,14 +132,12 @@ def test_beta_large_small():
     return reportKnownContinuous(dist.cdf, samples, descr=expression)
 
 @timed(5)
-@statisticalTest
 def test_beta_large_large():
-    a = 1e9
-    b = 1e9
+    a = 1e300
+    b = 1e300
     nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
     ripl = get_ripl()
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
-    dist = scipy.stats.beta(a, b)
-    return reportKnownContinuous(dist.cdf, samples, descr=expression)
+    assert all(sample == 1/2 for sample in samples)
