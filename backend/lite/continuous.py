@@ -594,12 +594,12 @@ class BetaOutputPSP(RandomPSP):
       # That would cause the log-sum-exp calculation to yield NaN
       # instead of a real number in [0, 1], which would be bad.
       #
-      # The smallest value attained by log(u) is just over -745, when
-      # u is the smallest nonnegative floating-point number 2^-1074.
-      # In this case, there is no overflow for any alpha above 1e-305:
-      # log(u)/alpha <= -745/1e-305 = -8e2 * 1e305 = -8e307,
-      # which does not overflow since the largest finite
-      # floating-point magnitude is a little over 1e308.
+      # The least value attained by log(u) is just over -745, when u
+      # is the smallest nonnegative floating-point number 2^-1074.  In
+      # this case, there is no overflow for any alpha above 1e-305:
+      # log(u)/alpha <= -745/1e-305 = -8e2 * 1e305 = -8e307, which
+      # does not overflow since the largest finite floating-point
+      # magnitude is a little over 1e308.
       #
       # Since we round the Beta(alpha, beta) distribution to
       # Bernoulli-weighted spikes at 0 and 1 when alpha or beta is
