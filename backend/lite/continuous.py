@@ -538,7 +538,15 @@ class BetaOutputPSP(RandomPSP):
       return G/(G + H)
 
     # Johnk's algorithm: Given u, v uniform on [0, 1], let x =
-    # u^(1/alpha) and y = v^(1/beta); if x + y <= 1, yield x/(x + y).
+    # u^(1/alpha) and y = v^(1/beta); if x + y <= 1, yield x/(x + y),
+    # as described in
+    #
+    #   Luc Devroye, _Nonuniform Random Variate Generation_,
+    #   Springer-Verlag, 1986, Ch. IX `Continuous univariate
+    #   densities', Sec. 3.5 'Johnk's theorem and its implications',
+    #   p. 416.
+    #
+    # (Original paper by M.D. Johnk, cited by Devroye, is in German.)
     while True:
       u = np_rng.uniform()
       v = np_rng.uniform()
