@@ -63,12 +63,12 @@ def _test_serialize_program(v, label, action):
         except ImportError:
             raise SkipTest("Puma backend does not appear to be installed")
         trace1 = engine.getDistinguishedTrace()
-        engine = engine.to_puma()
+        engine.to_puma()
         trace2 = engine.getDistinguishedTrace()
         assert 'venture.puma' in trace2.trace.__module__
     elif action == 'convert_lite':
         trace1 = engine.getDistinguishedTrace()
-        engine = engine.to_lite()
+        engine.to_lite()
         trace2 = engine.getDistinguishedTrace()
         assert 'venture.lite' in trace2.trace.__module__
     else:

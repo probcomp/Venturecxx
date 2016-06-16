@@ -398,23 +398,17 @@ class Engine(object):
     return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
-    engine = backend.make_engine(
-      persistent_inference_trace=self.persistent_inference_trace,
-      seed=self._py_rng.randint(1, 2**31 - 1),
-    )
-    if self.persistent_inference_trace:
-      engine.infer_trace = self.infer_trace # TODO Copy?
-    engine.directiveCounter = self.directiveCounter
-    engine.model.convertFrom(self.model)
-    return engine
+    model = self.new_model(backend)
+    model.convertFrom(self.model)
+    self.model = model
 
   def to_lite(self):
     from venture.shortcuts import Lite
-    return self.convert(Lite())
+    self.convert(Lite())
 
   def to_puma(self):
     from venture.shortcuts import Puma
-    return self.convert(Puma())
+    self.convert(Puma())
 
   def set_profiling(self, enabled=True): self.model.set_profiling(enabled)
   def clear_profiling(self): self.model.clear_profiling()

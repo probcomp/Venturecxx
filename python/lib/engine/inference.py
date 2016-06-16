@@ -229,6 +229,10 @@ class Infer(object):
   def on_particle(self, index, action):
     return self.engine.on_particle(index, action)
 
+  def convert_model(self, backend_name):
+    import venture.shortcuts as s
+    backend = s.backend(backend_name)
+    self.engine.convert(backend)
   def new_model(self, backend_name=None):
     if backend_name is None:
       backend = None

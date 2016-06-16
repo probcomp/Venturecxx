@@ -122,6 +122,11 @@ class Ripl():
         '''Return the name of backend powering this Ripl.  Either ``"lite"`` or ``"puma"``.'''
         return self.sivm.core_sivm.engine.model.backend.name()
 
+    def convert_backend(self, name):
+        from venture.shortcuts import backend
+        target = backend(name)
+        self.sivm.core_sivm.engine.convert(target)
+
     ############################################
     # Execution
     ############################################

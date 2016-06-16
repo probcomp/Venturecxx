@@ -1011,6 +1011,14 @@ Check the given boolean condition and raise an error if it fails.
 Print the given values to the terminal.
 """)],
 
+  engine_method_sp("convert_model", infer_action_maker_type([t.SymbolType()], t.ForeignBlobType("<model>")), desc="""\
+Convert the implicit model to a different tracing backend.
+
+The symbol gives the name of the backend to use, either
+``puma`` or ``lite``.
+
+ """),
+
   engine_method_sp("new_model", infer_action_maker_type([t.SymbolType()], t.ForeignBlobType("<model>"), min_req_args=0), desc="""\
 Create an new empty model.
 
