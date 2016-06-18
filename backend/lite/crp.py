@@ -25,9 +25,9 @@ either
 or
   -- d = -k (k > 0) and alpha = Ld for L \in {1,2,...}
 
-The current implementation does not ensure that either of these conditions, and
+The current implementation does not ensure either of these conditions, and
 failing to either enter valid hyperparameters directly or assign hyperpriors
-with the valid domains will results in dangerous behavior.
+with valid domains will result in dangerous behavior.
 """
 
 from collections import OrderedDict
