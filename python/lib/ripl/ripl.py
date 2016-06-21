@@ -735,7 +735,7 @@ Open issues:
 
     def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
-            directives = self.execute_instruction({'instruction':'list_directives'})['directives']
+            directives = self.sivm.list_directives()
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
@@ -775,11 +775,9 @@ Open issues:
 
     def get_directive(self, label_or_did, type=False):
         if isinstance(label_or_did, int):
-            i = {'instruction':'get_directive', 'directive_id':label_or_did}
+            d = self.sivm.get_directive(label_or_did)
         else:
-            i = {'instruction':'labeled_get_directive',
-                 'label':v.symbol(label_or_did)}
-        d = self.execute_instruction(i)['directive']
+            d = self.sivm.labeled_get_directive(label_or_did)
         self._collect_value_of(d)
         return d
 
