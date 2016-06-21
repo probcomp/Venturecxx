@@ -283,7 +283,7 @@ class FlatTrace(AbstractTrace):
     self.results[addr] = value
 
   def register_made_sp(self, addr, sp):
-    assert self.results[addr] == sp
+    assert self.results[addr] is sp
     return SPRef(addr)
 
   def deref_sp(self, sp_ref):
