@@ -443,3 +443,14 @@ def testInventLabel2():
       return(val);
     }""")
   r.report('foo')
+
+def testForgettingAcrossModels():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.execute_program("""
+define env = run(new_model());
+infer in_model(env, { assume mu = normal(0, 1); });
+define env2 = first(run(in_model(env, fork_model())));
+infer in_model(env, forget(quote(mu)));
+infer in_model(env2, forget(quote(mu)));
+""")

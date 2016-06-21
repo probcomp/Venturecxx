@@ -319,7 +319,12 @@ class VentureSivm(object):
             self._clear()
         # forget directive mappings on the "forget" command
         if forgotten_did is not None:
-            del self.syntax_dict[forgotten_did]
+            if forgotten_did in self.syntax_dict:
+                del self.syntax_dict[forgotten_did]
+            else:
+                # XXX Presume that this is a fork-model directive id
+                # collision as reported in Issue #586.
+                pass
         if instruction_type in ['evaluate', 'infer']:
             # "evaluate" and "infer" are forgotten by the Engine;
             # forget them here, too.
