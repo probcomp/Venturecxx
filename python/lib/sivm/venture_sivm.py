@@ -40,8 +40,6 @@ class VentureSivm(object):
     # list of all instructions supported by venture sivm
     _extra_instructions = {
         'force',
-        'get_directive',
-        'labeled_get_directive',
         'sample',
         'sample_all',
     }
@@ -398,7 +396,7 @@ class VentureSivm(object):
     ###############################
 
     # adds label back to directive
-    def get_directive(self, did):
+    def _get_directive(self, did):
         tmp = copy.copy(self.directive_dict[did])
         label = self.core_sivm.engine.get_directive_label(did)
         if label is not None:
@@ -408,25 +406,21 @@ class VentureSivm(object):
             tmp['instruction'] = tmp['instruction'][len('labeled_'):]
         return tmp
 
+    def get_directive(self, did):
+        with self._pause_continuous_inference():
+            return self._get_directive(did)
+
     def list_directives(self):
-        candidates = [self.get_directive(did)
-                      for did in sorted(self.directive_dict.keys())]
-        return [c for c in candidates
-                if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']]
+        with self._pause_continuous_inference():
+            candidates = [self._get_directive(did)
+                          for did in sorted(self.directive_dict.keys())]
+            return [c for c in candidates
+                    if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']]
 
-    def _do_get_directive(self, instruction):
-        did = utils.validate_arg(instruction, 'directive_id',
-                                 utils.validate_positive_integer)
-        if did not in self.directive_dict:
-            raise VentureException('invalid_argument',
-                    "Directive with directive_id = {} does not exist".format(did),
-                    argument='directive_id')
-        return {"directive": self.get_directive(did)}
-
-    def _do_labeled_get_directive(self, instruction):
-        label = utils.validate_arg(instruction, 'label', utils.validate_symbol)
+    def labeled_get_directive(self, label):
+        label = utils.validate_symbol(label)
         did = self.core_sivm.engine.get_directive_id(label)
-        return {'directive': self.get_directive(did)}
+        return self.get_directive(did)
 
     def _do_force(self, instruction):
         exp = utils.validate_arg(instruction,'expression',

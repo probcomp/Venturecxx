@@ -775,11 +775,9 @@ Open issues:
 
     def get_directive(self, label_or_did, type=False):
         if isinstance(label_or_did, int):
-            i = {'instruction':'get_directive', 'directive_id':label_or_did}
+            d = self.sivm.get_directive(label_or_did)
         else:
-            i = {'instruction':'labeled_get_directive',
-                 'label':v.symbol(label_or_did)}
-        d = self.execute_instruction(i)['directive']
+            d = self.sivm.labeled_get_directive(label_or_did)
         self._collect_value_of(d)
         return d
 
