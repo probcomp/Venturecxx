@@ -52,8 +52,7 @@ class Evaluator(object):
       sp_node = self.trace.deref_sp(nodes[0].value)
       args = nodes[1:]
 
-      handle = self.construct_trace_handle(addr, sp_node.address, args)
-      w, value = self.apply_sp(sp_node.value, handle)
+      w, value = self.apply_sp(addr, sp_node, args)
       weight += w
 
       self.trace.register_application(addr, len(exp), value)
@@ -62,11 +61,10 @@ class Evaluator(object):
 
     return (weight, value)
 
-  def construct_trace_handle(self, app_addr, sp_addr, args):
-    return TraceHandle(self.trace, app_addr, sp_addr, args)
-
-  def apply_sp(self, sp, args):
-    return (0, sp.apply(args))
+  def apply_sp(self, addr, sp_node, args):
+    sp = sp_node.value
+    handle = TraceHandle(self.trace, addr, sp_node.address, args)
+    return (0, sp.apply(handle))
 
 # TODO: this signature retains backward compatibility with Args for now,
 # but we should remove that
