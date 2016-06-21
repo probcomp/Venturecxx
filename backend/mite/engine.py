@@ -26,6 +26,10 @@ class Engine(engine.Engine):
   def predict(self, expr):
     return self.run(v.app(v.sym('_predict'), v.quote(expr)))
 
+  def forget(self, directive_id):
+    print 'TODO: forget', directive_id
+    return 0
+
   def run(self, action_expr):
     (addr, val) = self.evaluate(v.app(
       v.sym('run_in'), action_expr, v.blob(self.model)))
