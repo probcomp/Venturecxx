@@ -225,9 +225,9 @@ class BlankTrace(AbstractTrace):
   """
 
   def __init__(self, seed):
-    super(BlankTrace, self).__init__(seed)
     self.results = {}
     self.observations = {}
+    super(BlankTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env): pass
 
@@ -262,10 +262,10 @@ class FlatTrace(AbstractTrace):
   """
 
   def __init__(self, seed):
-    super(FlatTrace, self).__init__(seed)
     self.requests = {}
     self.results = {}
     self.observations = {}
+    super(FlatTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
     self.requests[addr] = (exp, env)
