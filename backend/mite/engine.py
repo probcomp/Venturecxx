@@ -3,11 +3,11 @@ import venture.value.dicts as v
 from venture.engine import engine
 from venture.lite.value import VentureValue, SPRef
 from venture.lite.types import ExpressionType
-from venture.mite.traces import BlankTrace
+from venture.mite.traces import BlankTrace, FlatTrace
 
 class Engine(engine.Engine):
   def new_model(self, backend=None):
-    return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
+    return FlatTrace(self._py_rng.randint(1, 2**31 - 1))
 
   def init_inference_trace(self):
     return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
