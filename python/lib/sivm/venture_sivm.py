@@ -42,7 +42,6 @@ class VentureSivm(object):
         'force',
         'get_directive',
         'labeled_get_directive',
-        'list_directives',
         'sample',
         'sample_all',
     }
@@ -409,12 +408,11 @@ class VentureSivm(object):
             tmp['instruction'] = tmp['instruction'][len('labeled_'):]
         return tmp
 
-    def _do_list_directives(self, _):
+    def list_directives(self):
         candidates = [self.get_directive(did)
                       for did in sorted(self.directive_dict.keys())]
-        return { "directives" :
-                 [c for c in candidates
-                  if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']] }
+        return [c for c in candidates
+                if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']]
 
     def _do_get_directive(self, instruction):
         did = utils.validate_arg(instruction, 'directive_id',
@@ -542,6 +540,3 @@ class VentureSivm(object):
     def sample(self, expression):
         d = {'instruction':'sample','expression':expression}
         return self.execute_instruction(d)
-
-    def list_directives(self):
-        return self.execute_instruction({'instruction':'list_directives'})

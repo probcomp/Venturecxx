@@ -156,11 +156,8 @@ class TestVentureSivm(unittest.TestCase):
             self.sivm.execute_instruction(inst2)
         except VentureException as e:
             self.assertEquals(e.exception,'invalid_argument')
-        inst3 = {
-                'instruction':'list_directives',
-                }
-        o3 = self.sivm.execute_instruction(inst3)
-        self.assertEquals(o3['directives'], [])
+        o3 = self.sivm.list_directives()
+        self.assertEquals(o3, [])
     def test_labeled_report(self):
         inst1 = {
                 'instruction':'labeled_predict',
@@ -181,11 +178,8 @@ class TestVentureSivm(unittest.TestCase):
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst1['directive_id'] = o1['directive_id']
-        inst2 = {
-                'instruction':'list_directives',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['directives'], [inst1])
+        o2 = self.sivm.list_directives()
+        self.assertEquals(o2, [inst1])
     def test_get_directive(self):
         inst1 = {
                 'instruction':'predict',
@@ -226,11 +220,8 @@ class TestVentureSivm(unittest.TestCase):
                 'value': v.real(3)
                 }
         self.sivm.execute_instruction(inst)
-        inst2 = {
-                'instruction':'list_directives',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['directives'], [])
+        o2 = self.sivm.list_directives()
+        self.assertEquals(o2, [])
     def test_sample(self):
         inst = {
                 'instruction':'sample',
@@ -239,8 +230,5 @@ class TestVentureSivm(unittest.TestCase):
         val = v.number(3)
         o = self.sivm.execute_instruction(inst)
         self.assertEquals(o['value'],val)
-        inst2 = {
-                'instruction':'list_directives',
-                }
-        o2 = self.sivm.execute_instruction(inst2)
-        self.assertEquals(o2['directives'], [])
+        o2 = self.sivm.list_directives()
+        self.assertEquals(o2, [])

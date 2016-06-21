@@ -735,7 +735,7 @@ Open issues:
 
     def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
-            directives = self.execute_instruction({'instruction':'list_directives'})['directives']
+            directives = self.sivm.list_directives()
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
