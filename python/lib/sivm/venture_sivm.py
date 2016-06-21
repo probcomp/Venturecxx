@@ -193,7 +193,7 @@ class VentureSivm(object):
             info = sys.exc_info()
             try:
                 e = self._annotate(e, instruction)
-            except Exception as e2:
+            except Exception:
                 print "Trying to annotate an exception at SIVM level led to:"
                 import traceback
                 print traceback.format_exc()
@@ -489,7 +489,7 @@ class VentureSivm(object):
     ###############################
 
     def assume(self, name, expression, label=None):
-        if label==None:
+        if label is None:
             d = {'instruction': 'assume', 'symbol':name, 'expression':expression}
         else:
             label = v.symbol(label)
@@ -498,7 +498,7 @@ class VentureSivm(object):
         return self.execute_instruction(d)
 
     def predict(self, expression, label=None):
-        if label==None:
+        if label is None:
             d = {'instruction': 'predict', 'expression':expression}
         else:
             d = {'instruction': 'labeled_predict',
@@ -506,7 +506,7 @@ class VentureSivm(object):
         return self.execute_instruction(d)
 
     def observe(self, expression, value, label=None):
-        if label==None:
+        if label is None:
             d = {'instruction': 'observe', 'expression':expression, 'value':value}
         else:
             d = {'instruction': 'labeled_observe', 'expression':expression,
