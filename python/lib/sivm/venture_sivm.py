@@ -33,7 +33,6 @@ class VentureSivm(object):
         self._clear()
 
     dicts = {
-        'directive_dict',
         'syntax_dict',
     }
 
@@ -107,7 +106,6 @@ class VentureSivm(object):
     ###############################
 
     def _clear(self):
-        self.directive_dict = {} # Maps directive ids to the actual instructions
         # Maps directive ids to the Syntax objects that record their
         # macro expansion history
         self.syntax_dict = {}
@@ -199,12 +197,10 @@ class VentureSivm(object):
                 if instruction_type in ['define','assume','observe',
                         'predict','predict_all','evaluate','infer']:
                     # After annotation completes, clear the syntax
-                    # dictionaries, because the instruction was
+                    # dictionary, because the instruction was
                     # (presumably!) not recorded in the underlying
                     # engine (so e.g. future list_directives commands
                     # should not list it)
-                    if predicted_did in self.directive_dict:
-                        del self.directive_dict[predicted_did]
                     if predicted_did in self.syntax_dict:
                         del self.syntax_dict[predicted_did]
             raise e, None, info[2]
@@ -233,12 +229,6 @@ class VentureSivm(object):
 
         did = self.core_sivm.engine.predictNextDirectiveId()
         assert did not in self.syntax_dict
-        tmp_instruction = {}
-        tmp_instruction['directive_id'] = did
-        for key in ('instruction', 'expression', 'symbol', 'value'):
-            if key in instruction:
-                tmp_instruction[key] = copy.copy(instruction[key])
-        self.directive_dict[did] = tmp_instruction
         self.syntax_dict[did] = record
         return did
 
@@ -329,7 +319,6 @@ class VentureSivm(object):
             self._clear()
         # forget directive mappings on the "forget" command
         if forgotten_did is not None:
-            del self.directive_dict[forgotten_did]
             del self.syntax_dict[forgotten_did]
         if instruction_type in ['evaluate', 'infer']:
             # "evaluate" and "infer" are forgotten by the Engine;
@@ -344,8 +333,6 @@ class VentureSivm(object):
                 # may fail to be present in these dicts: if the
                 # instruction being executed caused a "load" operation
                 # (which mutates the current sivm!?).
-                if predicted_did in self.directive_dict:
-                    del self.directive_dict[predicted_did]
                 if predicted_did in self.syntax_dict:
                     del self.syntax_dict[predicted_did]
 
