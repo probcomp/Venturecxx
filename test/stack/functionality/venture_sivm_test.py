@@ -174,7 +174,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_list_directives(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',v.number(1),v.number(2)],
+                'expression': [v.symbol('add'),v.number(1),v.number(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst1['directive_id'] = o1['directive_id']
@@ -183,7 +183,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_get_directive(self):
         inst1 = {
                 'instruction':'predict',
-                'expression': ['add',v.number(1),v.number(2)],
+                'expression': [v.symbol('add'),v.number(1),v.number(2)],
                 }
         o1 = self.sivm.execute_instruction(inst1)
         inst1['directive_id'] = o1['directive_id']
@@ -192,7 +192,7 @@ class TestVentureSivm(unittest.TestCase):
     def test_labeled_get_directive(self):
         inst1 = {
                 'instruction':'labeled_predict',
-                'expression': ['add',v.number(1),v.number(2)],
+                'expression': [v.symbol('add'),v.number(1),v.number(2)],
                 'label': v.symbol('moo'),
                 }
         o1 = self.sivm.execute_instruction(inst1)
@@ -201,7 +201,7 @@ class TestVentureSivm(unittest.TestCase):
         output = {
                 'directive_id': o1['directive_id'],
                 'instruction': 'predict',
-                'expression': ['add',v.number(1),v.number(2)],
+                'expression': [v.symbol('add'),v.number(1),v.number(2)],
                 'label': v.symbol('moo'),
                 }
         self.assertEquals(o2, output)

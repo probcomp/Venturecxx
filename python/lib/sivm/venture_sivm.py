@@ -397,14 +397,28 @@ class VentureSivm(object):
 
     # adds label back to directive
     def _get_directive(self, did):
-        tmp = copy.copy(self.directive_dict[did])
+        import venture.lite.types as t
+        directive = copy.copy(self.core_sivm.engine.model.traces.at_distinguished('directive', did))
+        if directive[0] == 'define':
+            ans = { 'instruction' : 'assume',
+                    'symbol' : v.symbol(directive[1]),
+                    'expression' : directive[2]
+                }
+        elif directive[0] == 'evaluate':
+            ans = { 'instruction' : 'predict',
+                    'expression' : directive[1]
+                }
+        else:
+            assert directive[0] == 'observe'
+            ans = { 'instruction' : 'observe',
+                    'expression' : directive[1],
+                    'value' : directive[2]
+                }
         label = self.core_sivm.engine.get_directive_label(did)
         if label is not None:
-            tmp['label'] = v.symbol(label)
-            #tmp['instruction'] = 'labeled_' + tmp['instruction']
-        if tmp['instruction'].startswith('labeled_'):
-            tmp['instruction'] = tmp['instruction'][len('labeled_'):]
-        return tmp
+            ans['label'] = v.symbol(label)
+        ans['directive_id'] = did
+        return ans
 
     def get_directive(self, did):
         with self._pause_continuous_inference():
@@ -412,8 +426,8 @@ class VentureSivm(object):
 
     def list_directives(self):
         with self._pause_continuous_inference():
-            candidates = [self._get_directive(did)
-                          for did in sorted(self.directive_dict.keys())]
+            dids = self.core_sivm.engine.model.traces.at_distinguished('dids')
+            candidates = [self._get_directive(did) for did in sorted(dids)]
             return [c for c in candidates
                     if c['instruction'] in ['assume', 'observe', 'predict', 'predict_all']]
 
