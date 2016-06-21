@@ -37,6 +37,9 @@ class Engine(engine.Engine):
     self.model = next_model['value']
     return (addr, result)
 
+  def infer(self, action_expr):
+    return self.run(action_expr)
+
   def evaluate(self, expr):
     (addr, val) = self._do_evaluate(expr)
     return (addr.directive_id, val)
