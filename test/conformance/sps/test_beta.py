@@ -22,9 +22,11 @@ import nose.tools
 import scipy.stats
 import traceback
 
+from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest
 
@@ -77,10 +79,12 @@ def test_beta_tail():
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr=expression)
 
+@broken_in("puma", "Issue #504")
+@on_inf_prim("none")
 def test_beta_thagomizer():
     # Check that Beta with spiky tails yields sane samples, not NaN.
     v = (1, 1/2, 1e-5, 1e-15, 1e-20, 1e-299, 1e-301)
-    nsamples = default_num_samples()
+    nsamples = 50
     for a in v:
         for b in v:
             expression = '(beta %r %r)' % (a, b)
