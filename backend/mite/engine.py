@@ -6,9 +6,6 @@ from venture.lite.types import ExpressionType
 from venture.mite.traces import BlankTrace, FlatTrace
 
 class Engine(engine.Engine):
-  def new_model(self, backend=None):
-    return FlatTrace(self._py_rng.randint(1, 2**31 - 1))
-
   def init_inference_trace(self):
     return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
 
@@ -16,29 +13,6 @@ class Engine(engine.Engine):
     (addr, val) = self._do_evaluate(expr)
     self.infer_trace.bind_global(symbol, addr)
     return (addr.directive_id, val)
-
-  def assume(self, symbol, expr):
-    return self.run(v.app(v.sym('_assume'), v.quote(v.sym(symbol)), v.quote(expr)))
-
-  def observe(self, expr, value):
-    return self.run(v.app(v.sym('_observe'), v.quote(expr), v.quote(value)))
-
-  def predict(self, expr):
-    return self.run(v.app(v.sym('_predict'), v.quote(expr)))
-
-  def forget(self, directive_id):
-    print 'TODO: forget', directive_id
-    return 0
-
-  def run(self, action_expr):
-    (addr, val) = self.evaluate(v.app(
-      v.sym('run_in'), action_expr, v.blob(self.model)))
-    ([result], next_model) = val['value']
-    self.model = next_model['value']
-    return (addr, result)
-
-  def infer(self, action_expr):
-    return self.run(action_expr)
 
   def evaluate(self, expr):
     (addr, val) = self._do_evaluate(expr)
