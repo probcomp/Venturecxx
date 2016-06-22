@@ -100,7 +100,7 @@ class SplitTraceSP(TraceActionSP):
     return new_trace, trace
 
 registerBuiltinSP("blank_trace", BlankTraceSP())
-registerBuiltinSP("flat_trace", BlankTraceSP())
+registerBuiltinSP("flat_trace", FlatTraceSP())
 registerBuiltinSP("next_base_address_f", NextBaseAddressSP())
 registerBuiltinSP("global_env_f", GlobalEnvSP())
 registerBuiltinSP("eval_request_f", EvalRequestSP())
