@@ -30,21 +30,21 @@ def gen_for_each(items):
   return wrap
 
 @gen_on_inf_prim("none")
-@gen_for_each(["blank_trace", "flat_trace"])
+@gen_for_each(["blank_trace", "flat_trace", "graph_trace"])
 def testPredictInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("(run_in (predict 1) (%s))" % trace)
   assert_equal(result,1)
 
 @gen_on_inf_prim("none")
-@gen_for_each(["blank_trace", "flat_trace"])
+@gen_for_each(["blank_trace", "flat_trace", "graph_trace"])
 def testPredictInBlankTrace2(trace):
   ripl = get_ripl()
   result = ripl.evaluate("(run_in (predict (+ 3 4)) (%s))" % trace)
   assert_equal(result,7)
 
 @gen_on_inf_prim("none")
-@gen_for_each(["blank_trace", "flat_trace"])
+@gen_for_each(["blank_trace", "flat_trace", "graph_trace"])
 def testAssumeInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
@@ -56,7 +56,7 @@ def testAssumeInBlankTrace1(trace):
   assert_equal(result,12)
 
 @gen_on_inf_prim("none")
-@gen_for_each(["blank_trace", "flat_trace"])
+@gen_for_each(["blank_trace", "flat_trace", "graph_trace"])
 def testLambdaInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
