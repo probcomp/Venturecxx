@@ -1,6 +1,6 @@
 [define example1
   (lambda ()
-    (run (do (assume slope (normal 0 1))
+    (run_in (do (assume slope (normal 0 1))
              (assume intercept (normal 0 1))
              (assume f (mem (lambda (x) (+ (* slope x) intercept))))
              (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1)))))
@@ -19,7 +19,7 @@
 
 [define example2
   (lambda ()
-    (run (rejection_loop
+    (run_in (rejection_loop
           (do (assume theta (beta 1 1))
               (observe (flip theta) true)
               (observe (flip theta) true)
@@ -30,7 +30,7 @@
 
 [define example3
   (lambda ()
-    (run (rejection_loop
+    (run_in (rejection_loop
           (do (assume theta (beta 1 1))
               (observe (binomial 100 theta) 100)
               (predict (debug 'theta theta))))
