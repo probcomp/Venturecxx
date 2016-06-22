@@ -15,40 +15,53 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, make_decorator
 
 from venture.test.config import get_ripl
-from venture.test.config import on_inf_prim
+from venture.test.config import gen_on_inf_prim
 
-@on_inf_prim("none")
-def testPredictInBlankTrace1():
+def gen_for_each(items):
+  def wrap(f):
+    @make_decorator(f)
+    def wrapped():
+      for item in items:
+        yield f, item
+    return wrapped
+  return wrap
+
+@gen_on_inf_prim("none")
+@gen_for_each(["blank_trace", "flat_trace"])
+def testPredictInBlankTrace1(trace):
   ripl = get_ripl()
-  result = ripl.evaluate("(run_in (predict 1) (blank_trace))")
+  result = ripl.evaluate("(run_in (predict 1) (%s))" % trace)
   assert_equal(result,1)
 
-@on_inf_prim("none")
-def testPredictInBlankTrace2():
+@gen_on_inf_prim("none")
+@gen_for_each(["blank_trace", "flat_trace"])
+def testPredictInBlankTrace2(trace):
   ripl = get_ripl()
-  result = ripl.evaluate("(run_in (predict (+ 3 4)) (blank_trace))")
+  result = ripl.evaluate("(run_in (predict (+ 3 4)) (%s))" % trace)
   assert_equal(result,7)
 
-@on_inf_prim("none")
-def testAssumeInBlankTrace1():
+@gen_on_inf_prim("none")
+@gen_for_each(["blank_trace", "flat_trace"])
+def testAssumeInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x 3)
             (assume y 4)
             (predict (* x y)))
-        (blank_trace))
-""")
+        (%s))
+""" % trace)
   assert_equal(result,12)
 
-@on_inf_prim("none")
-def testLambdaInBlankTrace1():
+@gen_on_inf_prim("none")
+@gen_for_each(["blank_trace", "flat_trace"])
+def testLambdaInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume f (lambda (x y) (+ x y 1)))
             (predict (f (f 2 3) (f 1 2))))
-        (blank_trace))
-""")
+        (%s))
+""" % trace)
   assert_equal(result,11)
