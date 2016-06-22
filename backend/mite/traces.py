@@ -300,22 +300,3 @@ class FlatTrace(AbstractTrace):
   def check_consistent(self):
     return all(self.results[id] == self.observations[id]
                for id in self.observations)
-
-  def detach(self):
-    # return a copy?
-    return (0, self.results)
-
-  def restore(self, subtrace):
-    self.results = subtrace
-    return 0
-
-  def regen(self, subtrace):
-    from venture.mite.evaluator import Restorer
-    new_trace = FlatTrace(self.py_prng.randint(1, 2**31 - 1))
-    for addr, (exp, env) in subtrace.requests.iteritems():
-      if isinstance(addr, addresses.DirectiveAddress):
-        Restorer(new_trace, subtrace).eval_family(addr, exp, env)
-    self.requests = new_trace.requests
-    self.results = new_trace.results
-    self.global_env = new_trace.global_env
-    return 0
