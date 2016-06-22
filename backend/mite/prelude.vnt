@@ -18,7 +18,8 @@
 
 [define run_in
   (lambda (act state)
-    ((action_func act) state))]
+    (let ((result ((action_func act) state)))
+      (first result)))]
 
 ;; trace interface
 
