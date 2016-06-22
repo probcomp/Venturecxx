@@ -18,9 +18,10 @@
 from __future__ import division
 
 import multiprocessing
+import traceback
+
 import nose.tools
 import scipy.stats
-import traceback
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
