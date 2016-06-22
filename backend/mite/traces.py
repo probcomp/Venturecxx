@@ -264,6 +264,7 @@ class FlatTrace(AbstractTrace):
   def __init__(self, seed):
     self.requests = {}
     self.results = {}
+    self.made_sps = {}
     self.observations = {}
     super(FlatTrace, self).__init__(seed)
 
@@ -271,7 +272,7 @@ class FlatTrace(AbstractTrace):
     self.requests[addr] = (exp, env)
 
   def register_response(self, addr, value):
-    assert self.results[addr] == value
+    assert self.results[addr] is value
 
   def register_constant(self, addr, value):
     self.results[addr] = value
@@ -284,11 +285,13 @@ class FlatTrace(AbstractTrace):
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
-    return SPRef(addr)
+    self.made_sps[addr] = sp
+    self.results[addr] = ret = SPRef(addr)
+    return ret
 
   def deref_sp(self, sp_ref):
     addr = sp_ref.makerNode
-    sp = self.results[addr]
+    sp = self.made_sps[addr]
     return Node(addr, sp)
 
   def register_observation(self, addr, value):
