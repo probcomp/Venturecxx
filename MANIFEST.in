@@ -996,7 +996,6 @@ include tool/minimal_deps.py
 include tool/pylintrc
 include tool/python-flymake.el
 include tool/refman-changelog
-include tool/scventure.py
 include tool/venture-epylint.py
 include tool/venture-mode.el
 include tool/venture_mode_font_lock.py
