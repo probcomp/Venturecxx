@@ -2,6 +2,8 @@ import copy
 import random
 import numpy as np
 
+from collections import OrderedDict
+
 import venture.mite.address as addresses
 import venture.lite.types as t
 import venture.lite.exp as e
@@ -221,7 +223,7 @@ class BlankTrace(AbstractTrace):
   """
 
   def __init__(self, seed):
-    self.results = {}
+    self.results = OrderedDict()
     self.observations = {}
     super(BlankTrace, self).__init__(seed)
 
@@ -272,7 +274,7 @@ class FlatTrace(AbstractTrace):
 
   def __init__(self, seed):
     self.requests = {}
-    self.results = {}
+    self.results = OrderedDict()
     self.made_sps = {}
     self.observations = {}
     super(FlatTrace, self).__init__(seed)

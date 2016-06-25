@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import venture.lite.types as t
 from venture.lite.value import SPRef
 
@@ -60,7 +62,7 @@ class DependencyGraphTrace(AbstractTrace):
 
   def __init__(self, seed):
     self.requests = {}
-    self.results = {}
+    self.results = OrderedDict()
     self.made_sps = {}
     self.nodes = {}
     self.children = {}
