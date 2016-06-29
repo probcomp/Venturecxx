@@ -16,12 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import contextmanager
+import cPickle
 import cStringIO as StringIO
 import random
 import threading
 import time
-
-import dill
 
 from venture.engine.inference import Infer
 from venture.engine.trace_set import TraceSet
@@ -372,10 +371,10 @@ class Engine(object):
     data['directiveCounter'] = self.directiveCounter
     data['extra'] = extra
     version = '0.2'
-    dill.dump((data, version), stream)
+    cPickle.dump((data, version), stream)
 
   def load_io(self, stream):
-    (data, version) = dill.load(stream)
+    (data, version) = cPickle.load(stream)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.model.load(data)
