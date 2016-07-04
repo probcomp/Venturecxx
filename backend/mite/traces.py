@@ -176,7 +176,6 @@ class AbstractTrace(ITrace):
   def eval_request(self, addr, exp, env):
     self.register_request(addr, exp, env)
     weight, value = Evaluator(self).eval_family(addr, exp, env)
-    self.register_response(addr, value)
     return (weight, value)
 
   def bind_global(self, symbol, addr):
@@ -186,9 +185,6 @@ class AbstractTrace(ITrace):
   # remainder of the interface, to be implemented by subclasses
 
   def register_request(self, addr, exp, env):
-    raise NotImplementedError
-
-  def register_response(self, addr, value):
     raise NotImplementedError
 
   def register_constant(self, addr, value):
@@ -230,9 +226,6 @@ class BlankTrace(AbstractTrace):
     super(BlankTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env): pass
-
-  def register_response(self, addr, value):
-    assert self.results[addr] is value
 
   def register_constant(self, addr, value):
     self.maybe_record_result(addr, value)
@@ -286,9 +279,6 @@ class FlatTrace(AbstractTrace):
 
   def register_request(self, addr, exp, env):
     self.requests[addr] = (exp, env)
-
-  def register_response(self, addr, value):
-    assert self.results[addr] is value
 
   def register_constant(self, addr, value):
     self.results[addr] = value

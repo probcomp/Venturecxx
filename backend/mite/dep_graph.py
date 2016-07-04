@@ -70,9 +70,6 @@ class DependencyGraphTrace(AbstractTrace):
   def register_request(self, addr, exp, env):
     self.requests[addr] = (exp, env)
 
-  def register_response(self, addr, value):
-    assert self.results[addr] is value
-
   def register_constant(self, addr, value):
     self.nodes[addr] = ConstantNode(addr)
     self.results[addr] = value
