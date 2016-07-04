@@ -194,7 +194,7 @@ class AbstractTrace(ITrace):
   def register_constant(self, addr, value):
     raise NotImplementedError
 
-  def register_lookup(self, addr, orig_addr):
+  def register_lookup(self, addr, node):
     raise NotImplementedError
 
   def register_application(self, addr, arity, value):
@@ -235,7 +235,7 @@ class BlankTrace(AbstractTrace):
     self.results[addr] = value
 
   def register_constant(self, addr, value): pass
-  def register_lookup(self, addr, orig_addr): pass
+  def register_lookup(self, addr, node): pass
   def register_application(self, addr, arity, value): pass
   def register_made_sp(self, addr, sp): return SPRef((addr, sp))
   def deref_sp(self, sp_ref):
@@ -277,8 +277,10 @@ class FlatTrace(AbstractTrace):
   def register_constant(self, addr, value):
     self.results[addr] = value
 
-  def register_lookup(self, addr, orig_addr):
-    self.results[addr] = self.results[orig_addr]
+  def register_lookup(self, addr, node):
+    # XXX this assert fails due to the deepcopy messing up object identities.
+    # assert node.value is self.results[node.address]
+    self.results[addr] = node.value
 
   def register_application(self, addr, arity, value):
     self.results[addr] = value

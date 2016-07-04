@@ -77,10 +77,12 @@ class DependencyGraphTrace(AbstractTrace):
     self.nodes[addr] = ConstantNode(addr)
     self.results[addr] = value
 
-  def register_lookup(self, addr, orig_addr):
-    self.nodes[addr] = LookupNode(addr, orig_addr)
-    self.results[addr] = self.results[orig_addr]
-    self.add_child_at(orig_addr, addr)
+  def register_lookup(self, addr, node):
+    # XXX this assert fails due to the deepcopy messing up object identities.
+    # assert node.value is self.results[node.address]
+    self.nodes[addr] = LookupNode(addr, node.address)
+    self.results[addr] = node.value
+    self.add_child_at(node.address, addr)
 
   def register_application(self, addr, arity, value):
     parents = [addresses.subexpression(index, addr)

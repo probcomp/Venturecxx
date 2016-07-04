@@ -27,7 +27,7 @@ class Evaluator(object):
 
     if e.isVariable(exp):
       result_node = env.findSymbol(exp)
-      self.trace.register_lookup(addr, result_node.address)
+      self.trace.register_lookup(addr, result_node)
       value = result_node.value
     elif e.isSelfEvaluating(exp):
       value = normalize(exp)
