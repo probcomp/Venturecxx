@@ -9,6 +9,9 @@ class Engine(engine.Engine):
   def init_inference_trace(self):
     return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
 
+  def new_model(self, _backend):
+    return None
+
   def define(self, symbol, expr):
     (addr, val) = self._do_evaluate(expr)
     self.infer_trace.bind_global(symbol, addr)

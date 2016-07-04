@@ -153,8 +153,7 @@ class Mite(Backend):
         assert persistent_inference_trace
         return engine.Engine(self, seed)
     def trace_constructor(self):
-        from venture.mite import trace
-        return trace.Trace
+        raise NotImplementedError
     def name(self): return "mite"
 
 def backend(name = "puma"):
