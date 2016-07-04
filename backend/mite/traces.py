@@ -58,7 +58,7 @@ class EvalRequestSP(TraceActionSP):
   arg_types = [t.Blob, t.Exp, EnvironmentType()]
 
   def do_action(self, trace, addr, expr, env):
-    trace = copy.deepcopy(trace)
+    (trace, env) = copy.deepcopy((trace, env))
     trace.eval_request(addr, expr, env)
     return None, trace
 
@@ -278,8 +278,7 @@ class FlatTrace(AbstractTrace):
     self.results[addr] = value
 
   def register_lookup(self, addr, node):
-    # XXX this assert fails due to the deepcopy messing up object identities.
-    # assert node.value is self.results[node.address]
+    assert node.value is self.results[node.address]
     self.results[addr] = node.value
 
   def register_application(self, addr, arity, value):

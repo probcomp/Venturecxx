@@ -78,8 +78,7 @@ class DependencyGraphTrace(AbstractTrace):
     self.results[addr] = value
 
   def register_lookup(self, addr, node):
-    # XXX this assert fails due to the deepcopy messing up object identities.
-    # assert node.value is self.results[node.address]
+    assert node.value is self.results[node.address]
     self.nodes[addr] = LookupNode(addr, node.address)
     self.results[addr] = node.value
     self.add_child_at(node.address, addr)
