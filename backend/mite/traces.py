@@ -232,12 +232,28 @@ class BlankTrace(AbstractTrace):
   def register_request(self, addr, exp, env): pass
 
   def register_response(self, addr, value):
-    self.results[addr] = value
+    assert self.results[addr] is value
 
-  def register_constant(self, addr, value): pass
-  def register_lookup(self, addr, node): pass
-  def register_application(self, addr, arity, value): pass
-  def register_made_sp(self, addr, sp): return SPRef((addr, sp))
+  def register_constant(self, addr, value):
+    self.maybe_record_result(addr, value)
+
+  def register_lookup(self, addr, node):
+    self.maybe_record_result(addr, node.value)
+
+  def register_application(self, addr, arity, value):
+    self.maybe_record_result(addr, value)
+
+  def maybe_record_result(self, addr, value):
+    if isinstance(addr, (addresses.directive, addresses.request)):
+      self.results[addr] = value
+
+  def register_made_sp(self, addr, sp):
+    ret = SPRef((addr, sp))
+    if addr in self.results:
+      assert self.results[addr] is sp
+      self.results[addr] = ret
+    return ret
+
   def deref_sp(self, sp_ref):
     (addr, sp) = sp_ref.makerNode
     return Node(addr, sp)
