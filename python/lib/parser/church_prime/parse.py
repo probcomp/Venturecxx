@@ -461,6 +461,8 @@ class ChurchPrimeParser(object):
         assert 'type' in symbol
         assert symbol['type'] == 'symbol'
         return tagged_value_to_string(symbol)
+    def unparse_symbol_quoted(self, symbol):
+        return "'" + self.unparse_symbol(symbol)
     def unparse_value(self, value):
         return value_to_string(value)
     def unparse_json(self, obj):
@@ -484,7 +486,7 @@ class ChurchPrimeParser(object):
         'freeze': [('directive_id', unparse_integer)],
         'labeled_freeze': [('label', unparse_symbol)],
         'report': [('directive_id', unparse_integer)],
-        'labeled_report': [('label', unparse_symbol)],
+        'labeled_report': [('label', unparse_symbol_quoted)],
         'infer': [('expression', unparse_expression)],
         'clear': [],
         'force': [('expression', unparse_expression), ('value', unparse_value)],
