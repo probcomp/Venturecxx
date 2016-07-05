@@ -70,10 +70,13 @@ def ripl_builder(args, backend):
     files = []
     plugins = []
     if args and args.seed:
-      r = backend.make_combined_ripl(persistent_inference_trace = True,
-                                     seed=int(args.seed))
+      seed = int(args.seed)
     else:
-      r = backend.make_combined_ripl(persistent_inference_trace = True)
+      seed = v._seed(None)
+    r = backend.make_combined_ripl(persistent_inference_trace = True,
+                                   seed=seed)
+    print "Initial random seed is %d (to reproduce run, use -s %d)" % \
+      (seed, seed)
 
     if args is not None:
         if args.prelude: r.load_prelude()
