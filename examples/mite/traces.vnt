@@ -36,3 +36,13 @@
               (predict (debug 'theta theta))))
          (flat_trace)))]
 
+[define example4
+  (lambda ()
+    (run_in (do (assume theta (debug 'theta (beta 1 1)))
+                (s <- (return nil))
+                (rho <- (extract s))
+                (xi <- (regen s))
+                (extract s)
+                (restore s (rest rho))
+                (return (debug 'results (list rho xi))))
+            (flat_trace)))]

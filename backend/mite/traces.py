@@ -101,6 +101,32 @@ class SplitTraceSP(TraceActionSP):
     new_trace.reseed(trace)
     return new_trace, trace
 
+class ExtractSP(TraceActionSP):
+  arg_types = [t.Object] ## TODO take a subproblem selector
+  result_type = t.Pair(t.Number, t.Blob)
+
+  def do_action(self, trace, subproblem):
+    trace = copy.deepcopy(trace)
+    (weight, trace_frag) = trace.extract(subproblem)
+    return (weight, trace_frag), trace
+
+class RegenSP(TraceActionSP):
+  arg_types = [t.Object] ## TODO take a subproblem selector
+  result_type = t.Number
+
+  def do_action(self, trace, subproblem):
+    trace = copy.deepcopy(trace)
+    weight = trace.regen(subproblem)
+    return weight, trace
+
+class RestoreSP(TraceActionSP):
+  arg_types = [t.Object, t.Blob] ## TODO take a subproblem selector
+
+  def do_action(self, trace, subproblem, trace_frag):
+    trace = copy.deepcopy(trace)
+    trace.restore(subproblem, trace_frag)
+    return None, trace
+
 registerBuiltinSP("blank_trace", BlankTraceSP())
 registerBuiltinSP("flat_trace", FlatTraceSP())
 registerBuiltinSP("next_base_address_f", NextBaseAddressSP())
@@ -111,6 +137,9 @@ registerBuiltinSP("register_observation_f", RegisterObservationSP())
 registerBuiltinSP("value_at_f", ValueAtSP())
 registerBuiltinSP("check_consistent_f", CheckConsistentSP())
 registerBuiltinSP("split_trace_f", SplitTraceSP())
+registerBuiltinSP("extract_f", ExtractSP())
+registerBuiltinSP("regen_f", RegenSP())
+registerBuiltinSP("restore_f", RestoreSP())
 
 class ITrace(object):
   # external trace interface exposed to VentureScript
@@ -138,6 +167,16 @@ class ITrace(object):
 
   def check_consistent(self):
     raise NotImplementedError
+
+  def extract(self, subproblem):
+    raise NotImplementedError
+
+  def regen(self, subproblem):
+    raise NotImplementedError
+
+  def restore(self, subproblem, trace_fragment):
+    raise NotImplementedError
+
 
 class AbstractTrace(ITrace):
   # common implementation of trace interface
@@ -312,3 +351,15 @@ class FlatTrace(AbstractTrace):
   def check_consistent(self):
     return all(self.results[id] == self.observations[id]
                for id in self.observations)
+
+  def extract(self, subproblem):
+    print 'extract is stubbed'
+    return (0, 'trace_fragment')
+
+  def regen(self, subproblem):
+    print 'regen is stubbed'
+    return 0
+
+  def restore(self, subproblem, trace_fragment):
+    print 'restore is stubbed'
+    assert trace_fragment == 'trace_fragment'

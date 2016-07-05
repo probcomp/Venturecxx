@@ -59,6 +59,21 @@
 [define split_trace
   (inference_action split_trace_f)]
 
+[define extract
+  (lambda (subproblem)
+    (inference_action
+     (lambda (trace) (extract_f trace subproblem))))]
+
+[define regen
+  (lambda (subproblem)
+    (inference_action
+     (lambda (trace) (regen_f trace subproblem))))]
+
+[define restore
+  (lambda (subproblem trace_frag)
+    (inference_action
+     (lambda (trace) (restore_f trace subproblem trace_frag))))]
+
 [define eval_toplevel
   (lambda (addr expr)
     (do (env <- global_env)
