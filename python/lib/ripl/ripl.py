@@ -47,6 +47,7 @@ Typical usage begins by using one of the factory functions in the
 
 '''
 
+from contextlib import contextmanager
 from collections import OrderedDict
 import cStringIO as StringIO
 import numbers
@@ -899,6 +900,16 @@ Open issues:
     def enable_error_annotation(self):
         self._do_not_annotate = False
         self.sivm._do_not_annotate = False
+
+    @contextmanager
+    def no_error_annotation(self):
+        annotating = self._do_not_annotate
+        sivm_annotating = self.sivm._do_not_annotate
+        try:
+            yield
+        finally:
+            self._do_not_annotate = annotating
+            self.sivm._do_not_annotate = sivm_annotating
 
     ############################################
     # Profiler methods
