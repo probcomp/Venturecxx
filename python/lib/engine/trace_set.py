@@ -339,9 +339,6 @@ if freeze has been used.
   def primitive_infer(self, exp):
     return self.traces.map('primitive_infer', exp)
 
-  def logscore(self): return self.traces.at_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.traces.map('getGlobalLogScore')
-
   def get_entropy_info(self):
     return { 'unconstrained_random_choices' : self.traces.at_distinguished('numRandomChoices') }
 
