@@ -172,7 +172,6 @@ struct ConcreteTrace : Trace
   double likelihoodWeight();
 
   int getSeed();
-  double getGlobalLogScore();
 
   bool hasAAAMadeSPAux(OutputNode * makerNode);
   void discardAAAMadeSPAux(OutputNode * makerNode);

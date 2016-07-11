@@ -810,9 +810,6 @@ the scaffold determined by the given expression."""
     # Python's native randomness.
     return 0
 
-  def getGlobalLogScore(self):
-    return self.log_joint_at("default", "all")
-
   #### Serialization interface
 
   def makeSerializationDB(self, values=None, skipStackDictConversion=False):
