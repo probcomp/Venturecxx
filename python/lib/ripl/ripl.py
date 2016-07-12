@@ -906,6 +906,8 @@ Open issues:
         annotating = self._do_not_annotate
         sivm_annotating = self.sivm._do_not_annotate
         try:
+            self._do_not_annotate = True
+            self.sivm._do_not_annotate = True
             yield
         finally:
             self._do_not_annotate = annotating
