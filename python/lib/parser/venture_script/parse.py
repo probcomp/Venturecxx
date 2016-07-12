@@ -413,7 +413,6 @@ class Semantics(object):
         l, start, _end = ll
         assert isloc(l), '%r' % (l,)
         l_ = adjlocust(l, start)
-        print 'language %r' % (l_,)
         return l_
 
     # paramlist, params: Return list of located symbols.
