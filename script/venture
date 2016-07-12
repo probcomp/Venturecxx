@@ -65,14 +65,14 @@ def local_ripl(args, backend):
     return r
 
 def ripl_builder(args, backend):
+  if args and args.seed:
+    seed = int(args.seed)
+  else:
+    seed = v._seed(None)
   def build():
     interactive = True
     files = []
     plugins = []
-    if args and args.seed:
-      seed = int(args.seed)
-    else:
-      seed = v._seed(None)
     r = backend.make_combined_ripl(persistent_inference_trace = True,
                                    seed=seed)
     print "Initial random seed is %d (to reproduce run, use -s %d)" % \
