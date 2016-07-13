@@ -130,9 +130,9 @@ def scan_string_end(scanner, text):
     scanner.begin('')
 
 def scan_language(scanner, text):
-    assert text[0] == '@'
+    assert text.startswith('@{')
     assert scanner.current_language == None
-    language = text[1:]
+    language = text[len('@{'):]
     if language not in scanner.languages:
         scanner.produce(-1)
     scanner.current_language = scanner.languages[language]()
@@ -212,7 +212,7 @@ class Scanner(Plex.Scanner):
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
-        (Plex.Str('@') + name, scan_language),
+        (Plex.Str('@{') + name, scan_language),
         (Plex.AnyChar,  -1),    # Invalid -- error.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
