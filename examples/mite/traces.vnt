@@ -38,11 +38,15 @@
 
 [define example4
   (lambda ()
-    (run_in (do (assume theta (debug 'theta (beta 1 1)))
+    (run_in (do (assume slope (normal 0 1))
+                (assume intercept (normal 0 1))
+                (assume f (lambda (x) (+ (* slope x) intercept)))
+                (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1))))
                 (s <- (return nil))
                 (rho <- (extract s))
                 (xi <- (regen s))
                 (extract s)
                 (restore s (rest rho))
+                (predict (debug 'xyz (list (f 0) (f 1) (f 2) (f 1))))
                 (return (debug 'results (list rho xi))))
             (flat_trace)))]

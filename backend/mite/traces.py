@@ -12,7 +12,7 @@ from venture.lite.value import SPRef
 
 from venture.untraced.node import Node, normalize
 
-from venture.mite.evaluator import Evaluator
+from venture.mite.evaluator import Evaluator, Regenerator
 from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
@@ -352,14 +352,43 @@ class FlatTrace(AbstractTrace):
     return all(self.results[id] == self.observations[id]
                for id in self.observations)
 
+  def unregister_constant(self, addr):
+    del self.results[addr]
+
+  def unregister_lookup(self, addr):
+    del self.results[addr]
+
+  def unregister_application(self, addr):
+    del self.results[addr]
+
+  def unregister_made_sp(self, addr):
+    sp = self.made_sps[addr]
+    del self.made_sps[addr]
+    self.results[addr] = sp
+    return sp
+
   def extract(self, subproblem):
-    print 'extract is stubbed'
-    return (0, 'trace_fragment')
+    x = Regenerator(self)
+    weight = 0
+    for i in reversed(range(self.directive_counter)):
+      addr = addresses.directive(i+1)
+      (exp, env) = self.requests[addr]
+      weight += x.uneval_family(addr, exp, env)
+    return (weight, x.fragment)
 
   def regen(self, subproblem):
-    print 'regen is stubbed'
-    return 0
+    x = Evaluator(self)
+    weight = 0
+    for i in range(self.directive_counter):
+      addr = addresses.directive(i+1)
+      (exp, env) = self.requests[addr]
+      w, _ = x.eval_family(addr, exp, env)
+      weight += w
+    return weight
 
   def restore(self, subproblem, trace_fragment):
-    print 'restore is stubbed'
-    assert trace_fragment == 'trace_fragment'
+    x = Regenerator(self, trace_fragment)
+    for i in range(self.directive_counter):
+      addr = addresses.directive(i+1)
+      (exp, env) = self.requests[addr]
+      x.eval_family(addr, exp, env)

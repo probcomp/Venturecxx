@@ -27,6 +27,11 @@ class Evaluator(object):
 
     if e.isVariable(exp):
       result_node = env.findSymbol(exp)
+      # XXX hack to propagate regenerated global bindings
+      try:
+        result_node.value = self.trace.value_at(result_node.address)
+      except KeyError:
+        pass
       self.trace.register_lookup(addr, result_node)
       value = result_node.value
     elif e.isSelfEvaluating(exp):
@@ -100,7 +105,7 @@ class TraceHandle(IArgs):
 
   def incRequest(self, request_id):
     # TODO remove ref-counting from trace layer
-    return request_id
+    raise NotImplementedError
 
   def hasRequest(self, request_id):
     # TODO remove ref-counting from trace layer
@@ -111,3 +116,94 @@ class TraceHandle(IArgs):
   def requestedValue(self, request_id):
     addr = self.request_address(request_id)
     return self.trace.value_at(addr)
+
+
+class Regenerator(Evaluator):
+  """Unevaluate and restore from a trace fragment."""
+
+  def __init__(self, trace, fragment=None):
+    self.trace = trace
+    if fragment is None:
+      fragment = {} # addr -> result value
+    self.fragment = fragment
+
+  def uneval_family(self, addr, exp, env):
+    weight = 0
+
+    if e.isVariable(exp):
+      self.trace.unregister_lookup(addr)
+    elif e.isSelfEvaluating(exp) or e.isQuotation(exp) or e.isLambda(exp):
+      self.trace.unregister_constant(addr)
+    else:
+      # unapply
+      value = self.trace.value_at(addr)
+      if isinstance(value, SPRef) and value.makerNode is addr:
+        value = self.unregister_made_sp(addr)
+      self.trace.unregister_application(addr)
+
+      nodes = []
+      for index, subexp in enumerate(exp):
+        subaddr = addresses.subexpression(index, addr)
+        nodes.append(Node(subaddr, self.trace.value_at(subaddr)))
+
+      sp_node = self.trace.deref_sp(nodes[0].value)
+      args = nodes[1:]
+
+      weight += self.unapply_sp(addr, value, sp_node, args)
+
+      # uneval operands
+      for node, subexp in reversed(zip(nodes, exp)):
+        weight += self.uneval_family(node.address, subexp, env)
+
+    return weight
+
+  def unapply_sp(self, addr, value, sp_node, args):
+    sp = sp_node.value
+    handle = RestoringTraceHandle(
+      self.trace, addr, sp_node.address, args, self, output_value=value)
+    sp.unapply(handle)
+    return 0
+
+  def apply_sp(self, addr, sp_node, args):
+    sp = sp_node.value
+    handle = RestoringTraceHandle(
+      self.trace, addr, sp_node.address, args, self)
+    return (0, sp.restore(handle))
+
+
+## TODO remove getState and setState, following interface from poster
+class RestoringTraceHandle(TraceHandle):
+  def __init__(self, trace, app_addr, sp_addr, args, restorer, output_value=None):
+    super(RestoringTraceHandle, self).__init__(
+      trace, app_addr, sp_addr, args)
+    self.outputValue = lambda: output_value
+    self.restorer = restorer
+
+  def setState(self, node, value, ext=None):
+    key = node if ext is None else (node, ext)
+    self.restorer.fragment[key] = value
+
+  def getState(self, node, ext=None):
+    key = node if ext is None else (node, ext)
+    return self.restorer.fragment[key]
+
+  def newRequest(self, request_id, exp, env):
+    # TODO return Node(value, address) so that SPs don't have to use
+    # requestedValue all the time; this way the untraced interpreter
+    # doesn't have to retain requests with non-repeatable request_ids.
+    addr = self.request_address(request_id)
+    w, _ = self.restorer.eval_family(addr, exp, env)
+    assert w == 0
+    return request_id
+
+  def incRequest(self, request_id):
+    # TODO remove ref-counting from trace layer
+    raise NotImplementedError
+
+  def decRequest(self, request_id):
+    addr = self.request_address(request_id)
+    (exp, env) = self.trace.requests[addr]
+    w = self.restorer.uneval_family(addr, exp, env)
+    assert w == 0
+    return request_id
+
