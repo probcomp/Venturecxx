@@ -276,7 +276,7 @@ class Semantics(object):
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
 def parse_church_prime(f, context, languages=None):
-    assert languages is None
+    assert not languages # XXX The Church' scanner can't deal with languages (yet)
     scanner = scan.Scanner(f, context)
     semantics = Semantics()
     parser = grammar.Parser(semantics)
@@ -313,7 +313,7 @@ def parse_church_prime_string(string, languages=None):
 
 
 def string_complete_p(string, languages=None):
-    assert languages is None
+    assert not languages # XXX The Church' scanner can't deal with languages (yet)
     scanner = scan.Scanner(StringIO.StringIO(string), '(string)')
     semantics = Semantics()
     parser = grammar.Parser(semantics)
