@@ -386,6 +386,7 @@ this Dataset."""
 # Solution: Defer.  For now, just merge on rows, holding columns
 # fixed.
 
+### Inference SPs relating to printing, plotting and datasets
 
 def print_fun(*args):
   def convert_arg(arg):
@@ -399,6 +400,10 @@ def print_fun(*args):
   else:
     print [convert_arg(a) for a in args]
 
+inf.registerBuiltinInferenceSP("print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
+Print the given values to the terminal.
+"""))
+
 def plot_fun(spec, dataset):
   spec = t.ExpressionType().asPython(spec)
   if isinstance(dataset, Dataset):
@@ -406,34 +411,6 @@ def plot_fun(spec, dataset):
   else:
     # Assume a raw data frame
     PlotSpec(spec).plot(dataset, list(dataset.columns.values))
-
-def plot_to_file_fun(basenames, spec, dataset):
-  filenames = t.ExpressionType().asPython(basenames)
-  spec = t.ExpressionType().asPython(spec)
-  if isinstance(dataset, Dataset):
-    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
-                        _format_filenames(filenames, spec))
-  else:
-    PlotSpec(spec).plot(dataset, list(dataset.columns.values),
-                        _format_filenames(filenames, spec))
-
-def _format_filenames(filenames,spec):
-  if isinstance(filenames, basestring) or isinstance(filenames, v.VentureString):
-    if isinstance(filenames, v.VentureString):
-      filenames = filenames.getString()
-    if isinstance(spec, basestring) or isinstance(spec, v.VentureString):
-      return [filenames + '.png']
-    else:
-      raise VentureValueError('The number of specs must match the number of filenames.')
-  else:
-    if isinstance(spec, list) and len(spec) == len(filenames):
-      return [filename + '.png' for filename in filenames]
-    else:
-      raise VentureValueError('The number of specs must match the number of filenames.')
-
-inf.registerBuiltinInferenceSP("print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
-Print the given values to the terminal.
-"""))
 
 inf.registerBuiltinInferenceSP("plot", deterministic_typed(plot_fun, [t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
 Plot a data set according to a plot specification.
@@ -507,6 +484,30 @@ Example::
        plotf("c0s", d))
 """)[0])
 
+def plot_to_file_fun(basenames, spec, dataset):
+  filenames = t.ExpressionType().asPython(basenames)
+  spec = t.ExpressionType().asPython(spec)
+  if isinstance(dataset, Dataset):
+    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
+                        _format_filenames(filenames, spec))
+  else:
+    PlotSpec(spec).plot(dataset, list(dataset.columns.values),
+                        _format_filenames(filenames, spec))
+
+def _format_filenames(filenames,spec):
+  if isinstance(filenames, basestring) or isinstance(filenames, v.VentureString):
+    if isinstance(filenames, v.VentureString):
+      filenames = filenames.getString()
+    if isinstance(spec, basestring) or isinstance(spec, v.VentureString):
+      return [filenames + '.png']
+    else:
+      raise VentureValueError('The number of specs must match the number of filenames.')
+  else:
+    if isinstance(spec, list) and len(spec) == len(filenames):
+      return [filename + '.png' for filename in filenames]
+    else:
+      raise VentureValueError('The number of specs must match the number of filenames.')
+
 inf.registerBuiltinInferenceSP("plot_to_file", deterministic_typed(plot_to_file_fun, [t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
 Save plot(s) to file(s).
 
@@ -542,13 +543,13 @@ Right now only implemented on datasets created by `empty` and
 
 inf.registerBuiltinInferenceSP("_collect", inf.macro_helper("collect", inf.infer_action_maker_type([t.AnyType()], return_type=t.ForeignBlobType("<dataset>"), variadic=True))[0])
 
-inf.registerBuiltinInferenceSP("printf", inf.engine_method_sp("printf", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
-Print model values collected in a dataset.
-
-This is a basic debugging facility.""")[0])
-
 inf.registerBuiltinInferenceSP("sweep", inf.engine_method_sp("sweep", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
 Print the iteration count.
 
 Extracts the last row of the supplied inference Dataset and prints its iteration count.
 """)[0])
+
+inf.registerBuiltinInferenceSP("printf", inf.engine_method_sp("printf", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
+Print model values collected in a dataset.
+
+This is a basic debugging facility.""")[0])
