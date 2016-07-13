@@ -58,7 +58,7 @@ class OrderedFrozenSet(object):
         return True
 
     def __lt__(self, other):
-        if not (self <= other):
+        if not self <= other:
             return False
         if all(x in self for x in other._dict.iterkeys()):
             return False
@@ -74,7 +74,7 @@ class OrderedFrozenSet(object):
         return True
 
     def __gt__(self, other):
-        if not (self >= other):
+        if not self >= other:
             return False
         if all(x in other for x in self._dict.iterkeys()):
             return False
