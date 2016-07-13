@@ -16,9 +16,10 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple
+import math
 
 from venture.lite.orderedset import OrderedFrozenSet
-from venture.lite.scaffold import constructScaffold
+from venture.lite.scaffold import constructScaffold, Scaffold
 from venture.lite.smap import SamplableMap
 
 # The language of possible subproblem selection phrases.  The item in
@@ -54,7 +55,9 @@ class TraceSearchIndexer(object):
     self.prog = prog
 
   def sampleIndex(self, trace):
-    return interpret(self.prog, trace)
+    (scaffold, _weight) = interpret(self.prog, trace)
+    assert isinstance(scaffold, Scaffold)
+    return scaffold
 
 
 # The return value of interpret is expected to be one of
@@ -69,21 +72,26 @@ def interpret(prog, trace):
   #     interpret(prog.source1, trace),
   #     interpret(prog.source2, trace))
   if isinstance(prog, Lookup):
-    return interpret(prog.dictionary, trace)[prog.key]
+    (d, w) = interpret(prog.dictionary, trace)
+    return (d[prog.key], w)
   elif isinstance(prog, Random1):
-    return sample_one(interpret(prog.source, trace), trace.py_rng)
+    (thing, wt) = interpret(prog.source, trace)
+    ans = sample_one(thing, trace.py_rng)
+    wt2 = -1 * math.log(len(thing))
+    return (ans, wt + wt2)
   # elif isinstance(prog, Edge): # TODO
   elif isinstance(prog, Extent):
-    return extent(interpret(prog.source, trace), trace)
+    (thing, wt) = interpret(prog.source, trace)
+    return (extent(thing, trace), wt)
   # elif isinstance(prog, UnionDict):
   # elif isinstance(prog, Union):
   elif isinstance(prog, FetchTag):
-    return trace.scopes[prog.name] # TODO What to do with the default scope, if we still have that idea?
+    return (trace.scopes[prog.name], 0) # TODO What to do with the default scope, if we still have that idea?
   elif isinstance(prog, Top):
-    return Top # Hack: Top as a node set is also a special token, reusing the same token
+    return (Top, 0) # Hack: Top as a node set is also a special token, reusing the same token
   elif isinstance(prog, MinimalSubproblem):
-    nodes = interpret(prog.source, trace)
-    return constructScaffold(trace, [nodes])
+    (nodes, wt) = interpret(prog.source, trace)
+    return (constructScaffold(trace, [nodes]), wt)
   else:
     raise Exception("Unknown trace search term %s" % (prog,))
 
