@@ -1182,3 +1182,6 @@ evaluated persists across invocations of `pyexec` and `pyeval`.
 ]
 
 inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
+
+def registerBuiltinInferenceSP(name, sp_obj):
+  inferenceSPsList.append([name, sp_obj])
