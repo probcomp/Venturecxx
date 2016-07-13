@@ -29,7 +29,7 @@
 #include <boost/foreach.hpp>
 
 void registerDeterministicLKernels(Trace * trace,
-  boost::shared_ptr<Scaffold> scaffold,
+  const boost::shared_ptr<Scaffold> & scaffold,
   const vector<ApplicationNode*>& applicationNodes,
   const vector<VentureValuePtr>& values)
 {

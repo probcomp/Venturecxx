@@ -20,6 +20,7 @@ import time
 from nose.tools import eq_
 
 from venture.test.config import broken_in
+from venture.test.config import gen_broken_in
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 import venture.test.errors as err
@@ -289,3 +290,63 @@ def testAnnotateErrorInEvaluate():
           ^^^^^^^
 """,
   ripl.evaluate, "(badness)")
+
+def testAnnotateErrorInListLookup():
+  # Doubles as a regression test for Issue #510 (silent acceptance of
+  # negative list indexes).
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+Index out of bounds VentureNumber(-1.0)
+(autorun (lookup (list 2 3) -1))
+         ^^^^^^^^^^^^^^^^^^^^^^
+""",
+  ripl.evaluate, "(lookup (list 2 3) -1)")
+
+@broken_in("puma", "Puma does not report error addresses")
+def testAnnotateErrorInListLookup2():
+  # Doubles as a regression test for Issue #510 (silent acceptance of
+  # negative list indexes).
+  ripl = get_ripl()
+  # TODO Include the segment
+  # (autorun (lookup (list 2 3) -1))
+  #          ^^^^^^^^^^^^^^^^^^^^^^
+  # once Issue #491 is fixed
+  err.assert_error_message_contains("""\
+Index out of bounds VentureNumber(-1.0)
+""",
+  ripl.sample, "(lookup (list 2 3) -1)")
+
+@gen_broken_in("puma", "Puma does not report error addresses")
+def testAnnotateModelProgramError():
+  for form in ['(predict foo)', '(predict_all foo)', '(sample foo)',
+               '(sample_all foo)', '(force foo 3)']:
+    yield checkAnnotateModelProgramError, form
+
+def checkAnnotateModelProgramError(form):
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+(autorun %s)
+         %s
+Caused by
+*** evaluation: Cannot find symbol 'foo'
+foo
+^^^
+""" % (form, "^" * len(form)),
+  ripl.evaluate, form)
+
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
+def testAnnotateInModelError():
+  # Tests Github Issue #538.
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  err.assert_error_message_contains("""\
+*** evaluation: Nested ripl operation signalled an error
+(autorun (in_model (run (new_model)) (action (run (sample (add foo 1))))))
+                                                  ^^^^^^^^^^^^^^^^^^^^
+Caused by
+*** evaluation: Cannot find symbol 'foo'
+(add foo 1.0)
+     ^^^
+""",
+  ripl.evaluate, "in_model(run(new_model()), action(run(sample(foo + 1))))")

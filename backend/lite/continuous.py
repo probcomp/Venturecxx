@@ -503,7 +503,130 @@ class BetaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, params, np_rng):
     alpha, beta = params
-    return np_rng.beta(a=alpha, b=beta)
+
+    # Beta(0, 0) is a pair of Dirac deltas at 0 and 1.  Beta(0, b) is
+    # a Dirac delta at 1; Beta(a, 0) is a Dirac delta at 0.  For any a
+    # or b rounded to zero, this is the best we can do.
+    if alpha == 0 and beta == 0:
+      return float(np_rng.randint(2))
+    elif alpha == 0:
+      return 1.
+    elif beta == 0:
+      return 0.
+    elif min(alpha, beta) < 1e-300:
+      # Not a delta -- but close enough to it at 0 that no matter what
+      # beta is, the spike near 1 would always be rounded to 1 in
+      # practice.
+      #
+      # XXX This is probably true for alpha < 1e-300.  I am not so
+      # sure that for beta < 1e-300, the spike near 0 would always be
+      # rounded to 0 in practice -- there are many more floating-point
+      # numbers near 0 than there are near 1.  But if you really care
+      # about the accuracy of the *distribution* in this case, maybe
+      # you should rethink your model.  We do this case to avoid the
+      # much more significant problem of giving NaN in some cases,
+      # described below.
+      return 0. if np_rng.uniform() < alpha/(alpha + beta) else 1.
+
+    if 1 < alpha or 1 < beta:
+      # Easy case: at least one of the pseudocounts exceeds 1.  Use
+      # the well-known relation to independent Gamma distributions:
+      # for independent G ~ Gamma(alpha) and H ~ Gamma(beta), we have
+      # G/(G + H) ~ Beta(alpha, beta).
+      G = np_rng.gamma(shape=alpha)
+      H = np_rng.gamma(shape=beta)
+      return G/(G + H)
+
+    # Johnk's algorithm: Given u, v uniform on [0, 1], let x =
+    # u^(1/alpha) and y = v^(1/beta); if x + y <= 1, yield x/(x + y),
+    # as described in
+    #
+    #   Luc Devroye, _Nonuniform Random Variate Generation_,
+    #   Springer-Verlag, 1986, Ch. IX `Continuous univariate
+    #   densities', Sec. 3.5 'Johnk's theorem and its implications',
+    #   p. 416.
+    #
+    # (Original paper by M.D. Johnk, cited by Devroye, is in German.)
+    while True:
+      u = np_rng.uniform()
+      v = np_rng.uniform()
+      x = u**(1/alpha)
+      y = v**(1/beta)
+      if 1 < x + y:
+          continue            # reject
+
+      # If u, v, alpha, and beta are far enough from zero that x and
+      # y are not rounded to zero, do the division in direct space.
+      if 0 < x + y:
+        return x/(x + y)
+
+      # Otherwise, do the division in log space:
+      #
+      #       x/(x + y) = exp log x/(x + y)
+      #       = exp [log x - log (x + y)]
+      #       = exp [log x - log m*(x/m + y/m)]
+      #       = exp [log x - log m - log (x/m + y/m)]
+      #       = exp [log x - log m - log (exp log x/m + exp log y/m)]
+      #       = exp [log x - log m
+      #               - log (exp (log x - log m) + exp (log y - log m))]
+      #       = exp [log x' - log (exp log x' + exp log y')]
+      #
+      # where m = max(x, y), x' = x/m, and y' = y/m, in order to
+      # avoid overflow in the intermediate exp.
+      #
+      # Should we worry about zero u or v?
+      #
+      # Numbers from 0 to the smallest positive floating-point
+      # number, or the slightly larger smallest positive /normal/
+      # floating-point number if the CPU is in the nonstandard but
+      # common faster flush-to-zero mode, will be rounded to zero.
+      # The smallest positive normal floating-point number is
+      # 2^-1022.  Hence
+      #
+      #       Pr[u = 0 or v = 0]
+      #         = Pr[u = 0] + Pr[v = 0] - Pr[u = 0 and v = 0]
+      #        <= 2^-1022 + 2^-1022 - 2^-2044
+      #         = 2^-1021 - 2^-2044
+      #         < 2^-1021 <<< 2^-256.
+      #
+      # This will never happen unless the PRNG is broken.
+      #
+      # XXX Is numpy's PRNG broken?  Unclear: many alleged `uniform
+      # [0, 1]' samplers actually give probability 2^-64 or 2^-53 of
+      # yielding zero, e.g. by drawing an integer in {0, 1, 2, ...,
+      # 2^53 - 1} and dividing by 2^53.  This is not what numpy's PRNG
+      # does but it's not too far off either.
+
+      assert 0 < u
+      assert 0 < v
+      log_x = np.log(u)/alpha
+      log_y = np.log(v)/beta
+
+      # Should we worry about floating-point overflow of log_x (and
+      # respectively log_y) to -infinity when alpha (resp. beta) is
+      # very small so that 1/alpha or (resp. 1/beta) is very large?
+      # That would cause the log-sum-exp calculation to yield NaN
+      # instead of a real number in [0, 1], which would be bad.
+      #
+      # The least value attained by log(u) is just over -745, when u
+      # is the smallest nonnegative floating-point number 2^-1074.  In
+      # this case, there is no overflow for any alpha above 1e-305:
+      # log(u)/alpha <= -745/1e-305 = -8e2 * 1e305 = -8e307, which
+      # does not overflow since the largest finite floating-point
+      # magnitude is a little over 1e308.
+      #
+      # Since we round the Beta(alpha, beta) distribution to
+      # Bernoulli-weighted spikes at 0 and 1 when alpha or beta is
+      # below 1e-300, this does not concern us for any possible values
+      # of u and v.
+
+      assert not np.isinf(log_x)
+      assert not np.isinf(log_y)
+
+      log_m = max(log_x, log_y)
+      log_x -= log_m
+      log_y -= log_m
+      return np.exp(log_x - np.log(np.exp(log_x) + np.exp(log_y)))
 
   def logDensityNumeric(self, x, params):
     return scipy.stats.beta.logpdf(x,*params)
@@ -518,7 +641,7 @@ class BetaOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
-    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
+    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log1p(-x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self, name):
@@ -575,8 +698,10 @@ class GammaOutputPSP(RandomPSP):
                                   [args.np_prng()]))
 
   def gradientOfSimulate(self, args, value, direction):
-    # These gradients were computed by Sympy; the script to get them is
-    # in doc/gradients.py
+    # These gradients were computed by Sympy; the script to get them
+    # is in doc/gradients.py.  Subsequently modified to convert
+    # math.log(math.exp(foo)) to (foo), because apparently Sympy's
+    # simplifier is not up to that.
     alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
@@ -597,14 +722,14 @@ class GammaOutputPSP(RandomPSP):
       else:
         x0 = -alpha + 1
         x1 = 1.0 / alpha
-        x2 = alpha * math.log(math.exp(x1 * (x0 - (beta * value) ** alpha)))
+        x2 = alpha * (x1 * (x0 - (beta * value) ** alpha))
         x3 = -x2
         x4 = x0 + x3
         gradAlpha = (x4 ** (x0 * x1) * (x3 + (alpha + x2 - 1) *
                      math.log(x4)) / (alpha ** 2.0 * beta))
         x0 = 1.0 / alpha
-        gradBeta = ( -(-alpha * math.log(math.exp(-x0 * (alpha +
-          (beta * value) ** alpha - 1))) - alpha + 1) ** x0 / beta ** 2.0 )
+        gradBeta = ( -(-alpha * (-x0 * (alpha +
+          (beta * value) ** alpha - 1)) - alpha + 1) ** x0 / beta ** 2.0 )
     return [direction * gradAlpha, direction * gradBeta]
 
   def logDensity(self, x, args):

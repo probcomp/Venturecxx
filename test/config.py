@@ -487,6 +487,26 @@ general-purpose inference programs except sub-sampled MH.
 def subSampling():
   return config["infer"].startswith("(subsampled_mh")
 
+# TODO Abstract commonalities with the rejection skipper
+def skipWhenDoingParticleGibbs(reason):
+  """Annotate a test function as being suitable for testing all
+general-purpose inference programs except particle Gibbs.
+
+  """
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args):
+      if not doingParticleGibbs():
+        return f(*args)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_doing_particle_gibbs = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def doingParticleGibbs():
+  return config["infer"].startswith("(pgibbs") or config["infer"].startswith("(func_pgibbs")
+
 def skipWhenInParallel(reason):
   def wrap(f):
     @nose.make_decorator(f)
@@ -510,7 +530,7 @@ def needs_ggplot(f):
   @nose.make_decorator(f)
   def wrapped(*args):
     try:
-      import ggplot             # pylint: disable=unused-variable
+      import venture.ggplot             # pylint: disable=unused-variable
       return f(*args)
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
@@ -521,10 +541,30 @@ def gen_needs_ggplot(f):
   @nose.make_decorator(f)
   def wrapped(*args):
     try:
-      import ggplot
+      import venture.ggplot
       for t in f(*args): yield t
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
+  return wrapped
+
+def needs_pystan(f):
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import pystan
+      return f(*args)
+    except ImportError:
+      raise SkipTest("pystan not installed on this machine")
+  return wrapped
+
+def needs_seaborn(f):
+  @nose.make_decorator(f)
+  def wrapped(*args):
+    try:
+      import seaborn
+      return f(*args)
+    except ImportError:
+      raise SkipTest("seaborn not installed on this machine")
   return wrapped
 
 def capture_output(ripl, program):

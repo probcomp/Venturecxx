@@ -22,11 +22,10 @@ from venture.test.config import on_inf_prim
 
 @on_inf_prim("define")
 def testVariableShadowing():
-  """Prior to the patch in which we implemented Trace.sealEnvironment(), we were
-  able to destructively redefine symbols from the inference prelude, and things
-  exploded.  Now we should see a shadowing behavior when we try similar
-  definitions.
-"""
+  # Prior to the patch in which we implemented
+  # Trace.sealEnvironment(), we were able to destructively redefine
+  # symbols from the inference prelude, and things exploded.  Now we
+  # should see a shadowing behavior when we try similar definitions.
   ripl = get_ripl()
   ripl.execute_program('''
 [assume x (normal 0 1)]

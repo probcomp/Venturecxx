@@ -75,7 +75,7 @@ def test_foreign_aaa_uc():
 @skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
 def test_foreign_aaa_infer():
-    "Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1"
+    # Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
     ripl.bind_foreign_sp("test_beta_bernoulli", builtins["make_uc_beta_bernoulli"])
@@ -107,7 +107,7 @@ def test_foreign_latents():
 @skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
 def test_foreign_latents_infer():
-    "Same as test.inference_quality.micro.test_latents.testHMMSP1"
+    # Same as test.inference_quality.micro.test_latents.testHMMSP1
 
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -135,16 +135,15 @@ def test_foreign_latents_infer():
     return reportKnownDiscrete(ans, predictions)
 
 def test_unpicklable_sp_sequential():
-    'If we attempt to bind an unpicklable SP in sequential mode, should work'
+    # If we attempt to bind an unpicklable SP in sequential mode, should work
     ripl = get_ripl()
     ripl.infer('(resample 2)')
     ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
 
 def test_unpicklable_sp_parallel():
-    '''
-    If we attempt to bind an unpicklable SP and the engine is in parallel
-    or emulating mode, check that we get the proper warning.
-    '''
+    # If we attempt to bind an unpicklable SP and the engine is in
+    # parallel or emulating mode, check that we get the proper
+    # warning.
     for mode in ['serializing', 'thread_ser', 'multiprocess']:
         yield check_unpicklable_sp_parallel, mode
 
@@ -157,7 +156,7 @@ def check_unpicklable_sp_parallel(mode):
         ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
 
 def test_return_foreign_sp():
-    'Foreign SPs can be returned as the result of directives.'
+    # Foreign SPs can be returned as the result of directives.
     ripl = get_ripl()
     ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
     ripl.sample('f')

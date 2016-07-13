@@ -47,6 +47,8 @@ Typical usage begins by using one of the factory functions in the
 
 '''
 
+from contextlib import contextmanager
+from collections import OrderedDict
 import cStringIO as StringIO
 import numbers
 import os
@@ -71,8 +73,8 @@ class Ripl():
         self.sivm = sivm
         self.parsers = parsers
         self._compute_search_paths(extra_search_paths or [])
-        self.directive_id_to_stringable_instruction = {}
-        self.directive_id_to_mode = {}
+        self.directive_id_to_stringable_instruction = OrderedDict()
+        self.directive_id_to_mode = OrderedDict()
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
         self._do_not_annotate = False
@@ -120,6 +122,11 @@ class Ripl():
     def backend(self):
         '''Return the name of backend powering this Ripl.  Either ``"lite"`` or ``"puma"``.'''
         return self.sivm.core_sivm.engine.model.backend.name()
+
+    def convert_backend(self, name):
+        from venture.shortcuts import backend
+        target = backend(name)
+        self.sivm.core_sivm.engine.convert(target)
 
     ############################################
     # Execution
@@ -403,7 +410,7 @@ class Ripl():
         return ans
 
     def directive_id_for_label(self, label):
-        return self.sivm.label_dict[label]
+        return self.sivm.core_sivm.engine.get_directive_id(label)
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
@@ -461,7 +468,7 @@ class Ripl():
         scaffold.show()
         print ""
 
-        by_did = {}
+        by_did = OrderedDict()
         def mark(nodes, base_color, only_bottom=False):
             for node in nodes:
                 color = color_app(base_color)
@@ -501,7 +508,7 @@ class Ripl():
             print self._cur_parser().unparse_instruction(instr, by_did[did])
 
         print "\n*** Cumulative subproblem nodes ***\n"
-        by_did = {}
+        by_did = OrderedDict()
         mark(pnodes, 'red', only_bottom=False)
         mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=False)
         mark(scaffold.absorbing, 'blue', only_bottom=False)
@@ -534,23 +541,12 @@ value to be returned as a dict annotating its Venture type.
 
         '''
         name = _symbolize(name)
-        if self.sivm.core_sivm.engine.swapped_model:
-            # TODO Properly scope directive labels the models those
-            # directives are in.
-            # Failing that, this code just suppresses labeling
-            # directives in any except the main model.
-            if label is None:
-                i = {'instruction': 'assume', 'symbol':name,
-                     'expression':expression}
-            else:
-                raise Exception("TODO Cannot label instructions inside in_model.")
+        if label is None:
+            label = name
         else:
-            if label is None:
-                label = name
-            else:
-                label = _symbolize(label)
-            i = {'instruction':'labeled_assume',
-                 'symbol':name, 'expression':expression, 'label':label}
+            label = _symbolize(label)
+        i = {'instruction':'labeled_assume',
+             'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -565,8 +561,8 @@ value to be returned as a dict annotating its Venture type.
         return value if type else u.strip_types(value)
 
     def predict_all(self, expression, type=False):
-        expression = self._ensure_parsed_expression(expression)
-        (pid, value) = self.sivm.core_sivm.engine.predict_all(expression)
+        i = {'instruction':'predict_all', 'expression':expression}
+        value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None, type=False):
@@ -740,7 +736,7 @@ Open issues:
 
     def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
-            directives = self.execute_instruction({'instruction':'list_directives'})['directives']
+            directives = self.sivm.list_directives()
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
@@ -780,15 +776,13 @@ Open issues:
 
     def get_directive(self, label_or_did, type=False):
         if isinstance(label_or_did, int):
-            i = {'instruction':'get_directive', 'directive_id':label_or_did}
+            d = self.sivm.get_directive(label_or_did)
         else:
-            i = {'instruction':'labeled_get_directive',
-                 'label':v.symbol(label_or_did)}
-        d = self.execute_instruction(i)['directive']
+            d = self.sivm.labeled_get_directive(label_or_did)
         self._collect_value_of(d)
         return d
 
-    def force(self, expression, value):
+    def force(self, expression, value, type=False):
         i = {'instruction':'force', 'expression':expression, 'value':value}
         self.execute_instruction(i)
         return None
@@ -799,8 +793,8 @@ Open issues:
         return value if type else u.strip_types(value)
 
     def sample_all(self, expression, type=False):
-        expression = self._ensure_parsed_expression(expression)
-        value = self.sivm.core_sivm.engine.sample_all(expression)
+        i = {'instruction':'sample_all', 'expression':expression}
+        value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def continuous_inference_status(self):
@@ -906,6 +900,18 @@ Open issues:
     def enable_error_annotation(self):
         self._do_not_annotate = False
         self.sivm._do_not_annotate = False
+
+    @contextmanager
+    def no_error_annotation(self):
+        annotating = self._do_not_annotate
+        sivm_annotating = self.sivm._do_not_annotate
+        try:
+            self._do_not_annotate = True
+            self.sivm._do_not_annotate = True
+            yield
+        finally:
+            self._do_not_annotate = annotating
+            self.sivm._do_not_annotate = sivm_annotating
 
     ############################################
     # Profiler methods

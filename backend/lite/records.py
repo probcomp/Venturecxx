@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from numbers import Number
 
 from venture.lite.exception import VentureTypeError
@@ -51,7 +52,11 @@ class VentureRecord(vv.VentureValue):
     self.fields = fields
 
   def asStackDict(self, _trace=None):
-    return {"type":"record", "tag":self.tag, "fields":self.fields}
+    return OrderedDict([
+      ("type", "record"),
+      ("tag", self.tag),
+      ("fields", self.fields),
+    ])
 
   @staticmethod
   def fromStackDict(thing):

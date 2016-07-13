@@ -24,7 +24,8 @@
 #include "detach.h"
 #include "consistency.h"
 
-pair<Trace*, double> FuncMHGKernel::propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> FuncMHGKernel::propose(
+    ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;

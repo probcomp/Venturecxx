@@ -102,11 +102,14 @@ constructs a SyntaxRule object, and expands with that.
     self.template = template
     self.desc = desc
 
-    patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
-    templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
+    self._patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
+    self._templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
 
-    self.desugar = lambda index: replace(pattern, templateIndeces, index)
-    self.resugar = lambda index: replace(template, patternIndeces, index)
+  def desugar(self, index):
+    return replace(self.pattern, self._templateIndeces, index)
+
+  def resugar(self, index):
+    return replace(self.template, self._patternIndeces, index)
 
   def applies(self, exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == self.name
@@ -117,7 +120,7 @@ constructs a SyntaxRule object, and expands with that.
       bindings = bind(self.pattern, exp)
       subbed = sub(bindings, self.template)
       expanded = expand(subbed)
-      return SubstitutionSyntax(expanded, self.desugar, self.resugar)
+      return SubstitutionSyntax(expanded, self)
     except VentureException as e:
       e.data['expression_index'] = self.resugar(e.data['expression_index'])
       raise
@@ -136,10 +139,13 @@ def replace(exp, indexMap, index):
   return []
 
 class SubstitutionSyntax(Syntax):
-  def __init__(self, syntax, desugar, resugar):
+  def __init__(self, syntax, sugarer):
     self.syntax = syntax
-    self.desugar = desugar
-    self.resugar = resugar
+    self.sugarer = sugarer
+  def desugar(self, index):
+    return self.sugarer.desugar(index)
+  def resugar(self, index):
+    return self.sugarer.resugar(index)
   def desugared(self):
     return self.syntax.desugared()
   def desugar_index(self, index):

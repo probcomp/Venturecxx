@@ -107,7 +107,7 @@ void ConcreteTrace::registerUnconstrainedChoice(Node * node) {
 }
 
 void ConcreteTrace::registerUnconstrainedChoiceInScope(
-    ScopeID scope, BlockID block, Node * node)
+    const ScopeID & scope, const BlockID & block, Node * node)
 {
   assert(block);
   if (!scopes.count(scope)) {
@@ -151,7 +151,7 @@ void ConcreteTrace::unregisterUnconstrainedChoice(Node * node) {
 }
 
 void ConcreteTrace::unregisterUnconstrainedChoiceInScope(
-    ScopeID scope, BlockID block, Node * node)
+    const ScopeID & scope, const BlockID & block, Node * node)
 {
   assert(scopes[scope].contains(block));
   assert(scopes[scope].get(block).count(node));
@@ -172,7 +172,8 @@ void ConcreteTrace::unregisterConstrainedChoice(Node * node) {
 }
 
 /* Regen mutations */
-void ConcreteTrace::addESREdge(RootOfFamily esrRoot, OutputNode * outputNode)
+void ConcreteTrace::addESREdge(const RootOfFamily & esrRoot,
+			       OutputNode * outputNode)
 {
   incNumRequests(esrRoot);
   addChild(esrRoot.get(), outputNode);
@@ -184,29 +185,32 @@ void ConcreteTrace::reconnectLookup(LookupNode * lookupNode)
   addChild(lookupNode->sourceNode, lookupNode);
 }
 
-void ConcreteTrace::incNumRequests(RootOfFamily root) { numRequests[root]++; }
+void ConcreteTrace::incNumRequests(const RootOfFamily & root)
+{
+  numRequests[root]++;
+}
 
 void ConcreteTrace::incRegenCount(
-    boost::shared_ptr<Scaffold> scaffold, Node * node)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   scaffold->incRegenCount(node);
 }
 
 bool ConcreteTrace::hasLKernel(
-    boost::shared_ptr<Scaffold> scaffold, Node * node)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   return scaffold->hasLKernel(node);
 }
 
 void ConcreteTrace::registerLKernel(
-    boost::shared_ptr<Scaffold> scaffold, Node * node,
-    boost::shared_ptr<LKernel> lkernel)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node,
+    const boost::shared_ptr<LKernel> & lkernel)
 {
   scaffold->registerLKernel(node, lkernel);
 }
 
 boost::shared_ptr<LKernel> ConcreteTrace::getLKernel(
-    boost::shared_ptr<Scaffold> scaffold, Node * node)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   return scaffold->getLKernel(node);
 }
@@ -234,7 +238,7 @@ void ConcreteTrace::disconnectLookup(LookupNode * lookupNode)
   removeChild(lookupNode->sourceNode, lookupNode);
 }
 
-void ConcreteTrace::decNumRequests(RootOfFamily root)
+void ConcreteTrace::decNumRequests(const RootOfFamily & root)
 {
   assert(numRequests.count(root));
   numRequests[root]--;
@@ -242,7 +246,7 @@ void ConcreteTrace::decNumRequests(RootOfFamily root)
 }
 
 void ConcreteTrace::decRegenCount(
-    boost::shared_ptr<Scaffold> scaffold, Node * node)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   scaffold->decRegenCount(node);
 }
@@ -256,12 +260,6 @@ void ConcreteTrace::removeChild(Node * node, Node * child)
 /* Primitive getters */
 gsl_rng * ConcreteTrace::getRNG() { return rng->get_rng(); }
 const gsl_rng * ConcreteTrace::getRNG() const { return rng->get_rng(); }
-
-VentureValuePtr ConcreteTrace::getValue(Node * node)
-{
-  assert(values[node]);
-  return values[node];
-}
 
 boost::shared_ptr<SP> ConcreteTrace::getMadeSP(Node * makerNode)
 {
@@ -295,14 +293,14 @@ vector<RootOfFamily> ConcreteTrace::getESRParents(Node * node)
 
 set<Node*> ConcreteTrace::getChildren(Node * node) { return node->children; }
 
-int ConcreteTrace::getNumRequests(RootOfFamily root)
+int ConcreteTrace::getNumRequests(const RootOfFamily & root)
 {
   if (numRequests.count(root)) { return numRequests[root]; }
   else { return 0; }
 }
 
 int ConcreteTrace::getRegenCount(
-    boost::shared_ptr<Scaffold> scaffold, Node * node)
+    const boost::shared_ptr<Scaffold> & scaffold, Node * node)
 {
   return scaffold->getRegenCount(node);
 }
@@ -328,7 +326,7 @@ bool ConcreteTrace::isObservation(Node * node)
 }
 
 /* Primitive Setters */
-void ConcreteTrace::setValue(Node * node, VentureValuePtr value)
+void ConcreteTrace::setValue(Node * node, const VentureValuePtr & value)
 {
   assert(value);
   values[node] = value;
@@ -342,14 +340,14 @@ void ConcreteTrace::unobserveNode(Node * node)
   observedValues.erase(node);
 }
 
-void ConcreteTrace::observeNode(Node * node, VentureValuePtr value)
+void ConcreteTrace::observeNode(Node * node, const VentureValuePtr & value)
 {
   assert(!observedValues.count(node));
   observedValues[node] = value;
 }
 
 void ConcreteTrace::setMadeSPRecord(
-    Node * makerNode, boost::shared_ptr<VentureSPRecord> spRecord)
+    Node * makerNode, const boost::shared_ptr<VentureSPRecord> & spRecord)
 {
   assert(!madeSPRecords.count(makerNode));
   madeSPRecords[makerNode] = spRecord;
@@ -361,18 +359,19 @@ void ConcreteTrace::destroyMadeSPRecord(Node * makerNode)
   madeSPRecords.erase(makerNode);
 }
 
-void ConcreteTrace::setMadeSP(Node * makerNode, boost::shared_ptr<SP> sp)
+void ConcreteTrace::setMadeSP(Node * makerNode,
+			      const boost::shared_ptr<SP> & sp)
 {
   getMadeSPRecord(makerNode)->sp = sp;
 }
 
 void ConcreteTrace::setMadeSPAux(Node * makerNode,
-                                 boost::shared_ptr<SPAux> spAux)
+                                 const boost::shared_ptr<SPAux> & spAux)
 {
   getMadeSPRecord(makerNode)->spAux = spAux;
 }
 
-void ConcreteTrace::setChildren(Node * node, set<Node*> childNodes)
+void ConcreteTrace::setChildren(Node * node, const set<Node*> & childNodes)
 {
   assert(false);
   //  children[node] = childNodes;
@@ -384,30 +383,32 @@ void ConcreteTrace::setESRParents(
   esrRoots[node] = esrRootNodes;
 }
 
-void ConcreteTrace::setNumRequests(RootOfFamily node, int num)
+void ConcreteTrace::setNumRequests(const RootOfFamily & node, int num)
 {
   //assert(false);
   numRequests[node] = num;
 }
 
 /* SPFamily operations */
-void ConcreteTrace::registerMadeSPFamily(Node * makerNode, FamilyID id,
-                                         RootOfFamily esrRoot)
+void ConcreteTrace::registerMadeSPFamily(Node * makerNode, const FamilyID & id,
+                                         const RootOfFamily & esrRoot)
 {
   getMadeSPFamilies(makerNode)->registerFamily(id, esrRoot);
 }
 
-void ConcreteTrace::unregisterMadeSPFamily(Node * makerNode, FamilyID id)
+void ConcreteTrace::unregisterMadeSPFamily(Node * makerNode,
+					   const FamilyID & id)
 {
   getMadeSPFamilies(makerNode)->unregisterFamily(id);
 }
 
-bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, FamilyID id)
+bool ConcreteTrace::containsMadeSPFamily(Node * makerNode, const FamilyID & id)
 {
   return getMadeSPFamilies(makerNode)->containsFamily(id);
 }
 
-RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
+RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode,
+						const FamilyID & id)
 {
   return getMadeSPFamilies(makerNode)->getRootOfFamily(id);
 }
@@ -415,7 +416,7 @@ RootOfFamily ConcreteTrace::getMadeSPFamilyRoot(Node * makerNode, FamilyID id)
 
 /* New in ConcreteTrace */
 
-BlockID ConcreteTrace::sampleBlock(ScopeID scope)
+BlockID ConcreteTrace::sampleBlock(const ScopeID & scope)
 {
   if (!scopes.count(scope)) {
     throw "scope " + scope->toString() + " does not contain any blocks";
@@ -423,18 +424,18 @@ BlockID ConcreteTrace::sampleBlock(ScopeID scope)
   return scopes[scope].sampleKeyUniformly(getRNG());
 }
 
-vector<BlockID> ConcreteTrace::blocksInScope(ScopeID scope)
+vector<BlockID> ConcreteTrace::blocksInScope(const ScopeID & scope)
 {
   if (scopes.count(scope)) { return scopes[scope].getOrderedKeys(); }
   else { return vector<BlockID>(); }
 }
 
-int ConcreteTrace::numBlocksInScope(ScopeID scope)
+int ConcreteTrace::numBlocksInScope(const ScopeID & scope)
 {
   return blocksInScope(scope).size();
 }
 
-set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
+set<Node*> ConcreteTrace::getAllNodesInScope(const ScopeID & scope)
 {
   set<Node*> all;
   // TODO have SamplableMap provide an iterator
@@ -449,7 +450,7 @@ set<Node*> ConcreteTrace::getAllNodesInScope(ScopeID scope)
 }
 
 vector<set<Node*> > ConcreteTrace::getOrderedSetsInScopeAndRange(
-    ScopeID scope, BlockID minBlock, BlockID maxBlock)
+    const ScopeID & scope, const BlockID & minBlock, const BlockID & maxBlock)
 {
   vector<set<Node*> > ordered;
   vector<BlockID> sortedBlocks =
@@ -461,7 +462,7 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScopeAndRange(
   return ordered;
 }
 
-vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope)
+vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(const ScopeID & scope)
 {
   vector<set<Node*> > ordered;
   vector<BlockID> sortedBlocks = scopes[scope].getOrderedKeys();
@@ -472,7 +473,8 @@ vector<set<Node*> > ConcreteTrace::getOrderedSetsInScope(ScopeID scope)
   return ordered;
 }
 
-set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block)
+set<Node*> ConcreteTrace::getNodesInBlock(const ScopeID & scope,
+					  const BlockID & block)
 {
   if(!scopes[scope].contains(block)) {
     throw "scope " + scope->toString() + " does not contain block "
@@ -494,7 +496,8 @@ set<Node*> ConcreteTrace::getNodesInBlock(ScopeID scope, BlockID block)
 }
 
 void ConcreteTrace::addUnconstrainedChoicesInBlock(
-    ScopeID scope, BlockID block, set<Node*> & pnodes, Node * node)
+    const ScopeID & scope, const BlockID & block,
+    set<Node*> & pnodes, Node * node)
 {
   OutputNode * outputNode = dynamic_cast<OutputNode*>(node);
   if (!outputNode) { return; }
@@ -537,7 +540,7 @@ void ConcreteTrace::addUnconstrainedChoicesInBlock(
   }
 }
 
-bool ConcreteTrace::scopeHasEntropy(ScopeID scope)
+bool ConcreteTrace::scopeHasEntropy(const ScopeID & scope)
 {
   return scopes.count(scope) && numBlocksInScope(scope) > 0;
 }
@@ -606,7 +609,9 @@ int ConcreteTrace::numUnconstrainedChoices()
   return unconstrainedChoices.size();
 }
 
-double ConcreteTrace::logLikelihoodAt(ScopeID scope, BlockID block) {
+double ConcreteTrace::logLikelihoodAt(const ScopeID & scope,
+				      const BlockID & block)
+{
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
   if (!scopeHasEntropy(scope)) { return 0; }
@@ -621,7 +626,8 @@ double ConcreteTrace::logLikelihoodAt(ScopeID scope, BlockID block) {
   return xiWeight;
 }
 
-double ConcreteTrace::logJointAt(ScopeID scope, BlockID block) {
+double ConcreteTrace::logJointAt(const ScopeID & scope, const BlockID & block)
+{
   // TODO This is a different code path from normal infer commands
   // because it needs to return the weight
   if (!scopeHasEntropy(scope)) { return 0; }
@@ -672,7 +678,6 @@ double ConcreteTrace::likelihoodWeight() {
 }
 
 int ConcreteTrace::getSeed() { assert(false); }
-double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
 
 bool ConcreteTrace::hasAAAMadeSPAux(OutputNode * makerNode)
@@ -687,7 +692,7 @@ void ConcreteTrace::discardAAAMadeSPAux(OutputNode * makerNode)
 }
 
 void ConcreteTrace::registerAAAMadeSPAux(
-    OutputNode * makerNode, boost::shared_ptr<SPAux> spAux)
+    OutputNode * makerNode, const boost::shared_ptr<SPAux> & spAux)
 {
   aaaMadeSPAuxs[makerNode] = spAux;
 }
@@ -740,7 +745,7 @@ void ConcreteTrace::freezeOutputNode(OutputNode * outputNode)
 }
 
 template <typename K, typename V>
-set<K> keySet(map<K, V> m)
+set<K> keySet(const map<K, V> & m)
 {
   set<K> answer;
   pair<K, V> me;

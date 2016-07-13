@@ -71,19 +71,62 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
     def test_optional_let(self):
         self.run_test( 'a',
                 r(0,1,v.sym('a')))
-        self.run_test( '(a=b;c)',
-                r(0,7,r(1,5,v.sym('let'),1,3,r(1,3,r(1,1,v.sym('a'),3,1,v.sym('b'))),5,1,v.sym('c'))))
+        self.run_test( '{a=b;c}',
+                r(0,7,r(1,5,v.sym('do'),1,3,r(2,1,v.sym('let'),1,1,v.sym('a'),3,1,v.sym('b')),5,1,v.sym('c'))))
 
     def test_proc(self):
         self.run_test( 'proc(arg, arg){ true }',
                 r(0,22,r(0,4,v.sym('lambda'),4,10,r(5,3,v.sym('arg'),10,3,v.sym('arg')),16,4,v.boolean(True))))
         self.run_test( 'proc(){ a=b;c }',
-                r(0,15,r(0,4,v.sym('lambda'),4,2,r(),8,5,r(8,5,v.sym('let'),8,3,r(8,3,r(8,1,v.sym('a'),10,1,v.sym('b'))),12,1,v.sym('c')))))
+                r(0,15,r(0,4,v.sym('lambda'),4,2,r(),8,5,r(8,5,v.sym('do'),8,3,r(9,1,v.sym('let'),8,1,v.sym('a'),10,1,v.sym('b')),12,1,v.sym('c')))))
+
+
+    def test_arrow_proc(self):
+        self.run_test( '(arg, arg) -> true',
+                r(0,18,r(11,2,v.sym('lambda'),0,10,r(1,3,v.sym('arg'),6,3,v.sym('arg')),14,4,v.boolean(True))))
+        self.run_test( '(arg) -> true',
+                r(0,13,r(6,2,v.sym('lambda'),0,5,r(1,3,v.sym('arg')),9,4,v.boolean(True))))
+        self.run_test( 'arg   -> true',
+                r(0,13,r(6,2,v.sym('lambda'),0,3,r(0,3,v.sym('arg')),9,4,v.boolean(True))))
+        self.run_test( '() -> { a=b;c }',
+                r(0,15,r(3,2,v.sym('lambda'),0,2,r(),6,9,r(8,5,v.sym('do'),8,3,r(9,1,v.sym('let'),8,1,v.sym('a'),10,1,v.sym('b')),12,1,v.sym('c')))))
 
 
     def test_let(self):
         self.run_test( '{ a=b;c=d;e}',
-                r(0,12,r(0,12,v.sym('let'),2,7,r(2,3,r(2,1,v.sym('a'),4,1,v.sym('b')),6,3,r(6,1,v.sym('c'),8,1,v.sym('d'))),10,1,v.sym('e'))))
+                r(0,12,r(2,9,v.sym('do'),2,3,r(3,1,v.sym('let'),2,1,v.sym('a'),4,1,v.sym('b')),6,3,r(7,1,v.sym('let'),6,1,v.sym('c'),8,1,v.sym('d')),10,1,v.sym('e'))))
+        self.run_test( '{ let a=b; let c=d; e}',
+                r(0,22,r(2,19,v.sym('do'),2,7,r(2,3,v.sym('let'),6,1,v.sym('a'),8,1,v.sym('b')),11,7,r(11,3,v.sym('let'),15,1,v.sym('c'),17,1,v.sym('d')),20,1,v.sym('e'))))
+
+
+    def test_letrec(self):
+        self.run_test( '{ letrec a=b; and c=d; e}',
+                r(0,25,r(2,22,v.sym('do'),2,10,r(2,6,v.sym('letrec'),9,1,v.sym('a'),11,1,v.sym('b')),14,7,r(14,3,v.sym('mutrec'),18,1,v.sym('c'),20,1,v.sym('d')),23,1,v.sym('e'))))
+
+
+    def test_let_values(self):
+        self.run_test( '{ let (a,b)=(c,d); e}',
+                r(0,21,r(2,18,v.sym('do'),2,15,r(2,3,v.sym('let_values'),6,5,r(7,1,v.sym('a'),9,1,v.sym('b')),12,5,r(12,1,v.sym('values_list'),13,1,v.sym('c'),15,1,v.sym('d'))),19,1,v.sym('e'))))
+
+
+    def test_do(self):
+        self.run_test( '{a <- b; e}',
+                r(0,11,r(1,9,v.sym('do'),1,6,r(1,1,'a',3,2,v.sym('<-'),6,1,v.sym('b')),9,1,v.sym('e'))))
+        self.run_test( '{a <- b; }',
+                r(0,10,r(1,7,v.sym('do'),1,6,r(1,1,'a',3,2,v.sym('<-'),6,1,v.sym('b')),7,1,v.sym('pass'))))
+
+
+    def test_do_directive(self):
+        self.run_test( '{ assume a = b; observe c = d; predict e }',
+                r(0,42,r(2,38,v.sym('do'),
+                         2,12,r(2,6,v.sym('assume'),9,1,v.sym('a'),13,1,v.sym('b')),
+                         16,13,r(16,7,v.sym('observe'),24,1,v.sym('c'),28,1,v.sym('d')),
+                         31,9,r(31,7,v.sym('predict'),39,1,v.sym('e')))))
+        self.run_test( '{ assume a = b; label: observe c = d; predict e }',
+                r(0,49,r(2,45,v.sym('do'),
+                         2,12,r(2,6,v.sym('assume'),9,1,v.sym('a'),13,1,v.sym('b')),
+                         16,20,r(23,7,v.sym('observe'),31,1,v.sym('c'),35,1,v.sym('d'),16,5,v.sym('label')),
+                         38,9,r(38,7,v.sym('predict'),46,1,v.sym('e')))))
 
 
     def test_identity(self):
@@ -96,9 +139,9 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 r(0,20,r(0,2,v.sym('if'),4,1,v.sym('a'),9,1,v.sym('b'),18,1,v.sym('c'))))
         self.run_test( 'if( a=b;c) {d=e;f}else{g=h;i }',
                 r(0,30,r(0,2,v.sym('if'),
-                    4,5,r(4,5,v.sym('let'),4,3,r(4,3,r(4,1,v.sym('a'),6,1,v.sym('b'))),8,1,v.sym('c')),
-                         12,5,r(12,5,v.sym('let'),12,3,r(12,3,r(12,1,v.sym('d'),14,1,v.sym('e'))),16,1,v.sym('f')),
-                         23,5,r(23,5,v.sym('let'),23,3,r(23,3,r(23,1,v.sym('g'),25,1,v.sym('h'))),27,1,v.sym('i')),
+                    4,5,r(4,5,v.sym('do'),4,3,r(5,1,v.sym('let'),4,1,v.sym('a'),6,1,v.sym('b')),8,1,v.sym('c')),
+                         12,5,r(12,5,v.sym('do'),12,3,r(13,1,v.sym('let'),12,1,v.sym('d'),14,1,v.sym('e')),16,1,v.sym('f')),
+                         23,5,r(23,5,v.sym('do'),23,3,r(24,1,v.sym('let'),23,1,v.sym('g'),25,1,v.sym('h')),27,1,v.sym('i')),
                 )))
 
     def test_infix_locations(self):
@@ -361,11 +404,11 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                 'expression')
         #let
         self.run_legacy_test( '{ a=b; c=d; e}',
-                [[v.sym('let'), [[v.sym('a'),v.sym('b')], [v.sym('c'),v.sym('d')]], v.sym('e')]],
+                [[v.sym('do'), [v.sym('let'),v.sym('a'),v.sym('b')], [v.sym('let'),v.sym('c'),v.sym('d')], v.sym('e')]],
                 'expression')
         #proc
         self.run_legacy_test( 'proc(){ a=2; b }',
-                [[v.sym('lambda'),[],[v.sym('let'),[[v.sym('a'), v.number(2.0)]], v.sym('b')]]],
+                [[v.sym('lambda'),[],[v.sym('do'),[v.sym('let'), v.sym('a'), v.number(2.0)], v.sym('b')]]],
                 'expression')
         #sym
         self.run_legacy_test( 'b',
@@ -416,6 +459,84 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
                                 ],
                             v.number(2.0)]],
                 'expression')
+
+    def test_array_syntax(self):
+        self.run_legacy_test('[]', [[v.sym('array')]], 'zero')
+        self.run_legacy_test('[1]', [[v.sym('array'), v.number(1)]], 'one')
+        self.run_legacy_test('[1,2]',
+            [[v.sym('array'), v.number(1), v.number(2)]],
+            'two')
+        self.run_legacy_test('[1,2,    3]',
+            [[v.sym('array'), v.number(1), v.number(2), v.number(3)]],
+            'three')
+        self.run_legacy_test('array(1, 2, 3)',
+            [[v.sym('array'), v.number(1), v.number(2), v.number(3)]],
+            'four')
+        self.run_test('f([1,2 + 3])',
+            r(0,12, r(0,1, v.sym('f'),
+                      2,9, r(2,1, v.sym('array'),
+                             3,1, v.number(1),
+                             5,5, r(7,1, v.sym('add'),
+                                    5,1, v.number(2),
+                                    9,1, v.number(3))))))
+
+    def test_values_syntax(self):
+        self.run_legacy_test('()', [[v.sym('values_list')]], 'zero')
+        self.run_legacy_test('(1,2)',
+            [[v.sym('values_list'), v.number(1), v.number(2)]],
+            'two')
+        self.run_legacy_test('(1,2,    3)',
+            [[v.sym('values_list'), v.number(1), v.number(2), v.number(3)]],
+            'three')
+        self.run_legacy_test('(1, 2, 3)',
+            [[v.sym('values_list'), v.number(1), v.number(2), v.number(3)]],
+            'four')
+        self.run_test('f((1,2 + 3))',
+            r(0,12, r(0,1, v.sym('f'),
+                      2,9, r(2,1, v.sym('values_list'),
+                             3,1, v.number(1),
+                             5,5, r(7,1, v.sym('add'),
+                                    5,1, v.number(2),
+                                    9,1, v.number(3))))))
+
+
+    def test_lookup(self):
+        self.run_legacy_test( 'a[b][c]',
+                [[v.sym('lookup'),
+                  [v.sym('lookup'), v.sym('a'), v.sym('b')],
+                  v.sym('c')]],
+                'lookup')
+        self.run_legacy_test( 'a[b](d,e)[c]',
+                [[v.sym('lookup'),
+                  [[v.sym('lookup'), v.sym('a'), v.sym('b')],
+                   v.sym('d'), v.sym('e')],
+                  v.sym('c')]],
+                'lookup')
+        self.run_legacy_test( 'a + b[c]',
+                [[v.sym('add'),
+                  v.sym('a'),
+                  [v.sym('lookup'), v.sym('b'), v.sym('c')]]],
+                'lookup')
+        self.run_legacy_test( '(a + b)[c]',
+                [[v.sym('lookup'),
+                  [v.sym('add'), v.sym('a'), v.sym('b')],
+                  v.sym('c')]],
+                'lookup')
+
+
+    def test_unquote(self):
+        self.run_legacy_test( '${e}',
+                [['quote', ['unquote', v.sym('e')]]],
+                'unquote')
+        self.run_legacy_test( '$e',
+                [['quote', ['unquote', v.sym('e')]]],
+                'unquote')
+        self.run_legacy_test( '${e + 1}',
+                [['quote', ['unquote', [v.sym('add'), v.sym('e'), v.num(1)]]]],
+                'unquote')
+        self.run_legacy_test( '$e + 1',
+                [[v.sym('add'), ['quote', ['unquote', v.sym('e')]], v.num(1)]],
+                'unquote')
 
 
 # Almost the same effect as @venture.test.config.in_backend('none'),
@@ -499,11 +620,10 @@ class TestInstructions(unittest.TestCase):
 
     def test_labeled_assume(self):
         full_loc = j(0,4,5,1,7,6,14,1,16,1,18,1)
-        expr_loc = j(7,6,14,1,16,1,18,1)
         self.run_test( 'name : assume a = b',
                 [{'loc':full_loc, 'value':{
-                    'instruction' : {'loc': expr_loc, 'value':'evaluate'},
-                    'expression' : {'loc': expr_loc, 'value':
+                    'instruction' : {'loc': full_loc, 'value':'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
                         [{'loc':j(7,6), 'value':v.sym('assume')},
                          {'loc': j(14,1), 'value':v.sym('a')},
                          {'loc':j(18,1), 'value':v.sym('b')},
@@ -523,11 +643,10 @@ class TestInstructions(unittest.TestCase):
                     }}])
     def test_labeled_predict(self):
         full_loc = j(0,4,5,1,7,7,15,4)
-        expr_loc = j(7,7,15,4)
         self.run_test( 'name : predict blah',
                 [{'loc':full_loc, 'value':{
-                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
-                    'expression' : {'loc': expr_loc, 'value':
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc': full_loc, 'value':
                         [{'loc':j(7,7), 'value':v.sym('predict')},
                          {'loc':j(15,4), 'value':v.sym('blah')},
                          {'loc':j(0,4), 'value':v.sym('name')}]}
@@ -547,11 +666,10 @@ class TestInstructions(unittest.TestCase):
                     }}])
     def test_labeled_observe(self):
         full_loc = j(0,4,5,1,7,7,15,1,17,1,19,9)
-        expr_loc = j(7,7,15,1,17,1,19,9)
         self.run_test( 'name : observe a = count<32>',
                 [{'loc':full_loc, 'value':{
-                    'instruction' : {'loc':expr_loc, 'value': 'evaluate'},
-                    'expression' : {'loc':expr_loc, 'value':
+                    'instruction' : {'loc':full_loc, 'value': 'evaluate'},
+                    'expression' : {'loc':full_loc, 'value':
                         [{'loc':j(7,7), 'value':v.sym('observe')},
                          {'loc':j(15,1), 'value':v.sym('a')},
                          {'loc':j(19,9), 'value':{'type':'count', 'value':32.0}},

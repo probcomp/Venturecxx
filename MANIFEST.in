@@ -561,14 +561,6 @@ include examples/hmc_demo.py
 include examples/hmm.vnt
 include examples/hmm_plugin.py
 include examples/lda.vnt
-include examples/notebooks/README
-include examples/notebooks/bivariate_gaussian.ipynb
-include examples/notebooks/continuous_example.ipynb
-include examples/notebooks/geweke_single_scope_fail.ipynb
-include examples/notebooks/subsampled_mh.ipynb
-include examples/notebooks/subsampled_mh_utils.py
-include examples/notebooks/trick_coin.ipynb
-include examples/notebooks/utils.py
 include examples/on-geweke-testing.txt
 include examples/on-teaching-exchangeable-coupling.txt
 include examples/plotting/bimodal.vnt
@@ -1004,7 +996,6 @@ include tool/minimal_deps.py
 include tool/pylintrc
 include tool/python-flymake.el
 include tool/refman-changelog
-include tool/scventure.py
 include tool/venture-epylint.py
 include tool/venture-mode.el
 include tool/venture_mode_font_lock.py

@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
+from collections import OrderedDict
 
 class SamplableMap(object):
   def __init__(self):
-    self.d = {}
+    self.d = OrderedDict()
     self.a = []
 
   def __getitem__(self,k):
@@ -27,7 +27,7 @@ class SamplableMap(object):
 
 
   def __setitem__(self,k,v):
-    assert not k in self.d
+    assert k not in self.d
     self.d[k] = len(self.a)
     self.a.append((k,v))
 
@@ -51,7 +51,7 @@ class SamplableMap(object):
   def __repr__(self): return "SamplableMap: " + self._as_dict().__repr__()
 
   def _as_dict(self):
-    return {k:self[k] for k in self.d}
+    return OrderedDict((k, self[k]) for k in self.d)
 
   def sample(self,py_rng): return py_rng.sample(self.a,1)[0]
 

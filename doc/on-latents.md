@@ -67,6 +67,23 @@ Under this assumption,
 
 - Ergo, it is appropriate to permit SPs that have (1) without (2)
 
+- (3) requires being able to evaluate the relevant term in the (yet
+  different) M-H ratio, namely
+
+      p(z'|x) q(z|x,z')
+      -----------------
+      p(z|x) q(z'|x,z)
+
+  (y does not appear in this term because it is accounted for in its
+  own term; although in the case of a plate of y, there may be some ys
+  being block-proposed and other ys that are fixed.)
+
+  In particular, this comes for free if q has stationary distribution
+  p(z|x,y_fixed), which includes any valid standalone transition
+  kernel. So it seems harmless to require (3) in general, even for
+  AEKernels (aside from the implementation burden of reverting the
+  state in case of rejection).
+
 - (4) is irrelevant without (1), and is enabled by the same mechanism
   -- simply more than one application of `foo` (provided applying
   `foo` changes the aux commutatively and invertably).  If (4) is

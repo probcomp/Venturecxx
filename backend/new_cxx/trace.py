@@ -78,6 +78,7 @@ class Trace(object):
 
   def has_own_prng(self): return True
   def set_seed(self, seed):
+    assert seed is not None
     prng = random.Random(seed)
     # XXX It is unclear why 0 and >=2^31 are not allowed here, but it
     # will be better to fix this when we replace all seeds by 32-byte
@@ -239,4 +240,4 @@ def _expToDict(exp):
     else:
       return {"kernel":"rejection","scope":scope,"block":block,"transitions":1}
   else:
-    raise Exception("Cannot parse infer instruction")
+    raise Exception("The Puma backend does not support the %s inference primitive" % (tag,))

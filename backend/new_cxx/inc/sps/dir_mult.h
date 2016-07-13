@@ -35,9 +35,10 @@ struct DirCatSPAux : SPAux
 };
 
 // Collapsed Asymmetric
-struct MakeDirCatOutputPSP : PSP
+struct MakeDirCatOutputPSP : virtual PSP
+  , DeterministicMakerAAAPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -46,10 +47,16 @@ struct DirCatOutputPSP : RandomPSP
   DirCatOutputPSP(const vector<double>& alpha, double total):
     alpha(alpha), total(total) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
@@ -62,9 +69,10 @@ private:
 };
 
 // Collapsed Symmetric
-struct MakeSymDirCatOutputPSP : PSP
+struct MakeSymDirCatOutputPSP : virtual PSP
+  , DeterministicMakerAAAPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -87,10 +95,13 @@ struct UCDirCatSPAux : DirCatSPAux
 };
 
 // Uncollapsed Asymmetric
-struct MakeUCDirCatOutputPSP : RandomPSP
+struct MakeUCDirCatOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 };
 
 struct UCDirCatSP : SP
@@ -107,10 +118,16 @@ struct UCDirCatOutputPSP : RandomPSP
 {
   UCDirCatOutputPSP(size_t n) : n(n) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
@@ -120,10 +137,13 @@ private:
 };
 
 // Uncollapsed Symmetric
-struct MakeUCSymDirCatOutputPSP : RandomPSP
+struct MakeUCSymDirCatOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 };
 
 struct UCSymDirCatSP : SP

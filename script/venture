@@ -69,15 +69,18 @@ def local_ripl(args, backend):
     return r
 
 def ripl_builder(args, backend):
+  if args and args.seed:
+    seed = int(args.seed)
+  else:
+    seed = v._seed(None)
   def build():
     interactive = True
     files = []
     plugins = []
-    if args and args.seed:
-      r = backend.make_combined_ripl(persistent_inference_trace = True,
-                                     entropy=int(args.seed))
-    else:
-      r = backend.make_combined_ripl(persistent_inference_trace = True)
+    r = backend.make_combined_ripl(persistent_inference_trace = True,
+                                   seed=seed)
+    print "Initial random seed is %d (to reproduce run, use -s %d)" % \
+      (seed, seed)
 
     if args is not None:
         if args.prelude: r.load_prelude()
@@ -115,7 +118,7 @@ def add_local_args(parser):
                         help="load a Python file in the local directory.  If the file defines\na __venture_start__ function, call it with the ripl to\ninitialize the library.")
     parser.add_argument('--prelude', action='store_true',
                         help = 'load model prelude on startup (default: off)')
-    parser.add_argument('--seed', action='store', help="Random seed")
+    parser.add_argument('-s', '--seed', action='store', help="Random seed")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform',

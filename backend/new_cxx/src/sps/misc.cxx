@@ -19,13 +19,16 @@
 
 #include "utils.h"
 
-VentureValuePtr ExactlyOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ExactlyOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("exactly", args, 1, 2);
   return args->operandValues[0];
 }
 
-double ExactlyOutputPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ExactlyOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   VentureValuePtr in = args->operandValues[0];
   if (in->equals(value)) { return 0; }

@@ -22,7 +22,8 @@
 
 #include <boost/foreach.hpp>
 
-VentureValuePtr MakeCSPOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr MakeCSPOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("lambda", args, 2);
 
@@ -44,7 +45,8 @@ CSPRequestPSP::CSPRequestPSP(const vector<string>& symbols,
   environment(environment)
 {}
 
-VentureValuePtr CSPRequestPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr CSPRequestPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("compound procedure", args, symbols.size());
 

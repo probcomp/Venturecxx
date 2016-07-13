@@ -33,7 +33,7 @@ from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testObserveAVar1a():
-  "Observations should propagate through variables."
+  # Observations should propagate through variables.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
@@ -57,7 +57,7 @@ def testObserveAVar1b():
 
 @on_inf_prim("none")
 def testObserveAMem1a():
-  "Observations should propagate through mem."
+  # Observations should propagate through mem.
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (normal 0.0 1.0)))")
   ripl.observe("(f)", 3.0)
@@ -81,7 +81,7 @@ def testObserveAMem1b():
 
 @on_inf_prim("none")
 def testObserveThenProcessDeterministically1a():
-  "Observations should propagate through deterministic SPs."
+  # Observations should propagate through deterministic SPs.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
@@ -106,7 +106,7 @@ def testObserveThenProcessDeterministically1b():
 
 @on_inf_prim("mh")
 def testObserveThenProcessStochastically1a():
-  "Observations should propagate through stochastic SPs without crashing."
+  # Observations should propagate through stochastic SPs without crashing.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
@@ -134,7 +134,8 @@ def testObserveThenProcessStochastically1b():
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
 def testObserveOutputOfIf1():
-  "It is natural to want deterministic conditionals in one's error models.  Some cases Venture can handle gracefully."
+  # It is natural to want deterministic conditionals in one's error
+  # models.  Some cases Venture can handle gracefully.
   ripl = get_ripl()
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")

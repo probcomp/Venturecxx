@@ -44,7 +44,8 @@ PyTrace::PyTrace() : trace(new ConcreteTrace())
 }
 PyTrace::~PyTrace() {}
 
-void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
+void PyTrace::evalExpression(
+    DirectiveID did, const boost::python::object & object)
 {
   VentureValuePtr exp = parseExpression(object);
   pair<double, Node*> p = evalFamily(trace.get(),
@@ -68,7 +69,7 @@ void PyTrace::unevalDirectiveID(DirectiveID did)
  trace->families.erase(did);
 }
 
-void PyTrace::observe(DirectiveID did, boost::python::object valueExp)
+void PyTrace::observe(DirectiveID did, const boost::python::object & valueExp)
 {
   assert(trace->families.count(did));
   RootOfFamily root = trace->families[did];
@@ -127,32 +128,6 @@ size_t PyTrace::getSeed() {
   return 0;
 }
 
-double PyTrace::getGlobalLogScore()
-{
-  // TODO This algorithm is totally wrong:
-  // https://app.asana.com/0/16653194948424/20100308871203
-  double ls = 0.0;
-  for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
-       iter != trace->unconstrainedChoices.end();
-       ++iter) {
-    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
-    boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    boost::shared_ptr<Args> args = trace->getArgs(node);
-    if (psp->canAbsorb(trace.get(), node, NULL)) {
-      ls += psp->logDensity(trace->getGroundValue(node), args);
-    }
-  }
-  for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
-       iter != trace->constrainedChoices.end();
-       ++iter) {
-    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
-    boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    boost::shared_ptr<Args> args = trace->getArgs(node);
-    ls += psp->logDensity(trace->getGroundValue(node), args);
-  }
-  return ls;
-}
-
 uint32_t PyTrace::numUnconstrainedChoices()
 {
   return trace->numUnconstrainedChoices();
@@ -169,7 +144,10 @@ struct Inferer
   size_t transitions;
   vector<boost::shared_ptr<Inferer> > subkernels;
 
-  Inferer(boost::shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
+  Inferer(
+      const boost::shared_ptr<ConcreteTrace> & trace,
+      const boost::python::dict & params)
+    : trace(trace)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
     if (kernel == "mh") {
@@ -240,7 +218,7 @@ struct Inferer
   }
 };
 
-double PyTrace::primitive_infer(boost::python::dict params)
+double PyTrace::primitive_infer(const boost::python::dict & params)
 {
   Inferer inferer(trace, params);
   return inferer.infer();
@@ -264,13 +242,19 @@ void PyTrace::registerConstraints()
   trace->registerConstraints();
 }
 
-double PyTrace::logLikelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
+double PyTrace::logLikelihoodAt(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
+{
   ScopeID scope = parseValueO(pyscope);
   BlockID block = parseValueO(pyblock);
   return trace->logLikelihoodAt(scope, block);
 }
 
-double PyTrace::logJointAt(boost::python::object pyscope, boost::python::object pyblock) {
+double PyTrace::logJointAt(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
+{
   ScopeID scope = parseValueO(pyscope);
   BlockID block = parseValueO(pyblock);
   return trace->logJointAt(scope, block);
@@ -281,14 +265,16 @@ double PyTrace::likelihoodWeight()
   return trace->likelihoodWeight();
 }
 
-int PyTrace::numNodesInBlock(boost::python::object pyscope, boost::python::object pyblock)
+int PyTrace::numNodesInBlock(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
 {
   ScopeID scope = parseValueO(pyscope);
   BlockID block = parseValueO(pyblock);
   return trace->getNodesInBlock(scope, block).size();
 }
 
-int PyTrace::numBlocksInScope(boost::python::object pyscope)
+int PyTrace::numBlocksInScope(const boost::python::object & pyscope)
 {
   ScopeID scope = parseValueO(pyscope);
   return trace->numBlocksInScope(scope);
@@ -351,7 +337,6 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
-    .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("primitive_infer", &PyTrace::primitive_infer)

@@ -216,5 +216,5 @@ def testDirectivesFreezableFromInference():
   ripl.infer("(freeze 'bar)")
   eq_(engine.get_entropy_info()['unconstrained_random_choices'],1)
   ripl.infer(30)
-  assert not xval == ripl.sample("x")
+  assert xval != ripl.sample("x")
   eq_(yval, ripl.sample("y"))

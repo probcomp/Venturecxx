@@ -16,12 +16,11 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import contextmanager
+import cPickle
 import cStringIO as StringIO
 import random
 import threading
 import time
-
-import dill
 
 from venture.engine.inference import Infer
 from venture.engine.trace_set import TraceSet
@@ -32,9 +31,9 @@ import venture.value.dicts as v
 class Engine(object):
 
   def __init__(self, backend, seed, persistent_inference_trace=True):
+    assert seed is not None
     self._py_rng = random.Random(seed)
     self.model = self.new_model(backend)
-    self.swapped_model = False
     self.directiveCounter = 0
     self.inferrer = None
     import venture.lite.inference_sps as inf
@@ -87,6 +86,10 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     return (baseAddr, self.model.define(baseAddr,id,datum))
 
+  def labeled_assume(self, label, id, datum):
+    baseAddr = self.nextBaseAddr()
+    return (baseAddr, self.model.labeled_define(label, baseAddr, id, datum))
+
   def predict_all(self,datum):
     baseAddr = self.nextBaseAddr()
     values = self.model.evaluate(baseAddr, datum)
@@ -96,6 +99,11 @@ class Engine(object):
     (did, answers) = self.predict_all(datum)
     return (did, answers[0])
 
+  def labeled_predict(self, label, datum):
+    baseAddr = self.nextBaseAddr()
+    values = self.model.labeled_evaluate(label, baseAddr, datum)
+    return (baseAddr, values[0])
+
   def observe(self,datum,val):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
@@ -103,9 +111,26 @@ class Engine(object):
       weights = self.incorporate()
     return (baseAddr, weights)
 
+  def labeled_observe(self, label, datum, val):
+    baseAddr = self.nextBaseAddr()
+    self.model.labeled_observe(label, baseAddr, datum, val)
+    if True: # TODO: add flag to toggle auto-incorporation
+      weights = self.incorporate()
+    return (baseAddr, weights)
+
   def forget(self,directiveId):
     weights = self.model.forget(directiveId)
     return weights
+
+  def labeled_forget(self, label):
+    weights = self.model.labeled_forget(label)
+    return weights
+
+  def get_directive_id(self, label):
+    return self.model.get_directive_id(label)
+
+  def get_directive_label(self, did):
+    return self.model.get_directive_label(did)
 
   def force(self,datum,val):
     # TODO: The directive counter increments, but the "force" isn't added
@@ -135,11 +160,20 @@ class Engine(object):
   def freeze(self,directiveId):
     self.model.freeze(directiveId)
 
+  def labeled_freeze(self, label):
+    self.model.labeled_freeze(label)
+
   def report_value(self,directiveId):
     return self.model.report_value(directiveId)
 
+  def labeled_report_value(self, label):
+    return self.model.labeled_report_value(label)
+
   def report_raw(self,directiveId):
     return self.model.report_raw(directiveId)
+
+  def labeled_report_raw(self, label):
+    return self.model.labeled_report_raw(label)
 
   def register_foreign_sp(self, name, sp):
     self.foreign_sps[name] = sp
@@ -192,14 +226,12 @@ class Engine(object):
 
   def in_model(self, model, action):
     current_model = self.model
-    current_swapped_status = self.swapped_model
     self.model = model
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
     stack_dict_action = {"type":"SP", "value":action}
     program = [v.sym("run"), v.quote(stack_dict_action)]
     try:
-      self.swapped_model = True
       with self.inference_trace():
         did = self._do_raw_evaluate(program)
         ans = self.infer_trace.extractRaw(did)
@@ -207,7 +239,6 @@ class Engine(object):
         return (ans, model)
     finally:
       self.model = current_model
-      self.swapped_model = current_swapped_status
 
   @contextmanager
   def _particle_swapping(self, action):
@@ -215,7 +246,10 @@ class Engine(object):
     # disallow the ripl.
     class NoRipl(object):
       def __getattr__(self, attr):
-        raise VentureException('Modeling commands not allowed in for_each_particle.')
+        if attr in ['sample', 'sample_all', 'force']:
+          return getattr(ripl, attr)
+        else:
+          raise VentureException('Modeling commands not allowed in for_each_particle.')
     self.ripl = NoRipl()
     # TODO asStackDict doesn't do the right thing because it tries to
     # be politely printable.  Maybe I should change that.
@@ -280,8 +314,6 @@ class Engine(object):
     next_trace.sealEnvironment()
 
   def primitive_infer(self, exp): return self.model.primitive_infer(exp)
-  def logscore(self): return self.model.logscore()
-  def logscore_all(self): return self.model.logscore_all()
   def get_entropy_info(self): return self.model.get_entropy_info()
 
   def get_seed(self):
@@ -337,10 +369,10 @@ class Engine(object):
     data['directiveCounter'] = self.directiveCounter
     data['extra'] = extra
     version = '0.2'
-    dill.dump((data, version), stream)
+    cPickle.dump((data, version), stream)
 
   def load_io(self, stream):
-    (data, version) = dill.load(stream)
+    (data, version) = cPickle.load(stream)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.model.load(data)
@@ -363,23 +395,17 @@ class Engine(object):
     return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
-    engine = backend.make_engine(
-      persistent_inference_trace=self.persistent_inference_trace,
-      seed=self._py_rng.randint(1, 2**31 - 1),
-    )
-    if self.persistent_inference_trace:
-      engine.infer_trace = self.infer_trace # TODO Copy?
-    engine.directiveCounter = self.directiveCounter
-    engine.model.convertFrom(self.model)
-    return engine
+    model = self.new_model(backend)
+    model.convertFrom(self.model)
+    self.model = model
 
   def to_lite(self):
     from venture.shortcuts import Lite
-    return self.convert(Lite())
+    self.convert(Lite())
 
   def to_puma(self):
     from venture.shortcuts import Puma
-    return self.convert(Puma())
+    self.convert(Puma())
 
   def set_profiling(self, enabled=True): self.model.set_profiling(enabled)
   def clear_profiling(self): self.model.clear_profiling()

@@ -33,7 +33,7 @@ struct SamplableMap
   MapVVPtrInt d;
   vector<pair<VentureValuePtr, V> > a;
 
-  V & get(VentureValuePtr k)
+  V & get(const VentureValuePtr & k)
   {
     assert(size() > 0);
     assert(d.count(k));
@@ -41,7 +41,7 @@ struct SamplableMap
     return v;
   }
 
-  void set(VentureValuePtr k, V v)
+  void set(const VentureValuePtr & k, const V & v)
   {
     assert(!d.count(k));
     d[k] = a.size();
@@ -74,7 +74,8 @@ struct SamplableMap
     return orderedKeys;
   }
 
-  vector<VentureValuePtr> getOrderedKeysInRange(const VentureValuePtr & min, const VentureValuePtr & max)
+  vector<VentureValuePtr> getOrderedKeysInRange(
+      const VentureValuePtr & min, const VentureValuePtr & max)
   {
     std::set<VentureValuePtr, VentureValuePtrsLess> keys;
     for (size_t i = 0; i < a.size(); ++i) {
@@ -88,7 +89,7 @@ struct SamplableMap
 
   size_t count(const VentureValuePtr& k) const { assert(false); }
   size_t size() const { return a.size(); }
-  bool contains(VentureValuePtr k) { return d.count(k); }
+  bool contains(const VentureValuePtr & k) { return d.count(k); }
 
   VentureValuePtr & sampleKeyUniformly(gsl_rng * rng)
   {

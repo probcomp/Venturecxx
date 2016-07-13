@@ -219,7 +219,7 @@ class TestSivmUtils(unittest.TestCase):
             ['identity',[['identity',['a','b']],'c','d']]
             ]
     def test_sugar_expression_index_standard_cases(self):
-        """make sure that all sugared locations are properly translated"""
+        # make sure that all sugared locations are properly translated
         msg_string ="\n\nsym: {}\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "desugared_index: {}\nexpected_index: {}\n"\
                     "got_index: {}"
@@ -235,7 +235,7 @@ class TestSivmUtils(unittest.TestCase):
                     raise
                 self.assertEqual(i3,i1,msg=msg_string.format(sym,a,s,i2,i1,i3))
     def test_sugar_expression_index_all_cases(self):
-        """make sure that none of the edge cases crash the thingy"""
+        # make sure that none of the edge cases crash the thingy
         msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "desugared_index: {}"
         for a in self.fancy_expressions:
@@ -249,7 +249,7 @@ class TestSivmUtils(unittest.TestCase):
                     raise
 
     def test_desugar_expression_index_standard_cases(self):
-        """make sure that all sugared locations are properly translated"""
+        # make sure that all sugared locations are properly translated
         msg_string ="\n\nsym: {}\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "sugared_index: {}\nexpected_index: {}\n"\
                     "got_index: {}"
@@ -265,7 +265,7 @@ class TestSivmUtils(unittest.TestCase):
                     raise
                 self.assertEqual(i3,i2,msg=msg_string.format(sym,a,s,i1,i2,i3))
     def test_desugar_expression_index_all_cases(self):
-        """make sure that none of the edge cases crash the thingy"""
+        # make sure that none of the edge cases crash the thingy
         msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "sugared_index: {}"
         for a in self.fancy_expressions:

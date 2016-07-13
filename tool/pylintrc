@@ -32,6 +32,7 @@ disable=invalid-name,
  fixme,
  logging-not-lazy,
  redefined-builtin,
+ misplaced-comparison-constant,
 # Messages disabled pending normalization of our codebase:
  no-name-in-module,
  no-member,
@@ -82,6 +83,11 @@ disable=invalid-name,
 #   can be produced under pressure.
 #   TODO Perhaps turn C0302, R0902, R0911, R0912, R0913, R0914, R0915 back on
 #   for the code-review-mode style check
+
+# Rationale: Suppressing misplaced-comparison-constant
+#   0.05 < pvalue is judged to be sometimes clearer than pvalue >
+#   0.05, because the objects are listed in ascending order, even
+#   though the object of interest is not first.
 
 [FORMAT]
 indent-string='  '

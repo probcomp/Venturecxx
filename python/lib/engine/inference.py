@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from copy import copy
 import time
 
@@ -41,6 +42,22 @@ class Infer(object):
     self.engine = engine
 
   @staticmethod
+  def _canonicalize(fn):
+    if isinstance(fn, VentureString):
+      return fn.getString()
+    else:
+      return fn
+
+  @staticmethod
+  def _canonicalize_tree(thing):
+    if isinstance(thing, basestring):
+      return thing
+    elif isinstance(thing, VentureString):
+      return thing.getString()
+    elif isinstance(thing, list):
+      return [Infer._canonicalize_tree(t) for t in thing]
+
+  @staticmethod
   def _format_filenames(filenames,spec):
     if isinstance(filenames, basestring) or \
        isinstance(filenames, VentureString):
@@ -53,7 +70,7 @@ class Infer(object):
           'The number of specs must match the number of filenames.')
     else:
       if isinstance(spec, list) and len(spec) == len(filenames):
-        return [filename + '.png' for filename in filenames]
+        return [Infer._canonicalize(filename) + '.png' for filename in filenames]
       else:
         raise VentureValueError(
           'The number of specs must match the number of filenames.')
@@ -131,10 +148,12 @@ class Infer(object):
   def printf(self, dataset): print dataset.asPandas()
   def plotf(self, spec, dataset):
     spec = ExpressionType().asPython(spec)
+    spec = self._canonicalize_tree(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
   def plotf_to_file(self, basenames, spec, dataset):
     filenames = ExpressionType().asPython(basenames)
     spec = ExpressionType().asPython(spec)
+    spec = self._canonicalize_tree(spec)
     PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
                         self._format_filenames(filenames, spec))
   def sweep(self, dataset):
@@ -155,18 +174,15 @@ class Infer(object):
 
   def collect(self, *exprs):
     names, stack_dicts = self.parse_exprs(exprs, None)
-    answer = {} # Map from column name to list of values; the values
-                # are parallel to the particles
-    std_names = ['iter', 'prt. id', 'time (s)', 'log score',
+    answer = OrderedDict() # Map from column name to list of values; the values
+                           # are parallel to the particles
+    std_names = ['iter', 'prt. id', 'time (s)',
                  'prt. log wgt.', 'prt. prob.']
     def collect_std_streams(engine):
       the_time = time.time() - engine.creation_time
       answer['iter'] = [1] * engine.num_traces()
       answer['prt. id'] = range(engine.num_traces())
       answer['time (s)'] = [the_time] * engine.num_traces()
-      # TODO Replace this by explicit references to
-      # (global_log_likelihood), because the current implementation is wrong
-      answer['log score'] = engine.logscore_all()
       log_weights = copy(engine.model.log_weights)
       answer['prt. log wgt.'] = log_weights
       answer['prt. prob.'] = logWeightsToNormalizedDirect(log_weights)
@@ -213,6 +229,10 @@ class Infer(object):
   def on_particle(self, index, action):
     return self.engine.on_particle(index, action)
 
+  def convert_model(self, backend_name):
+    import venture.shortcuts as s
+    backend = s.backend(backend_name)
+    self.engine.convert(backend)
   def new_model(self, backend_name=None):
     if backend_name is None:
       backend = None
@@ -298,7 +318,7 @@ Dataset which is the result of the merge. """
     if other.ind_names is None:
       return self
     self._check_compat(other)
-    answer = {}
+    answer = OrderedDict()
     for (key, vals) in self.data.iteritems():
       if key == "iter" and len(vals) > 0:
         nxt = max(vals)
@@ -315,7 +335,7 @@ into it."""
     if self.ind_names is None:
       self.ind_names = other.ind_names
       self.std_names = other.std_names
-      self.data = dict([name, []] for name in self.ind_names + self.std_names)
+      self.data = OrderedDict([name, []] for name in self.ind_names + self.std_names)
     self._check_compat(other)
     for key in self.data.keys():
       if key == "iter" and len(self.data[key]) > 0:

@@ -55,6 +55,8 @@ keywords = {                    # XXX Use a perfect hash.
     'infer': grammar.K_INFER,
     'lambda': grammar.K_LAMBDA,
     'le': grammar.K_LE,
+    'let': grammar.K_LET,
+    'letrec': grammar.K_LETREC,
     'load': grammar.K_LOAD,
     'lt': grammar.K_LT,
     'mul': grammar.K_MUL,
@@ -164,9 +166,19 @@ class Scanner(Plex.Scanner):
         (Plex.Str('}'), grammar.T_RCURLY),
         (Plex.Str('[|'), grammar.T_LOXFORD),
         (Plex.Str('|]'), grammar.T_ROXFORD),
-        (Plex.Str('${'), grammar.T_LDOLLAR_CURLY),
+        (Plex.Str('$'), grammar.T_LDOLLAR),
         (Plex.Str('='), grammar.T_EQDEF),
+        # Hack ~ to mean = everywhere but be available for reasons of
+        # code style.  If we later want to adjust the system to
+        # differentiate them, new tokens and grammar changes will be
+        # needed.
+        (Plex.Str('~'), grammar.T_EQDEF),
         (Plex.Str('<-'), grammar.T_LARR),
+        # Also <~ for <-.
+        (Plex.Str('<~'), grammar.T_LARR),
+        (Plex.Str('->'), grammar.T_RARR),
+        # Also ~> for ->.
+        (Plex.Str('~>'), grammar.T_RARR),
         (Plex.Str('||'), grammar.T_AND),
         (Plex.Str('&&'), grammar.T_OR),
         (Plex.Str('=='), grammar.T_EQ),

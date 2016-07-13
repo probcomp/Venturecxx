@@ -28,7 +28,8 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testBinomial1():
-  "A simple test that checks the interface of binomial and its simulate method"
+  # A simple test that checks the interface of binomial and its
+  # simulate method
   ripl = get_ripl()
 
   p = 0.3
@@ -43,7 +44,7 @@ def testBinomial1():
 
 @statisticalTest
 def testBinomial2():
-  "A simple test that checks the binomial logdensity"
+  # A simple test that checks the binomial logdensity
   ripl = get_ripl()
 
   b = 0.7
@@ -62,7 +63,7 @@ def testBinomial2():
 @broken_in("puma", "Puma is missing an enumerate method here")
 @on_inf_prim("gibbs") # Also MH, but really testing gibbs
 def testBinomial3():
-  "A simple test that checks the binomial enumerate method"
+  # A simple test that checks the binomial enumerate method
   ripl = get_ripl()
 
   b = 0.7

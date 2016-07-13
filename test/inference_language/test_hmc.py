@@ -36,7 +36,8 @@ import venture.value.dicts as val
 @statisticalTest
 @on_inf_prim("hmc")
 def testNormalWithObserve1():
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation
   ripl = get_ripl()
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
@@ -57,8 +58,8 @@ def testMVGaussSmokeHMC():
 
 @statisticalTest
 def checkMVGaussSmoke(infer):
-  """Confirm that projecting a multivariate Gaussian to one dimension
-  results in a univariate Gaussian."""
+  # Confirm that projecting a multivariate Gaussian to one dimension
+  # results in a univariate Gaussian.
   ripl = get_ripl()
   ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
   ripl.assume("x", "(lookup vec 0)", label="pid")
@@ -142,9 +143,9 @@ def testForceBrush5():
 @statisticalTest
 @on_inf_prim("hmc") # Really comparing MH and HMC
 def testMoreElaborate():
-  """Confirm that HMC still works in the presence of brush.  Do not,
-  however, mess with the possibility that the principal nodes that HMC
-  operates over may themselves be in the brush."""
+  # Confirm that HMC still works in the presence of brush.  Do not,
+  # however, mess with the possibility that the principal nodes that
+  # HMC operates over may themselves be in the brush.
   ripl = get_ripl()
   ripl.assume("x", "(tag (quote param) 0 (uniform_continuous -10 10))")
   ripl.assume("y", "(tag (quote param) 1 (uniform_continuous -10 10))",

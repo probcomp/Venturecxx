@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from venture.lite.exception import VentureError
 from venture.lite.types import VentureType
 from venture.lite.value import VentureNil
@@ -28,7 +30,7 @@ class SPFamilies(object):
       assert type(families) is dict
       self.families = families
     else:
-      self.families = {} # id => node
+      self.families = OrderedDict() # id => node
 
   def containsFamily(self, id):
     return id in self.families

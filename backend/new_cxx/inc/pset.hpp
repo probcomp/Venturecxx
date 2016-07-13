@@ -42,13 +42,13 @@ public:
   PSet() : root(new Node<Key, bool>()) {}
 
 
-  bool contains(const Key& key)
+  bool contains(const Key& key) const
     {
       //      cout << "pset::contains" << endl;
       return Node<Key, bool>::node_contains(root, key, comp);
     }
 
-  PSet insert(const Key& key)
+  PSet insert(const Key& key) const
     {
       //      cout << "pset::contains" << endl;
       return PSet(Node<Key, bool>::node_insert(root, key, true, comp));
@@ -63,15 +63,15 @@ public:
   analogy to Data.PSet.adjust from the Haskell standard library.
   */
   template <class Function>
-  PSet adjust(const Key& key, const Function& f)
+  PSet adjust(const Key& key, const Function& f) const
     { return PSet(Node<Key, bool>::node_adjust(root, key, f, comp)); }
 
-  PSet remove(const Key& key)
+  PSet remove(const Key& key) const
     { return PSet(Node<Key, bool>::node_remove(root, key, comp)); }
 
-  size_t size() { return root->size; }
+  size_t size() const { return root->size; }
 
-  vector<Key> keys()
+  vector<Key> keys() const
     { return Node<Key, bool>::node_traverse_keys_in_order(root); }
 };
 };

@@ -36,7 +36,7 @@ def testGradientMethodsBasicNesterov():
   yield checkGradientMethodsBasic, "nesterov"
 
 def checkGradientMethodsBasic(inference_method):
-  "Make sure that map methods find the maximum"
+  # Make sure that map methods find the maximum
   ripl = get_ripl()
   ripl.assume("a", "(normal 1 1)", label = "pid")
   ripl.force("a", 0.0)
@@ -48,7 +48,8 @@ def checkGradientMethodsBasic(inference_method):
 @broken_in('puma', "Gradient climbers only implemented in Lite.")
 @on_inf_prim("nesterov")
 def testNesterovWithInt():
-  "Without fixing VentureInteger to play nicely with Python numbers, this errors"
+  # Without fixing VentureInteger to play nicely with Python numbers,
+  # this errors
   raise SkipTest("Observes that change the type of a variable may break gradient methods. Issue: https://app.asana.com/0/11127829865276/15085515046349")
   ripl = get_ripl()
   ripl.assume('x', '(normal 1 1)')

@@ -22,10 +22,8 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 def testESRRefAbsorb1():
-  """
-  This test ensures that an ESRRefOutputPSP does not absorb when its RequestPSP
-  might change.
-  """
+  # This test ensures that an ESRRefOutputPSP does not absorb when its
+  # RequestPSP might change.
   ripl = get_ripl()
   ripl.predict("(if (flip 0.7) 1 0)",label="pid")
   predictions = collectSamples(ripl,"pid")

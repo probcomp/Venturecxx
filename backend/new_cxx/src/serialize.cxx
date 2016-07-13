@@ -24,7 +24,7 @@
 #include "detach.h"
 #include "regen.h"
 
-OrderedDB::OrderedDB(Trace * trace, vector<VentureValuePtr> values) :
+OrderedDB::OrderedDB(Trace * trace, const vector<VentureValuePtr> & values) :
   trace(trace),
   stack(values) {}
 
@@ -53,7 +53,7 @@ VentureValuePtr OrderedDB::getValue(Node * node)
   }
 }
 
-void OrderedDB::registerValue(Node * node, VentureValuePtr value)
+void OrderedDB::registerValue(Node * node, const VentureValuePtr & value)
 {
   DB::registerValue(node, value);
 
@@ -70,7 +70,8 @@ boost::shared_ptr<OrderedDB> PyTrace::makeEmptySerializationDB()
   return boost::shared_ptr<OrderedDB>(new OrderedDB(trace.get()));
 }
 
-boost::shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion)
+boost::shared_ptr<OrderedDB> PyTrace::makeSerializationDB(
+    const boost::python::list & stackDicts, bool skipStackDictConversion)
 {
   assert(!skipStackDictConversion);
 
@@ -82,7 +83,8 @@ boost::shared_ptr<OrderedDB> PyTrace::makeSerializationDB(boost::python::list st
   return boost::shared_ptr<OrderedDB>(new OrderedDB(trace.get(), values));
 }
 
-boost::python::list PyTrace::dumpSerializationDB(boost::shared_ptr<OrderedDB> db, bool skipStackDictConversion)
+boost::python::list PyTrace::dumpSerializationDB(
+    const boost::shared_ptr<OrderedDB> & db, bool skipStackDictConversion)
 {
   assert(!skipStackDictConversion);
 
@@ -95,7 +97,8 @@ boost::python::list PyTrace::dumpSerializationDB(boost::shared_ptr<OrderedDB> db
   return stackDicts;
 }
 
-void PyTrace::unevalAndExtract(DirectiveID did, boost::shared_ptr<OrderedDB> db)
+void PyTrace::unevalAndExtract(
+    DirectiveID did, const boost::shared_ptr<OrderedDB> & db)
 {
   // leaves trace in an inconsistent state. use restore afterward
   assert(trace->families.count(did));
@@ -105,7 +108,8 @@ void PyTrace::unevalAndExtract(DirectiveID did, boost::shared_ptr<OrderedDB> db)
                db);
 }
 
-void PyTrace::restoreDirectiveID(DirectiveID did, boost::shared_ptr<OrderedDB> db)
+void PyTrace::restoreDirectiveID(
+    DirectiveID did, const boost::shared_ptr<OrderedDB> & db)
 {
   assert(trace->families.count(did));
   restore(trace.get(),
@@ -115,7 +119,10 @@ void PyTrace::restoreDirectiveID(DirectiveID did, boost::shared_ptr<OrderedDB> d
           boost::shared_ptr<map<Node*, Gradient> >());
 }
 
-void PyTrace::evalAndRestore(DirectiveID did, boost::python::object object, boost::shared_ptr<OrderedDB> db)
+void PyTrace::evalAndRestore(
+    DirectiveID did,
+    const boost::python::object & object,
+    const boost::shared_ptr<OrderedDB> & db)
 {
   VentureValuePtr exp = parseExpression(object);
   pair<double, Node*> p = evalFamily(trace.get(),

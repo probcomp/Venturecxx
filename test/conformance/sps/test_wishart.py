@@ -47,7 +47,8 @@ def testWishartSmoke():
 
 @statisticalTest
 def testWishartPrior1():
-  """Confirm that the diagonal elements of a Wishart are a chi-squared distribution."""
+  # Confirm that the diagonal elements of a Wishart are a chi-squared
+  # distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -63,7 +64,8 @@ def testWishartPrior1():
 
 @statisticalTest
 def testWishartPrior2():
-  """Confirm that the diagonal elements of a Wishart are a chi-squared distribution."""
+  # Confirm that the diagonal elements of a Wishart are a chi-squared
+  # distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -79,7 +81,8 @@ def testWishartPrior2():
 
 @statisticalTest
 def testInvWishartPrior1():
-  """Confirm that the diagonal elements of an inverse Wishart are an inverse Gamma distribution."""
+  # Confirm that the diagonal elements of an inverse Wishart are an
+  # inverse Gamma distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -95,7 +98,8 @@ def testInvWishartPrior1():
 
 @statisticalTest
 def testInvWishartPrior2():
-  """Confirm that the diagonal elements of an inverse Wishart are an inverse Gamma distribution."""
+  # Confirm that the diagonal elements of an inverse Wishart are an
+  # inverse Gamma distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -111,7 +115,8 @@ def testInvWishartPrior2():
 
 @statisticalTest
 def testWishartPrior3():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -126,7 +131,8 @@ def testWishartPrior3():
 
 @statisticalTest
 def testWishartPrior4():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -142,7 +148,8 @@ def testWishartPrior4():
 
 @statisticalTest
 def testInvWishartPrior3():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -157,7 +164,8 @@ def testInvWishartPrior3():
 
 @statisticalTest
 def testInvWishartPrior4():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
@@ -173,7 +181,7 @@ def testInvWishartPrior4():
 def testInvWishartAssess():
   psi = 3 # Parameterization from https://en.wikipedia.org/wiki/Inverse-Wishart_distribution
   dof = 5
-  n = 30000
+  n = 3000
   low = 0.00001
   high = 500
   get_ripl() # Make sure the SP registry is built (!)
@@ -186,5 +194,5 @@ def testInvWishartAssess():
   inv_gammas = np.vectorize(inv_gamma)(np.linspace(low, high, n))
   cum_w = math.exp(logaddexp(inv_wisharts)) * (high - low) / n
   cum_g = math.exp(logaddexp(inv_gammas)) * (high - low) / n
-  np.testing.assert_allclose([1, 1], [cum_w, cum_g], rtol=1e-3)
+  np.testing.assert_allclose([1, 1], [cum_w, cum_g], rtol=1e-2)
   np.testing.assert_allclose(inv_wisharts, inv_gammas)

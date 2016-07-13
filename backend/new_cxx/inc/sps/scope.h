@@ -20,15 +20,21 @@
 
 #include "psp.h"
 
-struct TagOutputPSP : PSP
+struct TagOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
 
-struct TagExcludeOutputPSP : PSP
+struct TagExcludeOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
 #endif

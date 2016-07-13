@@ -44,6 +44,12 @@ class Trace(object):
     # Forward all other trace methods without modification
     return getattr(self.trace, attrname)
 
+  def directive(self, did):
+    return self.directives[did]
+
+  def dids(self):
+    return sorted(self.directives.keys())
+
   def define(self, baseAddr, id, exp):
     assert baseAddr not in self.directives
     self.trace.eval(baseAddr, exp)

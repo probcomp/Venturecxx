@@ -16,6 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import cPickle as pickle
+import contextlib
+import copy
 import random
 
 import numpy.random as npr
@@ -25,6 +27,7 @@ from ..multiprocess import SynchronousMaster
 from ..multiprocess import SynchronousSerializingMaster
 from ..multiprocess import ThreadedMaster
 from ..multiprocess import ThreadedSerializingMaster
+from venture.exception import VentureException
 from venture.lite.utils import log_domain_even_out
 from venture.lite.utils import logaddexp
 from venture.lite.utils import sampleLogCategorical
@@ -38,10 +41,13 @@ class TraceSet(object):
     self.mode = 'sequential'
     self.process_cap = None
     self.traces = None
+    assert seed is not None
     self._py_rng = random.Random(seed)
     seed = self._py_rng.randint(1, 2**31 - 1)
     trace = tr.Trace(self.backend.trace_constructor()(seed))
     self.create_trace_pool([trace])
+    self._did_to_label = {}
+    self._label_to_did = {}
 
   def _trace_master(self, mode):
     if mode == 'multiprocess':
@@ -64,6 +70,80 @@ class TraceSet(object):
     else:
       self.log_weights = [0 for _ in traces]
 
+  # Labeled operations.
+
+  @contextlib.contextmanager
+  def _putting_label(self, label, did):
+    if label in self._label_to_did:
+      raise VentureException('invalid_argument',
+          'Label %r is already assigned to a different directive.' % (label,),
+          argument='label')
+    assert did not in self._did_to_label, \
+        'did %r already has label %r, not %r' % \
+        (did, self._did_to_label[did], label)
+    yield
+    assert label not in self._label_to_did, \
+      'Label %r mysteriously appeared in model!' % (label,)
+    assert did not in self._did_to_label
+    self._label_to_did[label] = did
+    self._did_to_label[did] = label
+
+  def _get_label(self, label):
+    if label not in self._label_to_did:
+      raise VentureException('invalid_argument',
+          'Label %r does not exist.' % (label,),
+          argument='label')
+    return self._label_to_did[label]
+
+  @contextlib.contextmanager
+  def _forgetting_label(self, label):
+    if label not in self._label_to_did:
+      raise VentureException('invalid_argument',
+          'Label %r does not exist.' % (label,),
+          argument='label')
+    did = self._label_to_did[label]
+    assert label == self._did_to_label[did]
+    yield self._label_to_did[label]
+    assert did == self._label_to_did[label]
+    assert did not in self._did_to_label
+    del self._label_to_did[label]
+
+  def get_directive_id(self, label):
+    return self._get_label(label)
+
+  def get_directive_label(self, did):
+    return self._did_to_label.get(did)
+
+  def labeled_define(self, label, baseAddr, id, exp):
+    with self._putting_label(label, baseAddr):
+      return self.define(baseAddr, id, exp)
+
+  def labeled_observe(self, label, baseAddr, exp, val):
+    with self._putting_label(label, baseAddr):
+      self.observe(baseAddr, exp, val)
+
+  def labeled_evaluate(self, label, baseAddr, exp):
+    with self._putting_label(label, baseAddr):
+      return self.evaluate(baseAddr, exp)
+
+  def labeled_forget(self, label):
+    with self._forgetting_label(label) as directiveId:
+      return self.forget(directiveId)
+
+  def labeled_freeze(self, label):
+    directiveId = self._get_label(label)
+    self.freeze(directiveId)
+
+  def labeled_report_value(self, label):
+    directiveId = self._get_label(label)
+    return self.report_value(directiveId)
+
+  def labeled_report_raw(self, label):
+    directiveId = self._get_label(label)
+    return self.report_raw(directiveId)
+
+  # Unlabeled operations.
+
   def define(self, baseAddr, id, datum):
     values = self.traces.map('define', baseAddr, id, datum)
     return values[0]
@@ -75,7 +155,10 @@ class TraceSet(object):
     self.traces.map('observe', baseAddr, datum, val)
 
   def forget(self, directiveId):
-    return self.traces.map('forget', directiveId)
+    weights = self.traces.map('forget', directiveId)
+    if directiveId in self._did_to_label:
+      del self._did_to_label[directiveId]
+    return weights
 
   def freeze(self, directiveId):
     self.traces.map('freeze', directiveId)
@@ -99,6 +182,8 @@ class TraceSet(object):
     seed = self._py_rng.randint(1, 2**31 - 1)
     trace = tr.Trace(self.backend.trace_constructor()(seed))
     self.create_trace_pool([trace])
+    self._label_to_did = {}
+    self._did_to_label = {}
 
   def reinit_inference_problem(self, num_particles=1):
     """Unincorporate all observations and return to the prior.
@@ -254,9 +339,6 @@ if freeze has been used.
   def primitive_infer(self, exp):
     return self.traces.map('primitive_infer', exp)
 
-  def logscore(self): return self.traces.at_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.traces.map('getGlobalLogScore')
-
   def get_entropy_info(self):
     return { 'unconstrained_random_choices' : self.traces.at_distinguished('numRandomChoices') }
 
@@ -297,17 +379,23 @@ if freeze has been used.
     data['mode'] = self.mode
     data['traces'] = self.retrieve_dumps()
     data['log_weights'] = self.log_weights
+    data['label_dict'] = self._label_to_did
+    data['did_dict'] = self._did_to_label
     return data
 
   def load(self, data):
     traces = [self.restore_trace(trace) for trace in data['traces']]
     self.mode = data['mode']
     self.create_trace_pool(traces, data['log_weights'])
+    self._label_to_did = data['label_dict']
+    self._did_to_label = data['did_dict']
 
   def convertFrom(self, other):
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
     self.mode = other.mode
     self.create_trace_pool(traces, other.log_weights)
+    self._did_to_label = copy.copy(other._did_to_label)
+    self._label_to_did = copy.copy(other._label_to_did)
 
   def set_profiling(self, enabled=True):
       self.traces.map('set_profiling', enabled)

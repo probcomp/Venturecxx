@@ -34,7 +34,7 @@ from venture.test.stats import statisticalTest
 @on_inf_prim("any")
 @statisticalTest
 def testBernoulliIfNormal1():
-  "A simple program with bernoulli, if, and normal applications in the brush"
+  # A simple program with bernoulli, if, and normal applications in the brush
   ripl = get_ripl()
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))", label="pid")
@@ -47,7 +47,7 @@ def testBernoulliIfNormal1():
 @on_inf_prim("any")
 @statisticalTest
 def testBernoulliIfNormal2():
-  "A simple program with bernoulli, if, and an absorbing application of normal"
+  # A simple program with bernoulli, if, and an absorbing application of normal
   if not collect_iid_samples():
     raise SkipTest("This test should not pass without reset.")
 
@@ -106,7 +106,7 @@ def testNormalWithObserve2b():
 @on_inf_prim("any")
 @statisticalTest
 def testNormalWithObserve3():
-  "Checks the posterior of a Gaussian in a Linear-Gaussian-BN"
+  # Checks the posterior of a Gaussian in a Linear-Gaussian-BN
   raise SkipTest("I do not know the right answer.  See issue "
                  "https://app.asana.com/0/9277419963067/9797699085006")
   ripl = get_ripl()
@@ -131,7 +131,7 @@ def testNormalWithObserve3():
 @on_inf_prim("any")
 @statisticalTest
 def testStudentT1():
-  "Simple program involving simulating from a student_t"
+  # Simple program involving simulating from a student_t
   ripl = get_ripl()
   ripl.assume("a", "(student_t 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 3.0)
@@ -185,7 +185,7 @@ def testStudentT2():
   "implementation of subsampling can't handle")
 @statisticalTest
 def testSprinkler1():
-  "Classic Bayes-net example, with no absorbing when proposing to 'rain'"
+  # Classic Bayes-net example, with no absorbing when proposing to 'rain'
   ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)", label="pid")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")
@@ -227,7 +227,7 @@ def testSprinkler2():
 @on_inf_prim("any")
 @statisticalTest
 def testBLOGCSI1():
-  "Context-sensitive Bayes-net taken from BLOG examples"
+  # Context-sensitive Bayes-net taken from BLOG examples
   ripl = get_ripl()
   ripl.assume("u","(bernoulli 0.3)")
   ripl.assume("v","(bernoulli 0.9)")
@@ -242,7 +242,7 @@ def testBLOGCSI1():
 @on_inf_prim("any")
 @statisticalTest
 def testGeometric1():
-  "Geometric written with bernoullis and ifs, with absorbing at the condition."
+  # Geometric written with bernoullis and ifs, with absorbing at the condition.
   ripl = get_ripl()
   ripl.assume("p","(if (flip) 0.5 0.5)")
   ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (+ 1 (geo p))))")

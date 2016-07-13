@@ -31,19 +31,23 @@ struct DB
 {
   virtual bool hasValue(Node * node);
   virtual VentureValuePtr getValue(Node * node);
-  virtual void registerValue(Node * node, VentureValuePtr value);
+  virtual void registerValue(Node * node, const VentureValuePtr & value);
 
   bool hasLatentDB(Node * makerNode);
   shared_ptr<LatentDB> getLatentDB(Node * makerNode);
-  void registerLatentDB(Node * makerNode, shared_ptr<LatentDB> latentDB);
+  void registerLatentDB(
+      Node * makerNode, const shared_ptr<LatentDB> & latentDB);
 
-  bool hasESRParent(shared_ptr<SP> sp, FamilyID id);
-  RootOfFamily getESRParent(shared_ptr<SP> sp, FamilyID id);
-  void registerSPFamily(shared_ptr<SP> sp, FamilyID id, RootOfFamily esrParent);
+  bool hasESRParent(const shared_ptr<SP> & sp, const FamilyID & id);
+  RootOfFamily getESRParent(const shared_ptr<SP> & sp, const FamilyID & id);
+  void registerSPFamily(
+      const shared_ptr<SP> & sp,
+      const FamilyID & id,
+      const RootOfFamily & esrParent);
 
   bool hasMadeSPAux(Node * makerNode);
   shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
-  void registerMadeSPAux(Node * makerNode, shared_ptr<SPAux> spAux);
+  void registerMadeSPAux(Node * makerNode, const shared_ptr<SPAux> & spAux);
 
 private:
   map<Node*, shared_ptr<LatentDB> > latentDBs;
