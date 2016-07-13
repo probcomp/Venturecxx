@@ -58,7 +58,7 @@ class Infer(object):
     elif isinstance(thing, VentureString):
       return thing.getString()
     elif isinstance(thing, list):
-      return [Infer._canonicalize_tree(t) for t in thing]
+      return [Infer._canonicalize_tree(tree) for tree in thing]
 
   @staticmethod
   def _format_filenames(filenames,spec):
@@ -325,7 +325,7 @@ Dataset which is the result of the merge. """
     for (key, vals) in self.data.iteritems():
       if key == "iter" and len(vals) > 0:
         nxt = max(vals)
-        answer[key] = vals + [v + nxt for v in other.data[key]]
+        answer[key] = vals + [val + nxt for val in other.data[key]]
       else:
         answer[key] = vals + other.data[key]
     return Dataset(self.ind_names, self.std_names, answer)
@@ -343,7 +343,7 @@ into it."""
     for key in self.data.keys():
       if key == "iter" and len(self.data[key]) > 0:
         nxt = max(self.data[key])
-        self.data[key].extend([v + nxt for v in other.data[key]])
+        self.data[key].extend([val + nxt for val in other.data[key]])
       else:
         self.data[key].extend(other.data[key])
     return self
