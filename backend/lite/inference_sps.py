@@ -15,17 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.engine.inference import Dataset
-from venture.engine.plot_spec import PlotSpec
 from venture.exception import VentureException
 from venture.lite.exception import VentureNestedRiplMethodError
 from venture.lite.exception import VentureTypeError
-from venture.lite.exception import VentureValueError
 from venture.lite.records import RecordType
 from venture.lite.records import VentureRecord
 from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_help import no_request
-from venture.lite.value import VentureForeignBlob
 import venture.lite.psp as psp
 import venture.lite.sp as sp
 import venture.lite.types as t
@@ -212,50 +208,6 @@ Calling it directly is likely to be difficult and unproductive. """)
 def assert_fun(test, msg=""):
   # TODO Raise an appropriate Venture exception instead of crashing Python
   assert test, msg
-
-def print_fun(*args):
-  def convert_arg(arg):
-    if isinstance(arg, VentureForeignBlob) and \
-       isinstance(arg.getForeignBlob(), Dataset):
-      return arg.getForeignBlob().asPandas()
-    else:
-      return arg
-  if len(args) == 1:
-    print convert_arg(args[0])
-  else:
-    print [convert_arg(a) for a in args]
-
-def plot_fun(spec, dataset):
-  spec = t.ExpressionType().asPython(spec)
-  if isinstance(dataset, Dataset):
-    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names)
-  else:
-    # Assume a raw data frame
-    PlotSpec(spec).plot(dataset, list(dataset.columns.values))
-
-def plot_to_file_fun(basenames, spec, dataset):
-  filenames = t.ExpressionType().asPython(basenames)
-  spec = t.ExpressionType().asPython(spec)
-  if isinstance(dataset, Dataset):
-    PlotSpec(spec).plot(dataset.asPandas(), dataset.ind_names,
-                        _format_filenames(filenames, spec))
-  else:
-    PlotSpec(spec).plot(dataset, list(dataset.columns.values),
-                        _format_filenames(filenames, spec))
-
-def _format_filenames(filenames,spec):
-  if isinstance(filenames, basestring) or isinstance(filenames, v.VentureString):
-    if isinstance(filenames, v.VentureString):
-      filenames = filenames.getString()
-    if isinstance(spec, basestring) or isinstance(spec, v.VentureString):
-      return [filenames + '.png']
-    else:
-      raise VentureValueError('The number of specs must match the number of filenames.')
-  else:
-    if isinstance(spec, list) and len(spec) == len(filenames):
-      return [filename + '.png' for filename in filenames]
-    else:
-      raise VentureValueError('The number of specs must match the number of filenames.')
 
 inferenceSPsList = [
   trace_method_sp("mh", transition_oper_type(), desc="""\
@@ -837,112 +789,6 @@ unwrapped to Python strings for the plugin.
 """),
 
   macro_helper("call_back", infer_action_maker_type([t.AnyType()], return_type=t.AnyType(), variadic=True)),
-  macro_helper("collect", infer_action_maker_type([t.AnyType()], return_type=t.ForeignBlobType("<dataset>"), variadic=True)),
-
-  engine_method_sp("printf", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
-Print model values collected in a dataset.
-
-This is a basic debugging facility."""),
-
-  ["plot", deterministic_typed(plot_fun, [t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
-Plot a data set according to a plot specification.
-
-Example::
-
-    define d = empty()
-    assume x = normal(0, 1)
-    infer accumulate_dataset(1000,
-              do(mh(default, one, 1),
-                 collect(x)))
-    plot("c0s", d)
-
-will do 1000 iterations of `mh` collecting some standard data and
-the value of ``x``, and then show a plot of the ``x`` variable (which
-should be a scalar) against the iteration number (from 1 to 1000),
-colored according to the global log score.  See `collect`
-for details on collecting and labeling data to be plotted.
-
-The format specifications are inspired loosely by the classic
-printf.  To wit, each individual plot that appears on a page is
-specified by some line noise consisting of format characters
-matching the following regex::
-
-    [<geom>]*(<stream>?<scale>?){1,3}
-
-specifying
-
-- the geometric objects to draw the plot with, and
-- for each dimension (x, y, and color, respectively)
-    - the data stream to use
-    - the scale
-
-The possible geometric objects are:
-
-- _p_oint,
-- _l_ine,
-- _b_ar, and
-- _h_istogram
-
-The possible data streams are:
-
-- _<an integer>_ that column in the data set, 0-indexed,
-- _%_ the next column after the last used one
-- iteration _c_ounter,
-- _t_ime (wall clock, since the beginning of the Venture program), and
-- pa_r_ticle
-
-The possible scales are:
-
-- _d_irect, and
-- _l_ogarithmic
-
-If one stream is indicated for a 2-D plot (points or lines), the x
-axis is filled in with the iteration counter.  If three streams are
-indicated, the third is mapped to color.
-
-If the given specification is a list, make all those plots at once.
-""")],
-
-  engine_method_sp("plotf", infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
-Plot a data set according to a plot specification.
-
-This is identical to `plot`, except it's an inference action,
-so can participate in `do` blocks.
-
-Example::
-
-    do(assume x, normal(0, 1),
-       ...
-       plotf("c0s", d))
-"""),
-
-  ["plot_to_file", deterministic_typed(plot_to_file_fun, [t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")], t.NilType(), descr="""\
-Save plot(s) to file(s).
-
-Like `plot`, but save the resulting plot(s) instead of displaying on screen.
-Just as ``<spec>`` may be either a single expression or a list, ``<basenames>`` may
-either be a single symbol or a list of symbols. The number of basenames must
-be the same as the number of specifications.
-
-Examples:
-  plot_to_file("basename", "spec", <expression> ...) saves the plot specified by
-    the spec in the file "basename.png"
-  plot_to_file(quote(basename1, basename2), (quote(spec1, spec2)), <expression> ...) saves
-    the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
-""")],
-
-  engine_method_sp("plotf_to_file", infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
-Save plot(s) to file(s).
-
-Like `plotf`, but save the resulting plot(s) instead of displaying on screen.
-See `plot_to_file`.
-"""),
-
-  engine_method_sp("sweep", infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
-Print the iteration count.
-
-Extracts the last row of the supplied inference Dataset and prints its iteration count.
-"""),
 
   ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol>"), t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
   ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2)),
@@ -988,27 +834,12 @@ The directive can be specified by label or by directive id.
 Stop any continuous inference that may be running.
 """),
 
-  ["empty", deterministic_typed(lambda *args: Dataset(), [], t.ForeignBlobType("<dataset>"), descr="""\
-Create an empty dataset `into` which further `collect` ed stuff may be merged.
-  """)],
-
-  ["into", sequenced_sp(lambda orig, new: orig.merge_bang(new), infer_action_maker_type([t.ForeignBlobType(), t.ForeignBlobType()]), desc="""\
-Destructively merge the contents of the second argument into the
-first.
-
-Right now only implemented on datasets created by `empty` and
-`collect`, but in principle generalizable to any monoid.  """)],
-
   # Hackety hack hack backward compatibility
   ["ordered_range", deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                                         [t.AnyType()], t.ListType(), variadic=True)],
 
   ["assert", sequenced_sp(assert_fun, infer_action_maker_type([t.BoolType(), t.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
-""")],
-
-  ["print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
-Print the given values to the terminal.
 """)],
 
   engine_method_sp("convert_model", infer_action_maker_type([t.SymbolType()], t.ForeignBlobType("<model>")), desc="""\
