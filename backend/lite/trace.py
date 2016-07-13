@@ -343,13 +343,19 @@ class Trace(object):
     #import pdb; pdb.set_trace()
     #scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     nodes = self.scopes[scope][block]
-    if scope == "default": return nodes
+    if scope == "default":
+      return nodes
     else:
-      pnodes = OrderedSet()
-      for node in nodes: self.addRandomChoicesInBlock(scope, block, pnodes, node)
-      return pnodes
+      return self.randomChoicesInExtent(nodes, scope, block)
 
-  def addRandomChoicesInBlock(self, scope, block, pnodes, node):
+  def randomChoicesInExtent(self, nodes, scope, block):
+    # The scope and block, if present, limit the computed dynamic
+    # extent to everything that is not explicitly excluded from them.
+    pnodes = OrderedSet()
+    for node in nodes: self.addRandomChoicesInExtent(node, scope, block, pnodes)
+    return pnodes
+
+  def addRandomChoicesInExtent(self, node, scope, block, pnodes):
     if not isOutputNode(node): return
 
     if self.pspAt(node).isRandom() and node not in self.ccs: pnodes.add(node)
@@ -358,21 +364,21 @@ class Trace(object):
     if self.pspAt(requestNode).isRandom() and requestNode not in self.ccs: pnodes.add(requestNode)
 
     for esr in self.valueAt(node.requestNode).esrs:
-      self.addRandomChoicesInBlock(scope, block, pnodes, self.spFamilyAt(requestNode, esr.id))
+      self.addRandomChoicesInExtent(self.spFamilyAt(requestNode, esr.id), scope, block, pnodes)
 
-    self.addRandomChoicesInBlock(scope, block, pnodes, node.operatorNode)
+    self.addRandomChoicesInExtent(node.operatorNode, scope, block, pnodes)
 
     for i, operandNode in enumerate(node.operandNodes):
       if i == 2 and isTagOutputPSP(self.pspAt(node)):
         (new_scope, new_block, _) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope, new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
-        if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope, block, pnodes, operandNode)
+        if scope != new_scope or block == new_block: self.addRandomChoicesInExtent(operandNode, scope, block, pnodes)
       elif i == 1 and isTagExcludeOutputPSP(self.pspAt(node)):
         (excluded_scope, _) = [self.valueAt(randNode) for randNode in node.operandNodes]
         excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
-        if scope != excluded_scope: self.addRandomChoicesInBlock(scope, block, pnodes, operandNode)
+        if scope != excluded_scope: self.addRandomChoicesInExtent(operandNode, scope, block, pnodes)
       else:
-        self.addRandomChoicesInBlock(scope, block, pnodes, operandNode)
+        self.addRandomChoicesInExtent(operandNode, scope, block, pnodes)
 
 
   def scopeHasEntropy(self, scope):
