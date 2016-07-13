@@ -59,6 +59,25 @@ class TraceSearchIndexer(object):
     assert isinstance(scaffold, Scaffold)
     return scaffold
 
+  def logDensityOfIndex(self, trace, _):
+    # Two things:
+    #
+    # - The marginal probability of producing the same result is
+    #   actually intractable, so this is computing the probability of
+    #   following the same path (which may not actually yield the same
+    #   result, per Issue #576 (scope membership reversibility).
+    #
+    # - In cases with only one random choice, the probability of
+    #   following the same path is independent of the path.  To handle
+    #   the more general case, I need to change the interface of
+    #   Indexers to be able to return a trace of the path they
+    #   followed so it can be replayed in the new context.
+    #   - Interestingly, this may also lead to a solution to #576.
+    #
+    # Until then, just return the weight and hope.
+    (scaffold, weight) = interpret(self.prog, trace)
+    assert isinstance(scaffold, Scaffold)
+    return weight
 
 # The return value of interpret is expected to be one of
 # - A single node
