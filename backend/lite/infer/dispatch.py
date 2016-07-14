@@ -85,13 +85,13 @@ def primitive_infer(trace, exp):
     (scope, block, _transitions, _) = parse_arguments(trace, exp)
     drawScaffold(trace, BlockScaffoldIndexer(scope, block))
   elif operator == "mh_kernel_update":
-    (scope, block, transitions, _) = parse_arguments(trace, exp)
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
-      do_mh_kernel_update(trace, scope, block, exp))
+      do_mh_kernel_update(trace, scope, block, extra))
   elif operator == "subsampled_mh":
-    (scope, block, transitions, _) = parse_arguments(trace, exp)
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
-      do_subsampled_mh(trace, scope, block, exp))
+      do_subsampled_mh(trace, scope, block, extra))
   elif operator == "subsampled_mh_check_applicability":
     (scope, block, _transitions, _) = parse_arguments(trace, exp)
     SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(trace)
@@ -100,7 +100,7 @@ def primitive_infer(trace, exp):
   elif operator == "subsampled_mh_make_consistent":
     (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
-      do_subsampled_mh_make_consistent(trace, scope, block, exp))
+      do_subsampled_mh_make_consistent(trace, scope, block, extra))
   elif operator == "meanfield":
     (scope, block, transitions, extra) = parse_arguments(trace, exp)
     steps = int(extra[0])
@@ -221,24 +221,24 @@ def primitive_infer(trace, exp):
     return scaffold.numAffectedNodes()
   else: raise Exception("INFER %s is not implemented" % operator)
 
-def do_mh_kernel_update(trace, scope, block, exp):
-  (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
+def do_mh_kernel_update(trace, scope, block, extra):
+  (useDeltaKernels, deltaKernelArgs, updateValues) = extra
   scaffolder = BlockScaffoldIndexer(scope, block,
     useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
     updateValues=updateValues)
   return mixMH(trace, scaffolder, MHOperator())
 
-def do_subsampled_mh(trace, scope, block, exp):
+def do_subsampled_mh(trace, scope, block, extra):
   (Nbatch, k0, epsilon,
-   useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:9]
+   useDeltaKernels, deltaKernelArgs, updateValues) = extra
   scaffolder = SubsampledBlockScaffoldIndexer(scope, block,
     useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
     updateValues=updateValues)
   return subsampledMixMH(
     trace, scaffolder, SubsampledMHOperator(), Nbatch, k0, epsilon)
 
-def do_subsampled_mh_make_consistent(trace, scope, block, exp):
-  (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
+def do_subsampled_mh_make_consistent(trace, scope, block, extra):
+  (useDeltaKernels, deltaKernelArgs, updateValues) = extra
   scaffolder = SubsampledBlockScaffoldIndexer(scope, block,
     useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
     updateValues=updateValues)
