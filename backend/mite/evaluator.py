@@ -68,16 +68,16 @@ class Evaluator(object):
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
-    handle = TraceHandle(self.trace, addr, sp_node.address, args)
-    return (0, sp.apply(handle))
+    handle = TraceHandle(self.trace, sp_node.address, args)
+    return (0, sp.apply(addr, handle))
 
 # TODO: this signature retains backward compatibility with Args for now,
 # but we should remove that
 from venture.lite.psp import IArgs
 class TraceHandle(IArgs):
-  def __init__(self, trace, app_addr, sp_addr, args):
+  def __init__(self, trace, sp_addr, args):
     self.trace = trace
-    self.node = app_addr
+    self.node = None
     self.sp_addr = sp_addr
     self.operandNodes = args
     self.env = None
@@ -160,23 +160,23 @@ class Regenerator(Evaluator):
   def unapply_sp(self, addr, value, sp_node, args):
     sp = sp_node.value
     handle = RestoringTraceHandle(
-      self.trace, addr, sp_node.address, args, self, output_value=value)
-    fragment = sp.unapply(handle)
+      self.trace, sp_node.address, args, self, output_value=value)
+    fragment = sp.unapply(addr, handle)
     self.fragment[addr] = fragment
     return 0
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
     handle = RestoringTraceHandle(
-      self.trace, addr, sp_node.address, args, self)
+      self.trace, sp_node.address, args, self)
     fragment = self.fragment[addr]
-    return (0, sp.restore(handle, fragment))
+    return (0, sp.restore(addr, handle, fragment))
 
 
 class RestoringTraceHandle(TraceHandle):
-  def __init__(self, trace, app_addr, sp_addr, args, restorer, output_value=None):
+  def __init__(self, trace, sp_addr, args, restorer, output_value=None):
     super(RestoringTraceHandle, self).__init__(
-      trace, app_addr, sp_addr, args)
+      trace, sp_addr, args)
     self.outputValue = lambda: output_value
     self.restorer = restorer
 
