@@ -51,13 +51,13 @@ def parse_arguments(trace, args):
       transitions = int(args[-2])
     else:
       transitions = int(args[-1])
+  if not trace.scopeHasEntropy(scope):
+    transitions = 0
   return (scope, block, transitions)
 
 def primitive_infer(trace, exp):
   operator = exp[0]
   (scope, block, transitions) = parse_arguments(trace, exp)
-  if not trace.scopeHasEntropy(scope):
-    return 0.0
   ct = 0
   for _ in range(transitions):
     if operator == "mh":
@@ -186,4 +186,4 @@ def primitive_infer(trace, exp):
   if transitions > 0:
     return ct/float(transitions)
   else:
-    return float("nan")
+    return 0.0
