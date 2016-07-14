@@ -21,6 +21,9 @@ import math
 from venture.lite.orderedset import OrderedFrozenSet
 from venture.lite.scaffold import constructScaffold, Scaffold
 from venture.lite.smap import SamplableMap
+from venture.lite.sp_help import deterministic_typed
+import venture.lite.inference_sps as inf
+import venture.lite.types as t
 
 # The language of possible subproblem selection phrases.  The item in
 # each field is expected to be one of these, except Lookup.key,
@@ -141,3 +144,29 @@ def set_fmap(thing, f):
     return f(thing)
   else:
     return f(OrderedFrozenSet([thing]))
+
+inf.registerBuiltinInferenceSP("by_tag", \
+    deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType()))
+
+def by_tag_value_fun(tag, val):
+  return Lookup(val, FetchTag(tag))
+
+inf.registerBuiltinInferenceSP("by_tag_value", \
+    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value")], t.ForeignBlobType()))
+
+def subselect_fun(source1, source2):
+  return Intersect(Extent(source1), source2)
+
+inf.registerBuiltinInferenceSP("by_subselection", \
+    deterministic_typed(subselect_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
+
+inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType()))
+
+inf.registerBuiltinInferenceSP("minimal_subproblem", \
+    deterministic_typed(MinimalSubproblem, [t.ForeignBlobType()], t.ForeignBlobType()))
+
+# XXX Do I want different names for "random singleton variable" vs
+# "random singleton block"?  ATM, they can be disambiguated by
+# dispatch.
+inf.registerBuiltinInferenceSP("random_singleton", \
+    deterministic_typed(Random1, [t.ForeignBlobType()], t.ForeignBlobType()))
