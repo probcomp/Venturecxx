@@ -41,7 +41,13 @@ def parse_arguments(trace, args):
   assert len(args) >= 3
   (_, scope, block) = args[0:3]
   scope, block = trace._normalizeEvaluatedScopeAndBlock(scope, block)
-  if len(args) == 3:
+  (transitions, extra) = parse_transitions_extra(args[3:])
+  if not trace.scopeHasEntropy(scope):
+    transitions = 0
+  return (scope, block, transitions, extra)
+
+def parse_transitions_extra(args):
+  if len(args) == 0:
     transitions = 1
     extra = []
   else:
@@ -50,13 +56,11 @@ def parse_arguments(trace, args):
       # The last item was the parallelism indicator, which Lite
       # ignores anyway
       transitions = int(args[-2])
-      extra = args[3:-2]
+      extra = args[:-2]
     else:
       transitions = int(args[-1])
-      extra = args[3:-1]
-  if not trace.scopeHasEntropy(scope):
-    transitions = 0
-  return (scope, block, transitions, extra)
+      extra = args[:-1]
+  return (transitions, extra)
 
 def transloop(trace, transitions, operate):
   ct = 0
