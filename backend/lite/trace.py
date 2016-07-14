@@ -17,11 +17,11 @@
 
 import copy
 import math
-import numpy.random as npr
 import random
 
 from collections import OrderedDict
 
+import numpy.random as npr
 from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
@@ -33,10 +33,8 @@ from venture.lite.detach import detachAndExtract
 from venture.lite.detach import unconstrain
 from venture.lite.detach import unevalFamily
 from venture.lite.env import VentureEnvironment
-from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.exception import VentureError
 from venture.lite.infer import BlockScaffoldIndexer
-from venture.lite.infer import mixMH
 from venture.lite.lkernel import DeterministicLKernel
 from venture.lite.node import ConstantNode
 from venture.lite.node import LookupNode
@@ -64,7 +62,6 @@ from venture.lite.sp import SPFamilies
 from venture.lite.sp import VentureSPRecord
 from venture.lite.types import ExpressionType
 from venture.lite.value import SPRef
-from venture.lite.value import VentureNumber
 from venture.lite.value import VenturePair
 from venture.lite.value import VentureSymbol
 from venture.lite.value import VentureValue
