@@ -187,18 +187,6 @@ def par_transition_oper_type(extra_args = None, **kwargs):
     other_args + [t.BoolType("in_parallel : bool")],
     min_req_args=len(other_args), **kwargs)
 
-def macro_helper(name, tp):
-  return ["_" + name, engine_method_sp(name, tp, desc="""\
-A helper function for implementing the eponymous inference macro.
-
-Calling it directly is likely to be difficult and unproductive. """)]
-
-def ripl_macro_helper(name, tp):
-  return ["_" + name, ripl_method_sp(name, tp, desc="""\
-A helper function for implementing the eponymous inference macro.
-
-Calling it directly is likely to be difficult and unproductive. """)]
-
 def assert_fun(test, msg=""):
   # TODO Raise an appropriate Venture exception instead of crashing Python
   assert test, msg
@@ -224,10 +212,16 @@ def register_ripl_method_sp(name, tp, desc="", method_name=None):
   registerBuiltinInferenceSP(name, ripl_method_sp(method_name, tp, desc))
 
 def register_macro_helper(name, tp):
-  registerBuiltinInferenceSP(*macro_helper(name, tp))
+  registerBuiltinInferenceSP("_" + name, engine_method_sp(name, tp, desc="""\
+A helper function for implementing the eponymous inference macro.
+
+Calling it directly is likely to be difficult and unproductive. """))
 
 def register_ripl_macro_helper(name, tp):
-  registerBuiltinInferenceSP(*ripl_macro_helper(name, tp))
+  registerBuiltinInferenceSP("_" + name, ripl_method_sp(name, tp, desc="""\
+A helper function for implementing the eponymous inference macro.
+
+Calling it directly is likely to be difficult and unproductive. """))
 
 register_trace_method_sp("mh", transition_oper_type(), desc="""\
 Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
