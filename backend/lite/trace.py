@@ -493,6 +493,12 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
+  # XXX Why are all these inference operations defined as trace methods?
+  # Because
+  # - Multiprocessing doesn't know how to call raw functions, and
+  #   currently uses a Trace as the object whose methods to invoke
+  # - We didn't learn how to export raw functions from the C++
+  #   extension, but we want to show the same interface to Traces.
   def primitive_infer(self, exp):
     return infer.primitive_infer(self, exp)
 
