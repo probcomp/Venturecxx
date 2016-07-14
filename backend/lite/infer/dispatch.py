@@ -43,17 +43,20 @@ def parse_arguments(trace, args):
   scope, block = trace._normalizeEvaluatedScopeAndBlock(scope, block)
   if len(args) == 3:
     transitions = 1
+    extra = []
   else:
     maybe_transitions = args[-1]
     if isinstance(maybe_transitions, bool):
       # The last item was the parallelism indicator, which Lite
       # ignores anyway
       transitions = int(args[-2])
+      extra = args[3:-2]
     else:
       transitions = int(args[-1])
+      extra = args[3:-1]
   if not trace.scopeHasEntropy(scope):
     transitions = 0
-  return (scope, block, transitions)
+  return (scope, block, transitions, extra)
 
 def transloop(trace, transitions, operate):
   ct = 0
@@ -71,75 +74,72 @@ def transloop(trace, transitions, operate):
 def primitive_infer(trace, exp):
   operator = exp[0]
   if operator == "mh":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block), MHOperator()))
   elif operator == "func_mh":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block), FuncMHOperator()))
   elif operator == "draw_scaffold":
-    (scope, block, _transitions) = parse_arguments(trace, exp)
+    (scope, block, _transitions, _) = parse_arguments(trace, exp)
     drawScaffold(trace, BlockScaffoldIndexer(scope, block))
   elif operator == "mh_kernel_update":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       do_mh_kernel_update(trace, scope, block, exp))
   elif operator == "subsampled_mh":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       do_subsampled_mh(trace, scope, block, exp))
   elif operator == "subsampled_mh_check_applicability":
-    (scope, block, _transitions) = parse_arguments(trace, exp)
+    (scope, block, _transitions, _) = parse_arguments(trace, exp)
     SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(trace)
     # Does not affect nodes
     return 0.0
   elif operator == "subsampled_mh_make_consistent":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       do_subsampled_mh_make_consistent(trace, scope, block, exp))
   elif operator == "meanfield":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    steps = int(exp[3])
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
+    steps = int(extra[0])
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             MeanfieldOperator(steps, 0.0001)))
   elif operator == "hmc":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    (epsilon, L) = exp[3:5]
+    (scope, block, transitions, (epsilon, L)) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             HamiltonianMonteCarloOperator(epsilon, int(L))))
   elif operator == "gibbs":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             EnumerativeGibbsOperator()))
   elif operator == "emap":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             EnumerativeMAPOperator()))
   elif operator == "gibbs_update":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block, updateValues=True),
             EnumerativeGibbsOperator()))
   elif operator == "slice":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    (w, m) = exp[3:5]
+    (scope, block, transitions, (w, m)) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             StepOutSliceOperator(w, m)))
   elif operator == "slice_doubling":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    (w, p) = exp[3:5]
+    (scope, block, transitions, (w, p)) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             DoublingSliceOperator(w, p)))
   elif operator == "pgibbs":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    particles = int(exp[3])
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
+    particles = int(extra[0])
     if isinstance(block, list): # Ordered range
       (_, min_block, max_block) = block
       scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
@@ -151,8 +151,8 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               PGibbsOperator(particles)))
   elif operator == "pgibbs_update":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    particles = int(exp[3])
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
+    particles = int(extra[0])
     if isinstance(block, list): # Ordered range
       (_, min_block, max_block) = block
       scaffolder = BlockScaffoldIndexer(
@@ -165,8 +165,8 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block, updateValues=True),
               PGibbsOperator(particles)))
   elif operator == "func_pgibbs":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    particles = int(exp[3])
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
+    particles = int(extra[0])
     if isinstance(block, list): # Ordered range
       (_, min_block, max_block) = block
       scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
@@ -178,8 +178,8 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePGibbsOperator(particles)))
   elif operator == "func_pmap":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    particles = int(exp[3])
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
+    particles = int(extra[0])
     if isinstance(block, list): # Ordered range
       (_, min_block, max_block) = block
       scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
@@ -191,33 +191,31 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePMAPOperator(particles)))
   elif operator == "grad_ascent":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    (rate, steps) = exp[3:5]
+    (scope, block, transitions, (rate, steps)) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             GradientAscentOperator(rate, int(steps))))
   elif operator == "nesterov":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    (rate, steps) = exp[3:5]
+    (scope, block, transitions, (rate, steps)) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             NesterovAcceleratedGradientAscentOperator(rate, int(steps))))
   elif operator == "rejection":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    if len(exp) == 5:
-      trials = int(exp[3])
+    (scope, block, transitions, extra) = parse_arguments(trace, exp)
+    if len(extra) == 1:
+      trials = int(extra[0])
     else:
       trials = None
       return transloop(trace, transitions, lambda : \
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               RejectionOperator(trials)))
   elif operator == "bogo_possibilize":
-    (scope, block, transitions) = parse_arguments(trace, exp)
+    (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block),
             BogoPossibilizeOperator()))
   elif operator == "print_scaffold_stats":
-    (scope, block, _transitions) = parse_arguments(trace, exp)
+    (scope, block, _transitions, _) = parse_arguments(trace, exp)
     scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(trace)
     scaffold.show()
     return scaffold.numAffectedNodes()
