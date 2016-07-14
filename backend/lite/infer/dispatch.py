@@ -79,9 +79,8 @@ def primitive_infer(trace, exp):
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block), FuncMHOperator()))
   elif operator == "draw_scaffold":
-    (scope, block, transitions) = parse_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      drawScaffold(trace, BlockScaffoldIndexer(scope, block)))
+    (scope, block, _transitions) = parse_arguments(trace, exp)
+    drawScaffold(trace, BlockScaffoldIndexer(scope, block))
   elif operator == "mh_kernel_update":
     (scope, block, transitions) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \

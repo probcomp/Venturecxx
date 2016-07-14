@@ -644,7 +644,7 @@ O(#nodes). """)
 register_trace_method_sp("draw_scaffold", transition_oper_type(), desc="""\
 Draw a visual representation of the scaffold indicated by the given scope and block.
 
-This is useful for debugging.  You probably do not want to specify more than 1 transition.
+This is useful for debugging.  The transition count is ignored.
 
 Returns the number of nodes in the drawing.""")
 
