@@ -13,11 +13,13 @@ class VentureSP(VentureValue):
   def unapply(self, _args):
     raise VentureBuiltinSPMethodError("Cannot unapply")
 
-  def restore(self, _args):
+  def restore(self, _args, _trace_fragment):
     raise VentureBuiltinSPMethodError("Cannot restore previous state")
 
   def logDensity(self, _value, _args):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
+
+  # TODO: replace this trio of methods with constrained kernels.
 
   def constrain(self, _value, _args):
     raise VentureBuiltinSPMethodError("Cannot constrain")
@@ -48,11 +50,10 @@ class SimulationSP(VentureSP):
   def unapply(self, args):
     value = args.outputValue()
     self.unincorporate(value, args)
-    args.setState(args.node, value)
+    return value
 
   @override(VentureSP)
-  def restore(self, args):
-    value = args.getState(args.node)
+  def restore(self, args, value):
     self.incorporate(value, args)
     return value
 
@@ -101,9 +102,10 @@ class RequestReferenceSP(VentureSP):
   def unapply(self, args):
     raddr = self.request_map.pop(args.node)
     args.decRequest(raddr)
+    return None
 
   @override(VentureSP)
-  def restore(self, args):
+  def restore(self, args, _trace_fragment):
     # NB: this assumes that the request made is deterministic
     # so we can just reapply
     return self.apply(args)
@@ -160,9 +162,3 @@ class TraceNodeArgs(LiteTraceNodeArgs):
 
   def unconstrain(self, raddr):
     return self.context.unconstrainRequest(self.node, raddr)
-
-  def setState(self, node, value, ext=None):
-    return self.context.setState(node, value, ext)
-
-  def getState(self, node, ext=None):
-    return self.context.getState(node, ext)

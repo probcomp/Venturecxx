@@ -161,31 +161,24 @@ class Regenerator(Evaluator):
     sp = sp_node.value
     handle = RestoringTraceHandle(
       self.trace, addr, sp_node.address, args, self, output_value=value)
-    sp.unapply(handle)
+    fragment = sp.unapply(handle)
+    self.fragment[addr] = fragment
     return 0
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
     handle = RestoringTraceHandle(
       self.trace, addr, sp_node.address, args, self)
-    return (0, sp.restore(handle))
+    fragment = self.fragment[addr]
+    return (0, sp.restore(handle, fragment))
 
 
-## TODO remove getState and setState, following interface from poster
 class RestoringTraceHandle(TraceHandle):
   def __init__(self, trace, app_addr, sp_addr, args, restorer, output_value=None):
     super(RestoringTraceHandle, self).__init__(
       trace, app_addr, sp_addr, args)
     self.outputValue = lambda: output_value
     self.restorer = restorer
-
-  def setState(self, node, value, ext=None):
-    key = node if ext is None else (node, ext)
-    self.restorer.fragment[key] = value
-
-  def getState(self, node, ext=None):
-    key = node if ext is None else (node, ext)
-    return self.restorer.fragment[key]
 
   def newRequest(self, request_id, exp, env):
     # TODO return Node(value, address) so that SPs don't have to use
