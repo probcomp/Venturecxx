@@ -62,6 +62,20 @@ def parse_transitions_extra(args):
       extra = args[:-1]
   return (transitions, extra)
 
+def arity_dispatch_arguments(trace, args, required_extra=0):
+  if len(args) >= 3 + required_extra:
+    # Assume old scope-block form
+    (scope, block, transitions, extra) = parse_arguments(trace, args)
+    return (BlockScaffoldIndexer(scope, block), transitions, extra)
+  else:
+    # Assume new subproblem selector form
+    (_, selection_blob) = args[0:2]
+    (transitions, extra) = parse_transitions_extra(args[2:])
+    # TODO Detect the case when the selection is guaranteed to produce
+    # no random choices and abort (like parse_arguments does)
+    from venture.untraced import TraceSearchIndexer
+    return (TraceSearchIndexer(selection_blob.datum), transitions, extra)
+
 def transloop(trace, transitions, operate):
   ct = 0
   for _ in range(transitions):
@@ -78,9 +92,9 @@ def transloop(trace, transitions, operate):
 def primitive_infer(trace, exp):
   operator = exp[0]
   if operator == "mh":
-    (scope, block, transitions, _) = parse_arguments(trace, exp)
+    (scaffolder, transitions, _) = arity_dispatch_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
-      mixMH(trace, BlockScaffoldIndexer(scope, block), MHOperator()))
+      mixMH(trace, scaffolder, MHOperator()))
   elif operator == "func_mh":
     (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
