@@ -46,7 +46,8 @@ def primitive_infer(trace, exp):
   else:
     maybe_transitions = exp[-1]
     if isinstance(maybe_transitions, bool):
-      # The last item was the parallelism indicator
+      # The last item was the parallelism indicator, which Lite
+      # ignores anyway
       transitions = int(exp[-2])
     else:
       transitions = int(exp[-1])
