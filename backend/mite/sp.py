@@ -128,37 +128,3 @@ class RequestReferenceSP(VentureSP):
 
   def request(self, _args):
     raise VentureBuiltinSPMethodError("Request not implemented!")
-
-# TODO: rename "args" -> "traceview"
-# and define an ITraceView and put that here instead
-class TraceNodeArgs(LiteTraceNodeArgs):
-  def __init__(self, trace, node, context=None):
-    super(TraceNodeArgs, self).__init__(trace, node)
-    self.context = context
-
-  def outputValue(self):
-    return self.trace.valueAt(self.node)
-
-  def operandValue(self, ix):
-    return self.trace.valueAt(self.operandNodes[ix])
-
-  def newRequest(self, raddr, exp, env):
-    return self.context.newRequest(self.node, raddr, exp, env)
-
-  def incRequest(self, raddr):
-    return self.context.incRequest(self.node, raddr)
-
-  def decRequest(self, raddr):
-    return self.context.decRequest(self.node, raddr)
-
-  def hasRequest(self, raddr):
-    return self.context.hasRequest(self.node, raddr)
-
-  def requestedValue(self, raddr):
-    return self.context.requestedValue(self.node, raddr)
-
-  def constrain(self, raddr, value):
-    return self.context.constrainRequest(self.node, raddr, value)
-
-  def unconstrain(self, raddr):
-    return self.context.unconstrainRequest(self.node, raddr)
