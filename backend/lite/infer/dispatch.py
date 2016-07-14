@@ -37,20 +37,25 @@ from venture.lite.infer.subsampled_mh import SubsampledBlockScaffoldIndexer
 from venture.lite.infer.subsampled_mh import SubsampledMHOperator
 from venture.lite.infer.subsampled_mh import subsampledMixMH
 
-def primitive_infer(trace, exp):
-  assert len(exp) >= 3
-  (operator, scope, block) = exp[0:3]
+def parse_arguments(trace, args):
+  assert len(args) >= 3
+  (_, scope, block) = args[0:3]
   scope, block = trace._normalizeEvaluatedScopeAndBlock(scope, block)
-  if len(exp) == 3:
+  if len(args) == 3:
     transitions = 1
   else:
-    maybe_transitions = exp[-1]
+    maybe_transitions = args[-1]
     if isinstance(maybe_transitions, bool):
       # The last item was the parallelism indicator, which Lite
       # ignores anyway
-      transitions = int(exp[-2])
+      transitions = int(args[-2])
     else:
-      transitions = int(exp[-1])
+      transitions = int(args[-1])
+  return (scope, block, transitions)
+
+def primitive_infer(trace, exp):
+  operator = exp[0]
+  (scope, block, transitions) = parse_arguments(trace, exp)
   if not trace.scopeHasEntropy(scope):
     return 0.0
   ct = 0
