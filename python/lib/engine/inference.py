@@ -471,7 +471,7 @@ indicated, the third is mapped to color.
 If the given specification is a list, make all those plots at once.
 """))
 
-inf.registerBuiltinInferenceSP("plotf", inf.engine_method_sp("plotf", inf.infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
+inf.register_engine_method_sp("plotf", inf.infer_action_maker_type([t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Plot a data set according to a plot specification.
 
 This is identical to `plot`, except it's an inference action,
@@ -482,7 +482,7 @@ Example::
     do(assume x, normal(0, 1),
        ...
        plotf("c0s", d))
-""")[1])
+""")
 
 def plot_to_file_fun(basenames, spec, dataset):
   filenames = t.ExpressionType().asPython(basenames)
@@ -523,12 +523,12 @@ Examples:
     the spec1 plot in the file basename1.png, and the spec2 plot in basename2.png.
 """))
 
-inf.registerBuiltinInferenceSP("plotf_to_file", inf.engine_method_sp("plotf_to_file", inf.infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
+inf.register_engine_method_sp("plotf_to_file", inf.infer_action_maker_type([t.AnyType("<basename>"), t.AnyType("<spec>"), t.ForeignBlobType("<dataset>")]), desc="""\
 Save plot(s) to file(s).
 
 Like `plotf`, but save the resulting plot(s) instead of displaying on screen.
 See `plot_to_file`.
-""")[1])
+""")
 
 inf.registerBuiltinInferenceSP("empty", deterministic_typed(lambda *args: Dataset(), [], t.ForeignBlobType("<dataset>"), descr="""\
 Create an empty dataset `into` which further `collect` ed stuff may be merged.
@@ -541,15 +541,15 @@ first.
 Right now only implemented on datasets created by `empty` and
 `collect`, but in principle generalizable to any monoid.  """))
 
-inf.registerBuiltinInferenceSP("_collect", inf.macro_helper("collect", inf.infer_action_maker_type([t.AnyType()], return_type=t.ForeignBlobType("<dataset>"), variadic=True))[1])
+inf.register_macro_helper("collect", inf.infer_action_maker_type([t.AnyType()], return_type=t.ForeignBlobType("<dataset>"), variadic=True))
 
-inf.registerBuiltinInferenceSP("sweep", inf.engine_method_sp("sweep", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
+inf.register_engine_method_sp("sweep", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
 Print the iteration count.
 
 Extracts the last row of the supplied inference Dataset and prints its iteration count.
-""")[1])
+""")
 
-inf.registerBuiltinInferenceSP("printf", inf.engine_method_sp("printf", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
+inf.register_engine_method_sp("printf", inf.infer_action_maker_type([t.ForeignBlobType("<dataset>")]), desc="""\
 Print model values collected in a dataset.
 
-This is a basic debugging facility.""")[1])
+This is a basic debugging facility.""")
