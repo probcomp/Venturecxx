@@ -133,6 +133,25 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
   def description(self, _name):
     return self.desc
 
+def transition_oper_args_types(extra_args = None):
+  # ExpressionType reasonably approximates the mapping I want for
+  # scope and block IDs.
+  return [t.AnyType("scope : object"), t.AnyType("block : object")] + \
+    (extra_args if extra_args is not None else []) + \
+    [t.IntegerType("transitions : int")]
+
+def transition_oper_type(extra_args = None, return_type=None, **kwargs):
+  if return_type is None:
+    return_type = t.Array(t.Number)
+  return infer_action_maker_type(transition_oper_args_types(extra_args),
+                                 return_type=return_type, **kwargs)
+
+def par_transition_oper_type(extra_args = None, **kwargs):
+  other_args = transition_oper_args_types(extra_args)
+  return infer_action_maker_type(\
+    other_args + [t.BoolType("in_parallel : bool")],
+    min_req_args=len(other_args), **kwargs)
+
 def infer_action_type(return_type):
   func_type = sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
   ans_type = RecordType("inference_action", "returning " + return_type.name())
@@ -167,29 +186,6 @@ don't actually read the state (e.g., for doing IO)"""
   untyped = InferPrimitiveOutputPSP(f, klass=MadeActionOutputPSP, desc=desc,
                                     tp=tp.return_type)
   return no_request(psp.TypedPSP(untyped, tp))
-
-def transition_oper_args_types(extra_args = None):
-  # ExpressionType reasonably approximates the mapping I want for
-  # scope and block IDs.
-  return [t.AnyType("scope : object"), t.AnyType("block : object")] + \
-    (extra_args if extra_args is not None else []) + \
-    [t.IntegerType("transitions : int")]
-
-def transition_oper_type(extra_args = None, return_type=None, **kwargs):
-  if return_type is None:
-    return_type = t.Array(t.Number)
-  return infer_action_maker_type(transition_oper_args_types(extra_args),
-                                 return_type=return_type, **kwargs)
-
-def par_transition_oper_type(extra_args = None, **kwargs):
-  other_args = transition_oper_args_types(extra_args)
-  return infer_action_maker_type(\
-    other_args + [t.BoolType("in_parallel : bool")],
-    min_req_args=len(other_args), **kwargs)
-
-def assert_fun(test, msg=""):
-  # TODO Raise an appropriate Venture exception instead of crashing Python
-  assert test, msg
 
 inferenceSPsList = []
 
@@ -858,6 +854,10 @@ Stop any continuous inference that may be running.
 registerBuiltinInferenceSP("ordered_range",
     deterministic_typed(lambda *args: (v.VentureSymbol("ordered_range"),) + args,
                         [t.AnyType()], t.ListType(), variadic=True))
+
+def assert_fun(test, msg=""):
+  # TODO Raise an appropriate Venture exception instead of crashing Python
+  assert test, msg
 
 registerBuiltinInferenceSP("assert", sequenced_sp(assert_fun, infer_action_maker_type([t.BoolType(), t.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
