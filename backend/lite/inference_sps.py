@@ -152,19 +152,13 @@ def typed_inf_sp(name, tp, klass, desc=""):
   return no_request(psp.TypedPSP(untyped, tp))
 
 def trace_method_sp(name, tp, desc=""):
-  return [ name, typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc) ]
+  return typed_inf_sp(name, tp, MadeInferPrimitiveOutputPSP, desc)
 
-def engine_method_sp(name, tp, desc="", method_name=None):
-  if method_name is None:
-    method_name = name
-  it = typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc)
-  return [name, it]
+def engine_method_sp(method_name, tp, desc=""):
+  return typed_inf_sp(method_name, tp, MadeEngineMethodInferOutputPSP, desc)
 
-def ripl_method_sp(name, tp, desc="", method_name=None):
-  if method_name is None:
-    method_name = name
-  it = typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc)
-  return [name, it]
+def ripl_method_sp(method_name, tp, desc=""):
+  return typed_inf_sp(method_name, tp, MadeRiplMethodInferOutputPSP, desc)
 
 def sequenced_sp(f, tp, desc=""):
   """This is for SPs that should be able to participate in do blocks but
@@ -194,16 +188,16 @@ def par_transition_oper_type(extra_args = None, **kwargs):
     min_req_args=len(other_args), **kwargs)
 
 def macro_helper(name, tp):
-  return engine_method_sp("_" + name, tp, method_name=name, desc="""\
+  return ["_" + name, engine_method_sp(name, tp, desc="""\
 A helper function for implementing the eponymous inference macro.
 
-Calling it directly is likely to be difficult and unproductive. """)
+Calling it directly is likely to be difficult and unproductive. """)]
 
 def ripl_macro_helper(name, tp):
-  return ripl_method_sp("_" + name, tp, method_name=name, desc="""\
+  return ["_" + name, ripl_method_sp(name, tp, desc="""\
 A helper function for implementing the eponymous inference macro.
 
-Calling it directly is likely to be difficult and unproductive. """)
+Calling it directly is likely to be difficult and unproductive. """)]
 
 def assert_fun(test, msg=""):
   # TODO Raise an appropriate Venture exception instead of crashing Python
@@ -217,13 +211,17 @@ def registerBuiltinInferenceSP(name, sp_obj):
   inferenceSPsList.append([name, sp_obj])
 
 def register_trace_method_sp(name, tp, desc=""):
-  registerBuiltinInferenceSP(*trace_method_sp(name, tp, desc))
+  registerBuiltinInferenceSP(name, trace_method_sp(name, tp, desc))
 
 def register_engine_method_sp(name, tp, desc="", method_name=None):
-  registerBuiltinInferenceSP(*engine_method_sp(name, tp, desc, method_name))
+  if method_name is None:
+    method_name = name
+  registerBuiltinInferenceSP(name, engine_method_sp(method_name, tp, desc))
 
 def register_ripl_method_sp(name, tp, desc="", method_name=None):
-  registerBuiltinInferenceSP(*ripl_method_sp(name, tp, desc, method_name))
+  if method_name is None:
+    method_name = name
+  registerBuiltinInferenceSP(name, ripl_method_sp(method_name, tp, desc))
 
 def register_macro_helper(name, tp):
   registerBuiltinInferenceSP(*macro_helper(name, tp))
