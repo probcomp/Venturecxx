@@ -154,6 +154,9 @@ def by_tag_value_fun(tag, val):
 inf.registerBuiltinInferenceSP("by_tag_value", \
     deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value")], t.ForeignBlobType()))
 
+inf.registerBuiltinInferenceSP("by_extent", \
+    deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType()))
+
 def subselect_fun(source1, source2):
   return Intersect(Extent(source1), source2)
 

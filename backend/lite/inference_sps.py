@@ -140,11 +140,13 @@ def transition_oper_args_types(extra_args = None):
     (extra_args if extra_args is not None else []) + \
     [t.IntegerType("transitions : int")]
 
-def transition_oper_type(extra_args = None, return_type=None, **kwargs):
+def transition_oper_type(extra_args = None, return_type=None, min_req_args=None, **kwargs):
   if return_type is None:
     return_type = t.Array(t.Number)
+  if min_req_args is None:
+    min_req_args = 2
   return infer_action_maker_type(transition_oper_args_types(extra_args),
-                                 return_type=return_type, **kwargs)
+                                 return_type=return_type, min_req_args=min_req_args, **kwargs)
 
 def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)

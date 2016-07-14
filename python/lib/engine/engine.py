@@ -26,6 +26,7 @@ from venture.engine.inference import Infer
 from venture.engine.trace_set import TraceSet
 from venture.exception import VentureException
 import venture.lite.inference_sps as inf
+import venture.untraced.trace_search # So the SPs get registered
 import venture.lite.value as vv
 import venture.value.dicts as v
 
