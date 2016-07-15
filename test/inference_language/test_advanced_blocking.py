@@ -26,7 +26,9 @@ def testSmoke():
   r.force("a", 1)
   r.force("b", 2)
   def both(ans):
-      assert (ans == [1, 2] or ans == [2, 1])
+    assert ans == [1, 2] or ans == [2, 1]
+  def one(ans):
+    assert ans == [1] or ans == [2]
   both(r.infer("""(do
   (s <- (select (minimal_subproblem (by_extent (by_top)))))
   (get_current_values s))"""))
@@ -35,4 +37,7 @@ def testSmoke():
   (get_current_values s))"""))
   both(r.infer("""(do
   (s <- (select (minimal_subproblem (by_tag 0))))
+  (get_current_values s))"""))
+  one(r.infer("""(do
+  (s <- (select (minimal_subproblem (random_singleton (by_tag 0)))))
   (get_current_values s))"""))
