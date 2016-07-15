@@ -110,7 +110,7 @@ def interpret(prog, trace):
   elif isinstance(prog, FetchTag):
     return (trace.scopes[prog.name], 0) # TODO What to do with the default scope, if we still have that idea?
   elif isinstance(prog, Top):
-    return (Top, 0) # Hack: Top as a node set is also a special token, reusing the same token
+    return (Top(), 0) # Hack: Top as a node set is also a special token, reusing the same token
   elif isinstance(prog, MinimalSubproblem):
     (nodes, wt) = interpret(prog.source, trace)
     return (constructScaffold(trace, [nodes]), wt)
