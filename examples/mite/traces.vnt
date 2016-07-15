@@ -6,7 +6,7 @@
              (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1)))))
          (blank_trace)))]
 
-[define rejection_loop
+[define split_rejection_loop
   (let ((reset_trace
          (lambda (t) (inference_action (lambda (_) (pair nil t))))))
     (lambda (prog)
@@ -15,11 +15,25 @@
           (consistent <- check_consistent)
           (if consistent
               (return result)
-              (do (reset_trace t) (rejection_loop prog))))))]
+              (do (reset_trace t) (split_rejection_loop prog))))))]
+
+[define regen_rejection_loop
+  (lambda (prog)
+    (do prog
+        (let loop
+            (lambda (loop)
+              (do (let s nil)
+                  (extract s)
+                  (regen s)
+                  (consistent <- check_consistent)
+                  (if consistent
+                      (return nil)
+                      (loop loop)))))
+        (loop loop)))]
 
 [define example2
   (lambda ()
-    (run_in (rejection_loop
+    (run_in (split_rejection_loop
           (do (assume theta (beta 1 1))
               (observe (flip theta) true)
               (observe (flip theta) true)
@@ -30,7 +44,7 @@
 
 [define example3
   (lambda ()
-    (run_in (rejection_loop
+    (run_in (split_rejection_loop
           (do (assume theta (beta 1 1))
               (observe (binomial 100 theta) 100)
               (predict (debug 'theta theta))))
@@ -50,3 +64,12 @@
                 (predict (debug 'xyz (list (f 0) (f 1) (f 2) (f 1))))
                 (return (debug 'results (list rho xi))))
             (flat_trace)))]
+
+[define example5
+  (lambda ()
+    (run_in (regen_rejection_loop
+          (do (assume theta (beta 1 1))
+              (observe (binomial 100 theta) 100)
+              (predict (debug 'theta theta))))
+         (flat_trace)))]
+
