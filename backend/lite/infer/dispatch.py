@@ -85,7 +85,7 @@ def arity_dispatch_arguments(trace, args, required_extra=0):
     (transitions, extra) = parse_transitions_extra(args[2:])
     # TODO Detect the case when the selection is guaranteed to produce
     # no random choices and abort (like parse_arguments does)
-    from venture.untraced import TraceSearchIndexer
+    from venture.untraced.trace_search import TraceSearchIndexer
     return (TraceSearchIndexer(selection_blob.datum), transitions, extra)
 
 def transloop(trace, transitions, operate):
