@@ -122,7 +122,7 @@ def interpret(prog, trace):
   # elif isinstance(prog, UnionDict):
   # elif isinstance(prog, Union):
   elif isinstance(prog, FetchTag):
-    return (trace.scopes[prog.name], 0) # TODO What to do with the default scope, if we still have that idea?
+    return (trace.scopes[prog.name], 0)
   elif isinstance(prog, Top):
     return (Top(), 0) # Hack: Top as a node set is also a special token, reusing the same token
   elif isinstance(prog, MinimalSubproblem):
@@ -144,7 +144,7 @@ def sample_one(thing, prng):
 
 def extent(thing, trace):
   if isinstance(thing, Top):
-    return trace.rcs # TODO ???
+    return trace.rcs
   return set_fmap(thing, lambda nodes: trace.randomChoicesInExtent(nodes, None, None))
 
 def as_set(thing):
