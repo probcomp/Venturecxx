@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from venture.lite.infer.dispatch import primitive_infer
+from venture.lite.infer.dispatch import log_likelihood_at
 from venture.lite.infer.mh import BlockScaffoldIndexer
 from venture.lite.infer.egibbs import EnumerativeDiversify
 from venture.lite.infer.rejection import MissingEsrParentError

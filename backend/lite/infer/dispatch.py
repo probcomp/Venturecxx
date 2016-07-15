@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 import numbers
 
+from venture.lite.detach import detachAndExtract
 from venture.lite.infer.draw_scaffold import drawScaffold
 from venture.lite.infer.egibbs import EnumerativeGibbsOperator
 from venture.lite.infer.egibbs import EnumerativeMAPOperator
@@ -38,7 +40,7 @@ from venture.lite.infer.slice_sample import StepOutSliceOperator
 from venture.lite.infer.subsampled_mh import SubsampledBlockScaffoldIndexer
 from venture.lite.infer.subsampled_mh import SubsampledMHOperator
 from venture.lite.infer.subsampled_mh import subsampledMixMH
-
+from venture.lite.regen import regenAndAttach
 import venture.lite.value as v
 
 def parse_arguments(trace, args):
@@ -264,3 +266,14 @@ def do_subsampled_mh_make_consistent(trace, scope, block, extra):
     useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
     updateValues=updateValues)
   return SubsampledMHOperator().makeConsistent(trace, scaffolder)
+
+def log_likelihood_at(trace, args):
+  (scaffolder, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
+  if transitions > 0:
+    scaffold = scaffolder.sampleIndex(trace)
+    (_rhoWeight, rhoDB) = detachAndExtract(trace, scaffold)
+    xiWeight = regenAndAttach(trace, scaffold, True, rhoDB, OrderedDict())
+    # Old state restored, don't need to do anything else
+    return xiWeight
+  else:
+    return 0.0

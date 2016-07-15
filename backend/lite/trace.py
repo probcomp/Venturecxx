@@ -499,18 +499,12 @@ class Trace(object):
   def primitive_infer(self, exp):
     return infer.primitive_infer(self, exp)
 
-  def log_likelihood_at(self, scope, block):
-    # TODO This is a different control path from primitive_infer
-    # because it needs to return the weight, and that didn't used to
-    # return values when this was writen.
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not self.scopeHasEntropy(scope):
-      return 0.0
-    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-    (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
-    # Old state restored, don't need to do anything else
-    return xiWeight
+  # XXX Why is there this weird structure of some methods forwarding
+  # to definite functions and other things indirecting through the
+  # primitive_infer dispatch?  History: primitive_infer used not to
+  # return values.  Also ambiguity: not clear which style is better.
+  def log_likelihood_at(self, *args):
+    return infer.log_likelihood_at(self, args)
 
   def log_joint_at(self, scope, block):
     # TODO This is a different control path from primitive_infer
