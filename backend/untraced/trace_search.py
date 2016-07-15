@@ -40,6 +40,18 @@ FetchTag = namedtuple("FetchTag", ["name"])
 Top = namedtuple("Top", [])
 MinimalSubproblem = namedtuple("MinimalSubproblem", ["source"])
 
+def is_search_ast(thing):
+  return (isinstance(thing, Intersect) or
+          isinstance(thing, Lookup) or
+          isinstance(thing, Random1) or
+          isinstance(thing, Edge) or
+          isinstance(thing, Extent) or
+          isinstance(thing, UnionDict) or
+          isinstance(thing, Union) or
+          isinstance(thing, FetchTag) or
+          isinstance(thing, Top) or
+          isinstance(thing, MinimalSubproblem))
+
 # TODO Not supporting ordered scaffolds (as for pgibbs) yet, though I
 # guess we could, by adding an "ordered list of sets of nodes" object
 # and an appropriate AST node to make one of those from a dictionary.
