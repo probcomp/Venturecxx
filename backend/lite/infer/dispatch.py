@@ -63,7 +63,7 @@ def parse_transitions_extra(args):
   return (transitions, extra)
 
 def arity_dispatch_arguments(trace, args, required_extra=0):
-  if len(args) >= 3 + required_extra:
+  if len(args) >= 4 + required_extra:
     # Assume old scope-block form
     (scope, block, transitions, extra) = parse_arguments(trace, args)
     return (BlockScaffoldIndexer(scope, block), transitions, extra)
