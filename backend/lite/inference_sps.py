@@ -144,7 +144,7 @@ def transition_oper_type(extra_args = None, return_type=None, min_req_args=None,
   if return_type is None:
     return_type = t.Array(t.Number)
   if min_req_args is None:
-    min_req_args = 2
+    min_req_args = 1 # The subproblem path spec
   return infer_action_maker_type(transition_oper_args_types(extra_args),
                                  return_type=return_type, min_req_args=min_req_args, **kwargs)
 
@@ -152,7 +152,7 @@ def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
   return infer_action_maker_type(\
     other_args + [t.BoolType("in_parallel : bool")],
-    min_req_args=len(other_args), **kwargs)
+    min_req_args=len(other_args) - 2, **kwargs)
 
 def infer_action_type(return_type):
   func_type = sp.SPType([t.ForeignBlobType()], t.PairType(return_type, t.ForeignBlobType()))
@@ -414,7 +414,7 @@ The ``transitions`` argument specifies how many times to do this.
 Returns the average number of nodes touched per transition in each particle.
 """)
 
-register_trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=2), desc="""\
+register_trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=1), desc="""\
 Sample from the local conditional by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
@@ -435,7 +435,7 @@ anything other than `one`.
 Returns the average number of nodes touched per transition in each particle.
 """)
 
-register_trace_method_sp("bogo_possibilize", transition_oper_type(min_req_args=2), desc="""\
+register_trace_method_sp("bogo_possibilize", transition_oper_type(min_req_args=1), desc="""\
 Initialize the local inference problem to a possible state.
 
 If the current local likelihood is 0, resimulate the local prior until
@@ -731,7 +731,7 @@ necessary again.
 """)
 
 register_engine_method_sp("log_likelihood_at",
-                   infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
+                          infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType()), min_req_args=1),
                    desc="""\
 Compute and return the value of the local log likelihood at the given scope and block.
 
@@ -747,7 +747,7 @@ treats exchangeably coupled nodes correctly.
 Compare `log_joint_at`.""")
 
 register_engine_method_sp("log_joint_at",
-                   infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType())),
+                          infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], return_type=t.ArrayUnboxedType(t.NumberType()), min_req_args=1),
                    desc="""\
 Compute and return the value of the local log joint density at the given scope and block.
 
