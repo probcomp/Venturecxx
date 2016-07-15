@@ -36,12 +36,6 @@ class LiteSP(SimulationSP):
   def unincorporate(self, value, args):
     return self.wrapped_sp.outputPSP.unincorporate(value, self.wrap_args(args))
 
-  def constrain(self, value, args):
-    if self.wrapped_sp.outputPSP.isRandom():
-      return super(LiteSP, self).constrain(value, args)
-    else:
-      raise VentureError("Cannot constrain a deterministic value.")
-
 for name, sp in builtInSPs().iteritems():
   if isinstance(sp.requestPSP, NullRequestPSP):
     registerBuiltinSP(name, LiteSP(sp))

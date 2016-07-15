@@ -19,17 +19,6 @@ class VentureSP(VentureValue):
   def logDensity(self, _value, _args):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
 
-  # TODO: replace this trio of methods with constrained kernels.
-
-  def constrain(self, _application_id, _value, _args):
-    raise VentureBuiltinSPMethodError("Cannot constrain")
-
-  def unconstrain(self, _application_id, _args):
-    raise VentureBuiltinSPMethodError("Cannot unconstrain")
-
-  def reconstrain(self, _application_id, _value, _args):
-    raise VentureBuiltinSPMethodError("Cannot unconstrain")
-
   def show(self):
     return "<procedure>"
 
@@ -55,27 +44,6 @@ class SimulationSP(VentureSP):
   def restore(self, _application_id, args, value):
     self.incorporate(value, args)
     return value
-
-  @override(VentureSP)
-  def constrain(self, _application_id, value, args):
-    oldValue = args.outputValue()
-    self.unincorporate(oldValue, args)
-    weight = self.logDensity(value, args)
-    self.incorporate(value, args)
-    return weight
-
-  @override(VentureSP)
-  def unconstrain(self, _application_id, args):
-    value = args.outputValue()
-    self.unincorporate(value, args)
-    weight = self.logDensity(value, args)
-    newValue = self.simulate(args)
-    self.incorporate(newValue, args)
-    return weight, newValue
-
-  @override(VentureSP)
-  def reconstrain(self, _application_id, value, args):
-    return self.constrain(value, args)
 
   def simulate(self, _args):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
@@ -108,22 +76,6 @@ class RequestReferenceSP(VentureSP):
     # NB: this assumes that the request made is deterministic
     # so we can just reapply
     return self.apply(application_id, args)
-
-  @override(VentureSP)
-  def constrain(self, application_id, value, args):
-    raddr = self.request_map[application_id]
-    weight = args.constrain(raddr, value)
-    return weight
-
-  @override(VentureSP)
-  def unconstrain(self, application_id, args):
-    raddr = self.request_map[application_id]
-    weight = args.unconstrain(raddr)
-    return weight, args.requestedValue(raddr)
-
-  @override(VentureSP)
-  def reconstrain(self, application_id, value, args):
-    return self.constrain(application_id, value, args)
 
   def request(self, _application_id, _args):
     raise VentureBuiltinSPMethodError("Request not implemented!")
