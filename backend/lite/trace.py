@@ -575,10 +575,16 @@ function.
       return infer.EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
-  def select(self, scope, block):
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-    return scaffold
+  def select(self, scope, block=None):
+    if block is not None:
+      # Assume old scope-block argument style
+      scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+      return BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    else:
+      # Assume new subproblem-selector argument style
+      selection_blob = scope
+      from venture.untraced.trace_search import TraceSearchIndexer
+      return TraceSearchIndexer(selection_blob.datum).sampleIndex(self)
 
   def just_detach(self, scaffold):
     return detachAndExtract(self, scaffold)

@@ -260,7 +260,7 @@ class Infer(object):
   def load_model(self, filename):
     self.engine.ripl.load(filename)
 
-  def select(self, scope, block):
+  def select(self, scope, block=None):
     assert len(self.engine.model.log_weights) == 1, \
       "Custom subproblems only supported for one trace at a time"
     return self.engine.model.traces.at(0, 'select', scope, block)

@@ -919,11 +919,10 @@ Venture via `ripl.register_foreign_sp` or `ripl.bind_foreign_sp`.
 Binds that symbol to that procedure in the current model.
 """)
 
-register_engine_method_sp("select", infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], t.ForeignBlobType("subproblem")), desc="""\
+register_engine_method_sp("select", infer_action_maker_type([t.AnyType("scope : object"), t.AnyType("block : object")], t.ForeignBlobType("subproblem"), min_req_args=1), desc="""\
 Select the subproblem indicated by the given scope and block from the current model.
 
-Does not interoperate with multiple particles, or with stochastic
-subproblem selection.
+Does not interoperate with multiple particles.
 
 """)
 
