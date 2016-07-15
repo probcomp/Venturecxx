@@ -115,7 +115,7 @@ def interpret(prog, trace):
     return (Top(), 0) # Hack: Top as a node set is also a special token, reusing the same token
   elif isinstance(prog, MinimalSubproblem):
     (nodes, wt) = interpret(prog.source, trace)
-    return (constructScaffold(trace, [nodes]), wt)
+    return (constructScaffold(trace, [as_set(nodes)]), wt)
   else:
     raise Exception("Unknown trace search term %s" % (prog,))
 
@@ -132,8 +132,19 @@ def sample_one(thing, prng):
 
 def extent(thing, trace):
   if isinstance(thing, Top):
-    return trace.scopes["default"] # TODO ???
+    return trace.rcs # TODO ???
   return set_fmap(thing, lambda nodes: trace.randomChoicesInExtent(nodes, None, None))
+
+def as_set(thing):
+  if isinstance(thing, OrderedFrozenSet):
+    return thing
+  elif isinstance(thing, SamplableMap):
+    ans = OrderedFrozenSet()
+    for _, v in thing.iteritems():
+      ans = ans.union(v)
+    return ans
+  else:
+    return OrderedFrozenSet([thing])
 
 def set_fmap(thing, f):
   "Lift an f :: set -> a to accept sets, single nodes (by upgrading), or dictionaries (pointwise)."
