@@ -10,7 +10,7 @@ class VentureSP(VentureValue):
   def apply(self, _application_id, _args):
     raise VentureBuiltinSPMethodError("Apply not implemented!")
 
-  def unapply(self, _application_id, _args):
+  def unapply(self, _application_id, _output, _args):
     raise VentureBuiltinSPMethodError("Cannot unapply")
 
   def restore(self, _application_id, _args, _trace_fragment):
@@ -47,10 +47,9 @@ class SimulationSP(VentureSP):
     return value
 
   @override(VentureSP)
-  def unapply(self, _application_id, args):
-    value = args.outputValue()
-    self.unincorporate(value, args)
-    return value
+  def unapply(self, _application_id, output, args):
+    self.unincorporate(output, args)
+    return output
 
   @override(VentureSP)
   def restore(self, _application_id, args, value):
@@ -99,7 +98,7 @@ class RequestReferenceSP(VentureSP):
     return args.requestedValue(raddr)
 
   @override(VentureSP)
-  def unapply(self, application_id, args):
+  def unapply(self, application_id, _output, args):
     raddr = self.request_map.pop(application_id)
     args.decRequest(raddr)
     return None

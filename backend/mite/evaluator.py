@@ -160,8 +160,8 @@ class Regenerator(Evaluator):
   def unapply_sp(self, addr, value, sp_node, args):
     sp = sp_node.value
     handle = RestoringTraceHandle(
-      self.trace, sp_node.address, args, self, output_value=value)
-    fragment = sp.unapply(addr, handle)
+      self.trace, sp_node.address, args, self)
+    fragment = sp.unapply(addr, value, handle)
     self.fragment[addr] = fragment
     return 0
 
@@ -174,10 +174,9 @@ class Regenerator(Evaluator):
 
 
 class RestoringTraceHandle(TraceHandle):
-  def __init__(self, trace, sp_addr, args, restorer, output_value=None):
+  def __init__(self, trace, sp_addr, args, restorer):
     super(RestoringTraceHandle, self).__init__(
       trace, sp_addr, args)
-    self.outputValue = lambda: output_value
     self.restorer = restorer
 
   def newRequest(self, request_id, exp, env):
