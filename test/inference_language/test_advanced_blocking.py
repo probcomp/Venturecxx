@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import eq_
+
 from venture.test.config import get_ripl
 
 def testSmoke():
@@ -23,7 +25,14 @@ def testSmoke():
   r.assume("b", "(tag 0 1 (normal 0 1))")
   r.force("a", 1)
   r.force("b", 2)
-  both = r.infer("""(do
+  def both(ans):
+      assert (ans == [1, 2] or ans == [2, 1])
+  both(r.infer("""(do
   (s <- (select (minimal_subproblem (by_extent (by_top)))))
-  (get_current_values s))""")
-  assert (both == [1, 2] or both == [2, 1])
+  (get_current_values s))"""))
+  eq_([2], r.infer("""(do
+  (s <- (select (minimal_subproblem (by_tag_value 0 1))))
+  (get_current_values s))"""))
+  both(r.infer("""(do
+  (s <- (select (minimal_subproblem (by_tag 0))))
+  (get_current_values s))"""))
