@@ -18,24 +18,23 @@ from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
 
 class BlankTraceSP(SimulationSP):
-  def simulate(self, args):
-    seed = args.py_prng().randint(1, 2**31 - 1)
+  def simulate(self, _inputs, prng):
+    seed = prng.py_prng.randint(1, 2**31 - 1)
     return t.Blob.asVentureValue(BlankTrace(seed))
 
 class FlatTraceSP(SimulationSP):
-  def simulate(self, args):
-    seed = args.py_prng().randint(1, 2**31 - 1)
+  def simulate(self, _inputs, prng):
+    seed = prng.py_prng.randint(1, 2**31 - 1)
     return t.Blob.asVentureValue(FlatTrace(seed))
 
 class TraceActionSP(SimulationSP):
   arg_types = []
   result_type = t.Nil
 
-  def simulate(self, args):
-    values = args.operandValues()
-    trace = t.Blob.asPython(values[0])
+  def simulate(self, inputs, _prng):
+    trace = t.Blob.asPython(inputs[0])
     args = [arg_t.asPython(value) for arg_t, value in
-            zip(self.arg_types, values[1:])]
+            zip(self.arg_types, inputs[1:])]
     result = self.do_action(trace, *args)
     return t.Pair(self.result_type, t.Blob).asVentureValue(result)
 

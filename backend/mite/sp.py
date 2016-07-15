@@ -1,5 +1,4 @@
 from venture.lite.exception import VentureBuiltinSPMethodError
-from venture.lite.node import TraceNodeArgs as LiteTraceNodeArgs
 from venture.lite.utils import override
 from venture.lite.value import VentureValue, VentureNil
 import venture.value.dicts as v
@@ -7,16 +6,16 @@ import venture.value.dicts as v
 class VentureSP(VentureValue):
   """A stochastic procedure."""
 
-  def apply(self, _application_id, _args):
+  def apply(self, _trace_handle, _application_id, _inputs):
     raise VentureBuiltinSPMethodError("Apply not implemented!")
 
-  def unapply(self, _application_id, _output, _args):
+  def unapply(self, _trace_handle, _application_id, _output, _inputs):
     raise VentureBuiltinSPMethodError("Cannot unapply")
 
-  def restore(self, _application_id, _args, _trace_fragment):
+  def restore(self, _trace_handle, _application_id, _inputs, _trace_fragment):
     raise VentureBuiltinSPMethodError("Cannot restore previous state")
 
-  def logDensity(self, _value, _args):
+  def logDensity(self, _value, _inputs):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
 
   def show(self):
@@ -30,28 +29,32 @@ class VentureSP(VentureValue):
 
 class SimulationSP(VentureSP):
   @override(VentureSP)
-  def apply(self, _application_id, args):
-    value = self.simulate(args)
-    self.incorporate(value, args)
-    return value
-
-  @override(VentureSP)
-  def unapply(self, _application_id, output, args):
-    self.unincorporate(output, args)
+  def apply(self, trace_handle, _application_id, inputs):
+    # TODO: use trace_handle.value_at to unpack the input nodes
+    input_values = [node.value for node in inputs]
+    output = self.simulate(input_values, trace_handle.prng())
+    self.incorporate(output, input_values)
     return output
 
   @override(VentureSP)
-  def restore(self, _application_id, args, value):
-    self.incorporate(value, args)
-    return value
+  def unapply(self, _trace_handle, _application_id, output, inputs):
+    input_values = [node.value for node in inputs]
+    self.unincorporate(output, input_values)
+    return output
 
-  def simulate(self, _args):
+  @override(VentureSP)
+  def restore(self, _trace_handle, _application_id, inputs, output):
+    input_values = [node.value for node in inputs]
+    self.incorporate(output, input_values)
+    return output
+
+  def simulate(self, _inputs, _prng):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
 
-  def incorporate(self, value, args):
+  def incorporate(self, output, inputs):
     pass
 
-  def unincorporate(self, value, args):
+  def unincorporate(self, output, inputs):
     pass
 
 class RequestReferenceSP(VentureSP):
@@ -59,23 +62,23 @@ class RequestReferenceSP(VentureSP):
     self.request_map = {}
 
   @override(VentureSP)
-  def apply(self, application_id, args):
+  def apply(self, trace_handle, application_id, inputs):
     assert application_id not in self.request_map
-    raddr = self.request(application_id, args)
+    raddr = self.request(trace_handle, application_id, inputs)
     self.request_map[application_id] = raddr
-    return args.requestedValue(raddr)
+    return trace_handle.value_at(raddr)
 
   @override(VentureSP)
-  def unapply(self, application_id, _output, args):
+  def unapply(self, trace_handle, application_id, _output, _inputs):
     raddr = self.request_map.pop(application_id)
-    args.decRequest(raddr)
+    trace_handle.free_request(raddr)
     return None
 
   @override(VentureSP)
-  def restore(self, application_id, args, _trace_fragment):
+  def restore(self, trace_handle, application_id, inputs, _trace_fragment):
     # NB: this assumes that the request made is deterministic
     # so we can just reapply
-    return self.apply(application_id, args)
+    return self.apply(trace_handle, application_id, inputs)
 
-  def request(self, _application_id, _args):
+  def request(self, _trace_handle, _application_id, _inputs):
     raise VentureBuiltinSPMethodError("Request not implemented!")

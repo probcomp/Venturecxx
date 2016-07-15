@@ -1,5 +1,4 @@
-import numbers
-from contextlib import contextmanager
+from collections import namedtuple
 
 from venture.exception import VentureException
 from venture.lite.address import List
@@ -68,22 +67,15 @@ class Evaluator(object):
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
-    handle = TraceHandle(self.trace, sp_node.address, args)
-    return (0, sp.apply(addr, handle))
+    handle = TraceHandle(self.trace, sp_node.address)
+    return (0, sp.apply(handle, addr, args))
 
-# TODO: this signature retains backward compatibility with Args for now,
-# but we should remove that
-from venture.lite.psp import IArgs
-class TraceHandle(IArgs):
-  def __init__(self, trace, sp_addr, args):
+class TraceHandle(object):
+  def __init__(self, trace, sp_addr):
     self.trace = trace
     self.node = None
     self.sp_addr = sp_addr
-    self.operandNodes = args
     self.env = None
-
-  def operandValues(self):
-    return [node.value for node in self.operandNodes]
 
   def py_prng(self):
     return self.trace.py_prng
@@ -91,10 +83,15 @@ class TraceHandle(IArgs):
   def np_prng(self):
     return self.trace.np_prng
 
+  PRNG = namedtuple('TracePRNG', ['py_prng', 'np_prng'])
+
+  def prng(self):
+    return self.PRNG(self.trace.py_prng, self.trace.np_prng)
+
   def request_address(self, request_id):
     return addresses.request(self.sp_addr, request_id)
 
-  def newRequest(self, request_id, exp, env):
+  def new_request(self, request_id, exp, env):
     # TODO return Node(value, address) so that SPs don't have to use
     # requestedValue all the time; this way the untraced interpreter
     # doesn't have to retain requests with non-repeatable request_ids.
@@ -103,17 +100,9 @@ class TraceHandle(IArgs):
     assert w == 0
     return request_id
 
-  def incRequest(self, request_id):
-    # TODO remove ref-counting from trace layer
-    raise NotImplementedError
-
-  def hasRequest(self, request_id):
-    # TODO remove ref-counting from trace layer
-    # XXX for now, this breaks the trace abstraction
-    addr = self.request_address(request_id)
-    return addr in self.trace.results
-
-  def requestedValue(self, request_id):
+  def value_at(self, request_id):
+    # TODO have this accept a Node(value, address),
+    # as returned by new_request
     addr = self.request_address(request_id)
     return self.trace.value_at(addr)
 
@@ -160,26 +149,26 @@ class Regenerator(Evaluator):
   def unapply_sp(self, addr, value, sp_node, args):
     sp = sp_node.value
     handle = RestoringTraceHandle(
-      self.trace, sp_node.address, args, self)
-    fragment = sp.unapply(addr, value, handle)
+      self.trace, sp_node.address, self)
+    fragment = sp.unapply(handle, addr, value, args)
     self.fragment[addr] = fragment
     return 0
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
     handle = RestoringTraceHandle(
-      self.trace, sp_node.address, args, self)
+      self.trace, sp_node.address, self)
     fragment = self.fragment[addr]
-    return (0, sp.restore(addr, handle, fragment))
+    return (0, sp.restore(handle, addr, args, fragment))
 
 
 class RestoringTraceHandle(TraceHandle):
-  def __init__(self, trace, sp_addr, args, restorer):
+  def __init__(self, trace, sp_addr, restorer):
     super(RestoringTraceHandle, self).__init__(
-      trace, sp_addr, args)
+      trace, sp_addr)
     self.restorer = restorer
 
-  def newRequest(self, request_id, exp, env):
+  def new_request(self, request_id, exp, env):
     # TODO return Node(value, address) so that SPs don't have to use
     # requestedValue all the time; this way the untraced interpreter
     # doesn't have to retain requests with non-repeatable request_ids.
@@ -188,11 +177,7 @@ class RestoringTraceHandle(TraceHandle):
     assert w == 0
     return request_id
 
-  def incRequest(self, request_id):
-    # TODO remove ref-counting from trace layer
-    raise NotImplementedError
-
-  def decRequest(self, request_id):
+  def free_request(self, request_id):
     addr = self.request_address(request_id)
     (exp, env) = self.trace.requests[addr]
     w = self.restorer.uneval_family(addr, exp, env)

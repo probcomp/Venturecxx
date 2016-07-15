@@ -12,8 +12,8 @@ from venture.mite.traces import AbstractTrace
 
 
 class GraphTraceSP(SimulationSP):
-  def simulate(self, args):
-    seed = args.py_prng().randint(1, 2**31 - 1)
+  def simulate(self, _inputs, prng):
+    seed = prng.py_prng.randint(1, 2**31 - 1)
     return t.Blob.asVentureValue(DependencyGraphTrace(seed))
 
 registerBuiltinSP("graph_trace", GraphTraceSP())

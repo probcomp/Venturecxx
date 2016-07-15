@@ -10,12 +10,12 @@ class CompoundSP(RequestReferenceSP):
     self.exp = exp
     self.env = env
 
-  def request(self, application_id, args):
-    if len(self.params) != len(args.operandNodes):
+  def request(self, trace_handle, application_id, inputs):
+    if len(self.params) != len(inputs):
       raise VentureError("Wrong number of arguments: " \
         "compound takes exactly %d arguments, got %d." \
-        % (len(self.params), len(args.operandNodes)))
+        % (len(self.params), len(inputs)))
     raddr = application_id
-    extendedEnv = VentureEnvironment(self.env, self.params, args.operandNodes)
-    args.newRequest(raddr, self.exp, extendedEnv)
+    extendedEnv = VentureEnvironment(self.env, self.params, inputs)
+    trace_handle.new_request(raddr, self.exp, extendedEnv)
     return raddr
