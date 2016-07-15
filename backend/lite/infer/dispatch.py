@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import numbers
+
 from venture.lite.infer.draw_scaffold import drawScaffold
 from venture.lite.infer.egibbs import EnumerativeGibbsOperator
 from venture.lite.infer.egibbs import EnumerativeMAPOperator
@@ -37,6 +39,8 @@ from venture.lite.infer.subsampled_mh import SubsampledBlockScaffoldIndexer
 from venture.lite.infer.subsampled_mh import SubsampledMHOperator
 from venture.lite.infer.subsampled_mh import subsampledMixMH
 
+import venture.lite.value as v
+
 def parse_arguments(trace, args):
   assert len(args) >= 3
   (_, scope, block) = args[0:3]
@@ -57,9 +61,17 @@ def parse_transitions_extra(args):
       # ignores anyway
       transitions = int(args[-2])
       extra = args[:-2]
-    else:
+    elif isinstance(maybe_transitions, numbers.Number):
       transitions = int(args[-1])
       extra = args[:-1]
+    elif isinstance(maybe_transitions, v.VentureNumber):
+      # Transitions came in without type unwrapping
+      transitions = int(args[-1].getNumber())
+      extra = args[:-1]
+    elif isinstance(maybe_transitions, v.VentureBool):
+      # Arguments came in without type unwrapping
+      transitions = int(args[-2].getNumber())
+      extra = args[:-2]
   return (transitions, extra)
 
 def arity_dispatch_arguments(trace, args, required_extra=0):
