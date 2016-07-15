@@ -2,7 +2,7 @@
   (lambda ()
     (run_in (do (assume slope (normal 0 1))
              (assume intercept (normal 0 1))
-             (assume f (mem (lambda (x) (+ (* slope x) intercept))))
+             (assume f (lambda (x) (+ (* slope x) intercept)))
              (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1)))))
          (blank_trace)))]
 
