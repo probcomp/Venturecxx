@@ -68,14 +68,16 @@ class TraceSearchIndexer(object):
     # - The marginal probability of producing the same result is
     #   actually intractable, so this is computing the probability of
     #   following the same path (which may not actually yield the same
-    #   result, per Issue #576 (scope membership reversibility).
+    #   result, per Issue #576 (scope membership reversibility)).
     #
     # - In cases with only one random choice, the probability of
     #   following the same path is independent of the path.  To handle
     #   the more general case, I need to change the interface of
     #   Indexers to be able to return a trace of the path they
     #   followed so it can be replayed in the new context.
-    #   - Interestingly, this may also lead to a solution to #576.
+    #   - Interestingly, this may also lead to a solution to #576, at
+    #     least in the form of rejecting transitions that are not
+    #     reversible.
     #
     # Until then, just return the weight and hope.
     (scaffold, weight) = interpret(self.prog, trace)
