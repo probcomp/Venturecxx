@@ -29,7 +29,9 @@ from venture.lite.infer.meanfield import MeanfieldOperator
 from venture.lite.infer.mh import BlockScaffoldIndexer
 from venture.lite.infer.mh import FuncMHOperator
 from venture.lite.infer.mh import MHOperator
+from venture.lite.infer.mh import getCurrentValues
 from venture.lite.infer.mh import mixMH
+from venture.lite.infer.mh import registerDeterministicLKernels
 from venture.lite.infer.pgibbs import PGibbsOperator
 from venture.lite.infer.pgibbs import ParticlePGibbsOperator
 from venture.lite.infer.pgibbs import ParticlePMAPOperator
@@ -271,6 +273,21 @@ def log_likelihood_at(trace, args):
   (scaffolder, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
   if transitions > 0:
     scaffold = scaffolder.sampleIndex(trace)
+    (_rhoWeight, rhoDB) = detachAndExtract(trace, scaffold)
+    xiWeight = regenAndAttach(trace, scaffold, True, rhoDB, OrderedDict())
+    # Old state restored, don't need to do anything else
+    return xiWeight
+  else:
+    return 0.0
+
+def log_joint_at(trace, args):
+  (scaffolder, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
+  if transitions > 0:
+    scaffold = scaffolder.sampleIndex(trace)
+    pnodes = scaffold.getPrincipalNodes()
+    currentValues = getCurrentValues(trace, pnodes)
+    registerDeterministicLKernels(trace, scaffold, pnodes, currentValues,
+      unconditional=True)
     (_rhoWeight, rhoDB) = detachAndExtract(trace, scaffold)
     xiWeight = regenAndAttach(trace, scaffold, True, rhoDB, OrderedDict())
     # Old state restored, don't need to do anything else

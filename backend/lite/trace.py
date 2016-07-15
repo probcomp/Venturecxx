@@ -506,23 +506,8 @@ class Trace(object):
   def log_likelihood_at(self, *args):
     return infer.log_likelihood_at(self, args)
 
-  def log_joint_at(self, scope, block):
-    # TODO This is a different control path from primitive_infer
-    # because it needs to return the weight, and that didn't used to
-    # return values when this was writen.
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not self.scopeHasEntropy(scope):
-      return 0.0
-    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-    pnodes = scaffold.getPrincipalNodes()
-    from infer.mh import getCurrentValues, registerDeterministicLKernels
-    currentValues = getCurrentValues(self, pnodes)
-    registerDeterministicLKernels(self, scaffold, pnodes, currentValues,
-      unconditional=True)
-    (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
-    # Old state restored, don't need to do anything else
-    return xiWeight
+  def log_joint_at(self, *args):
+    return infer.log_joint_at(self, args)
 
   def likelihood_weight(self):
     # TODO This is a different control path from primitive_infer
