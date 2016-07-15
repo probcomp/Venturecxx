@@ -96,6 +96,14 @@ def testSmoke3():
   eq_(r.sample("total"), 6)
   def all(things):
     eq_([1, 2, 3], sorted(things))
+  def one(thing):
+    assert thing == [1] or thing == [2] or thing == [3]
   all(r.infer("""(do
   (s <- (select (minimal_subproblem (by_extent (by_tag 'total)))))
+  (get_current_values s))"""))
+  one(r.infer("""(do
+  (s <- (select (minimal_subproblem (random_singleton (by_extent (by_top))))))
+  (get_current_values s))"""))
+  one(r.infer("""(do
+  (s <- (select (minimal_subproblem (by_extent (random_singleton (by_extent (by_top)))))))
   (get_current_values s))"""))
