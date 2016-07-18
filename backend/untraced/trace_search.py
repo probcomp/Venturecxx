@@ -23,6 +23,7 @@ from venture.lite.scaffold import constructScaffold, Scaffold
 from venture.lite.smap import SamplableMap
 from venture.lite.sp_help import deterministic_typed
 import venture.lite.inference_sps as inf
+import venture.lite.node as n
 import venture.lite.types as t
 
 # The language of possible subproblem selection phrases.  The item in
@@ -115,7 +116,9 @@ def interpret(prog, trace):
     ans = sample_one(thing, trace.py_rng)
     wt2 = -1 * math.log(len(thing))
     return (ans, wt + wt2)
-  # elif isinstance(prog, Edge): # TODO
+  elif isinstance(prog, Edge):
+    (thing, wt) = interpret(prog.source, trace)
+    return (follow_edge(thing, prog.edge, trace), wt)
   elif isinstance(prog, Extent):
     (thing, wt) = interpret(prog.source, trace)
     return (extent(thing, trace), wt)
@@ -147,6 +150,51 @@ def sample_one(thing, prng):
   else:
     raise Exception("Can only sample one element of a collection, not %s" % (thing,))
 
+def follow_edge(thing, edge, trace):
+  if isinstance(thing, Top):
+    if edge in t.NumberType():
+      did = int(edge.getNumber())
+      return trace.families[did]
+    else:
+      raise Exception("Selecting subproblems by label is not supported")
+  else:
+    return set_bind(thing, follow_func(edge, trace))
+
+def follow_func(edge, trace):
+  if edge in t.NumberType():
+    def doit(node):
+      if n.isApplicationNode(node):
+        # The subexpressions are the definite parents, accidentally in
+        # the order useful for this
+        return OrderedFrozenSet([trace.definiteParentsAt(node)[int(edge.getNumber())]])
+      else:
+        return OrderedFrozenSet([])
+    return doit
+  elif edge in t.SymbolType() or edge in t.StringType():
+    name = edge.getSymbol()
+    if name == "operator":
+      return follow_func(t.NumberType().asVentureValue(0), trace)
+    elif name == "source":
+      def doit(node):
+        if n.isLookupNode(node):
+          # The definite parents are the lookup source
+          return OrderedFrozenSet([trace.definiteParentsAt(node)[0]])
+        else:
+          return OrderedFrozenSet([])
+      return doit
+    elif name == "request":
+      def doit(node):
+        if n.isOutputNode(node):
+          # The last definite parent is the request node
+          return OrderedFrozenSet([trace.definiteParentsAt(node)[-1]])
+        else:
+          return OrderedFrozenSet([])
+      return doit
+    else:
+      raise Exception("Unknown named edge type %s" % (name,))
+  else:
+    raise Exception("Unknown edge type %s" % (edge,))
+
 def extent(thing, trace):
   if isinstance(thing, Top):
     return trace.rcs
@@ -175,6 +223,18 @@ def set_fmap(thing, f):
   else:
     return f(OrderedFrozenSet([thing]))
 
+def set_bind(thing, f):
+  "Lift an f :: a -> set b to accept sets (pointwise-union) or dictionaries (pointwise pointwise-union)."
+  if isinstance(thing, SamplableMap):
+    ans = SamplableMap()
+    for k, v in thing.iteritems():
+      ans[k] = set_bind(v, f)
+    return ans
+  elif isinstance(thing, OrderedFrozenSet):
+    return OrderedFrozenSet.union(*[f(v) for v in thing])
+  else:
+    return f(thing)
+
 def set_fmap2(thing1, thing2, f):
   """Lift a binary f :: set, set -> a to accept sets, single nodes (by
 upgrading), or dictionaries (pointwise, cross product if two)."""
@@ -199,7 +259,10 @@ def by_tag_value_fun(tag, val):
   return Lookup(val, FetchTag(tag))
 
 inf.registerBuiltinInferenceSP("by_tag_value", \
-    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value")], t.ForeignBlobType()))
+    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value>")], t.ForeignBlobType()))
+
+inf.registerBuiltinInferenceSP("by_walk", \
+    deterministic_typed(Edge, [t.ForeignBlobType(), t.AnyType("<edge>")], t.ForeignBlobType()))
 
 inf.registerBuiltinInferenceSP("by_extent", \
     deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType()))
