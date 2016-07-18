@@ -92,8 +92,7 @@ class SplitTraceSP(TraceActionSP):
   result_type = t.Blob
 
   def do_action(self, trace):
-    new_trace = copy.deepcopy(trace)
-    new_trace.reseed(trace)
+    new_trace = trace.copy()
     return new_trace, trace
 
 class ExtractSP(TraceActionSP):
@@ -139,7 +138,7 @@ class ITrace(object):
   def __init__(self):
     self.global_env = None
 
-  def reseed(self, other_trace):
+  def copy(self):
     raise NotImplementedError
 
   def next_base_address(self):
@@ -196,6 +195,11 @@ class AbstractTrace(ITrace):
       value = self.register_made_sp(addr, sp)
       builtin_env.addBinding(name, Node(addr, value))
     return builtin_env
+
+  def copy(self):
+    new_trace = copy.deepcopy(self)
+    new_trace.reseed(self)
+    return new_trace
 
   def reseed(self, other):
     prng = other.py_prng
