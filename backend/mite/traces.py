@@ -21,19 +21,6 @@ from venture.mite.state import (register_trace_type,
                                 trace_action)
 
 
-class BlankTraceSP(SimulationSP):
-  def simulate(self, _inputs, prng):
-    seed = prng.py_prng.randint(1, 2**31 - 1)
-    return t.Blob.asVentureValue(BlankTrace(seed))
-
-class FlatTraceSP(SimulationSP):
-  def simulate(self, _inputs, prng):
-    seed = prng.py_prng.randint(1, 2**31 - 1)
-    return t.Blob.asVentureValue(FlatTrace(seed))
-
-registerBuiltinSP("blank_trace", BlankTraceSP())
-registerBuiltinSP("flat_trace", FlatTraceSP())
-
 class ITrace(object):
   # external trace interface exposed to VentureScript
 
@@ -310,3 +297,17 @@ register_trace_type("_trace", ITrace, {
   "regen": trace_action("regen", [t.Object], t.Number),
   "restore": trace_action("restore", [t.Object, t.Blob], t.Nil),
 })
+
+
+class BlankTraceSP(SimulationSP):
+  def simulate(self, _inputs, prng):
+    seed = prng.py_prng.randint(1, 2**31 - 1)
+    return t.Blob.asVentureValue(BlankTrace(seed))
+
+class FlatTraceSP(SimulationSP):
+  def simulate(self, _inputs, prng):
+    seed = prng.py_prng.randint(1, 2**31 - 1)
+    return t.Blob.asVentureValue(FlatTrace(seed))
+
+registerBuiltinSP("blank_trace", BlankTraceSP())
+registerBuiltinSP("flat_trace", FlatTraceSP())

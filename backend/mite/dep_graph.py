@@ -11,14 +11,6 @@ from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import AbstractTrace
 
 
-class GraphTraceSP(SimulationSP):
-  def simulate(self, _inputs, prng):
-    seed = prng.py_prng.randint(1, 2**31 - 1)
-    return t.Blob.asVentureValue(DependencyGraphTrace(seed))
-
-registerBuiltinSP("graph_trace", GraphTraceSP())
-
-
 class DependencyNode(object):
   def __init__(self, addr):
     self.address = addr
@@ -113,3 +105,11 @@ class DependencyGraphTrace(AbstractTrace):
   def check_consistent(self):
     return all(self.results[id] == self.observations[id]
                for id in self.observations)
+
+
+class GraphTraceSP(SimulationSP):
+  def simulate(self, _inputs, prng):
+    seed = prng.py_prng.randint(1, 2**31 - 1)
+    return t.Blob.asVentureValue(DependencyGraphTrace(seed))
+
+registerBuiltinSP("graph_trace", GraphTraceSP())
