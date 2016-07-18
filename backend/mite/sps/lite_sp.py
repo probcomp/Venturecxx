@@ -17,7 +17,6 @@ class LiteSP(SimulationSP):
       "Cannot wrap requesting SPs"
 
   def wrap_args(self, inputs, prng=None):
-    # TODO: use one of Alexey's new Args classes
     if prng is not None:
       return MockArgs(inputs, self.wrapped_aux,
                       prng.py_prng, prng.np_prng)
