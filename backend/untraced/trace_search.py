@@ -132,16 +132,7 @@ def interpret(prog, trace):
     raise Exception("Unknown trace search term %s" % (prog,))
 
 def intersect(thing1, thing2):
-  if isinstance(thing1, SamplableMap) and isinstance(thing2, SamplableMap):
-    ans = SamplableMap()
-    for k1,v1 in thing1.iteritems():
-      for k2,v2 in thing2.iteritems():
-        ans[(k1, k2)] = v1.intersection(v2)
-    return ans
-  elif isinstance(thing2, SamplableMap):
-    return set_fmap(thing2, lambda nodes: nodes.intersection(as_set(thing1)))
-  else:
-    return set_fmap(thing1, lambda nodes: nodes.intersection(as_set(thing2)))
+  return set_fmap2(thing1, thing2, lambda nodes1, nodes2: nodes1.intersection(nodes2))
 
 def sample_one(thing, prng):
   if isinstance(thing, SamplableMap):
@@ -178,6 +169,20 @@ def set_fmap(thing, f):
     return f(thing)
   else:
     return f(OrderedFrozenSet([thing]))
+
+def set_fmap2(thing1, thing2, f):
+  """Lift a binary f :: set, set -> a to accept sets, single nodes (by
+upgrading), or dictionaries (pointwise, cross product if two)."""
+  if isinstance(thing1, SamplableMap) and isinstance(thing2, SamplableMap):
+    ans = SamplableMap()
+    for k1,v1 in thing1.iteritems():
+      for k2,v2 in thing2.iteritems():
+        ans[(k1, k2)] = f(v1, v2)
+    return ans
+  elif isinstance(thing2, SamplableMap):
+    return set_fmap(thing2, lambda nodes: f(as_set(thing1), nodes))
+  else:
+    return set_fmap(thing1, lambda nodes: f(nodes, as_set(thing2)))
 
 inf.registerBuiltinInferenceSP("by_intersection", \
     deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
