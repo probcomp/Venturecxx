@@ -3,19 +3,12 @@
     (let ((theta (beta a b)))
       (lambda (n) (binomial n theta))))]
 
-[define binomial_N (inference_action binomial_N)]
-[define binomial_K (inference_action binomial_K)]
-[define binomial_add
-  (let ((orig binomial_add))
-    (lambda (k n)
-      (inference_action (lambda (trace) (orig trace k n)))))]
-
 [define example1
   (let ((a 1) (b 1)
         (simulate
          (lambda (n)
-           (do (N <- binomial_N)
-               (K <- binomial_K)
+           (do (N <- (binomial_N))
+               (K <- (binomial_K))
                (let theta (beta (+ a K) (+ b (- N K))))
                (return (binomial n theta)))))
         (incorporate

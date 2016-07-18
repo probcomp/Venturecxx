@@ -190,6 +190,11 @@ class AbstractTrace(ITrace):
       self.register_constant(addr, value)
       builtin_env.addBinding(name, Node(addr, value))
     for name, sp in builtInSPs().iteritems():
+      if isinstance(sp, tuple):
+        # assume compound definition
+        # TODO define a namedtuple?
+        (params, body) = sp
+        sp = CompoundSP(params, body, builtin_env)
       addr = addresses.builtin(name)
       self.register_constant(addr, sp)
       value = self.register_made_sp(addr, sp)

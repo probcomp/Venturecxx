@@ -8,7 +8,11 @@ def register_subtrace_type(name, cls, actions):
   constructor = SubtraceConstructorSP(cls)
   registerBuiltinSP(name, constructor)
   for action_name, action_sp in actions.iteritems():
-    registerBuiltinSP(action_name, action_sp)
+    action_func_name = action_name + "_func"
+    registerBuiltinSP(action_func_name, action_sp)
+    (params, body) = action_sp.action_defn(action_func_name)
+    body = t.Exp.asPython(t.Exp.asVentureValue(body))
+    registerBuiltinSP(action_name, (params, body))
 
 
 class SubtraceConstructorSP(SimulationSP):
@@ -32,6 +36,10 @@ class SubtracePropertySP(SimulationSP):
     return t.Pair(self.output_type, t.Blob).asVentureValue(
       (output, trace))
 
+  def action_defn(self, action_func_name):
+    # interpreted by register_subtrace_type
+    return ([], ['inference_action', action_func_name])
+
 subtrace_property = SubtracePropertySP
 
 
@@ -51,5 +59,13 @@ class SubtraceActionSP(SimulationSP):
     output = getattr(trace, self.name)(*inputs)
     return t.Pair(self.output_type, t.Blob).asVentureValue(
       (output, trace))
+
+  def action_defn(self, action_func_name):
+    # interpreted by register_subtrace_type
+    names = ['var{}'.format(i) for i in range(len(self.input_types))]
+    return (names,
+            ['inference_action',
+             ['make_csp', ['quote', ['trace']],
+              ['quote', [action_func_name, 'trace'] + names]]])
 
 subtrace_action = SubtraceActionSP
