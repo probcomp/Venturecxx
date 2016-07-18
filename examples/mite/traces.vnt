@@ -10,9 +10,9 @@
   (let ((reset_trace
          (lambda (t) (inference_action (lambda (_) (pair nil t))))))
     (lambda (prog)
-      (do (t <- split_trace)
+      (do (t <- (split_trace))
           (result <- prog)
-          (consistent <- check_consistent)
+          (consistent <- (check_consistent))
           (if consistent
               (return result)
               (do (reset_trace t) (split_rejection_loop prog))))))]
@@ -25,7 +25,7 @@
               (do (let s nil)
                   (extract s)
                   (regen s)
-                  (consistent <- check_consistent)
+                  (consistent <- (check_consistent))
                   (if consistent
                       (return nil)
                       (loop loop)))))

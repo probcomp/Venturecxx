@@ -16,6 +16,10 @@ from venture.mite.evaluator import Evaluator, Regenerator
 from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
+from venture.mite.state import (register_subtrace_type,
+                                subtrace_property,
+                                subtrace_action)
+
 
 class BlankTraceSP(SimulationSP):
   def simulate(self, _inputs, prng):
@@ -27,110 +31,8 @@ class FlatTraceSP(SimulationSP):
     seed = prng.py_prng.randint(1, 2**31 - 1)
     return t.Blob.asVentureValue(FlatTrace(seed))
 
-class TraceActionSP(SimulationSP):
-  arg_types = []
-  result_type = t.Nil
-
-  def simulate(self, inputs, _prng):
-    trace = t.Blob.asPython(inputs[0])
-    args = [arg_t.asPython(value) for arg_t, value in
-            zip(self.arg_types, inputs[1:])]
-    result = self.do_action(trace, *args)
-    return t.Pair(self.result_type, t.Blob).asVentureValue(result)
-
-  def do_action(self, trace, *args):
-    raise NotImplementedError
-
-class NextBaseAddressSP(TraceActionSP):
-  result_type = t.Blob
-
-  def do_action(self, trace):
-    address = trace.next_base_address()
-    return address, trace
-
-class GlobalEnvSP(TraceActionSP):
-  result_type = EnvironmentType()
-
-  def do_action(self, trace):
-    return trace.global_env, trace
-
-class EvalRequestSP(TraceActionSP):
-  arg_types = [t.Blob, t.Exp, EnvironmentType()]
-
-  def do_action(self, trace, addr, expr, env):
-    trace.eval_request(addr, expr, env)
-    return None, trace
-
-class BindGlobalSP(TraceActionSP):
-  arg_types = [t.Symbol, t.Blob]
-
-  def do_action(self, trace, symbol, addr):
-    trace.bind_global(symbol, addr)
-    return None, trace
-
-class RegisterObservationSP(TraceActionSP):
-  arg_types = [t.Blob, t.Object]
-
-  def do_action(self, trace, addr, value):
-    trace.register_observation(addr, value)
-    return None, trace
-
-class ValueAtSP(TraceActionSP):
-  arg_types = [t.Blob]
-  result_type = t.Object
-
-  def do_action(self, trace, addr):
-    return trace.value_at(addr), trace
-
-class CheckConsistentSP(TraceActionSP):
-  result_type = t.Bool
-
-  def do_action(self, trace):
-    return trace.check_consistent(), trace
-
-class SplitTraceSP(TraceActionSP):
-  result_type = t.Blob
-
-  def do_action(self, trace):
-    new_trace = trace.copy()
-    return new_trace, trace
-
-class ExtractSP(TraceActionSP):
-  arg_types = [t.Object] ## TODO take a subproblem selector
-  result_type = t.Pair(t.Number, t.Blob)
-
-  def do_action(self, trace, subproblem):
-    (weight, trace_frag) = trace.extract(subproblem)
-    return (weight, trace_frag), trace
-
-class RegenSP(TraceActionSP):
-  arg_types = [t.Object] ## TODO take a subproblem selector
-  result_type = t.Number
-
-  def do_action(self, trace, subproblem):
-    weight = trace.regen(subproblem)
-    return weight, trace
-
-class RestoreSP(TraceActionSP):
-  arg_types = [t.Object, t.Blob] ## TODO take a subproblem selector
-
-  def do_action(self, trace, subproblem, trace_frag):
-    trace.restore(subproblem, trace_frag)
-    return None, trace
-
 registerBuiltinSP("blank_trace", BlankTraceSP())
 registerBuiltinSP("flat_trace", FlatTraceSP())
-registerBuiltinSP("next_base_address_f", NextBaseAddressSP())
-registerBuiltinSP("global_env_f", GlobalEnvSP())
-registerBuiltinSP("eval_request_f", EvalRequestSP())
-registerBuiltinSP("bind_global_f", BindGlobalSP())
-registerBuiltinSP("register_observation_f", RegisterObservationSP())
-registerBuiltinSP("value_at_f", ValueAtSP())
-registerBuiltinSP("check_consistent_f", CheckConsistentSP())
-registerBuiltinSP("split_trace_f", SplitTraceSP())
-registerBuiltinSP("extract_f", ExtractSP())
-registerBuiltinSP("regen_f", RegenSP())
-registerBuiltinSP("restore_f", RestoreSP())
 
 class ITrace(object):
   # external trace interface exposed to VentureScript
@@ -393,3 +295,18 @@ class FlatTrace(AbstractTrace):
       addr = addresses.directive(i+1)
       (exp, env) = self.requests[addr]
       x.eval_family(addr, exp, env)
+
+
+register_subtrace_type("_trace", ITrace, {
+  "next_base_address": subtrace_action("next_base_address", [], t.Blob),
+  "global_env": subtrace_property("global_env", EnvironmentType()),
+  "eval_request": subtrace_action("eval_request", [t.Blob, t.Exp, EnvironmentType()], t.Nil),
+  "bind_global": subtrace_action("bind_global", [t.Symbol, t.Blob], t.Nil),
+  "register_observation": subtrace_action("register_observation", [t.Blob, t.Object], t.Nil),
+  "value_at": subtrace_action("value_at", [t.Blob], t.Object),
+  "check_consistent": subtrace_action("check_consistent", [], t.Bool),
+  "split_trace": subtrace_action("copy", [], t.Blob),
+  "extract": subtrace_action("extract", [t.Object], t.Pair(t.Number, t.Blob)),
+  "regen": subtrace_action("regen", [t.Object], t.Number),
+  "restore": subtrace_action("restore", [t.Object, t.Blob], t.Nil),
+})

@@ -18,7 +18,7 @@
 
 [define copy
   (lambda (state)
-    (first (split_trace_f state)))]
+    (first (split_trace_func state)))]
 
 [define run_in
   (lambda (act state)
@@ -27,78 +27,27 @@
 
 ;; trace interface
 
-;; [define blank_trace
-;;   (dict (list "counter" "global_env" "results")
-;;         (list 0 (get_current_environment) (dict nil nil)))]
-
-[define next_base_address
-  (inference_action next_base_address_f)]
-
-[define global_env
-  (inference_action global_env_f)]
-
-[define eval_request
-  (lambda (addr expr env)
-    (inference_action
-     (lambda (trace) (eval_request_f trace addr expr env))))]
-
-[define bind_global
-  (lambda (symbol addr)
-    (inference_action
-     (lambda (trace) (bind_global_f trace symbol addr))))]
-
-[define register_observation
-  (lambda (addr value)
-    (inference_action
-     (lambda (trace) (register_observation_f trace addr value))))]
-
-[define value_at
-  (lambda (addr)
-    (inference_action
-     (lambda (trace) (value_at_f trace addr))))]
-
-[define check_consistent
-  (inference_action check_consistent_f)]
-
-[define split_trace
-  (inference_action split_trace_f)]
-
-[define extract
-  (lambda (subproblem)
-    (inference_action
-     (lambda (trace) (extract_f trace subproblem))))]
-
-[define regen
-  (lambda (subproblem)
-    (inference_action
-     (lambda (trace) (regen_f trace subproblem))))]
-
-[define restore
-  (lambda (subproblem trace_frag)
-    (inference_action
-     (lambda (trace) (restore_f trace subproblem trace_frag))))]
-
 [define eval_toplevel
   (lambda (addr expr)
-    (do (env <- global_env)
+    (do (env <- (global_env))
         (eval_request addr expr env)))]
 
 [define _assume
   (lambda (symbol expr)
-    (do (addr <- next_base_address)
+    (do (addr <- (next_base_address))
         (eval_toplevel addr expr)
         (bind_global symbol addr)
         (value_at addr)))]
 
 [define _observe
   (lambda (expr value)
-    (do (addr <- next_base_address)
+    (do (addr <- (next_base_address))
         (eval_toplevel addr expr)
         (register_observation addr value)
         (return 0)))]
 
 [define _predict
   (lambda (expr)
-    (do (addr <- next_base_address)
+    (do (addr <- (next_base_address))
         (eval_toplevel addr expr)
         (value_at addr)))]
