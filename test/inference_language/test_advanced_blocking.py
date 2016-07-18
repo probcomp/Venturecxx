@@ -144,3 +144,14 @@ assume datum    = mem((i, d) ~> {                    // Per-datapoint:
     by_extent(by_tag_value("row", integer<3>)),
     by_extent(by_tag("clustering")))));
   get_current_values(s)}"""))
+  r.force("z(integer<4>)", expr.atom(8))
+  # Check that union picks out several rows' cluster assignments.
+  eq_([8, 8], r.infer("""{
+  s <- select(minimal_subproblem(by_union(
+    by_intersection(
+      by_extent(by_tag_value("row", integer<3>)),
+      by_extent(by_tag("clustering"))),
+    by_intersection(
+      by_extent(by_tag_value("row", integer<4>)),
+      by_extent(by_tag("clustering"))))));
+  get_current_values(s)}"""))

@@ -120,7 +120,9 @@ def interpret(prog, trace):
     (thing, wt) = interpret(prog.source, trace)
     return (extent(thing, trace), wt)
   # elif isinstance(prog, UnionDict):
-  # elif isinstance(prog, Union):
+  elif isinstance(prog, Union):
+    (sources, weights) = zip(*[interpret(source, trace) for source in prog.sources])
+    return (reduce(union, sources), sum(weights))
   elif isinstance(prog, FetchTag):
     return (trace.scopes[prog.name], 0)
   elif isinstance(prog, Top):
@@ -133,6 +135,9 @@ def interpret(prog, trace):
 
 def intersect(thing1, thing2):
   return set_fmap2(thing1, thing2, lambda nodes1, nodes2: nodes1.intersection(nodes2))
+
+def union(thing1, thing2):
+  return set_fmap2(thing1, thing2, lambda nodes1, nodes2: nodes1.union(nodes2))
 
 def sample_one(thing, prng):
   if isinstance(thing, SamplableMap):
@@ -198,6 +203,9 @@ inf.registerBuiltinInferenceSP("by_tag_value", \
 
 inf.registerBuiltinInferenceSP("by_extent", \
     deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType()))
+
+inf.registerBuiltinInferenceSP("by_union", \
+    deterministic_typed(lambda *args: Union(args), [t.ForeignBlobType()], t.ForeignBlobType(), variadic=True))
 
 def subselect_fun(source1, source2):
   return Intersect(Extent(source1), source2)
