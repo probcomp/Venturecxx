@@ -103,11 +103,11 @@ class TraceSearchIndexer(object):
 # - A Scaffold
 # - The Top() object (serving as a special token denoting the top of the trace)
 def interpret(prog, trace):
-  # if isinstance(prog, Intersect):
-  #   return intersect(
-  #     interpret(prog.source1, trace),
-  #     interpret(prog.source2, trace))
-  if isinstance(prog, Lookup):
+  if isinstance(prog, Intersect):
+    (s1, w1) = interpret(prog.source1, trace)
+    (s2, w2) = interpret(prog.source2, trace)
+    return (intersect(s1, s2), w1 + w2)
+  elif isinstance(prog, Lookup):
     (d, w) = interpret(prog.dictionary, trace)
     return (d[prog.key], w)
   elif isinstance(prog, Random1):
@@ -131,8 +131,17 @@ def interpret(prog, trace):
   else:
     raise Exception("Unknown trace search term %s" % (prog,))
 
-# def intersect(thing1, thing2):
-#   ...
+def intersect(thing1, thing2):
+  if isinstance(thing1, SamplableMap) and isinstance(thing2, SamplableMap):
+    ans = SamplableMap()
+    for k1,v1 in thing1.iteritems():
+      for k2,v2 in thing2.iteritems():
+        ans[(k1, k2)] = v1.intersection(v2)
+    return ans
+  elif isinstance(thing2, SamplableMap):
+    return set_fmap(thing2, lambda nodes: nodes.intersection(as_set(thing1)))
+  else:
+    return set_fmap(thing1, lambda nodes: nodes.intersection(as_set(thing2)))
 
 def sample_one(thing, prng):
   if isinstance(thing, SamplableMap):
@@ -169,6 +178,9 @@ def set_fmap(thing, f):
     return f(thing)
   else:
     return f(OrderedFrozenSet([thing]))
+
+inf.registerBuiltinInferenceSP("by_intersection", \
+    deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
 
 inf.registerBuiltinInferenceSP("by_tag", \
     deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType()))

@@ -137,3 +137,8 @@ assume datum    = mem((i, d) ~> {                    // Per-datapoint:
     for d in range(6):
       if r.sample("flip(0.7)"):
         observe(i, d)
+  r.force("z(integer<3>)", expr.atom(8)) # A sentinel value that would not be assigned
+  eq_([8], r.infer("""{
+  s <- select(minimal_subproblem(by_intersection(by_extent(by_tag_value("row", integer<3>)),
+                                                 by_extent(by_tag("clustering")))));
+  get_current_values(s)}"""))
