@@ -18,7 +18,8 @@ from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
 from venture.mite.state import (register_trace_type,
                                 trace_property,
-                                trace_action)
+                                trace_action,
+                                TraceConstructorSP)
 
 
 class ITrace(object):
@@ -299,15 +300,10 @@ register_trace_type("_trace", ITrace, {
 })
 
 
-class BlankTraceSP(SimulationSP):
+class VentureTraceConstructorSP(TraceConstructorSP):
   def simulate(self, _inputs, prng):
     seed = prng.py_prng.randint(1, 2**31 - 1)
-    return t.Blob.asVentureValue(BlankTrace(seed))
+    return t.Blob.asVentureValue(self.trace_class(seed))
 
-class FlatTraceSP(SimulationSP):
-  def simulate(self, _inputs, prng):
-    seed = prng.py_prng.randint(1, 2**31 - 1)
-    return t.Blob.asVentureValue(FlatTrace(seed))
-
-registerBuiltinSP("blank_trace", BlankTraceSP())
-registerBuiltinSP("flat_trace", FlatTraceSP())
+registerBuiltinSP("blank_trace", VentureTraceConstructorSP(BlankTrace))
+registerBuiltinSP("flat_trace", VentureTraceConstructorSP(FlatTrace))

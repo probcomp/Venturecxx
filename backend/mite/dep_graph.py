@@ -1,14 +1,13 @@
 from collections import OrderedDict
 
-import venture.lite.types as t
 from venture.lite.value import SPRef
 
 from venture.untraced.node import Node
 
 import venture.mite.address as addresses
-from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import AbstractTrace
+from venture.mite.traces import VentureTraceConstructorSP
 
 
 class DependencyNode(object):
@@ -107,9 +106,5 @@ class DependencyGraphTrace(AbstractTrace):
                for id in self.observations)
 
 
-class GraphTraceSP(SimulationSP):
-  def simulate(self, _inputs, prng):
-    seed = prng.py_prng.randint(1, 2**31 - 1)
-    return t.Blob.asVentureValue(DependencyGraphTrace(seed))
-
-registerBuiltinSP("graph_trace", GraphTraceSP())
+registerBuiltinSP("graph_trace", VentureTraceConstructorSP(
+  DependencyGraphTrace))
