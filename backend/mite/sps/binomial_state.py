@@ -1,8 +1,8 @@
 import venture.lite.types as t
 
-from venture.mite.state import (register_subtrace_type,
-                                subtrace_property,
-                                subtrace_action)
+from venture.mite.state import (register_trace_type,
+                                trace_property,
+                                trace_action)
 
 
 class BinomialState(object):
@@ -24,9 +24,9 @@ class BinomialState(object):
     ret.K = self.K
     return ret
 
-register_subtrace_type("binomial_state", BinomialState, {
-  "binomial_N": subtrace_property("N", t.Int),
-  "binomial_K": subtrace_property("K", t.Int),
-  "binomial_add": subtrace_action("add", [t.Int, t.Int], t.Nil),
-  "binomial_remove": subtrace_action("remove", [t.Int, t.Int], t.Nil),
+register_trace_type("binomial_state", BinomialState, {
+  "binomial_N": trace_property("N", t.Int),
+  "binomial_K": trace_property("K", t.Int),
+  "binomial_add": trace_action("add", [t.Int, t.Int], t.Nil),
+  "binomial_remove": trace_action("remove", [t.Int, t.Int], t.Nil),
 })

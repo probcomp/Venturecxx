@@ -4,8 +4,8 @@ from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 
 
-def register_subtrace_type(name, cls, actions):
-  constructor = SubtraceConstructorSP(cls)
+def register_trace_type(name, cls, actions):
+  constructor = TraceConstructorSP(cls)
   registerBuiltinSP(name, constructor)
   for action_name, action_sp in actions.iteritems():
     action_func_name = action_name + "_func"
@@ -15,7 +15,7 @@ def register_subtrace_type(name, cls, actions):
     registerBuiltinSP(action_name, (params, body))
 
 
-class SubtraceConstructorSP(SimulationSP):
+class TraceConstructorSP(SimulationSP):
   def __init__(self, trace_class):
     self.trace_class = trace_class
 
@@ -24,7 +24,7 @@ class SubtraceConstructorSP(SimulationSP):
     return t.Blob.asVentureValue(self.trace_class())
 
 
-class SubtracePropertySP(SimulationSP):
+class TracePropertySP(SimulationSP):
   def __init__(self, property_name, property_type):
     self.name = property_name
     self.output_type = property_type
@@ -37,15 +37,15 @@ class SubtracePropertySP(SimulationSP):
       (output, trace))
 
   def action_defn(self, action_func_name):
-    # interpreted by register_subtrace_type
+    # interpreted by register_trace_type
     return ([], ['inference_action', action_func_name])
 
-subtrace_property = SubtracePropertySP
+trace_property = TracePropertySP
 
 
 # TODO: this should have an unapply method that undoes its effect on
 # the trace.
-class SubtraceActionSP(SimulationSP):
+class TraceActionSP(SimulationSP):
   def __init__(self, method_name, input_types, output_type):
     self.name = method_name
     self.input_types = input_types
@@ -61,11 +61,11 @@ class SubtraceActionSP(SimulationSP):
       (output, trace))
 
   def action_defn(self, action_func_name):
-    # interpreted by register_subtrace_type
+    # interpreted by register_trace_type
     names = ['var{}'.format(i) for i in range(len(self.input_types))]
     return (names,
             ['inference_action',
              ['make_csp', ['quote', ['trace']],
               ['quote', [action_func_name, 'trace'] + names]]])
 
-subtrace_action = SubtraceActionSP
+trace_action = TraceActionSP

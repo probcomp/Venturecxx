@@ -16,9 +16,9 @@ from venture.mite.evaluator import Evaluator, Regenerator
 from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
-from venture.mite.state import (register_subtrace_type,
-                                subtrace_property,
-                                subtrace_action)
+from venture.mite.state import (register_trace_type,
+                                trace_property,
+                                trace_action)
 
 
 class BlankTraceSP(SimulationSP):
@@ -297,16 +297,16 @@ class FlatTrace(AbstractTrace):
       x.eval_family(addr, exp, env)
 
 
-register_subtrace_type("_trace", ITrace, {
-  "next_base_address": subtrace_action("next_base_address", [], t.Blob),
-  "global_env": subtrace_property("global_env", EnvironmentType()),
-  "eval_request": subtrace_action("eval_request", [t.Blob, t.Exp, EnvironmentType()], t.Nil),
-  "bind_global": subtrace_action("bind_global", [t.Symbol, t.Blob], t.Nil),
-  "register_observation": subtrace_action("register_observation", [t.Blob, t.Object], t.Nil),
-  "value_at": subtrace_action("value_at", [t.Blob], t.Object),
-  "check_consistent": subtrace_action("check_consistent", [], t.Bool),
-  "split_trace": subtrace_action("copy", [], t.Blob),
-  "extract": subtrace_action("extract", [t.Object], t.Pair(t.Number, t.Blob)),
-  "regen": subtrace_action("regen", [t.Object], t.Number),
-  "restore": subtrace_action("restore", [t.Object, t.Blob], t.Nil),
+register_trace_type("_trace", ITrace, {
+  "next_base_address": trace_action("next_base_address", [], t.Blob),
+  "global_env": trace_property("global_env", EnvironmentType()),
+  "eval_request": trace_action("eval_request", [t.Blob, t.Exp, EnvironmentType()], t.Nil),
+  "bind_global": trace_action("bind_global", [t.Symbol, t.Blob], t.Nil),
+  "register_observation": trace_action("register_observation", [t.Blob, t.Object], t.Nil),
+  "value_at": trace_action("value_at", [t.Blob], t.Object),
+  "check_consistent": trace_action("check_consistent", [], t.Bool),
+  "split_trace": trace_action("copy", [], t.Blob),
+  "extract": trace_action("extract", [t.Object], t.Pair(t.Number, t.Blob)),
+  "regen": trace_action("regen", [t.Object], t.Number),
+  "restore": trace_action("restore", [t.Object, t.Blob], t.Nil),
 })
