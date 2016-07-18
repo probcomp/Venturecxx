@@ -1,0 +1,40 @@
+[define make_beta_binomial
+  (lambda (a b)
+    (let ((theta (beta a b)))
+      (lambda (n) (binomial n theta))))]
+
+[define binomial_N (inference_action binomial_N)]
+[define binomial_K (inference_action binomial_K)]
+[define binomial_add
+  (let ((orig binomial_add))
+    (lambda (k n)
+      (inference_action (lambda (trace) (orig trace k n)))))]
+
+[define example1
+  (let ((a 1) (b 1)
+        (simulate
+         (lambda (n)
+           (do (N <- binomial_N)
+               (K <- binomial_K)
+               (let theta (beta (+ a K) (+ b (- N K))))
+               (return (binomial n theta)))))
+        (incorporate
+         (lambda (k n)
+           (binomial_add n k)))
+        (unincorporate
+         (lambda (k n)
+           (binomial_remove n k))))
+    (lambda ()
+      (debug 'results
+             (run_in (do (x1 <- (simulate 10))
+                         (incorporate x1 10)
+                         (x2 <- (simulate 10))
+                         (incorporate x2 10)
+                         (x3 <- (simulate 10))
+                         (incorporate x3 10)
+                         (x4 <- (simulate 10))
+                         (incorporate x4 10)
+                         (x5 <- (simulate 10))
+                         (incorporate x5 10)
+                         (return (+ x1 x2 x3 x4 x5)))
+                     (binomial_state)))))]
