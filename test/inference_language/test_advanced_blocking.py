@@ -18,6 +18,7 @@
 from nose.tools import eq_
 
 from venture.test.config import get_ripl
+import venture.value.dicts as expr
 
 def testSmoke():
   # Basic tagging of random choices
@@ -107,3 +108,32 @@ def testSmoke3():
   one(r.infer("""(do
   (s <- (select (minimal_subproblem (by_extent (random_singleton (by_extent (by_top)))))))
   (get_current_values s))"""))
+
+def testPoster():
+  r = get_ripl(seed=0)
+  r.set_mode("venture_script")
+  r.execute_program("""
+assume alpha    ~ tag("hyper", "conc", gamma(1.0, 1.0));     // Concentration parameter
+assume assign   = make_crp(alpha);                   // Choose the CRP representation
+assume z        = mem((i) ~> { assign() });          // The partition on i induced by the DP
+assume pct      = mem((d) ~> { tag("hyper", d, gamma(1.0, 1.0)) });           // Per-dimension hyper prior
+assume theta    = mem((z, d) ~> { tag("compt", d, beta(pct(d), pct(d))) });   // Per-component latent
+assume datum    = mem((i, d) ~> {                    // Per-datapoint:
+  tag("row", i,
+  tag("col", d, {
+    cmpt ~ tag("clustering", pair(i, d), z(i));      // Select cluster
+    weight ~ theta(cmpt, d);                         // Fetch latent weight
+    flip(weight)}))});                               // Apply component model
+""")
+  dataset = [[0, 0, 0, 0, 0, 0],
+             [1, 0, 0, 1, 0, 0],
+             [1, 1, 0, 0, 0, 0],
+             [0, 0, 0, 1, 0, 0],
+             [1, 1, 0, 0, 0, 0],
+             [0, 1, 1, 0, 1, 0]]
+  def observe(i, d):
+    r.observe(expr.app(expr.symbol("datum"), expr.integer(i), d), dataset[i][d])
+  for i in range(6):
+    for d in range(6):
+      if r.sample("flip(0.7)"):
+        observe(i, d)
