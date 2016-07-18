@@ -45,7 +45,6 @@ class NextBaseAddressSP(TraceActionSP):
   result_type = t.Blob
 
   def do_action(self, trace):
-    trace = copy.copy(trace)
     address = trace.next_base_address()
     return address, trace
 
@@ -59,7 +58,6 @@ class EvalRequestSP(TraceActionSP):
   arg_types = [t.Blob, t.Exp, EnvironmentType()]
 
   def do_action(self, trace, addr, expr, env):
-    (trace, env) = copy.deepcopy((trace, env))
     trace.eval_request(addr, expr, env)
     return None, trace
 
@@ -67,7 +65,6 @@ class BindGlobalSP(TraceActionSP):
   arg_types = [t.Symbol, t.Blob]
 
   def do_action(self, trace, symbol, addr):
-    trace = copy.deepcopy(trace)
     trace.bind_global(symbol, addr)
     return None, trace
 
@@ -75,7 +72,6 @@ class RegisterObservationSP(TraceActionSP):
   arg_types = [t.Blob, t.Object]
 
   def do_action(self, trace, addr, value):
-    trace = copy.deepcopy(trace)
     trace.register_observation(addr, value)
     return None, trace
 
@@ -96,7 +92,7 @@ class SplitTraceSP(TraceActionSP):
   result_type = t.Blob
 
   def do_action(self, trace):
-    new_trace = copy.copy(trace)
+    new_trace = copy.deepcopy(trace)
     new_trace.reseed(trace)
     return new_trace, trace
 
@@ -105,7 +101,6 @@ class ExtractSP(TraceActionSP):
   result_type = t.Pair(t.Number, t.Blob)
 
   def do_action(self, trace, subproblem):
-    trace = copy.deepcopy(trace)
     (weight, trace_frag) = trace.extract(subproblem)
     return (weight, trace_frag), trace
 
@@ -114,7 +109,6 @@ class RegenSP(TraceActionSP):
   result_type = t.Number
 
   def do_action(self, trace, subproblem):
-    trace = copy.deepcopy(trace)
     weight = trace.regen(subproblem)
     return weight, trace
 
@@ -122,7 +116,6 @@ class RestoreSP(TraceActionSP):
   arg_types = [t.Object, t.Blob] ## TODO take a subproblem selector
 
   def do_action(self, trace, subproblem, trace_frag):
-    trace = copy.deepcopy(trace)
     trace.restore(subproblem, trace_frag)
     return None, trace
 

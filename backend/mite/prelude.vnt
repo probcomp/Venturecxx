@@ -16,9 +16,13 @@
     (inference_action
      (lambda (t) (pair val t))))]
 
+[define copy
+  (lambda (state)
+    (first (split_trace_f state)))]
+
 [define run_in
   (lambda (act state)
-    (let ((result ((action_func act) state)))
+    (let ((result ((action_func act) (copy state))))
       (first result)))]
 
 ;; trace interface
