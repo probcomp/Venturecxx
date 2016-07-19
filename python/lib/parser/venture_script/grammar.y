@@ -42,19 +42,19 @@ instruction(command)	::= command(c).
 instruction(statement)	::= statement(e).
 
 labelled(directive)	::= L_NAME(l) T_COLON directive(d).
-labelled(directive_prog)	::= T_LDOLLAR(dol) primary(lab_exp) T_COLON directive(d).
+labelled(directive_prog)::= T_LDOLLAR(dol) primary(lab_exp) T_COLON directive(d).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(assume_prog)	::= K_ASSUME(k) T_LDOLLAR(dol) primary(sym_exp) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
+command(define)		::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 command(infer)		::= K_INFER(k) expression(e).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
 body(do)		::= statements(ss) T_SEMI(semi) expression_opt(e).
 body(exp)		::= expression(e).
-statements(one)	::= statement(s).
+statements(one)		::= statement(s).
 statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
 
 /* TODO deprecate "assign" in favor of let */
@@ -65,7 +65,7 @@ statement(mutrec)	::= K_AND(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
 				T_EQDEF(eq) expression(e).
 statement(labelled)	::= labelled(d).
-statement(none)	::= expression(e).
+statement(none)		::= expression(e).
 
 expression_opt(none)	::= .
 expression_opt(some)	::= expression(e).
