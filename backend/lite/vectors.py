@@ -26,6 +26,7 @@ from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_help import type_test
 from venture.lite.sp_registry import registerBuiltinSP
 import venture.lite.types as t
+import venture.lite.utils as u
 
 registerBuiltinSP("array",
   deterministic_typed(lambda *args: np.array(args),
@@ -68,6 +69,13 @@ registerBuiltinSP("simplex",
     descr="simplex returns the simplex point given by its argument coordinates."))
 
 registerBuiltinSP("is_simplex", type_test(t.SimplexType()))
+
+registerBuiltinSP("normalize",
+  deterministic_typed(u.normalizeList,
+    [t.HomogeneousListType(t.NumberType())],
+    t.SimplexType(),
+    descr="%s converts its argument sequence to a simplex by scaling" \
+          "its elements so that they sum to 1."))
 
 registerBuiltinSP("arange",
   deterministic_typed(np.arange,
