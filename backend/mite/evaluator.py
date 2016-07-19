@@ -115,6 +115,7 @@ class Regenerator(Evaluator):
     if fragment is None:
       fragment = {} # addr -> result value
     self.fragment = fragment
+    self.kernels = {}
 
   def uneval_family(self, addr, exp, env):
     weight = 0
@@ -150,16 +151,22 @@ class Regenerator(Evaluator):
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
-    fragment = sp.unapply(handle, addr, value, args)
+    kernel = self.kernels.get(addr)
+    if kernel is None:
+      kernel = sp.proposal_kernel(handle, addr)
+    (weight, fragment) = kernel.extract(value, args)
     self.fragment[addr] = fragment
-    return 0
+    return weight
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
+    kernel = self.kernels.get(addr)
+    if kernel is None:
+      kernel = sp.proposal_kernel(handle, addr)
     fragment = self.fragment[addr]
-    return (0, sp.restore(handle, addr, args, fragment))
+    return (0, kernel.restore(args, fragment))
 
 
 class RegeneratingTraceHandle(TraceHandle):
