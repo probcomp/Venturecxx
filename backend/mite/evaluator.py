@@ -148,7 +148,7 @@ class Regenerator(Evaluator):
 
   def unapply_sp(self, addr, value, sp_node, args):
     sp = sp_node.value
-    handle = RestoringTraceHandle(
+    handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
     fragment = sp.unapply(handle, addr, value, args)
     self.fragment[addr] = fragment
@@ -156,28 +156,28 @@ class Regenerator(Evaluator):
 
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
-    handle = RestoringTraceHandle(
+    handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
     fragment = self.fragment[addr]
     return (0, sp.restore(handle, addr, args, fragment))
 
 
-class RestoringTraceHandle(TraceHandle):
-  def __init__(self, trace, sp_addr, restorer):
-    super(RestoringTraceHandle, self).__init__(
+class RegeneratingTraceHandle(TraceHandle):
+  def __init__(self, trace, sp_addr, regenerator):
+    super(RegeneratingTraceHandle, self).__init__(
       trace, sp_addr)
-    self.restorer = restorer
+    self.regenerator = regenerator
 
   def restore_request(self, request_id, exp, env):
     addr = self.request_address(request_id)
-    w, _ = self.restorer.eval_family(addr, exp, env)
+    w, _ = self.regenerator.eval_family(addr, exp, env)
     assert w == 0
     return request_id
 
   def free_request(self, request_id):
     addr = self.request_address(request_id)
     (exp, env) = self.trace.requests[addr]
-    w = self.restorer.uneval_family(addr, exp, env)
+    w = self.regenerator.uneval_family(addr, exp, env)
     assert w == 0
     return request_id
 
