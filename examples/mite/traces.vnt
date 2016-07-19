@@ -73,3 +73,17 @@
               (predict (debug 'theta theta))))
          (flat_trace)))]
 
+[define example6
+  (lambda ()
+    (run_in (do (assume x 1)
+                (assume y 2)
+                (assume z 3)
+                (assume w (+ 4 5))
+                (x <- (value_at (pyaddress "directive(1)")))
+                (y <- (value_at (pyaddress "directive(2)")))
+                (z <- (value_at (pyaddress "directive(3)")))
+                (w <- (value_at (pyaddress "directive(4)")))
+                (w1 <- (value_at (pyaddress "subexpression(1, directive(4))")))
+                (w2 <- (value_at (pyaddress "subexpression(2, directive(4))")))
+                (return (debug 'xyz (list x y z w1 w2 w))))
+            (flat_trace)))]
