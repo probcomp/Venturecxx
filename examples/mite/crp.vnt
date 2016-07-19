@@ -1,0 +1,71 @@
+[define example1
+  (let ((alpha 1)
+        (simulate
+         (lambda ()
+           (do (table_counts <- (crp_table_counts))
+               (next_table <- (crp_next_table))
+               (let occupied (keys table_counts))
+               (let counts (values table_counts))
+               (let table (categorical (dirichlet (pair alpha (to_list counts)))
+                                       (pair next_table (to_list occupied))))
+               (return table))))
+        (incorporate
+         (lambda (table)
+           (crp_seat table 1)))
+        (unincorporate
+         (lambda (table)
+           (crp_seat table -1))))
+    (lambda ()
+      (debug 'results
+             (run_in (do (x1 <- (simulate))
+                         (incorporate x1)
+                         (x2 <- (simulate))
+                         (incorporate x2)
+                         (x3 <- (simulate))
+                         (incorporate x3)
+                         (x4 <- (simulate))
+                         (incorporate x4)
+                         (x5 <- (simulate))
+                         (incorporate x5)
+                         (return (list x1 x2 x3 x4 x5)))
+                     (crp_state)))))]
+
+[define make_exchangeable_sp
+  (lambda (apply_proc initial_state)
+    (let ((state (copy initial_state)))
+      (lambda ()
+        (let ((act (apply_proc))
+              (result ((action_func act) state)))
+          (first result)))))]
+
+[define make_crp_x
+  (lambda (alpha)
+    (make_exchangeable_sp
+     (lambda ()
+       (do (table_counts <- (crp_table_counts))
+           (next_table <- (crp_next_table))
+           (let occupied (keys table_counts))
+           (let counts (values table_counts))
+           (let table (categorical (normalize (pair alpha (to_list counts)))
+                                   (pair next_table (to_list occupied))))
+           (crp_seat table 1)
+           (return table)))
+     (crp_state)))]
+
+[define example2
+  (lambda ()
+    (do (let loop
+            (lambda (loop n)
+              (if (= n 0) nil
+                  (let ((f (make_crp_x 1))
+                        (x1 (f))
+                        (x2 (f))
+                        (x3 (f))
+                        (x4 (f))
+                        (x5 (f)))
+                    (if (= (array x1 x2 x4 x5)
+                           (array atom<1> atom<2> atom<2> atom<2>))
+                        (let ((_ (debug 'x x3)))
+                          (loop loop (- n 1)))
+                        (loop loop n))))))
+        (loop loop 10)))]

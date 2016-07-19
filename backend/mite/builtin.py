@@ -10,6 +10,7 @@ import venture.mite.traces
 import venture.mite.dep_graph
 import venture.mite.sps.lite_sp
 import venture.mite.sps.binomial_state
+import venture.mite.sps.crp_state
 
 def builtInValues():
   return { "true" : v.VentureBool(True), "false" : v.VentureBool(False),
