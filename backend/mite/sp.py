@@ -83,6 +83,11 @@ class SimulationSP(VentureSP):
     self.incorporate(output, input_values)
     return output
 
+  @override(VentureSP)
+  def constrained_kernel(self, trace_handle, application_id, val):
+    return SimulationConstrainedKernel(
+      self, trace_handle, application_id, val)
+
   def simulate(self, _inputs, _prng):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
 
@@ -91,6 +96,34 @@ class SimulationSP(VentureSP):
 
   def unincorporate(self, output, inputs):
     pass
+
+class SimulationConstrainedKernel(ApplicationKernel):
+  def __init__(self, sp, trace_handle, application_id, val):
+    self.sp = sp
+    self.trace_handle = trace_handle
+    self.application_id = application_id
+    self.val = val
+
+  def extract(self, output, inputs):
+    input_values = [node.value for node in inputs]
+    self.unincorporate(output, input_values)
+    if output == self.val:
+      weight = self.sp.logDensity(output, input_values)
+    else:
+      weight = float('-inf')
+    return (weight, output)
+
+  def regen(self, inputs):
+    input_values = [node.value for node in inputs]
+    output = self.val
+    weight = self.sp.logDensity(output, input_values)
+    self.incorporate(output, input_values)
+    return (weight, output)
+
+  def restore(self, inputs, output):
+    input_values = [node.value for node in inputs]
+    self.incorporate(output, input_values)
+    return output
 
 
 class RequestReferenceSP(VentureSP):
