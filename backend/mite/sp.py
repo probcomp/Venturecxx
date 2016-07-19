@@ -72,13 +72,13 @@ class RequestReferenceSP(VentureSP):
   def unapply(self, trace_handle, application_id, _output, _inputs):
     raddr = self.request_map.pop(application_id)
     trace_handle.free_request(raddr)
-    return None
+    return raddr
 
   @override(VentureSP)
-  def restore(self, trace_handle, application_id, inputs, _trace_fragment):
-    # NB: this assumes that the request made is deterministic
-    # so we can just reapply
-    return self.apply(trace_handle, application_id, inputs)
+  def restore(self, trace_handle, application_id, _inputs, raddr):
+    trace_handle.restore_request(raddr)
+    self.request_map[application_id] = raddr
+    return trace_handle.value_at(raddr)
 
   def request(self, _trace_handle, _application_id, _inputs):
     raise VentureBuiltinSPMethodError("Request not implemented!")

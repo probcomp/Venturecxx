@@ -168,10 +168,7 @@ class RestoringTraceHandle(TraceHandle):
       trace, sp_addr)
     self.restorer = restorer
 
-  def new_request(self, request_id, exp, env):
-    # TODO return Node(value, address) so that SPs don't have to use
-    # requestedValue all the time; this way the untraced interpreter
-    # doesn't have to retain requests with non-repeatable request_ids.
+  def restore_request(self, request_id, exp, env):
     addr = self.request_address(request_id)
     w, _ = self.restorer.eval_family(addr, exp, env)
     assert w == 0
