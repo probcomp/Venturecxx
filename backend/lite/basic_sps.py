@@ -146,6 +146,18 @@ registerBuiltinSP("dict",
           "are not the same length."))
 registerBuiltinSP("is_dict", type_test(t.DictType()))
 
+registerBuiltinSP("keys",
+  deterministic_typed(lambda d: d.keys(),
+    [t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v"))],
+    t.HomogeneousListType(t.AnyType("k")),
+    descr="keys returns a list of keys of the given dictionary."))
+
+registerBuiltinSP("values",
+  deterministic_typed(lambda d: d.values(),
+    [t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v"))],
+    t.HomogeneousListType(t.AnyType("v")),
+    descr="values returns a list of values of the given dictionary."))
+
 registerBuiltinSP("lookup", deterministic_typed(lambda xs, x: xs.lookup(x),
     [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v")), t.AnyType("k")],
     t.AnyType("v"),
