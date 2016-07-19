@@ -18,6 +18,12 @@ class VentureSP(VentureValue):
   def logDensity(self, _value, _inputs):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
 
+  def proposal_kernel(self, trace_handle, application_id):
+    return DefaultProposalKernel(self, trace_handle, application_id)
+
+  def constrained_kernel(self, _trace_handle, _application_id, _val):
+    return NotImplemented
+
   def show(self):
     return "<procedure>"
 
@@ -26,6 +32,35 @@ class VentureSP(VentureValue):
 
   def asStackDict(self, _trace=None):
     return v.sp(self.show(), self.extractStateAsVentureValue().asStackDict())
+
+class ApplicationKernel(object):
+  def extract(self, _output, _inputs):
+    raise VentureBuiltinSPMethodError("Extract not implemented")
+
+  def regen(self, _inputs):
+    raise VentureBuiltinSPMethodError("Regen not implemented")
+
+  def restore(self, _inputs, _trace_fragment):
+    raise VentureBuiltinSPMethodError("Restore not implemented")
+
+class DefaultProposalKernel(ApplicationKernel):
+  def __init__(self, sp, trace_handle, application_id):
+    self.sp = sp
+    self.trace_handle = trace_handle
+    self.application_id = application_id
+
+  def extract(self, output, inputs):
+    return (0, self.sp.unapply(
+      self.trace_handle, self.application_id, output, inputs))
+
+  def regen(self, inputs):
+    return (0, self.sp.apply(
+      self.trace_handle, self.application_id, inputs))
+
+  def restore(self, inputs, trace_fragment):
+    return self.sp.restore(
+      self.trace_handle, self.application_id, inputs, trace_fragment)
+
 
 class SimulationSP(VentureSP):
   @override(VentureSP)
@@ -56,6 +91,7 @@ class SimulationSP(VentureSP):
 
   def unincorporate(self, output, inputs):
     pass
+
 
 class RequestReferenceSP(VentureSP):
   def __init__(self):
