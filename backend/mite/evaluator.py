@@ -168,12 +168,6 @@ class RegeneratingTraceHandle(TraceHandle):
       trace, sp_addr)
     self.regenerator = regenerator
 
-  def restore_request(self, request_id, exp, env):
-    addr = self.request_address(request_id)
-    w, _ = self.regenerator.eval_family(addr, exp, env)
-    assert w == 0
-    return request_id
-
   def free_request(self, request_id):
     addr = self.request_address(request_id)
     (exp, env) = self.trace.requests[addr]
@@ -181,3 +175,8 @@ class RegeneratingTraceHandle(TraceHandle):
     assert w == 0
     return request_id
 
+  def restore_request(self, request_id, exp, env):
+    addr = self.request_address(request_id)
+    w, _ = self.regenerator.eval_family(addr, exp, env)
+    assert w == 0
+    return request_id
