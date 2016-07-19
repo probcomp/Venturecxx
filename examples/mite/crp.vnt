@@ -1,3 +1,5 @@
+;;; using the CRP trace defined in mite.sps.crp_state
+;;; test invoking the trace actions directly
 [define example1
   (let ((alpha 1)
         (simulate
@@ -30,6 +32,7 @@
                          (return (list x1 x2 x3 x4 x5)))
                      (crp_state)))))]
 
+;;; utility for wrapping a trace action as an exchangeable procedure
 [define make_exchangeable_sp
   (lambda (apply_proc initial_state)
     (let ((state (copy initial_state)))
@@ -38,6 +41,7 @@
               (result ((action_func act) state)))
           (first result)))))]
 
+;;; CRP as an exchangeable procedure
 [define make_crp_x
   (lambda (alpha)
     (make_exchangeable_sp
@@ -52,6 +56,7 @@
            (return table)))
      (crp_state)))]
 
+;;; rejection sampling example (with manual rejection loop)
 [define example2
   (lambda ()
     (do (let loop

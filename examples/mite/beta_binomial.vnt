@@ -1,8 +1,11 @@
+;;; beta-binomial as an uncollapsed compound procedure
 [define make_beta_binomial
   (lambda (a b)
     (let ((theta (beta a b)))
       (lambda (n) (binomial n theta))))]
 
+;;; using the binomial trace defined in mite.sps.binomial_state
+;;; test invoking the trace actions directly
 [define example1
   (let ((a 1) (b 1)
         (simulate
@@ -32,6 +35,7 @@
                          (return (+ x1 x2 x3 x4 x5)))
                      (binomial_state)))))]
 
+;;; utility for wrapping a trace action as an exchangeable procedure
 [define make_exchangeable_sp
   (lambda (apply_proc initial_state)
     (let ((state (copy initial_state)))
@@ -40,6 +44,7 @@
               (result ((action_func act) state)))
           (first result)))))]
 
+;;; collapsed beta binomial as an exchangeable procedure
 [define make_beta_binomial_x
   (lambda (a b)
     (make_exchangeable_sp
@@ -52,6 +57,7 @@
            (return k)))
      (binomial_state)))]
 
+;;; rejection sampling example (with manual rejection loop)
 [define example2
   (lambda ()
     (do (let loop
