@@ -52,7 +52,7 @@ class ITrace(object):
   def extract(self, subproblem):
     raise NotImplementedError
 
-  def regen(self, subproblem):
+  def regen(self, subproblem, trace_fragment):
     raise NotImplementedError
 
   def restore(self, subproblem, trace_fragment):
@@ -276,8 +276,8 @@ class FlatTrace(AbstractTrace):
       weight += x.uneval_family(addr, exp, env)
     return (weight, x.fragment)
 
-  def regen(self, subproblem):
-    x = Regenerator(self, subproblem)
+  def regen(self, subproblem, trace_fragment):
+    x = Regenerator(self, subproblem, trace_fragment)
     weight = 0
     for i in range(self.directive_counter):
       addr = addresses.directive(i+1)
@@ -306,7 +306,7 @@ register_trace_type("_trace", ITrace, {
   "select": trace_action("select", [t.Object], t.Blob),
   "pyselect": trace_action("pyselect", [t.String], t.Blob),
   "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
-  "regen": trace_action("regen", [t.Blob], t.Number),
+  "regen": trace_action("regen", [t.Blob, t.Blob], t.Number),
   "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),
 })
 

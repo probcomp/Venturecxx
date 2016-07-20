@@ -23,8 +23,8 @@
         (let loop
             (lambda (loop)
               (do (s <- (select nil))
-                  (extract s)
-                  (regen s)
+                  (rho <- (extract s))
+                  (regen s (rest rho))
                   (consistent <- (check_consistent))
                   (if consistent
                       (return nil)
@@ -58,7 +58,7 @@
                 (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1))))
                 (s <- (select nil))
                 (rho <- (extract s))
-                (xi <- (regen s))
+                (xi <- (regen s (rest rho)))
                 (extract s)
                 (restore s (rest rho))
                 (predict (debug 'xyz (list (f 0) (f 1) (f 2) (f 1))))
@@ -81,11 +81,11 @@
                 (s <- (pyselect "{
                          directive(2): {'type': 'proposal'}
                        }"))
-                (extract s)
-                (regen s)
+                (rho <- (extract s))
+                (regen s (rest rho))
                 (s <- (pyselect "{
                          directive(1): {'type': 'proposal'}
                        }"))
-                (extract s)
-                (regen s))
+                (rho <- (extract s))
+                (regen s (rest rho)))
             (flat_trace)))]
