@@ -157,7 +157,7 @@ class Regenerator(Evaluator):
       kernel = sp.proposal_kernel(handle, addr)
 
     (weight, fragment) = kernel.extract(value, args)
-    self.fragment[addr] = fragment
+    self.fragment[addr] = (fragment, sp, args)
     return weight
 
   def apply_sp(self, addr, sp_node, args):
@@ -168,8 +168,29 @@ class Regenerator(Evaluator):
     kernel = self.scaffold.kernel_at(sp, handle, addr)
     if kernel is None:
       kernel = sp.proposal_kernel(handle, addr)
+      fragment = self.fragment_to_maybe_restore(addr, sp, args)
+    else:
+      fragment = None
 
-    return kernel.regen(args)
+    if fragment is not None:
+      return (0, kernel.restore(args, fragment["value"]))
+    else:
+      return kernel.regen(args)
+
+  def fragment_to_maybe_restore(self, addr, sp, args):
+    if addr not in self.fragment:
+      # nothing to restore
+      return None
+    else:
+      (fragment, old_sp, old_args) = self.fragment[addr]
+      # check if the parents have changed
+      if old_sp is not sp:
+        return None
+      for (arg, old_arg) in zip(args, old_args):
+        if arg.value != old_arg.value:
+          return None
+      # wrap it in a dict to distinguish from None
+      return {"value": fragment}
 
 
 class Restorer(Regenerator):
@@ -184,8 +205,9 @@ class Restorer(Regenerator):
     if kernel is None:
       kernel = sp.proposal_kernel(handle, addr)
 
-    fragment = self.fragment[addr]
-    return (0, kernel.restore(args, fragment))
+    fragment = self.fragment_to_maybe_restore(addr, sp, args)
+    assert fragment is not None
+    return (0, kernel.restore(args, fragment["value"]))
 
 
 class RegeneratingTraceHandle(TraceHandle):
