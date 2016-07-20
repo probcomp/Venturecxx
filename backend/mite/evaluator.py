@@ -108,14 +108,14 @@ class TraceHandle(object):
 
 
 class Regenerator(Evaluator):
-  """Unevaluate and restore from a trace fragment."""
+  """Unevaluate and regenerate according to a scaffold."""
 
-  def __init__(self, trace, fragment=None):
+  def __init__(self, trace, scaffold, fragment=None):
     self.trace = trace
+    self.scaffold = scaffold
     if fragment is None:
       fragment = {} # addr -> result value
     self.fragment = fragment
-    self.kernels = {}
 
   def uneval_family(self, addr, exp, env):
     weight = 0
@@ -151,9 +151,11 @@ class Regenerator(Evaluator):
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
-    kernel = self.kernels.get(addr)
+
+    kernel = self.scaffold.kernel_at(sp, handle, addr)
     if kernel is None:
       kernel = sp.proposal_kernel(handle, addr)
+
     (weight, fragment) = kernel.extract(value, args)
     self.fragment[addr] = fragment
     return weight
@@ -162,9 +164,26 @@ class Regenerator(Evaluator):
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
-    kernel = self.kernels.get(addr)
+
+    kernel = self.scaffold.kernel_at(sp, handle, addr)
     if kernel is None:
       kernel = sp.proposal_kernel(handle, addr)
+
+    return kernel.regen(args)
+
+
+class Restorer(Regenerator):
+  """Restore from the trace fragment produced by uneval."""
+
+  def apply_sp(self, addr, sp_node, args):
+    sp = sp_node.value
+    handle = RegeneratingTraceHandle(
+      self.trace, sp_node.address, self)
+
+    kernel = self.scaffold.kernel_at(sp, handle, addr)
+    if kernel is None:
+      kernel = sp.proposal_kernel(handle, addr)
+
     fragment = self.fragment[addr]
     return (0, kernel.restore(args, fragment))
 

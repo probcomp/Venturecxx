@@ -12,7 +12,7 @@ from venture.lite.value import SPRef
 
 from venture.untraced.node import Node, normalize
 
-from venture.mite.evaluator import Evaluator, Regenerator
+from venture.mite.evaluator import Evaluator, Regenerator, Restorer
 from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
@@ -258,8 +258,12 @@ class FlatTrace(AbstractTrace):
     self.results[addr] = sp
     return sp
 
+  def select(self, _selector):
+    from venture.mite.scaffold import DefaultAllScaffold
+    return DefaultAllScaffold()
+
   def extract(self, subproblem):
-    x = Regenerator(self)
+    x = Regenerator(self, subproblem)
     weight = 0
     for i in reversed(range(self.directive_counter)):
       addr = addresses.directive(i+1)
@@ -268,7 +272,7 @@ class FlatTrace(AbstractTrace):
     return (weight, x.fragment)
 
   def regen(self, subproblem):
-    x = Evaluator(self)
+    x = Regenerator(self, subproblem)
     weight = 0
     for i in range(self.directive_counter):
       addr = addresses.directive(i+1)
@@ -278,7 +282,7 @@ class FlatTrace(AbstractTrace):
     return weight
 
   def restore(self, subproblem, trace_fragment):
-    x = Regenerator(self, trace_fragment)
+    x = Restorer(self, subproblem, trace_fragment)
     for i in range(self.directive_counter):
       addr = addresses.directive(i+1)
       (exp, env) = self.requests[addr]
@@ -294,9 +298,10 @@ register_trace_type("_trace", ITrace, {
   "value_at": trace_action("value_at", [t.Blob], t.Object),
   "check_consistent": trace_action("check_consistent", [], t.Bool),
   "split_trace": trace_action("copy", [], t.Blob),
-  "extract": trace_action("extract", [t.Object], t.Pair(t.Number, t.Blob)),
-  "regen": trace_action("regen", [t.Object], t.Number),
-  "restore": trace_action("restore", [t.Object, t.Blob], t.Nil),
+  "select": trace_action("select", [t.Object], t.Blob),
+  "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
+  "regen": trace_action("regen", [t.Blob], t.Number),
+  "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),
 })
 
 
