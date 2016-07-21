@@ -73,3 +73,19 @@
               (predict (debug 'theta theta))))
          (flat_trace)))]
 
+[define example6
+  (lambda ()
+    (run_in (do (assume x (normal 0 1))
+                (assume y (normal x 1))
+                (predict (debug 'xy (list x y)))
+                (s <- (pyselect "{
+                         directive(2): {'type': 'proposal'}
+                       }"))
+                (extract s)
+                (regen s)
+                (s <- (pyselect "{
+                         directive(1): {'type': 'proposal'}
+                       }"))
+                (extract s)
+                (regen s))
+            (flat_trace)))]
