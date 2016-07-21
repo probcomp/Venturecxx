@@ -89,3 +89,48 @@
                 (rho <- (extract s))
                 (regen s (rest rho)))
             (flat_trace)))]
+
+[define incorporate_constraint
+  (lambda (subproblem)
+    (do (rev <- (extract subproblem))
+        (let trace_frag (rest rev))
+        (regen subproblem trace_frag)))]
+
+[define resimulation_step
+  (lambda (subproblem)
+    (do (rev <- (extract subproblem))
+        (let w_rev (first rev))
+        (let trace_frag (rest rev))
+        (w_fwd <- (regen subproblem trace_frag))
+        (if (log_flip (- w_fwd w_rev))
+            (return nil)
+            (do (extract subproblem)
+                (restore subproblem trace_frag)))))]
+
+[define repeat
+  (lambda (n act)
+    (if (<= n 0)
+        (return nil)
+        (do act (repeat (- n 1) act))))]
+
+[define example7
+  (lambda ()
+    (run_in (do (assume x (normal 0 1))
+                (assume y (normal x 1))
+                (observe y 4)
+                (s <- (pyselectf "{
+                         directive(2): {'type': 'constrained',
+                                        'val': y}
+                       }" (dict (list 'y) (list 4))))
+                (weight <- (incorporate_constraint s))
+                (return (debug 'weight weight))
+                (repeat 100
+                  (do (s <- (pyselectf "{
+                               directive(1): {'type': 'proposal'},
+                               directive(2): {'type': 'constrained',
+                                              'val': y}
+                             }" (dict (list 'y) (list 4))))
+                      (resimulation_step s)
+                      (x <- (predict x))
+                      (return (debug 'x x)))))
+            (flat_trace)))]
