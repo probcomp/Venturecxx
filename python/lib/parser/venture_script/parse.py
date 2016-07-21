@@ -26,32 +26,49 @@ import venture.value.dicts as val
 from venture.parser.venture_script import grammar
 from venture.parser.venture_script import scan
 
+# Data structures
+# A "Token" is a 3-tuple consisting of a value, a start index, and an
+#   end index.
+# A "Located" object is a dict with that object in the "value" field
+#   and a location in the "loc" field.  The location is a 2-list of a
+#   start index and an end index.
+
 def tokval((value, _start, _end)):
+    "The value in a token."
     return value
 
 def isloc(obj):
+    "Is the argument a Located object?"
     return isinstance(obj, dict) and sorted(obj.keys()) == ['loc', 'value']
 
 def located(loc, value):
+    "Construct a Located object from a value and a location."
     # XXX Use a namedtuple, not a dict.
     return {'loc': loc, 'value': value}
 
 def locval(lv, v):
+    "Update (functionally) the value of the given located object with the given one."
     return {'loc': lv['loc'], 'value': v}
 
 def locmap(l, f):
+    "Map f over the value field of the given Located object."
     return {'loc': l['loc'], 'value': f(l['value'])}
 
 def locmerge(lv0, lv1, v):
+    "Construct a Located object with the given value that spans the extent of the given Located objects."
     start0, end0 = lv0['loc']
     start1, end1 = lv1['loc']
     assert start0 < end1
     return {'loc': [start0, end1], 'value': v}
 
 def loctoken((value, start, end)):
+    "Convert a Token to an equivalent Located object."
     return located([start, end], value)
 
 def loctoken1((_value, start, end), value):
+    """Construct a Located object at the given token's location with the given value.
+
+This is the composition of loctoken with locval."""
     return located([start, end], value)
 
 def locquoted((_value, start, _end), located_value, f):
@@ -60,12 +77,14 @@ def locquoted((_value, start, _end), located_value, f):
     return located([start, vend], f(located_value))
 
 def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
+    "Analog of locmerge for boundaries given by tokens."
     assert ostart <= oend
     assert oend < cstart
     assert cstart <= cend
     return located([ostart, cend], value)
 
 def loclist(items):
+    "Make a Located list of Located items, that spans their total extent."
     assert len(items) >= 1
     (start, _) = items[0]['loc']
     (_, end) = items[-1]['loc']
@@ -75,6 +94,7 @@ def expression_evaluation_instruction(e):
     return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
 
 def delocust(l):
+    "Recursively remove location tags."
     # XXX Why do we bother with tuples in the first place?
     if isinstance(l['value'], list) or isinstance(l['value'], tuple):
         return [delocust(v) for v in l['value']]
