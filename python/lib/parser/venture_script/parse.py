@@ -354,35 +354,27 @@ class Semantics(object):
         return locmerge(more, s, app)
 
     def p_path_step_tag(self, q, tag):
-        # XXX Is this just a _p_unop with the "question mark" operator?
         by_tag = loctoken1(q, val.symbol('by_tag'))
-        # TODO Should a bare name in this position be a symbol or a string?
-        # Symbol is more natural, and supports quasi-quotation better.
-        # String better agrees with the current practice of using
-        # strings as scope names. (Which, actually, may turn back into
-        # symbols when I implement that syntactic sugar...).
-        # Choosing string for now; to turn into symbol, replace
-        # locmap val.string with locquoted val.quasiquote
-        name = locmap(loctoken(tag), val.string)
+        name = locquoted(q, loctoken(tag), val.quasiquote)
         app = [by_tag, name]
         return locmerge(by_tag, name, app)
 
     def p_path_step_tag_val(self, q, tag, eq, value):
         by_tag_value = loctoken1(q, val.symbol('by_tag_value'))
-        name = locmap(loctoken(tag), val.string)
+        name = locquoted(q, loctoken(tag), val.quasiquote)
         app = [by_tag_value, name, value]
         return locmerge(by_tag_value, value, app)
 
     def p_hash_tag_tag(self, e, h, tag):
         tag_proc = loctoken1(h, val.symbol('tag'))
-        name = locmap(loctoken(tag), val.string)
+        name = locquoted(h, loctoken(tag), val.quasiquote)
         value = loctoken1(h, val.string("default"))
         app = [tag_proc, name, value, e]
         return locmerge(e, tag_proc, app)
 
     def p_hash_tag_tag_val(self, e, h, tag, colon, value):
         tag_proc = loctoken1(h, val.symbol('tag'))
-        name = locmap(loctoken(tag), val.string)
+        name = locquoted(h, loctoken(tag), val.quasiquote)
         app = [tag_proc, name, value, e]
         return locmerge(e, value, app)
 
