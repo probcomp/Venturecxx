@@ -35,42 +35,67 @@
                          (return (+ x1 x2 x3 x4 x5)))
                      (binomial_state)))))]
 
-;;; utility for wrapping a trace action as an exchangeable procedure
-[define make_exchangeable_sp
-  (lambda (apply_proc initial_state)
-    (let ((state (copy initial_state)))
-      (lambda (arg)
-        (let ((act (apply_proc arg))
-              (result ((action_func act) state)))
-          (first result)))))]
+;;; collapsed beta binomial as a simulation procedure
+[define make_beta_binomial_s_defn
+  '(lambda (a b)
+     (make_simulation_sp
+      `((a ,a) (b ,b)
+        (trace (binomial_state))
+        (simulate
+         (lambda (n)
+           (do (N <- (binomial_N))
+               (K <- (binomial_K))
+               (let theta (beta (+ a K) (+ b (- N K))))
+               (return (binomial n theta)))))
+        (incorporate
+         (lambda (k n)
+           (binomial_add n k)))
+        (unincorporate
+         (lambda (k n)
+           (binomial_remove n k))))))]
 
-;;; collapsed beta binomial as an exchangeable procedure
-[define make_beta_binomial_x
-  (lambda (a b)
-    (make_exchangeable_sp
-     (lambda (n)
-       (do (N <- (binomial_N))
-           (K <- (binomial_K))
-           (let theta (beta (+ a K) (+ b (- N K))))
-           (let k (binomial n theta))
-           (binomial_add n k)
-           (return k)))
-     (binomial_state)))]
-
-;;; rejection sampling example (with manual rejection loop)
+;;; basic example
 [define example2
   (lambda ()
+    (run_in
+     (do (assume make_beta_binomial_s ,make_beta_binomial_s_defn)
+         (assume f (make_beta_binomial_s 1 1))
+         (assume x1 (f 10))
+         (assume x2 (f 10))
+         (assume x3 (f 10))
+         (assume x4 (f 10))
+         (assume x5 (f 10))
+         (result <- (predict (+ x1 x2 x3 x4 x5)))
+         (return (debug 'result result)))
+     (blank_trace)))]
+
+;;; rejection sampling example
+[define rejection
+  (lambda ()
     (do (let loop
-            (lambda (loop n)
-              (if (= n 0) nil
-                  (let ((f (make_beta_binomial_x 1 1))
-                        (y (f 9))
-                        (x (f 1)))
-                    (if (= y 9)
-                        (let ((_ (debug 'x  x)))
-                          (loop loop (- n 1)))
-                        (loop loop n))))))
-        (loop loop 10)))]
+            (lambda (loop)
+              (do (s <- (select nil))
+                  (rho <- (extract s))
+                  (regen s (rest rho))
+                  (consistent <- (check_consistent))
+                  (if consistent
+                      (return nil)
+                      (loop loop)))))
+        (loop loop)))]
+
+[define example2b
+  (lambda ()
+    (run_in
+     (do (assume make_beta_binomial_s ,make_beta_binomial_s_defn)
+         (assume f (make_beta_binomial_s 1 1))
+         (assume y (f 4))
+         (assume x (f 1))
+         (observe y 4)
+         (repeat 10
+           (do (rejection)
+               (x <- (predict x))
+               (return (debug 'x x)))))
+     (flat_trace)))]
 
 ;;; emulating the binomial trace using the Venture trace
 
