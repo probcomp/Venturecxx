@@ -373,11 +373,25 @@ class Semantics(object):
         app = [by_tag_value, name, value]
         return locmerge(by_tag_value, value, app)
 
+    def p_hash_tag_tag(self, e, h, tag):
+        tag_proc = loctoken1(h, val.symbol('tag'))
+        name = locmap(loctoken(tag), val.string)
+        value = loctoken1(h, val.string("default"))
+        app = [tag_proc, name, value, e]
+        return locmerge(e, tag_proc, app)
+
+    def p_hash_tag_tag_val(self, e, h, tag, colon, value):
+        tag_proc = loctoken1(h, val.symbol('tag'))
+        name = locmap(loctoken(tag), val.string)
+        app = [tag_proc, name, value, e]
+        return locmerge(e, value, app)
+
     p_do_bind_none = _p_exp
     p_action_none = _p_exp
     p_arrow_pathexp = _p_exp
     p_arrow_none = _p_exp
     p_path_step_edge = _p_exp
+    p_hash_tag_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop

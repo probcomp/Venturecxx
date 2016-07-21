@@ -161,17 +161,15 @@ def testSugaryPoster():
   r = get_ripl(seed=0)
   r.set_mode("venture_script")
   r.execute_program("""
-assume alpha    ~ tag("hyper", "conc", gamma(1.0, 1.0));     // Concentration parameter
+assume alpha    ~ gamma(1.0, 1.0) #hyper:"conc";     // Concentration parameter
 assume assign   = make_crp(alpha);                   // Choose the CRP representation
 assume z        = mem((i) ~> { assign() });          // The partition on i induced by the DP
-assume pct      = mem((d) ~> { tag("hyper", d, gamma(1.0, 1.0)) });           // Per-dimension hyper prior
-assume theta    = mem((z, d) ~> { tag("compt", d, beta(pct(d), pct(d))) });   // Per-component latent
-assume datum    = mem((i, d) ~> {                    // Per-datapoint:
-  tag("row", i,
-  tag("col", d, {
-    cmpt ~ tag("clustering", pair(i, d), z(i));      // Select cluster
-    weight ~ theta(cmpt, d);                         // Fetch latent weight
-    flip(weight)}))});                               // Apply component model
+assume pct      = mem((d) ~> { gamma(1.0, 1.0) #hyper:d });           // Per-dimension hyper prior
+assume theta    = mem((z, d) ~> { beta(pct(d), pct(d)) #compt:d });   // Per-component latent
+assume datum    = mem((i, d) ~> {{                   // Per-datapoint:
+  cmpt ~ z(i) #clustering;                           // Select cluster
+  weight ~ theta(cmpt, d);                           // Fetch latent weight
+  flip(weight)} #row:i #col:d});                     // Apply component model
 """)
   dataset = [[0, 0, 0, 0, 0, 0],
              [1, 0, 0, 1, 0, 0],
