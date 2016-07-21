@@ -69,3 +69,45 @@ def testExtractRestore(trace):
 """ % trace)
   rho_z, xi_z = result
   assert_equal(rho_z, xi_z)
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testExtractRegenLambda(trace):
+  if trace == "graph_trace":
+    raise SkipTest("regen not yet implemented for graph trace")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y (normal x 1))
+            (assume f (lambda (x y) (+ x y 1)))
+            (z <- (predict (f x y)))
+            (s <- (select nil))
+            (weight_and_fragment <- (extract s))
+            (regen s (rest weight_and_fragment))
+            (z_ <- (predict (f x y)))
+            (return (list z z_)))
+        (%s))
+""" % trace)
+  rho_z, xi_z = result
+  assert_not_equal(rho_z, xi_z)
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testExtractRestoreLambda(trace):
+  if trace == "graph_trace":
+    raise SkipTest("regen not yet implemented for graph trace")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y (normal x 1))
+            (assume f (lambda (x y) (+ x y 1)))
+            (z <- (predict (f x y)))
+            (s <- (select nil))
+            (weight_and_fragment <- (extract s))
+            (restore s (rest weight_and_fragment))
+            (z_ <- (predict (f x y)))
+            (return (list z z_)))
+        (%s))
+""" % trace)
+  rho_z, xi_z = result
+  assert_equal(rho_z, xi_z)
