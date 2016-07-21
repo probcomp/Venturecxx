@@ -262,6 +262,11 @@ class FlatTrace(AbstractTrace):
     from venture.mite.scaffold import DefaultAllScaffold
     return DefaultAllScaffold()
 
+  def pyselect(self, code):
+    from venture.mite.scaffold import MinimalScaffold
+    selector = eval(code, vars(addresses))
+    return MinimalScaffold(selector)
+
   def extract(self, subproblem):
     x = Regenerator(self, subproblem)
     weight = 0
@@ -299,6 +304,7 @@ register_trace_type("_trace", ITrace, {
   "check_consistent": trace_action("check_consistent", [], t.Bool),
   "split_trace": trace_action("copy", [], t.Blob),
   "select": trace_action("select", [t.Object], t.Blob),
+  "pyselect": trace_action("pyselect", [t.String], t.Blob),
   "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
   "regen": trace_action("regen", [t.Blob], t.Number),
   "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),
