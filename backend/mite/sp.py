@@ -106,7 +106,7 @@ class SimulationConstrainedKernel(ApplicationKernel):
 
   def extract(self, output, inputs):
     input_values = [node.value for node in inputs]
-    self.unincorporate(output, input_values)
+    self.sp.unincorporate(output, input_values)
     if output == self.val:
       weight = self.sp.logDensity(output, input_values)
     else:
@@ -117,12 +117,12 @@ class SimulationConstrainedKernel(ApplicationKernel):
     input_values = [node.value for node in inputs]
     output = self.val
     weight = self.sp.logDensity(output, input_values)
-    self.incorporate(output, input_values)
+    self.sp.incorporate(output, input_values)
     return (weight, output)
 
   def restore(self, inputs, output):
     input_values = [node.value for node in inputs]
-    self.incorporate(output, input_values)
+    self.sp.incorporate(output, input_values)
     return output
 
 
