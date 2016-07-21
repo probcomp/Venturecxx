@@ -128,7 +128,7 @@ class Regenerator(Evaluator):
       # unapply
       value = self.trace.value_at(addr)
       if isinstance(value, SPRef) and value.makerNode is addr:
-        value = self.unregister_made_sp(addr)
+        value = self.trace.unregister_made_sp(addr)
       self.trace.unregister_application(addr)
 
       nodes = []
