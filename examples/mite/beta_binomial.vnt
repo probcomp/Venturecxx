@@ -71,3 +71,67 @@
                           (loop loop (- n 1)))
                         (loop loop n))))))
         (loop loop 10)))]
+
+;;; emulating the binomial trace using the Venture trace
+
+[define v_binomial_state
+  (lambda ()
+    (run_in (do (assume N (poisson 1))
+                (assume K (poisson 1))
+                (v_binomial_set 0 0)
+                (split_trace))
+            (flat_trace)))]
+
+[define v_binomial_set
+  (lambda (N K)
+    (do (s <- (pyselectf "{
+  directive(1): {'type': 'constrained', 'val': N},
+  directive(2): {'type': 'constrained', 'val': K}
+}" (dict (list 'N 'K) (list N K))))
+        (rev <- (extract s))
+        (regen s (rest rev))))]
+
+[define v_binomial_N
+  (lambda () (predict N))]
+[define v_binomial_K
+  (lambda () (predict K))]
+[define v_binomial_add
+  (lambda (n k)
+    (do (N <- (predict N))
+        (K <- (predict K))
+        (v_binomial_set (+ N n) (+ K k))))]
+[define v_binomial_remove
+  (lambda (n k)
+    (do (N <- (predict N))
+        (K <- (predict K))
+        (v_binomial_set (- N n) (- K k))))]
+
+;;; a version of example1 using the emulated trace
+[define example3
+  (let ((a 1) (b 1)
+        (simulate
+         (lambda (n)
+           (do (N <- (v_binomial_N))
+               (K <- (v_binomial_K))
+               (let theta (beta (+ a K) (+ b (- N K))))
+               (return (binomial n theta)))))
+        (incorporate
+         (lambda (k n)
+           (v_binomial_add n k)))
+        (unincorporate
+         (lambda (k n)
+           (v_binomial_remove n k))))
+    (lambda ()
+      (debug 'results
+             (run_in (do (x1 <- (simulate 10))
+                         (incorporate x1 10)
+                         (x2 <- (simulate 10))
+                         (incorporate x2 10)
+                         (x3 <- (simulate 10))
+                         (incorporate x3 10)
+                         (x4 <- (simulate 10))
+                         (incorporate x4 10)
+                         (x5 <- (simulate 10))
+                         (incorporate x5 10)
+                         (return (+ x1 x2 x3 x4 x5)))
+                     (v_binomial_state)))))]
