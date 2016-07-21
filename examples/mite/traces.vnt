@@ -108,12 +108,6 @@
             (do (extract subproblem)
                 (restore subproblem trace_frag)))))]
 
-[define repeat
-  (lambda (n act)
-    (if (<= n 0)
-        (return nil)
-        (do act (repeat (- n 1) act))))]
-
 [define example7
   (lambda ()
     (run_in (do (assume x (normal 0 1))

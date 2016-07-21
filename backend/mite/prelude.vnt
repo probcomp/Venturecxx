@@ -25,6 +25,12 @@
     (let ((result ((action_func act) (copy state))))
       (first result)))]
 
+[define repeat
+  (lambda (n act)
+    (if (<= n 0)
+        (return nil)
+        (do act (repeat (- n 1) act))))]
+
 ;; trace interface
 
 [define eval_toplevel
