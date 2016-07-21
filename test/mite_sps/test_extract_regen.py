@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import assert_equal, assert_not_equal, make_decorator
+import scipy
+
+from nose.tools import assert_equal, assert_not_equal, assert_almost_equal
+from nose.tools import make_decorator
 from nose import SkipTest
 
 from venture.test.config import get_ripl
@@ -111,3 +114,78 @@ def testExtractRestoreLambda(trace):
 """ % trace)
   rho_z, xi_z = result
   assert_equal(rho_z, xi_z)
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testSelectRegen1(trace):
+  if trace == "graph_trace":
+    raise SkipTest("regen not yet implemented for graph trace")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y (normal x 1))
+            (assume f (lambda (x y) (+ x y 1)))
+            (z <- (predict (list x y)))
+            (s <- (pyselect "{
+                     directive(2): {'type': 'proposal'}
+                   }"))
+            (weight_and_fragment <- (extract s))
+            (regen s (rest weight_and_fragment))
+            (z_ <- (predict (list x y)))
+            (return (list z z_)))
+        (%s))
+""" % trace)
+  (x, y), (x_, y_) = result
+  assert_equal(x, x_)
+  assert_not_equal(y, y_)
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testSelectRegen2(trace):
+  if trace == "graph_trace":
+    raise SkipTest("regen not yet implemented for graph trace")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y (normal x 1))
+            (assume f (lambda (x y) (+ x y 1)))
+            (z <- (predict (list x y)))
+            (s <- (pyselect "{
+                     directive(1): {'type': 'proposal'}
+                   }"))
+            (weight_and_fragment <- (extract s))
+            (regen s (rest weight_and_fragment))
+            (z_ <- (predict (list x y)))
+            (return (list z z_)))
+        (%s))
+""" % trace)
+  (x, y), (x_, y_) = result
+  assert_not_equal(x, x_)
+  assert_not_equal(y, y_)
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testSelectRegen3(trace):
+  if trace == "graph_trace":
+    raise SkipTest("regen not yet implemented for graph trace")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y (normal x 1))
+            (assume f (lambda (x y) (+ x y 1)))
+            (z <- (predict (list x y)))
+            (s <- (pyselectf "{
+                     directive(2): {'type': 'constrained',
+                                    'val': y}
+                   }" (dict (list 'y) (list 4))))
+            (weight_and_fragment <- (extract s))
+            (weight <- (regen s (rest weight_and_fragment)))
+            (z_ <- (predict (list x y)))
+            (return (list z z_ weight)))
+        (%s))
+""" % trace)
+  (x, y), (x_, y_), weight = result
+  assert_equal(x, x_)
+  assert_not_equal(y, y_)
+  assert_equal(y_, 4)
+  assert_almost_equal(weight, scipy.stats.norm(x_, 1).logpdf(y_))
