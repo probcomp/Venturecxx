@@ -32,37 +32,34 @@
                          (return (list x1 x2 x3 x4 x5)))
                      (crp_state)))))]
 
-;;; utility for wrapping a trace action as an exchangeable procedure
-[define make_exchangeable_sp_defn
-  '(lambda (apply_proc initial_state)
-     (let ((state (copy initial_state)))
-       (lambda ()
-         (let ((act (apply_proc))
-               (result ((action_func act) state)))
-           (first result)))))]
-
-;;; CRP as an exchangeable procedure
-[define make_crp_x_defn
+;;; CRP as a simulation procedure
+[define make_crp_s_defn
   '(lambda (alpha)
-     (make_exchangeable_sp
-      (lambda ()
-        (do (table_counts <- (crp_table_counts))
-            (next_table <- (crp_next_table))
-            (let occupied (keys table_counts))
-            (let counts (values table_counts))
-            (let table (categorical (normalize (pair alpha (to_list counts)))
-                                    (pair next_table (to_list occupied))))
-            (crp_seat table 1)
-            (return table)))
-      (crp_state)))]
+     (make_simulation_sp
+      `((alpha ,alpha)
+        (trace (crp_state))
+        (simulate
+         (lambda ()
+           (do (table_counts <- (crp_table_counts))
+               (next_table <- (crp_next_table))
+               (let occupied (keys table_counts))
+               (let counts (values table_counts))
+               (let table (categorical (dirichlet (pair alpha (to_list counts)))
+                                       (pair next_table (to_list occupied))))
+               (return table))))
+        (incorporate
+         (lambda (table)
+           (crp_seat table 1)))
+        (unincorporate
+         (lambda (table)
+           (crp_seat table -1))))))]
 
 ;;; basic CRP example
 [define example2
   (lambda ()
     (run_in
-     (do (assume make_exchangeable_sp ,make_exchangeable_sp_defn)
-         (assume make_crp_x ,make_crp_x_defn)
-         (assume f (make_crp_x 1))
+     (do (assume make_crp_s ,make_crp_s_defn)
+         (assume f (make_crp_s 1))
          (assume x1 (f))
          (assume x2 (f))
          (assume x3 (f))
@@ -89,64 +86,7 @@
 [define example2b
   (lambda ()
     (run_in
-     (do (assume make_exchangeable_sp ,make_exchangeable_sp_defn)
-         (assume make_crp_x ,make_crp_x_defn)
-         (assume f (make_crp_x 1))
-         (assume x1 (f))
-         (assume x2 (f))
-         (assume x3 (f))
-         (assume x4 (f))
-         (assume x5 (f))
-         (observe (array x1 x2 x4 x5)
-                  (array atom<1> atom<2> atom<2> atom<2>))
-         (rejection)
-         (result <- (predict (list x1 x2 x3 x4 x5)))
-         (return (debug 'result result)))
-     (flat_trace)))]
-
-;;; CRP as a simulation procedure
-[define make_crp_s_defn
-  '(lambda (alpha)
-     (make_simulation_sp
-      `((alpha ,alpha)
-        (trace (crp_state))
-        (simulate
-         (lambda ()
-           (do (table_counts <- (crp_table_counts))
-               (next_table <- (crp_next_table))
-               (let occupied (keys table_counts))
-               (let counts (values table_counts))
-               (let table (categorical (dirichlet (pair alpha (to_list counts)))
-                                       (pair next_table (to_list occupied))))
-               (return table))))
-        (incorporate
-         (lambda (table)
-           (crp_seat table 1)))
-        (unincorporate
-         (lambda (table)
-           (crp_seat table -1))))))]
-
-;;; same as example2 but with make_crp_s
-[define example3
-  (lambda ()
-    (run_in
-     (do (assume make_exchangeable_sp ,make_exchangeable_sp_defn)
-         (assume make_crp_s ,make_crp_s_defn)
-         (assume f (make_crp_s 1))
-         (assume x1 (f))
-         (assume x2 (f))
-         (assume x3 (f))
-         (assume x4 (f))
-         (assume x5 (f))
-         (result <- (predict (list x1 x2 x3 x4 x5)))
-         (return (debug 'result result)))
-     (blank_trace)))]
-
-[define example3b
-  (lambda ()
-    (run_in
-     (do (assume make_exchangeable_sp ,make_exchangeable_sp_defn)
-         (assume make_crp_s ,make_crp_s_defn)
+     (do (assume make_crp_s ,make_crp_s_defn)
          (assume f (make_crp_s 1))
          (assume x1 (f))
          (assume x2 (f))
@@ -160,4 +100,3 @@
                (result <- (predict (list x1 x2 x3 x4 x5)))
                (return (debug 'result result)))))
      (flat_trace)))]
-
