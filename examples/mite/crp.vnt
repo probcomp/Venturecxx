@@ -74,3 +74,44 @@
                           (loop loop (- n 1)))
                         (loop loop n))))))
         (loop loop 10)))]
+
+;;; CRP as a simulation procedure
+[define make_crp_s
+  (lambda (alpha)
+    (make_simulation_sp
+     `((alpha ,alpha)
+       (trace (crp_state))
+       (simulate
+        (lambda ()
+          (do (table_counts <- (crp_table_counts))
+              (next_table <- (crp_next_table))
+              (let occupied (keys table_counts))
+              (let counts (values table_counts))
+              (let table (categorical (dirichlet (pair alpha (to_list counts)))
+                                      (pair next_table (to_list occupied))))
+              (return table))))
+       (incorporate
+        (lambda (table)
+          (crp_seat table 1)))
+       (unincorporate
+        (lambda (table)
+          (crp_seat table -1))))))]
+
+;;; same as example2 but with make_crp_s
+[define example3
+  (lambda ()
+    (do (let loop
+            (lambda (loop n)
+              (if (= n 0) nil
+                  (let ((f (make_crp_s 1))
+                        (x1 (f))
+                        (x2 (f))
+                        (x3 (f))
+                        (x4 (f))
+                        (x5 (f)))
+                    (if (= (array x1 x2 x2 x2)
+                           (array atom<1> atom<2> atom<2> atom<2>))
+                        (let ((_ (debug 'x x3)))
+                          (loop loop (- n 1)))
+                        (loop loop n))))))
+        (loop loop 10)))]
