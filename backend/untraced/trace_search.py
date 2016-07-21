@@ -252,6 +252,12 @@ upgrading), or dictionaries (pointwise, cross product if two)."""
 inf.registerBuiltinInferenceSP("by_intersection", \
     deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
 
+def by_slash_fun(left, right):
+  return Intersect(Extent(left), Extent(right))
+
+inf.registerBuiltinInferenceSP("by_slash", \
+    deterministic_typed(by_slash_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
+
 inf.registerBuiltinInferenceSP("by_tag", \
     deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType()))
 

@@ -244,6 +244,7 @@ class Semantics(object):
         ss['value'].append(s)
         return locmerge(ss, s, ss['value'])
 
+    # statement: Return located statement
     def p_statement_let(self, l, n, eq, e):
         assert isloc(e)
         let = loctoken1(l, val.symbol('let'))
@@ -337,9 +338,46 @@ class Semantics(object):
             locbracket(po, pc, params),
             body,
         ])
+
+    def p_path_expression_one(self, slash, s):
+        assert isloc(s)
+        top = loctoken1(slash, val.symbol('by_top'))
+        intersect = loctoken1(slash, val.symbol('by_slash'))
+        app = [intersect, loclist([top]), s]
+        return locmerge(top, s, app)
+
+    def p_path_expression_some(self, more, slash, s):
+        # XXX Is this just _p_binop with the "slash" operator?
+        assert isloc(s)
+        intersect = loctoken1(slash, val.symbol('by_slash'))
+        app = [intersect, more, s]
+        return locmerge(more, s, app)
+
+    def p_path_step_tag(self, q, tag):
+        # XXX Is this just a _p_unop with the "question mark" operator?
+        by_tag = loctoken1(q, val.symbol('by_tag'))
+        # TODO Should a bare name in this position be a symbol or a string?
+        # Symbol is more natural, and supports quasi-quotation better.
+        # String better agrees with the current practice of using
+        # strings as scope names. (Which, actually, may turn back into
+        # symbols when I implement that syntactic sugar...).
+        # Choosing string for now; to turn into symbol, replace
+        # locmap val.string with locquoted val.quasiquote
+        name = locmap(loctoken(tag), val.string)
+        app = [by_tag, name]
+        return locmerge(by_tag, name, app)
+
+    def p_path_step_tag_val(self, q, tag, eq, value):
+        by_tag_value = loctoken1(q, val.symbol('by_tag_value'))
+        name = locmap(loctoken(tag), val.string)
+        app = [by_tag_value, name, value]
+        return locmerge(by_tag_value, value, app)
+
     p_do_bind_none = _p_exp
     p_action_none = _p_exp
+    p_arrow_pathexp = _p_exp
     p_arrow_none = _p_exp
+    p_path_step_edge = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop

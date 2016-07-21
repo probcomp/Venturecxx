@@ -84,7 +84,16 @@ action(none)		::= arrow(e).
 arrow(one)		::= L_NAME(param) T_RARR(op) expression(body).
 arrow(tuple)		::= T_LROUND(po) arraybody(params) T_RROUND(pc)
 				T_RARR(op) expression(body).
+arrow(pathexp)		::= path_expression(e).
 arrow(none)		::= boolean_and(e).
+
+/* My implementation of slash actually wants to be left-associated. */
+path_expression(one)	::= T_DIV(slash) path_step(s).
+path_expression(some)	::= path_expression(more) T_DIV(slash) path_step(s).
+
+path_step(tag)		::= T_QUESTION(q) L_NAME(tag).
+path_step(tag_val)	::= T_QUESTION(q) L_NAME(tag) T_EQ(eq) primary(value).
+path_step(edge)		::= primary(e).
 
 /* XXX This AND/OR precedence is backwards from everyone else!  */
 boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).

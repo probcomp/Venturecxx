@@ -155,3 +155,45 @@ assume datum    = mem((i, d) ~> {                    // Per-datapoint:
       by_extent(by_tag_value("row", integer<4>)),
       by_extent(by_tag("clustering"))))));
   get_current_values(s)}"""))
+
+def testSugaryPoster():
+  # Same as above, but with syntactic sugar for the path expressions.
+  r = get_ripl(seed=0)
+  r.set_mode("venture_script")
+  r.execute_program("""
+assume alpha    ~ tag("hyper", "conc", gamma(1.0, 1.0));     // Concentration parameter
+assume assign   = make_crp(alpha);                   // Choose the CRP representation
+assume z        = mem((i) ~> { assign() });          // The partition on i induced by the DP
+assume pct      = mem((d) ~> { tag("hyper", d, gamma(1.0, 1.0)) });           // Per-dimension hyper prior
+assume theta    = mem((z, d) ~> { tag("compt", d, beta(pct(d), pct(d))) });   // Per-component latent
+assume datum    = mem((i, d) ~> {                    // Per-datapoint:
+  tag("row", i,
+  tag("col", d, {
+    cmpt ~ tag("clustering", pair(i, d), z(i));      // Select cluster
+    weight ~ theta(cmpt, d);                         // Fetch latent weight
+    flip(weight)}))});                               // Apply component model
+""")
+  dataset = [[0, 0, 0, 0, 0, 0],
+             [1, 0, 0, 1, 0, 0],
+             [1, 1, 0, 0, 0, 0],
+             [0, 0, 0, 1, 0, 0],
+             [1, 1, 0, 0, 0, 0],
+             [0, 1, 1, 0, 1, 0]]
+  def observe(i, d):
+    r.observe(expr.app(expr.symbol("datum"), expr.integer(i), d), dataset[i][d])
+  for i in range(6):
+    for d in range(6):
+      if r.sample("flip(0.7)"):
+        observe(i, d)
+  r.force("z(integer<3>)", expr.atom(8)) # A sentinel value that would not be assigned
+  # Check that intersection picks out a row's cluster assignment.
+  eq_([8], r.infer("""{
+  s <- select(minimal_subproblem(/?row==integer<3>/?clustering));
+  get_current_values(s)}"""))
+  r.force("z(integer<4>)", expr.atom(8))
+  # Check that union picks out several rows' cluster assignments.
+  eq_([8, 8], r.infer("""{
+  s <- select(minimal_subproblem(by_union(
+    /?row==integer<3>/?clustering,
+    /?row==integer<4>/?clustering)));
+  get_current_values(s)}"""))
