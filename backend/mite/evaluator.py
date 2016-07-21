@@ -185,7 +185,12 @@ class Regenerator(Evaluator):
       (fragment, old_sp, old_args) = self.fragment[addr]
       # check if the parents have changed
       if old_sp is not sp:
-        return None
+        if not (isinstance(sp, CompoundSP) and
+                isinstance(old_sp, CompoundSP) and
+                sp.params == old_sp.params and
+                sp.exp == old_sp.exp and
+                sp.env is old_sp.env):
+          return None
       for (arg, old_arg) in zip(args, old_args):
         if arg.value != old_arg.value:
           return None
