@@ -11,6 +11,7 @@ class CRPState(object):
   def __init__(self):
     self.table_counts = OrderedDict()
     self.next_table = 1
+    self.free_table_stack = []
     self.num_customers = 0
 
   def seat(self, table, incr):
@@ -23,8 +24,13 @@ class CRPState(object):
       self.table_counts[table] = incr
     if self.table_counts[table] == 0:
       del self.table_counts[table]
-    if table == self.next_table:
-      self.next_table += 1
+      self.free_table_stack.append(self.next_table)
+      self.next_table = table
+    elif table == self.next_table:
+      if self.free_table_stack:
+        self.next_table = self.free_table_stack.pop()
+      else:
+        self.next_table += 1
 
   def copy(self):
     ret = CRPState()
