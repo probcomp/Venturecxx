@@ -47,6 +47,16 @@
                (let table (categorical (dirichlet (pair alpha (to_list counts)))
                                        (pair next_table (to_list occupied))))
                (return table))))
+        (log_density
+         (lambda (table)
+           (do (table_counts <- (crp_table_counts))
+               (num_customers <- (crp_num_customers))
+               (let denom (log (+ alpha num_customers)))
+               (let num
+                   (if (contains table_counts table)
+                       (log (lookup table_counts table))
+                       (log alpha)))
+               (return (- num denom)))))
         (incorporate
          (lambda (table)
            (crp_seat table 1)))
