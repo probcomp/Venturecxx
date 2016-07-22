@@ -160,3 +160,33 @@
                (result <- (predict (list x1 x2 x3 x4 x5)))
                (return (debug 'result result)))))
      (flat_trace)))]
+
+[define example2d
+  (lambda ()
+    (run_in
+     (do (assume make_crp_s ,make_crp_s_defn)
+         (assume f (make_crp_s 1))
+         (assume x1 (f))
+         (assume x2 (f))
+         (assume x3 (f))
+         (assume x4 (f))
+         (assume x5 (f))
+         (observe (array x1 x2 x4 x5)
+                  (array atom<1> atom<2> atom<2> atom<2>))
+         (s <- (pyselectf "{
+  directive(3): {'type': 'constrained', 'val': atom1},
+  directive(4): {'type': 'constrained', 'val': atom2},
+  directive(6): {'type': 'constrained', 'val': atom2},
+  directive(7): {'type': 'constrained', 'val': atom2},
+}" (dict (list 'atom1 'atom2) (list atom<1> atom<2>))))
+         (incorporate_constraint s)
+         (repeat 10
+           (do (s <- (pyselectf "{
+  directive(5): {'type': 'proposal'},
+  directive(6): {'type': 'proposal'},
+  directive(7): {'type': 'proposal'},
+}" (dict (list 'atom2) (list atom<2>))))
+               (rejection_with_bound s 0)
+               (result <- (predict (list x1 x2 x3 x4 x5)))
+               (return (debug 'result result)))))
+     (flat_trace)))]
