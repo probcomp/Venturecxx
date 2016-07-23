@@ -136,7 +136,7 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
 def transition_oper_args_types(extra_args = None):
   # ExpressionType reasonably approximates the mapping I want for
   # scope and block IDs.
-  return [t.AnyType("scope : object"), t.AnyType("block : object")] + \
+  return [t.AnyType("subproblem"), t.AnyType("tag_value : object")] + \
     (extra_args if extra_args is not None else []) + \
     [t.IntegerType("transitions : int")]
 

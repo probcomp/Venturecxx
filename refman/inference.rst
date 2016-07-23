@@ -158,6 +158,15 @@ For compatibility with previous versions of VentureScript, all the
 inference operators will also accept a tag and a tag value as two
 separate arguments, and treat them as `minimal_subproblem(/?<tag>==<value>)`.
 
+**Note**: The argument lists of the inference operators below
+come out of Sphinx a bit weird.  The intent is that the "tag_value"
+argument is required if and only if the "subproblem" argument is
+actually a raw tag, and immediately follows it.
+
+**Note 2**: The subproblem selection subsystem is not (yet)
+implemented in the Puma backend.  If using Puma, use the tag/value
+invocation form.
+
 Any given random choice in an execution history can be tagged by an
 arbitrary number of tags; but for each tag it has, it must be given a
 unique value (if any).  The most locally assigned value wins.
