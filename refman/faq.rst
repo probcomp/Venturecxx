@@ -78,3 +78,30 @@ A: The extension in `foo.vnts` tells the console to interpret the
 program in the concrete syntax, regardless of the `--abstract-syntax` flag. To
 ensure the program is interpreted in the abstract syntax, use the extension
 `foo.vnt` instead (without the `s`).
+
+Q: What is the difference between `sample` and `predict`?
+
+A: Mnemonic: `sample` is `predict` and `forget`.  To wit, the
+`predict` directive evaluates its expression, conditioned on
+everything else present in the model, *and records it* in the model.
+The `sample` operation, on the other hand, samples the value of its
+expression, conditioned on the current state of the model, *and leaves
+the model unchanged*.  This causes several differences:
+
+1) Every call to the same `sample` is independent and identically
+   distributed (conditioned on the state of the model), whereas
+   successive calls to `predict` may influence each other, if
+   exchangeably coupled SPs are involved.
+
+2) Repeated `predict` will consume increasing amounts of memory
+   tracing the predictions, whereas repeated `sample` will leave
+   total memory use unchanged.
+
+3) A `predict` creates a numbered (and optionally labeled) directive,
+   which can later be inspected with `report`, `list_directives`, etc.
+
+4) The `predict` ed expression will affect future inference: any
+   random choices therein are subject to inference themselves, and may
+   act as (soft) contraints on their parent choices.  In the case of
+   `default_markov_chain`, an unintentional `predict` may therefore
+   increase rejection rates and slow convergence.
