@@ -17,9 +17,11 @@
 
 from nose.tools import eq_
 
+from venture.test.config import broken_in
 from venture.test.config import get_ripl
 import venture.value.dicts as expr
 
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testSmoke():
   # Basic tagging of random choices
   r = get_ripl()
@@ -49,6 +51,7 @@ def testSmoke():
   eq_(1, r.sample("a"))
   assert r.sample("b") != 2
 
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testSmoke2():
   # Same, but with the random choices slightly obscured
   r = get_ripl()
@@ -85,6 +88,7 @@ def testSmoke2():
   eq_(1, r.sample("a"))
   assert r.sample("b") != 2
 
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testSmoke3():
   # Here's a variant that makes the difference between the local point
   # and the extent starker.
@@ -109,6 +113,7 @@ def testSmoke3():
   (s <- (select (minimal_subproblem (by_extent (random_singleton (by_extent (by_top)))))))
   (get_current_values s))"""))
 
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testPoster():
   r = get_ripl(seed=0)
   r.set_mode("venture_script")
@@ -156,6 +161,7 @@ assume datum    = mem((i, d) ~> {                    // Per-datapoint:
       by_extent(by_tag("clustering"))))));
   get_current_values(s)}"""))
 
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testSugaryPoster():
   # Same as above, but with syntactic sugar for the path expressions.
   r = get_ripl(seed=0)
