@@ -139,10 +139,14 @@ which of their consequences (likelihood-free choices have to be
 resampled, choices that can report likelihoods may be resampled or may
 be kept, contributing to the acceptance ratio, etc).  VentureScript
 currently provides one operation to convert a selection of random
-choices into a subproblem, namely `minimal_subproblem`.
+choices into a subproblem, namely `minimal_subproblem`.  That
+subproblem may then be passed to an inference operation like `mh` to
+actually operate on those choices.
 
 Randomized proposal targets may be obtained with the
-`random_singleton` procedure.
+`random_singleton` procedure, which correctly accounts for the
+acceptance correction due to the probability of selecting that
+particular subproblem to work on.
 
 Putting it all together, the inference tactic `default_markov_chain`
 might be defined as::
@@ -150,29 +154,13 @@ might be defined as::
     define default_markov_chain = (n) -> {
       repeat(n, mh(minimal_subproblem(random_singleton(by_extent(by_top())))))}
 
-Variable Scopes, Variable Blocks, and the Local Posterior
----------------------------------------------------------
+For compatibility with previous versions of VentureScript, all the
+inference operators will also accept a tag and a tag value as two
+separate arguments, and treat them as `minimal_subproblem(/?<tag>==<value>)`.
 
-VentureScript defines the notion of `inference scope` to allow the
-programmer to control the parts of their model on which to apply
-various inference procedures.  The idea is that a `scope` is some
-collection of related random choices (for example, the states of a
-hidden Markov model could be one scope, and the hyperparameters could
-be another); and each scope is further subdivided into `block` s,
-which are choices that ought to be reproposed together (the name is
-meant to evoke the idea of block proposals, not to be confused with
-curly-brace-delimited syntax blocks).
-
-Any given random choice in an execution history can exist in an
-arbitrary number of scopes; but for each scope it is in it must be in
-a unique block.  As such, a scope-block pair denotes a set of random
-choices.
-
-Any set of random choices defines a `local posterior`, which is the
-posterior on those choices, conditioned on keeping the rest of the
-execution history fixed.  Every inference method accepts a scope id
-and a block id as its first two arguments, and operates only on those
-random choices, with respect to that local posterior.
+Any given random choice in an execution history can be tagged by an
+arbitrary number of tags; but for each tag it has, it must be given a
+unique value (if any).  The most locally assigned value wins.
 
 Built-in Procedures for Inference
 ---------------------------------
