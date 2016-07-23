@@ -31,11 +31,12 @@ def _covariance_factor(Sigma):
   except la.LinAlgError:
     pass
 
-  # Assume it is at least nonsingular and try LU decomposition.
-  try:
-    return Covariance_LU(Sigma)
-  except la.LinAlgError:
-    pass
+  # XXX In the past, we tried LU decomposition if, owing to
+  # floating-point rounding error, the matrix is merely nonsingular,
+  # not positive-definite.  However, empirically, that seemed to lead
+  # to bad numerical results.  Until we have better numerical analysis
+  # of the situation, let's try just falling back to least-squares
+  # pseudoinverse approximation.
 
   # Otherwise, fall back to whatever heuristics scipy can manage.
   return Covariance_Loser(Sigma)
@@ -58,44 +59,6 @@ class Covariance_Cholesky(object):
     # compute log sqrt(det Sigma) = log det L, we sum the logs of its
     # diagonal.
     return np.sum(np.log(np.diag(L)))
-
-class Covariance_LU(object):
-  def __init__(self, Sigma):
-    self._lu = la.lu_factor(Sigma)
-    LU, P = self._lu
-    # If the sign of the determinant is negative, can't do it.
-    signP = +1 if (np.sum(P != np.arange(len(P))) % 2) == 0 else -1
-    signU = np.prod(np.sign(np.diag(LU)))
-    if signP*signU != +1:
-      raise la.LinAlgError('non-positive-semidefinite covariance matrix')
-  def solve(self, Y):
-    return la.lu_solve(self._lu, Y)
-  def inverse(self):
-    return self.solve(np.eye(self._lu[0].shape[0]))
-  def logsqrtdet(self):
-    # P Sigma = L U, where P is a permutation matrix, L is unit lower
-    # triangular, and U is upper triangular.  LU stores the lower
-    # triangle of L, the diagonal of U, and the upper triangle of U,
-    # since the diagonal entries of L are all 1.
-    LU, P = self._lu
-    diagU = np.diag(LU)
-
-    # Since P is a permutation matrix, L is a unit triangular matrix
-    # whose determinant is 1, and U is a triangular matrix whose
-    # determinant is the product of its diagonal, we have
-    #
-    #   det Sigma = det (P L U) = det P * det L * det U
-    #     = sign P * 1 * \prod_i u_ii
-    #     = sign P \prod_i u_ii.
-    #
-    # where u_ii is the ith diagonal entry of u.  Since we assume a
-    # positive semidefinite covariance matrix, the result is positive,
-    # so we can compute this by \sum_i \log_i |u_ii|.  Hence:
-    #
-    #   log sqrt(det Sigma) = log (\prod_i u_ii)^(1/2)
-    #     = (1/2) log \prod_i u_ii
-    #     = (1/2) \sum_i \log |u_ii|.
-    return (1/2.) * np.sum(np.log(np.abs(diagU)))
 
 class Covariance_Loser(object):
   def __init__(self, Sigma):
