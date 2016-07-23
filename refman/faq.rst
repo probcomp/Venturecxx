@@ -105,3 +105,39 @@ the model unchanged*.  This causes several differences:
    act as (soft) contraints on their parent choices.  In the case of
    `default_markov_chain`, an unintentional `predict` may therefore
    increase rejection rates and slow convergence.
+
+Q: Why is it that `sample` ignores `mem`, except when it doesn't?
+
+For instance, what's with this::
+
+    venture[script] > assume x = mem(proc (i) { normal(0, 1) })
+    []
+    venture[script] > sample x(1)
+    -0.249548049964
+    venture[script] > sample x(1)
+    -0.277036540423
+    venture[script] > sample x(1)
+    -0.357347313623
+    venture[script] > assume v = x(1)
+    -0.554297447992
+    venture[script] > sample x(1)
+    -0.554297447992
+    venture[script] > sample x(1)
+    -0.554297447992
+    venture[script] > sample x(1)
+    -0.554297447992
+
+A: Applications of `sample` do not modify the model, and are
+independent and identically distributed conditioned on the current
+state of the model.  The stochastic procedures created by `mem` are
+(very strongly!) exchangeably coupled across applications---even a single
+traced application suffices to constrain future samples.
+
+In detail: After the first `assume` in that transcript, there are no
+applications `x(1)` recorded in the model, so `sample x(1)` draws a
+new value for it.  The second `sample x(1)` is different because the
+first `sample x(1)` does not record its application in the model
+trace---they are IID.  After `assume v = x(1)`, however, there *is* an
+appliation `x(1)` in the model trace that the subsequent `sample x(1)`
+evaluations are conditioned on.  So they return the same value every
+time.
