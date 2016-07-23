@@ -250,7 +250,7 @@ upgrading), or dictionaries (pointwise, cross product if two)."""
     return set_fmap(thing1, lambda nodes: f(nodes, as_set(thing2)))
 
 inf.registerBuiltinInferenceSP("by_intersection",
-    deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+    deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), descr="""
 Intersect the selected choices.
 """))
 
@@ -258,14 +258,14 @@ def by_slash_fun(left, right):
   return Intersect(Extent(left), Extent(right))
 
 inf.registerBuiltinInferenceSP("by_slash", \
-    deterministic_typed(by_slash_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+    deterministic_typed(by_slash_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), descr="""
 This is what the / syntax does.
 
 Intersect the dynamic extents of both sets of selected choices.
 """))
 
 inf.registerBuiltinInferenceSP("by_tag", \
-    deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType(), desc="""
+    deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType(), descr="""
 Select the choices tagged by the given tag.
 
 They remain keyed by their values, so that `random_singleton` will
@@ -277,12 +277,12 @@ def by_tag_value_fun(tag, val):
   return Lookup(val, FetchTag(tag))
 
 inf.registerBuiltinInferenceSP("by_tag_value", \
-    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value>")], t.ForeignBlobType(), desc="""
+    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value>")], t.ForeignBlobType(), descr="""
 Select the choices tagged by the given tag at the given value.
 """))
 
 inf.registerBuiltinInferenceSP("by_walk", \
-    deterministic_typed(Edge, [t.ForeignBlobType(), t.AnyType("<edge>")], t.ForeignBlobType(), desc="""
+    deterministic_typed(Edge, [t.ForeignBlobType(), t.AnyType("<edge>")], t.ForeignBlobType(), descr="""
 Walk along the given edge in the dependency graph pointwise.
 
 Possible edges are
@@ -293,21 +293,21 @@ Possible edges are
 """))
 
 inf.registerBuiltinInferenceSP("by_extent", \
-    deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+    deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType(), descr="""
 Select the choices in the dynamic extent of the current selection.
 """))
 
 inf.registerBuiltinInferenceSP("by_union", \
-    deterministic_typed(lambda *args: Union(args), [t.ForeignBlobType()], t.ForeignBlobType(), variadic=True, desc="""
+    deterministic_typed(lambda *args: Union(args), [t.ForeignBlobType()], t.ForeignBlobType(), variadic=True, descr="""
 Union the given selections.
 """))
 
-inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType(), desc="""
+inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType(), descr="""
 Select the "top" of the model, whose dynamic extent is all random choices.
 """))
 
 inf.registerBuiltinInferenceSP("minimal_subproblem", \
-    deterministic_typed(MinimalSubproblem, [t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+    deterministic_typed(MinimalSubproblem, [t.ForeignBlobType()], t.ForeignBlobType(), descr="""
 Construct the minimal subproblem from the given selection.
 """))
 
@@ -315,7 +315,7 @@ Construct the minimal subproblem from the given selection.
 # "random singleton block"?  ATM, they can be disambiguated by
 # dispatch.
 inf.registerBuiltinInferenceSP("random_singleton", \
-    deterministic_typed(Random1, [t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+    deterministic_typed(Random1, [t.ForeignBlobType()], t.ForeignBlobType(), descr="""
 Randomly select one component of the current selection.
 
 Correctly account for the acceptance correction due to possible
