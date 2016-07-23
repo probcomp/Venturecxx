@@ -88,8 +88,6 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
     "vector_dot", # Numerical inconsistency between Eigen and Numpy
     "matrix_times_vector", # Numerical inconsistency between Eigen and Numpy
     "vector_times_matrix", # Numerical inconsistency between Eigen and Numpy
-    "int_div", # Disagreement between Python and C++
-    "int_mod", # Disagreement between Python and C++
     "vector_add", # Size-mismatched vectors crash Puma
     "matrix_add", # Size-mismatched matrices crash Puma
   ]:

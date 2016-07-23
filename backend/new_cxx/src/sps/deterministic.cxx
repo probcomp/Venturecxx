@@ -61,14 +61,14 @@ VentureValuePtr IntDivOutputPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("integer divide", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getInt() / args->operandValues[1]->getInt()));
+  return shared_ptr<VentureInteger>(new VentureInteger(args->operandValues[0]->getInt() / args->operandValues[1]->getInt()));
 }
 
 VentureValuePtr IntModOutputPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("integer mod", args, 2);
-  return shared_ptr<VentureNumber>(new VentureNumber(args->operandValues[0]->getInt() % args->operandValues[1]->getInt()));
+  return shared_ptr<VentureInteger>(new VentureInteger(args->operandValues[0]->getInt() % args->operandValues[1]->getInt()));
 }
 
 VentureValuePtr EqOutputPSP::simulate(

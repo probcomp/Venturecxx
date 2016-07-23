@@ -23,6 +23,7 @@ import numpy as np
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
 from venture.lite.sp_help import binaryNum
+from venture.lite.sp_help import binaryNumInt
 from venture.lite.sp_help import deterministic_psp
 from venture.lite.sp_help import dispatching_psp
 from venture.lite.sp_help import no_request
@@ -112,7 +113,7 @@ def integer_divide(x, y):
   else:
     return int(x) // int(y)
 
-registerBuiltinSP("int_div", binaryNum(integer_divide,
+registerBuiltinSP("int_div", binaryNumInt(integer_divide,
     descr="div returns the integer quotient of its first argument by its second"))
 
 def integer_mod(x, y):
@@ -121,7 +122,7 @@ def integer_mod(x, y):
   else:
     return int(x) % int(y)
 
-registerBuiltinSP("int_mod", binaryNum(integer_mod,
+registerBuiltinSP("int_mod", binaryNumInt(integer_mod,
     descr="mod returns the modulus of its first argument by its second"))
 
 registerBuiltinSP("min",
