@@ -19,7 +19,7 @@ Block Structure
 ---------------
 
 Like JavaScript, the organizing syntactic element of VentureScript is
-the _block_: a list of _statements_ surrounded by curly braces and
+the *block*: a list of *statements* surrounded by curly braces and
 separated by parentheses.  VentureScript has the following kinds of
 statements:
 
@@ -82,6 +82,73 @@ statements:
 Note that all of these affordances appear as expressions as well.  In
 fact, the block structure in VentureScript is just syntactic sugar for
 nested binding expressions of various kinds.
+
+Inference control with tags and subproblems
+-------------------------------------------
+
+VentureScript permits the user to control the strategy and focus of
+inference activity with the notion of the *subproblem*.  Any set of
+random choices in a VentureScript model defines a `local subproblem`,
+which is the problem of sampling from the posterior on those choices,
+conditioned on keeping the rest of the execution history fixed.
+Subproblem decomposition is useful because progress in distribution on
+a subproblem constitutes progress on the overall problem as well.
+
+It is typical to prepare a model for inference control by tagging some
+expressions with tags that can later be referenced when selecting a
+subproblem to operate on.  VentureScript provides syntactic sugar
+for tagging model expressions::
+
+    something #tag1
+    something_else #tag2:value
+
+The first form just associates the `something` expression with the tag
+named `tag1`.  The second form associates the `something_else`
+expression with the tag named `tag2` with the value computed by the
+`value` expression.
+
+For example, a typical simple Dirichlet process mixture model (over
+Bernoulli vectors) might be implemented and tagged like this::
+
+    assume assign   = make_crp(1);
+    assume z        = mem((i) ~> { assign() #clustering });     // The partition induced by the DP
+    assume pct      = mem((d) ~> { gamma(1.0, 1.0) #hyper:d }); // Per-dimension hyper prior
+    assume theta    = mem((z, d) ~> { beta(pct(d), pct(d)) #compt:d });   // Per-component latent
+    assume datum    = mem((i, d) ~> {{
+      cmpt ~ z(i);
+      weight ~ theta(cmpt, d);
+      flip(weight)} #row:i #col:d });   // Per-datapoint random choices
+
+VentureScript provides a path-like syntax for identifying random
+choices in a model on which inference might then be applied.  The `/`
+(forward slash) operator is analogous to a UNIX directory separator:
+it means "apply the pattern on the right to subchoices of the choices
+selected on the right" (and a leading `/` means "search for the
+choices on right in the whole model").  For example::
+
+    /?hyper               // select all choices tagged with the "hyper" tag
+    /?row==3              // select all choices involved in the third row
+    /?row==3/?clustering  // select only the cluster assignment for the third row
+
+Random choice selections can also be computed programmatically with
+the procedures beginning with `by_`, below.
+
+A complete subproblem definition includes not only the random choices
+of interest, but also additional information, such as how to treat
+which of their consequences (likelihood-free choices have to be
+resampled, choices that can report likelihoods may be resampled or may
+be kept, contributing to the acceptance ratio, etc).  VentureScript
+currently provides one operation to convert a selection of random
+choices into a subproblem, namely `minimal_subproblem`.
+
+Randomized proposal targets may be obtained with the
+`random_singleton` procedure.
+
+Putting it all together, the inference tactic `default_markov_chain`
+might be defined as::
+
+    define default_markov_chain = (n) -> {
+      repeat(n, mh(minimal_subproblem(random_singleton(by_extent(by_top())))))}
 
 Variable Scopes, Variable Blocks, and the Local Posterior
 ---------------------------------------------------------
