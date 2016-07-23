@@ -249,46 +249,80 @@ upgrading), or dictionaries (pointwise, cross product if two)."""
   else:
     return set_fmap(thing1, lambda nodes: f(nodes, as_set(thing2)))
 
-inf.registerBuiltinInferenceSP("by_intersection", \
-    deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
+inf.registerBuiltinInferenceSP("by_intersection",
+    deterministic_typed(Intersect, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+Intersect the selected choices.
+"""))
 
 def by_slash_fun(left, right):
   return Intersect(Extent(left), Extent(right))
 
 inf.registerBuiltinInferenceSP("by_slash", \
-    deterministic_typed(by_slash_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
+    deterministic_typed(by_slash_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+This is what the / syntax does.
+
+Intersect the dynamic extents of both sets of selected choices.
+"""))
 
 inf.registerBuiltinInferenceSP("by_tag", \
-    deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType()))
+    deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType(), desc="""
+Select the choices tagged by the given tag.
+
+They remain keyed by their values, so that `random_singleton` will
+pick all the choices given by a random tag value, rather than a single
+choice at random from all choices under that tag.
+"""))
 
 def by_tag_value_fun(tag, val):
   return Lookup(val, FetchTag(tag))
 
 inf.registerBuiltinInferenceSP("by_tag_value", \
-    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value>")], t.ForeignBlobType()))
+    deterministic_typed(by_tag_value_fun, [t.AnyType("<tag>"), t.AnyType("<value>")], t.ForeignBlobType(), desc="""
+Select the choices tagged by the given tag at the given value.
+"""))
 
 inf.registerBuiltinInferenceSP("by_walk", \
-    deterministic_typed(Edge, [t.ForeignBlobType(), t.AnyType("<edge>")], t.ForeignBlobType()))
+    deterministic_typed(Edge, [t.ForeignBlobType(), t.AnyType("<edge>")], t.ForeignBlobType(), desc="""
+Walk along the given edge in the dependency graph pointwise.
+
+Possible edges are
+- `operator`, for the operator position of an expression
+- `source`, for the expression a variable is bound to
+- `request`, for the request node corresponding to a procedure application
+- <an integer>, for that index subexpression of an expression
+"""))
 
 inf.registerBuiltinInferenceSP("by_extent", \
-    deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType()))
+    deterministic_typed(Extent, [t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+Select the choices in the dynamic extent of the current selection.
+"""))
 
 inf.registerBuiltinInferenceSP("by_union", \
-    deterministic_typed(lambda *args: Union(args), [t.ForeignBlobType()], t.ForeignBlobType(), variadic=True))
+    deterministic_typed(lambda *args: Union(args), [t.ForeignBlobType()], t.ForeignBlobType(), variadic=True, desc="""
+Union the given selections.
+"""))
 
-def subselect_fun(source1, source2):
-  return Intersect(Extent(source1), source2)
-
-inf.registerBuiltinInferenceSP("by_subselection", \
-    deterministic_typed(subselect_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType()))
-
-inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType()))
+inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType(), desc="""
+Select the "top" of the model, whose dynamic extent is all random choices.
+"""))
 
 inf.registerBuiltinInferenceSP("minimal_subproblem", \
-    deterministic_typed(MinimalSubproblem, [t.ForeignBlobType()], t.ForeignBlobType()))
+    deterministic_typed(MinimalSubproblem, [t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+Construct the minimal subproblem from the given selection.
+"""))
 
 # XXX Do I want different names for "random singleton variable" vs
 # "random singleton block"?  ATM, they can be disambiguated by
 # dispatch.
 inf.registerBuiltinInferenceSP("random_singleton", \
-    deterministic_typed(Random1, [t.ForeignBlobType()], t.ForeignBlobType()))
+    deterministic_typed(Random1, [t.ForeignBlobType()], t.ForeignBlobType(), desc="""
+Randomly select one component of the current selection.
+
+Correctly account for the acceptance correction due to possible
+changes in the probability of selecting a particular subproblem to
+work on.
+
+A "component" may be a single random choice, if the current selection
+is a set, or a set, if the current selection is a dictionary of tag
+values to sets of variables.
+"""))
