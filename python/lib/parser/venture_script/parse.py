@@ -33,10 +33,6 @@ def locquoted(located_quoter, located_value, f):
     assert start < vstart
     return ast.Located([start, vend], f(located_value))
 
-def locbracket(loc1, loc2, value):
-    "Analog of locmerge for boundaries given by tokens."
-    return ast.locmerge(loc1, loc2, value)
-
 def loclist(items):
     "Make a Located list of Located items, that spans their total extent."
     return ast.loclist(items)
@@ -224,7 +220,7 @@ class Semantics(object):
         assert ast.isloc(e)
         assert all(map(ast.isloc, names))
         let = ast.update_value(l, val.symbol('let_values'))
-        names = locbracket(po, pc, names)
+        names = ast.locmerge(po, pc, names)
         return ast.locmerge(let, e, [let, names, e])
     def p_statement_labelled(self, d):
         assert ast.isloc(d)
@@ -288,7 +284,7 @@ class Semantics(object):
         assert ast.isloc(body)
         return ast.locmerge(po, body, [
             ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
-            locbracket(po, pc, params),
+            ast.locmerge(po, pc, params),
             body,
         ])
 
@@ -384,35 +380,35 @@ class Semantics(object):
         assert isinstance(es, list) and all(map(ast.isloc, es))
         if len(es) == 1:
             [e] = es
-            return locbracket(o, c, e.value)
+            return ast.locmerge(o, c, e.value)
         else:
             construction = [ast.map_value(val.symbol, ast.update_value(o, 'values_list'))] + es
-            return locbracket(o, c, construction)
+            return ast.locmerge(o, c, construction)
     def p_primary_brace(self, o, e, c):
         assert ast.isloc(e)
-        return locbracket(o, c, e.value)
+        return ast.locmerge(o, c, e.value)
     def p_primary_proc(self, k, po, params, pc, bo, body, bc):
         assert ast.isloc(body)
-        return locbracket(k, bc, [
+        return ast.locmerge(k, bc, [
             ast.map_value(val.symbol, ast.update_value(k, 'lambda')),
-            locbracket(po, pc, params),
+            ast.locmerge(po, pc, params),
             body,
         ])
     def p_primary_if(self, k, po, p, pc, co, c, cc, ke, ao, a, ac):
         assert ast.isloc(p)
         assert ast.isloc(c)
         assert ast.isloc(a)
-        return locbracket(k, ac,
+        return ast.locmerge(k, ac,
             [ast.map_value(val.symbol, ast.update_value(k, 'if')), p, c, a])
     def p_primary_qquote(self, o, b, c):
-        return locbracket(o, c, val.quasiquote(b))
+        return ast.locmerge(o, c, val.quasiquote(b))
     def p_primary_unquote(self, op, e):
         return ast.locmerge(op, e,
             val.quote(ast.locmerge(op, e, val.unquote(e))))
     def p_primary_array(self, o, a, c):
         assert isinstance(a, list)
         construction = [ast.map_value(val.symbol, ast.update_value(o, 'array'))] + a
-        return locbracket(o, c, construction)
+        return ast.locmerge(o, c, construction)
     def p_primary_literal(self, l):
         assert ast.isloc(l)
         return l
@@ -455,7 +451,7 @@ class Semantics(object):
             raise VentureException('text_parse',
                 ('JSON not allowed for %s' % (t0,)),
                 text_index=[start, end])
-        return locbracket(t, c, {'type': t0, 'value': v})
+        return ast.locmerge(t, c, {'type': t0, 'value': v})
 
     # json: Return json object.
     def p_json_string(self, v):                 return v.value

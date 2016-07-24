@@ -33,9 +33,6 @@ def locquoted(located_quoter, located_value, f):
     assert start < _vstart
     return ast.Located([start, vend], f(located_value))
 
-def locbracket(loc1, loc2, value):
-    return ast.locmerge(loc1, loc2, value)
-
 def loclist(items):
     return ast.loclist(items)
 
@@ -113,15 +110,15 @@ class Semantics(object):
             new_exp = exp + [label]
             new_locexp = ast.Located(locexp.loc, new_exp)
             new_d = expression_evaluation_instruction(new_locexp)
-            return locbracket(l, close, new_d)
+            return ast.locmerge(l, close, new_d)
         else:
             d['label'] = label
             d['instruction'] = ast.map_value(lambda i: 'labeled_' + i, d['instruction'])
-            return locbracket(l, close, d)
+            return ast.locmerge(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
-        return locbracket(open, close, d)
+        return ast.locmerge(open, close, d)
     def p_instruction_command(self, open, c, close):
-        return locbracket(open, close, c)
+        return ast.locmerge(open, close, c)
     def p_instruction_expression(self, e):
         inst = expression_evaluation_instruction(e)
         return ast.update_value(e, inst)
@@ -184,9 +181,9 @@ class Semantics(object):
     def p_expression_unquote(self, unquote, e):
         return locquoted(unquote, e, val.unquote)
     def p_expression_comb0(self, open, close):
-        return locbracket(open, close, [])
+        return ast.locmerge(open, close, [])
     def p_expression_comb1(self, open, op, args, close):
-        return locbracket(open, close, [op] + args)
+        return ast.locmerge(open, close, [op] + args)
     def p_expression_comb_error(self, open, op, args, close):
         return 'error'
 
@@ -204,7 +201,7 @@ class Semantics(object):
 
     # namelist: return a located list of names
     def p_namelist_nl(self, open, ns, close):
-        return locbracket(open, close, ns)
+        return ast.locmerge(open, close, ns)
 
     # names: return list of located symbols
     def p_names_none(self):
@@ -230,7 +227,7 @@ class Semantics(object):
         if t == 'boolean':
             raise VentureException('parse', ('JSON not allowed for %s' % (t,)),
                 text_index=[start, end])
-        return locbracket(type, close, { 'type': t, 'value': value })
+        return ast.locmerge(type, close, { 'type': t, 'value': value })
 
     # json: Return json object.
     def p_json_string(self, v):                 return v.value
