@@ -123,8 +123,9 @@ VentureScript provides a path-like syntax for identifying random
 choices in a model on which inference might then be applied.  The `/`
 (forward slash) operator is analogous to a UNIX directory separator:
 it means "apply the pattern on the right to subchoices of the choices
-selected on the right" (and a leading `/` means "search for the
-choices on right in the whole model").  For example::
+selected on the left" (and a leading `/` means "search for the
+choices on right in the whole model").  By "subchoices" I mean the choices
+made in the dynamic extent of evaluating that one.  For example::
 
     /?hyper               // select all choices tagged with the "hyper" tag
     /?row==3              // select all choices involved in the third row
