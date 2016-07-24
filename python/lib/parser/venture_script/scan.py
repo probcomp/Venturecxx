@@ -21,6 +21,7 @@ import StringIO
 
 import venture.plex as Plex
 
+from venture.parser import ast
 from venture.parser.venture_script import grammar
 
 # XXX Automatically confirm we at least mention all tokens mentioned
@@ -230,4 +231,4 @@ class Scanner(Plex.Scanner):
             length = len(self.text)
         end = self.cur_pos
         start = end - length
-        Plex.Scanner.produce(self, token, (value, start, end - 1))
+        Plex.Scanner.produce(self, token, ast.Located([start, end-1], value))
