@@ -27,10 +27,6 @@ from venture.parser import ast
 from venture.parser.venture_script import grammar
 from venture.parser.venture_script import scan
 
-def locval(lv, v):
-    "Update (functionally) the value of the given located object with the given one."
-    return ast.update_value(lv, v)
-
 def locmap(l, f):
     "Map f over the value field of the given Located object."
     return ast.map_value(f, l)
@@ -146,8 +142,8 @@ class Semantics(object):
         assert ast.isloc(c)
         return c
     def p_instruction_statement(self, e):
-        i = locval(e, 'evaluate')
-        return locval(e, {'instruction': i, 'expression': e})
+        i = ast.update_value(e, 'evaluate')
+        return ast.update_value(e, {'instruction': i, 'expression': e})
 
     # labelled: Return located expression.
     def p_labelled_directive(self, l, d):
@@ -218,7 +214,7 @@ class Semantics(object):
     # statements: Return located list of located bindings.
     def p_statements_one(self, s):
         assert ast.isloc(s)
-        return locval(s, [s])
+        return ast.update_value(s, [s])
     def p_statements_many(self, ss, semi, s):
         assert ast.isloc(s)
         assert ast.isloc(s)
@@ -309,7 +305,7 @@ class Semantics(object):
         param = locmap(loctoken(param), val.symbol)
         return locmerge(param, body, [
             locmap(loctoken1(op, 'lambda'), val.symbol),
-            locval(param, [param]),
+            ast.update_value(param, [param]),
             body,
         ])
     def p_arrow_tuple(self, po, params, pc, op, body):
