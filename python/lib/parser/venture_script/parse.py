@@ -23,6 +23,7 @@ import json
 from venture.exception import VentureException
 import venture.value.dicts as val
 
+from venture.parser import ast
 from venture.parser.venture_script import grammar
 from venture.parser.venture_script import scan
 
@@ -33,62 +34,49 @@ from venture.parser.venture_script import scan
 #   and a location in the "loc" field.  The location is a 2-list of a
 #   start index and an end index.
 
-def tokval((value, _start, _end)):
+def tokval(located):
     "The value in a token."
-    return value
+    return located.value
 
 def isloc(obj):
     "Is the argument a Located object?"
-    return isinstance(obj, dict) and sorted(obj.keys()) == ['loc', 'value']
-
-def located(loc, value):
-    "Construct a Located object from a value and a location."
-    # XXX Use a namedtuple, not a dict.
-    return {'loc': loc, 'value': value}
+    return ast.isloc(obj)
 
 def locval(lv, v):
     "Update (functionally) the value of the given located object with the given one."
-    return {'loc': lv['loc'], 'value': v}
+    return ast.update_value(lv, v)
 
 def locmap(l, f):
     "Map f over the value field of the given Located object."
-    return {'loc': l['loc'], 'value': f(l['value'])}
+    return ast.map_value(f, l)
 
 def locmerge(lv0, lv1, v):
     "Construct a Located object with the given value that spans the extent of the given Located objects."
-    start0, end0 = lv0['loc']
-    start1, end1 = lv1['loc']
-    assert start0 < end1
-    return {'loc': [start0, end1], 'value': v}
+    return ast.locmerge(lv0, lv1, v)
 
-def loctoken((value, start, end)):
+def loctoken(located):
     "Convert a Token to an equivalent Located object."
-    return located([start, end], value)
+    return located
 
-def loctoken1((_value, start, end), value):
+def loctoken1(located, value):
     """Construct a Located object at the given token's location with the given value.
 
 This is the composition of loctoken with locval."""
-    return located([start, end], value)
+    return ast.update_value(located, value)
 
-def locquoted((_value, start, _end), located_value, f):
-    (_vstart, vend) = located_value['loc']
-    assert start < _vstart
-    return located([start, vend], f(located_value))
+def locquoted(located_quoter, located_value, f):
+    (vstart, vend) = located_value.loc
+    (start, _end) = located_quoter.loc
+    assert start < vstart
+    return ast.Located([start, vend], f(located_value))
 
-def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
+def locbracket(loc1, loc2, value):
     "Analog of locmerge for boundaries given by tokens."
-    assert ostart <= oend
-    assert oend < cstart
-    assert cstart <= cend
-    return located([ostart, cend], value)
+    return ast.locmerge(loc1, loc2, value)
 
 def loclist(items):
     "Make a Located list of Located items, that spans their total extent."
-    assert len(items) >= 1
-    (start, _) = items[0]['loc']
-    (_, end) = items[-1]['loc']
-    return located([start, end], items)
+    return ast.loclist(items)
 
 def expression_evaluation_instruction(e):
     return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
@@ -96,10 +84,16 @@ def expression_evaluation_instruction(e):
 def delocust(l):
     "Recursively remove location tags."
     # XXX Why do we bother with tuples in the first place?
-    if isinstance(l['value'], list) or isinstance(l['value'], tuple):
-        return [delocust(v) for v in l['value']]
+    if isinstance(l, dict) and sorted(l.keys()) == ['loc', 'value']:
+        return delocust(l['value'])
+    elif isloc(l):
+        return delocust(l.value)
+    elif isinstance(l, list) or isinstance(l, tuple):
+        return [delocust(v) for v in l]
+    elif isinstance(l, dict):
+        return dict((k, delocust(v)) for k, v in l.iteritems())
     else:
-        return l['value']
+        return l
 
 operators = {
     '+':        'add',
@@ -127,13 +121,15 @@ class Semantics(object):
     def parse_failed(self):
         assert self.answer is None
         raise VentureException('text_parse', 'Syntax error!')
-    def syntax_error(self, (number, (text, start, end))):
+    def syntax_error(self, (number, located)):
         # XXX Should not raise here -- should accumulate errors and
         # report them all at the end.
         #
         # XXX Should adapt lemonade to support passing a message, and
         # make the generated parser say which tokens (and, ideally,
         # nonterminals) it was expecting instead.
+        text = located.value
+        (start, end) = located.loc
         raise VentureException('text_parse',
             ('Syntax error at %s (token %d)' % (repr(text), number)),
             text_index=[start, end])
@@ -171,13 +167,13 @@ class Semantics(object):
     # labelled: Return located expression.
     def p_labelled_directive(self, l, d):
         label = locmap(loctoken(l), val.symbol)
-        exp = d['value']
+        exp = d.value
         new_exp = exp + [label]
         new_d = locmerge(label, d, new_exp)
         return new_d
     def p_labelled_directive_prog(self, dol, lab_exp, d):
         label = locmerge(loctoken(dol), lab_exp, val.unquote(lab_exp))
-        exp = d['value']
+        exp = d.value
         new_exp = exp + [label]
         new_d = locmerge(label, d, new_exp)
         return new_d
@@ -229,7 +225,7 @@ class Semantics(object):
             e = loctoken1(semi, val.symbol('pass'))
         assert isloc(e)
         do = locmerge(ss, e, val.symbol('do'))
-        return locmerge(ss, e, [do] + ss['value'] + [e])
+        return locmerge(ss, e, [do] + ss.value + [e])
     def p_body_exp(self, e):
         assert isloc(e)
         return e
@@ -241,8 +237,8 @@ class Semantics(object):
     def p_statements_many(self, ss, semi, s):
         assert isloc(s)
         assert isloc(s)
-        ss['value'].append(s)
-        return locmerge(ss, s, ss['value'])
+        ss.value.append(s)
+        return locmerge(ss, s, ss.value)
 
     # statement: Return located statement
     def p_statement_let(self, l, n, eq, e):
@@ -431,13 +427,13 @@ class Semantics(object):
         assert isinstance(es, list) and all(map(isloc, es))
         if len(es) == 1:
             [e] = es
-            return locbracket(o, c, e['value'])
+            return locbracket(o, c, e.value)
         else:
             construction = [locmap(loctoken1(o, 'values_list'), val.symbol)] + es
             return locbracket(o, c, construction)
     def p_primary_brace(self, o, e, c):
         assert isloc(e)
-        return locbracket(o, c, e['value'])
+        return locbracket(o, c, e.value)
     def p_primary_proc(self, k, po, params, pc, bo, body, bc):
         assert isloc(body)
         return locbracket(k, bc, [
@@ -494,7 +490,8 @@ class Semantics(object):
     def p_literal_string(self, v):
         return locmap(loctoken(v), val.string)
     def p_literal_json(self, t, v, c):
-        t0, start, end = t
+        t0 = t.value
+        start, end = t.loc
         assert t0[-1] == '<'
         t0 = t0[:-1]
         if t0 == 'boolean':
@@ -597,7 +594,7 @@ def string_complete_p(string):
                 parser.feed(token)
 
 def parse_instructions(string):
-    return parse_string(string)
+    return map(ast.as_legacy_dict, parse_string(string))
 
 def parse_instruction(string):
     ls = parse_instructions(string)

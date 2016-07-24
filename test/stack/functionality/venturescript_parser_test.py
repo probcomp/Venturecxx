@@ -526,16 +526,16 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
 
     def test_unquote(self):
         self.run_legacy_test( '${e}',
-                [['quote', ['unquote', v.sym('e')]]],
+                [[v.sym('quote'), [v.sym('unquote'), v.sym('e')]]],
                 'unquote')
         self.run_legacy_test( '$e',
-                [['quote', ['unquote', v.sym('e')]]],
+                [[v.sym('quote'), [v.sym('unquote'), v.sym('e')]]],
                 'unquote')
         self.run_legacy_test( '${e + 1}',
-                [['quote', ['unquote', [v.sym('add'), v.sym('e'), v.num(1)]]]],
+                [[v.sym('quote'), [v.sym('unquote'), [v.sym('add'), v.sym('e'), v.num(1)]]]],
                 'unquote')
         self.run_legacy_test( '$e + 1',
-                [[v.sym('add'), ['quote', ['unquote', v.sym('e')]], v.num(1)]],
+                [[v.sym('add'), [v.sym('quote'), [v.sym('unquote'), v.sym('e')]], v.num(1)]],
                 'unquote')
 
 
