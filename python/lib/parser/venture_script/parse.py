@@ -35,12 +35,6 @@ def loctoken(located):
     "Convert a Token to an equivalent Located object."
     return located
 
-def loctoken1(located, value):
-    """Construct a Located object at the given token's location with the given value.
-
-This is the composition of loctoken with locval."""
-    return ast.update_value(located, value)
-
 def locquoted(located_quoter, located_value, f):
     (vstart, vend) = located_value.loc
     (start, _end) = located_quoter.loc
@@ -155,40 +149,40 @@ class Semantics(object):
     # directive: Return located expression.
     def p_directive_assume(self, k, n, eq, e):
         assert ast.isloc(e)
-        i = loctoken1(k, val.symbol('assume'))
+        i = ast.update_value(k, val.symbol('assume'))
         s = ast.map_value(val.symbol, loctoken(n))
         app = [i, s, e]
         return locmerge(i, e, app)
     def p_directive_assume_prog(self, k, dol, sym_exp, eq, e):
         assert ast.isloc(e)
         assert ast.isloc(sym_exp)
-        i = loctoken1(k, val.symbol('assume'))
+        i = ast.update_value(k, val.symbol('assume'))
         app = [i, locmerge(loctoken(dol), sym_exp, val.unquote(sym_exp)), e]
         return locmerge(i, e, app)
     def p_directive_observe(self, k, e, eq, e1):
         assert ast.isloc(e)
         assert ast.isloc(e1)
-        i = loctoken1(k, val.symbol('observe'))
+        i = ast.update_value(k, val.symbol('observe'))
         app = [i, e, e1]
         return locmerge(i, e1, app)
     def p_directive_predict(self, k, e):
         assert ast.isloc(e)
-        i = loctoken1(k, val.symbol('predict'))
+        i = ast.update_value(k, val.symbol('predict'))
         app = [i, e]
         return locmerge(i, e, app)
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_define(self, k, n, eq, e):
         assert ast.isloc(e)
-        i = loctoken1(k, 'define')
+        i = ast.update_value(k, 'define')
         s = ast.map_value(val.symbol, loctoken(n))
         return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
     def p_command_infer(self, k, e):
         assert ast.isloc(e)
-        i = loctoken1(k, 'infer')
+        i = ast.update_value(k, 'infer')
         return locmerge(i, e, {'instruction': i, 'expression': e})
     def p_command_load(self, k, pathname):
-        i = loctoken1(k, 'load')
+        i = ast.update_value(k, 'load')
         p = loctoken(pathname)
         return locmerge(i, p, {'instruction': i, 'file': p})
 
@@ -196,7 +190,7 @@ class Semantics(object):
     def p_body_do(self, ss, semi, e):
         assert ast.isloc(ss)
         if e is None:
-            e = loctoken1(semi, val.symbol('pass'))
+            e = ast.update_value(semi, val.symbol('pass'))
         assert ast.isloc(e)
         do = locmerge(ss, e, val.symbol('do'))
         return locmerge(ss, e, [do] + ss.value + [e])
@@ -217,28 +211,28 @@ class Semantics(object):
     # statement: Return located statement
     def p_statement_let(self, l, n, eq, e):
         assert ast.isloc(e)
-        let = loctoken1(l, val.symbol('let'))
+        let = ast.update_value(l, val.symbol('let'))
         n = ast.map_value(val.symbol, loctoken(n))
         return locmerge(let, e, [let, n, e])
     def p_statement_assign(self, n, eq, e):
         assert ast.isloc(e)
-        let = loctoken1(eq, val.symbol('let'))
+        let = ast.update_value(eq, val.symbol('let'))
         n = ast.map_value(val.symbol, loctoken(n))
         return locmerge(n, e, [let, n, e])
     def p_statement_letrec(self, l, n, eq, e):
         assert ast.isloc(e)
-        let = loctoken1(l, val.symbol('letrec'))
+        let = ast.update_value(l, val.symbol('letrec'))
         n = ast.map_value(val.symbol, loctoken(n))
         return locmerge(let, e, [let, n, e])
     def p_statement_mutrec(self, l, n, eq, e):
         assert ast.isloc(e)
-        let = loctoken1(l, val.symbol('mutrec'))
+        let = ast.update_value(l, val.symbol('mutrec'))
         n = ast.map_value(val.symbol, loctoken(n))
         return locmerge(let, e, [let, n, e])
     def p_statement_letvalues(self, l, po, names, pc, eq, e):
         assert ast.isloc(e)
         assert all(map(ast.isloc, names))
-        let = loctoken1(l, val.symbol('let_values'))
+        let = ast.update_value(l, val.symbol('let_values'))
         names = locbracket(po, pc, names)
         return locmerge(let, e, [let, names, e])
     def p_statement_labelled(self, d):
@@ -259,7 +253,7 @@ class Semantics(object):
         assert ast.isloc(l)
         assert ast.isloc(r)
         assert op.value in operators
-        app = [ast.map_value(val.symbol, loctoken1(op, operators[op.value])), l, r]
+        app = [ast.map_value(val.symbol, ast.update_value(op, operators[op.value])), l, r]
         return locmerge(l, r, app)
     def _p_exp(self, e):
         assert ast.isloc(e)
@@ -285,65 +279,65 @@ class Semantics(object):
     def p_action_force(self, k, e1, eq, e2):
         assert ast.isloc(e1)
         assert ast.isloc(e2)
-        i = loctoken1(k, val.symbol('force'))
+        i = ast.update_value(k, val.symbol('force'))
         app = [i, e1, e2]
         return locmerge(i, e2, app)
     def p_action_sample(self, k, e):
         assert ast.isloc(e)
-        i = loctoken1(k, val.symbol('sample'))
+        i = ast.update_value(k, val.symbol('sample'))
         app = [i, e]
         return locmerge(i, e, app)
     def p_arrow_one(self, param, op, body):
         assert ast.isloc(body)
         param = ast.map_value(val.symbol, loctoken(param))
         return locmerge(param, body, [
-            ast.map_value(val.symbol, loctoken1(op, 'lambda')),
+            ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
             ast.update_value(param, [param]),
             body,
         ])
     def p_arrow_tuple(self, po, params, pc, op, body):
         assert ast.isloc(body)
         return locmerge(loctoken(po), body, [
-            ast.map_value(val.symbol, loctoken1(op, 'lambda')),
+            ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
             locbracket(po, pc, params),
             body,
         ])
 
     def p_path_expression_one(self, slash, s):
         assert ast.isloc(s)
-        top = loctoken1(slash, val.symbol('by_top'))
-        intersect = loctoken1(slash, val.symbol('by_slash'))
+        top = ast.update_value(slash, val.symbol('by_top'))
+        intersect = ast.update_value(slash, val.symbol('by_slash'))
         app = [intersect, loclist([top]), s]
         return locmerge(top, s, app)
 
     def p_path_expression_some(self, more, slash, s):
         # XXX Is this just _p_binop with the "slash" operator?
         assert ast.isloc(s)
-        intersect = loctoken1(slash, val.symbol('by_slash'))
+        intersect = ast.update_value(slash, val.symbol('by_slash'))
         app = [intersect, more, s]
         return locmerge(more, s, app)
 
     def p_path_step_tag(self, q, tag):
-        by_tag = loctoken1(q, val.symbol('by_tag'))
+        by_tag = ast.update_value(q, val.symbol('by_tag'))
         name = locquoted(q, loctoken(tag), val.quasiquote)
         app = [by_tag, name]
         return locmerge(by_tag, name, app)
 
     def p_path_step_tag_val(self, q, tag, eq, value):
-        by_tag_value = loctoken1(q, val.symbol('by_tag_value'))
+        by_tag_value = ast.update_value(q, val.symbol('by_tag_value'))
         name = locquoted(q, loctoken(tag), val.quasiquote)
         app = [by_tag_value, name, value]
         return locmerge(by_tag_value, value, app)
 
     def p_hash_tag_tag(self, e, h, tag):
-        tag_proc = loctoken1(h, val.symbol('tag'))
+        tag_proc = ast.update_value(h, val.symbol('tag'))
         name = locquoted(h, loctoken(tag), val.quasiquote)
-        value = loctoken1(h, val.string("default"))
+        value = ast.update_value(h, val.string("default"))
         app = [tag_proc, name, value, e]
         return locmerge(e, tag_proc, app)
 
     def p_hash_tag_tag_val(self, e, h, tag, colon, value):
-        tag_proc = loctoken1(h, val.symbol('tag'))
+        tag_proc = ast.update_value(h, val.symbol('tag'))
         name = locquoted(h, loctoken(tag), val.quasiquote)
         app = [tag_proc, name, value, e]
         return locmerge(e, value, app)
@@ -383,7 +377,7 @@ class Semantics(object):
     def p_applicative_lookup(self, a, o, index, c):
         assert ast.isloc(a)
         assert ast.isloc(index)
-        lookup = loctoken1(o, val.sym('lookup'))
+        lookup = ast.update_value(o, val.sym('lookup'))
         return locmerge(a, loctoken(c), [lookup, a, index])
     def p_applicative_none(self, e):
         assert ast.isloc(e)
@@ -403,7 +397,7 @@ class Semantics(object):
             [e] = es
             return locbracket(o, c, e.value)
         else:
-            construction = [ast.map_value(val.symbol, loctoken1(o, 'values_list'))] + es
+            construction = [ast.map_value(val.symbol, ast.update_value(o, 'values_list'))] + es
             return locbracket(o, c, construction)
     def p_primary_brace(self, o, e, c):
         assert ast.isloc(e)
@@ -411,7 +405,7 @@ class Semantics(object):
     def p_primary_proc(self, k, po, params, pc, bo, body, bc):
         assert ast.isloc(body)
         return locbracket(k, bc, [
-            ast.map_value(val.symbol, loctoken1(k, 'lambda')),
+            ast.map_value(val.symbol, ast.update_value(k, 'lambda')),
             locbracket(po, pc, params),
             body,
         ])
@@ -420,7 +414,7 @@ class Semantics(object):
         assert ast.isloc(c)
         assert ast.isloc(a)
         return locbracket(k, ac,
-            [ast.map_value(val.symbol, loctoken1(k, 'if')), p, c, a])
+            [ast.map_value(val.symbol, ast.update_value(k, 'if')), p, c, a])
     def p_primary_qquote(self, o, b, c):
         return locbracket(o, c, val.quasiquote(b))
     def p_primary_unquote(self, op, e):
@@ -429,7 +423,7 @@ class Semantics(object):
             val.quote(locmerge(op, e, val.unquote(e))))
     def p_primary_array(self, o, a, c):
         assert isinstance(a, list)
-        construction = [ast.map_value(val.symbol, loctoken1(o, 'array'))] + a
+        construction = [ast.map_value(val.symbol, ast.update_value(o, 'array'))] + a
         return locbracket(o, c, construction)
     def p_primary_literal(self, l):
         assert ast.isloc(l)
@@ -454,9 +448,9 @@ class Semantics(object):
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
-        return ast.map_value(val.boolean, loctoken1(t, True))
+        return ast.map_value(val.boolean, ast.update_value(t, True))
     def p_literal_false(self, f):
-        return ast.map_value(val.boolean, loctoken1(f, False))
+        return ast.map_value(val.boolean, ast.update_value(f, False))
     def p_literal_integer(self, v):
         return ast.map_value(val.number, loctoken(v))
     def p_literal_real(self, v):

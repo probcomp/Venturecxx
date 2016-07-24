@@ -30,9 +30,6 @@ from venture.parser.church_prime import scan
 def loctoken(located):
     return located
 
-def loctoken1(located, value):
-    return ast.update_value(located, value)
-
 def locquoted(located_quoter, located_value, f):
     (_vstart, vend) = located_value.loc
     (start, _end) = located_quoter.loc
@@ -140,7 +137,7 @@ class Semantics(object):
 
     # directive: Return { 'instruction': located(..., 'foo'), ... }.
     def p_directive_define(self, k, n, e):
-        return { 'instruction': loctoken1(k, 'define'),
+        return { 'instruction': ast.update_value(k, 'define'),
                  'symbol': ast.map_value(val.symbol, loctoken(n)), 'expression': e }
     def p_directive_assume(self, k, n, e):
         # Fun fact.  This manipulation (and the similar treatment of
@@ -152,27 +149,27 @@ class Semantics(object):
         # case now, because the 'expr' node constructed here is not
         # parsed from the string, but synthesized based on knowing
         # that its constituents appear in an 'assume' directive.
-        expr = [loctoken1(k, val.symbol('assume')),
+        expr = [ast.update_value(k, val.symbol('assume')),
                 ast.map_value(val.symbol, loctoken(n)),
                 e]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_assume_values(self, k, nl, e):
-        expr = [loctoken1(k, val.symbol('assume_values')),
+        expr = [ast.update_value(k, val.symbol('assume_values')),
                 nl,
                 e]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_observe(self, k, e, e1):
-        expr = [loctoken1(k, val.symbol('observe')), e, e1]
+        expr = [ast.update_value(k, val.symbol('observe')), e, e1]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_predict(self, k, e):
-        expr = [loctoken1(k, val.symbol('predict')), e]
+        expr = [ast.update_value(k, val.symbol('predict')), e]
         return expression_evaluation_instruction(loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):
-        return { 'instruction': loctoken1(k, 'infer'), 'expression': e }
+        return { 'instruction': ast.update_value(k, 'infer'), 'expression': e }
     def p_command_load(self, k, pathname):
-        return { 'instruction': loctoken1(k, 'load'),
+        return { 'instruction': ast.update_value(k, 'load'),
                  'file': loctoken(pathname) }
 
     # expression: Return located expression.
@@ -221,9 +218,9 @@ class Semantics(object):
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
-        return ast.map_value(val.boolean, loctoken1(t, True))
+        return ast.map_value(val.boolean, ast.update_value(t, True))
     def p_literal_false(self, f):
-        return ast.map_value(val.boolean, loctoken1(f, False))
+        return ast.map_value(val.boolean, ast.update_value(f, False))
     def p_literal_integer(self, v):
         return ast.map_value(val.number, loctoken(v))
     def p_literal_real(self, v):
