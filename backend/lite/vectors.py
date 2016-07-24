@@ -198,3 +198,9 @@ registerBuiltinSP("matrix_trace",
     [t.MatrixType()],
     t.NumberType(),
     descr="%s(x) returns the trace (in the algebraic sense) of matrix x."))
+
+registerBuiltinSP("determinant",
+  deterministic_typed(np.linalg.det,
+    [t.MatrixType()],
+    t.NumberType(),
+    descr="%s(x) returns the determinant of matrix x."))
