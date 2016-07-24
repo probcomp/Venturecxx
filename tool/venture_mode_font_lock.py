@@ -22,6 +22,7 @@ import re
 
 from venture.lite.builtin import builtInSPsIter
 from venture.lite.inference_sps import inferenceSPsList
+import venture.engine.inference # To register the inference SPs that live there
 from venture.engine import inference_prelude
 from venture.sivm.macro_system import macros
 from venture.shortcuts import Lite

@@ -167,6 +167,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('[|'), grammar.T_LOXFORD),
         (Plex.Str('|]'), grammar.T_ROXFORD),
         (Plex.Str('$'), grammar.T_LDOLLAR),
+        (Plex.Str('?'), grammar.T_QUESTION),
         (Plex.Str('='), grammar.T_EQDEF),
         # Hack ~ to mean = everywhere but be available for reasons of
         # code style.  If we later want to adjust the system to
@@ -179,6 +180,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('->'), grammar.T_RARR),
         # Also ~> for ->.
         (Plex.Str('~>'), grammar.T_RARR),
+        (Plex.Str('#'), grammar.T_HASH),
         (Plex.Str('||'), grammar.T_AND),
         (Plex.Str('&&'), grammar.T_OR),
         (Plex.Str('=='), grammar.T_EQ),

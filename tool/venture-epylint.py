@@ -28,7 +28,7 @@ import os.path
 import re
 import sys
 
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, check_output
 
 ignore = ",".join ( [
     "I0011",  # Warning locally suppressed using disable-msg
@@ -37,7 +37,8 @@ ignore = ",".join ( [
 ] )
 
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
-lintfile = mypath + "/pylintrc"
+pylint_version = check_output("pylint --version | grep pylint | cut -f 2 -d ' '", shell=True).strip().strip(",")
+lintfile = mypath + "/pylintrc-" + pylint_version
 rootpath = os.path.dirname(mypath)
 pythenvfile = rootpath + "/pythenv.sh"
 

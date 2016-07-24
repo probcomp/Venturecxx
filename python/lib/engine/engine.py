@@ -25,6 +25,8 @@ import time
 from venture.engine.inference import Infer
 from venture.engine.trace_set import TraceSet
 from venture.exception import VentureException
+import venture.lite.inference_sps as inf
+import venture.untraced.trace_search # So the SPs get registered
 import venture.lite.value as vv
 import venture.value.dicts as v
 
@@ -36,7 +38,6 @@ class Engine(object):
     self.model = self.new_model(backend)
     self.directiveCounter = 0
     self.inferrer = None
-    import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
@@ -300,7 +301,6 @@ class Engine(object):
     ans = trace.Trace(self._py_rng.randint(1, 2**31 - 1))
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
-    import venture.lite.inference_sps as inf
     for word in inf.inferenceKeywords:
       if not ans.boundInGlobalEnv(word):
         ans.bindPrimitiveName(word, vv.VentureSymbol(word))
