@@ -8,7 +8,7 @@
                (next_table <- (crp_next_table))
                (let occupied (keys table_counts))
                (let counts (values table_counts))
-               (let table (categorical (dirichlet (pair alpha (to_list counts)))
+               (let table (categorical (normalize (pair alpha (to_list counts)))
                                        (pair next_table (to_list occupied))))
                (return table))))
         (incorporate
@@ -44,7 +44,7 @@
                (next_table <- (crp_next_table))
                (let occupied (keys table_counts))
                (let counts (values table_counts))
-               (let table (categorical (dirichlet (pair alpha (to_list counts)))
+               (let table (categorical (normalize (pair alpha (to_list counts)))
                                        (pair next_table (to_list occupied))))
                (return table))))
         (log_density
