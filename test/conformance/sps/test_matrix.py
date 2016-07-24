@@ -17,6 +17,7 @@
 
 from numpy import allclose
 from numpy import array_equal
+from numpy import testing
 
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -80,3 +81,8 @@ class TestMatrixVector(object):
   def testMatrixTrace(self):
     assert self.ripl.sample("(matrix_trace (matrix (array (array -5.5 2.) (array 3. 4.0))))") == -1.5
     assert self.ripl.sample("(matrix_trace (matrix (array (array 0.))))") == 0.
+
+  @on_inf_prim("none")
+  def testMatrixDeterminant(self):
+    testing.assert_almost_equal(self.ripl.sample("(determinant  (matrix (array (array 1. 2. ) (array 3. 4))))"), -2)
+    testing.assert_almost_equal(self.ripl.sample("(determinant (matrix (array (array 0.))))"), 0.)
