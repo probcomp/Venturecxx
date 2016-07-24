@@ -72,13 +72,15 @@ class Semantics(object):
     def parse_failed(self):
         assert self.answer is None
         raise VentureException('parse', 'Syntax error!')
-    def syntax_error(self, (_number, (text, start, end))):
+    def syntax_error(self, (_number, located)):
         # XXX Should not raise here -- should accumulate errors and
         # report them all at the end.
         #
         # XXX Should adapt lemonade to support passing a message, and
         # make the generated parser say which tokens (and, ideally,
         # nonterminals) it was expecting instead.
+        text = located.value
+        (start, end) = located.loc
         raise VentureException('parse', ('Syntax error at %s' % (repr(text),)),
             text_index=[start, end])
 
