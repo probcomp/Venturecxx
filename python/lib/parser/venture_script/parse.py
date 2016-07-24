@@ -27,10 +27,6 @@ from venture.parser import ast
 from venture.parser.venture_script import grammar
 from venture.parser.venture_script import scan
 
-def locmerge(lv0, lv1, v):
-    "Construct a Located object with the given value that spans the extent of the given Located objects."
-    return ast.locmerge(lv0, lv1, v)
-
 def locquoted(located_quoter, located_value, f):
     (vstart, vend) = located_value.loc
     (start, _end) = located_quoter.loc
@@ -133,13 +129,13 @@ class Semantics(object):
         label = ast.map_value(val.symbol, l)
         exp = d.value
         new_exp = exp + [label]
-        new_d = locmerge(label, d, new_exp)
+        new_d = ast.locmerge(label, d, new_exp)
         return new_d
     def p_labelled_directive_prog(self, dol, lab_exp, d):
-        label = locmerge(dol, lab_exp, val.unquote(lab_exp))
+        label = ast.locmerge(dol, lab_exp, val.unquote(lab_exp))
         exp = d.value
         new_exp = exp + [label]
-        new_d = locmerge(label, d, new_exp)
+        new_d = ast.locmerge(label, d, new_exp)
         return new_d
 
     # directive: Return located expression.
@@ -148,38 +144,38 @@ class Semantics(object):
         i = ast.update_value(k, val.symbol('assume'))
         s = ast.map_value(val.symbol, n)
         app = [i, s, e]
-        return locmerge(i, e, app)
+        return ast.locmerge(i, e, app)
     def p_directive_assume_prog(self, k, dol, sym_exp, eq, e):
         assert ast.isloc(e)
         assert ast.isloc(sym_exp)
         i = ast.update_value(k, val.symbol('assume'))
-        app = [i, locmerge(dol, sym_exp, val.unquote(sym_exp)), e]
-        return locmerge(i, e, app)
+        app = [i, ast.locmerge(dol, sym_exp, val.unquote(sym_exp)), e]
+        return ast.locmerge(i, e, app)
     def p_directive_observe(self, k, e, eq, e1):
         assert ast.isloc(e)
         assert ast.isloc(e1)
         i = ast.update_value(k, val.symbol('observe'))
         app = [i, e, e1]
-        return locmerge(i, e1, app)
+        return ast.locmerge(i, e1, app)
     def p_directive_predict(self, k, e):
         assert ast.isloc(e)
         i = ast.update_value(k, val.symbol('predict'))
         app = [i, e]
-        return locmerge(i, e, app)
+        return ast.locmerge(i, e, app)
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_define(self, k, n, eq, e):
         assert ast.isloc(e)
         i = ast.update_value(k, 'define')
         s = ast.map_value(val.symbol, n)
-        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
+        return ast.locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
     def p_command_infer(self, k, e):
         assert ast.isloc(e)
         i = ast.update_value(k, 'infer')
-        return locmerge(i, e, {'instruction': i, 'expression': e})
+        return ast.locmerge(i, e, {'instruction': i, 'expression': e})
     def p_command_load(self, k, pathname):
         i = ast.update_value(k, 'load')
-        return locmerge(i, pathname, {'instruction': i, 'file': pathname})
+        return ast.locmerge(i, pathname, {'instruction': i, 'file': pathname})
 
     # body: Return located expression.
     def p_body_do(self, ss, semi, e):
@@ -187,8 +183,8 @@ class Semantics(object):
         if e is None:
             e = ast.update_value(semi, val.symbol('pass'))
         assert ast.isloc(e)
-        do = locmerge(ss, e, val.symbol('do'))
-        return locmerge(ss, e, [do] + ss.value + [e])
+        do = ast.locmerge(ss, e, val.symbol('do'))
+        return ast.locmerge(ss, e, [do] + ss.value + [e])
     def p_body_exp(self, e):
         assert ast.isloc(e)
         return e
@@ -201,35 +197,35 @@ class Semantics(object):
         assert ast.isloc(s)
         assert ast.isloc(s)
         ss.value.append(s)
-        return locmerge(ss, s, ss.value)
+        return ast.locmerge(ss, s, ss.value)
 
     # statement: Return located statement
     def p_statement_let(self, l, n, eq, e):
         assert ast.isloc(e)
         let = ast.update_value(l, val.symbol('let'))
         n = ast.map_value(val.symbol, n)
-        return locmerge(let, e, [let, n, e])
+        return ast.locmerge(let, e, [let, n, e])
     def p_statement_assign(self, n, eq, e):
         assert ast.isloc(e)
         let = ast.update_value(eq, val.symbol('let'))
         n = ast.map_value(val.symbol, n)
-        return locmerge(n, e, [let, n, e])
+        return ast.locmerge(n, e, [let, n, e])
     def p_statement_letrec(self, l, n, eq, e):
         assert ast.isloc(e)
         let = ast.update_value(l, val.symbol('letrec'))
         n = ast.map_value(val.symbol, n)
-        return locmerge(let, e, [let, n, e])
+        return ast.locmerge(let, e, [let, n, e])
     def p_statement_mutrec(self, l, n, eq, e):
         assert ast.isloc(e)
         let = ast.update_value(l, val.symbol('mutrec'))
         n = ast.map_value(val.symbol, n)
-        return locmerge(let, e, [let, n, e])
+        return ast.locmerge(let, e, [let, n, e])
     def p_statement_letvalues(self, l, po, names, pc, eq, e):
         assert ast.isloc(e)
         assert all(map(ast.isloc, names))
         let = ast.update_value(l, val.symbol('let_values'))
         names = locbracket(po, pc, names)
-        return locmerge(let, e, [let, names, e])
+        return ast.locmerge(let, e, [let, names, e])
     def p_statement_labelled(self, d):
         assert ast.isloc(d)
         return d
@@ -249,7 +245,7 @@ class Semantics(object):
         assert ast.isloc(r)
         assert op.value in operators
         app = [ast.map_value(val.symbol, ast.update_value(op, operators[op.value])), l, r]
-        return locmerge(l, r, app)
+        return ast.locmerge(l, r, app)
     def _p_exp(self, e):
         assert ast.isloc(e)
         return e
@@ -260,12 +256,12 @@ class Semantics(object):
         assert ast.isloc(e)
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
-        return locmerge(n, e, [n, ast.update_value(op, val.symbol("<-")), e])
+        return ast.locmerge(n, e, [n, ast.update_value(op, val.symbol("<-")), e])
     def p_do_bind_labelled(self, n, op, l):
         assert ast.isloc(l)
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
-        return locmerge(n, l, [n, ast.update_value(op, val.symbol("<-")), l])
+        return ast.locmerge(n, l, [n, ast.update_value(op, val.symbol("<-")), l])
     def p_action_directive(self, d):
         assert ast.isloc(d)
         return d
@@ -274,23 +270,23 @@ class Semantics(object):
         assert ast.isloc(e2)
         i = ast.update_value(k, val.symbol('force'))
         app = [i, e1, e2]
-        return locmerge(i, e2, app)
+        return ast.locmerge(i, e2, app)
     def p_action_sample(self, k, e):
         assert ast.isloc(e)
         i = ast.update_value(k, val.symbol('sample'))
         app = [i, e]
-        return locmerge(i, e, app)
+        return ast.locmerge(i, e, app)
     def p_arrow_one(self, param, op, body):
         assert ast.isloc(body)
         param = ast.map_value(val.symbol, param)
-        return locmerge(param, body, [
+        return ast.locmerge(param, body, [
             ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
             ast.update_value(param, [param]),
             body,
         ])
     def p_arrow_tuple(self, po, params, pc, op, body):
         assert ast.isloc(body)
-        return locmerge(po, body, [
+        return ast.locmerge(po, body, [
             ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
             locbracket(po, pc, params),
             body,
@@ -301,39 +297,39 @@ class Semantics(object):
         top = ast.update_value(slash, val.symbol('by_top'))
         intersect = ast.update_value(slash, val.symbol('by_slash'))
         app = [intersect, loclist([top]), s]
-        return locmerge(top, s, app)
+        return ast.locmerge(top, s, app)
 
     def p_path_expression_some(self, more, slash, s):
         # XXX Is this just _p_binop with the "slash" operator?
         assert ast.isloc(s)
         intersect = ast.update_value(slash, val.symbol('by_slash'))
         app = [intersect, more, s]
-        return locmerge(more, s, app)
+        return ast.locmerge(more, s, app)
 
     def p_path_step_tag(self, q, tag):
         by_tag = ast.update_value(q, val.symbol('by_tag'))
         name = locquoted(q, tag, val.quasiquote)
         app = [by_tag, name]
-        return locmerge(by_tag, name, app)
+        return ast.locmerge(by_tag, name, app)
 
     def p_path_step_tag_val(self, q, tag, eq, value):
         by_tag_value = ast.update_value(q, val.symbol('by_tag_value'))
         name = locquoted(q, tag, val.quasiquote)
         app = [by_tag_value, name, value]
-        return locmerge(by_tag_value, value, app)
+        return ast.locmerge(by_tag_value, value, app)
 
     def p_hash_tag_tag(self, e, h, tag):
         tag_proc = ast.update_value(h, val.symbol('tag'))
         name = locquoted(h, tag, val.quasiquote)
         value = ast.update_value(h, val.string("default"))
         app = [tag_proc, name, value, e]
-        return locmerge(e, tag_proc, app)
+        return ast.locmerge(e, tag_proc, app)
 
     def p_hash_tag_tag_val(self, e, h, tag, colon, value):
         tag_proc = ast.update_value(h, val.symbol('tag'))
         name = locquoted(h, tag, val.quasiquote)
         app = [tag_proc, name, value, e]
-        return locmerge(e, value, app)
+        return ast.locmerge(e, value, app)
 
     p_do_bind_none = _p_exp
     p_action_none = _p_exp
@@ -366,12 +362,12 @@ class Semantics(object):
         assert ast.isloc(fn)
         for arg in args:
             assert ast.isloc(arg)
-        return locmerge(fn, c, [fn] + args)
+        return ast.locmerge(fn, c, [fn] + args)
     def p_applicative_lookup(self, a, o, index, c):
         assert ast.isloc(a)
         assert ast.isloc(index)
         lookup = ast.update_value(o, val.sym('lookup'))
-        return locmerge(a, c, [lookup, a, index])
+        return ast.locmerge(a, c, [lookup, a, index])
     def p_applicative_none(self, e):
         assert ast.isloc(e)
         return e
@@ -411,8 +407,8 @@ class Semantics(object):
     def p_primary_qquote(self, o, b, c):
         return locbracket(o, c, val.quasiquote(b))
     def p_primary_unquote(self, op, e):
-        return locmerge(op, e,
-            val.quote(locmerge(op, e, val.unquote(e))))
+        return ast.locmerge(op, e,
+            val.quote(ast.locmerge(op, e, val.unquote(e))))
     def p_primary_array(self, o, a, c):
         assert isinstance(a, list)
         construction = [ast.map_value(val.symbol, ast.update_value(o, 'array'))] + a
