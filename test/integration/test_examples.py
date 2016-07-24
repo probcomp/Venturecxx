@@ -102,11 +102,3 @@ def testCrp2dDemo():
   with extra_module_path("examples"):
     import crp_2d_demo
     crp_2d_demo.doit(num_points=2, num_frames=3, show_pics=False)
-
-@in_backend("none")
-@needs_backend("lite")
-def testHmcDemo():
-  with extra_module_path("examples"):
-    with temp_directory("hmc") as plot_dir:
-      import hmc_demo
-      hmc_demo.doit(nsamples=3, nruns=1, plot_dir=plot_dir, contour_res=2)
