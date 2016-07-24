@@ -556,7 +556,6 @@ include examples/brownian/pic.vnt
 include examples/brownian/plot.vnt
 include examples/crosscat.vnt
 include examples/crp_2d_demo.py
-include examples/gaussian_geweke.py
 include examples/hmc_demo.py
 include examples/hmm.vnt
 include examples/hmm_plugin.py

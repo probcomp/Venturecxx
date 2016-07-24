@@ -28,7 +28,6 @@ from venture.test.config import gen_needs_backend
 from venture.test.config import gen_needs_ggplot
 from venture.test.config import in_backend
 from venture.test.config import needs_backend
-from venture.test.config import needs_seaborn
 
 def checkVentureExample(command):
   assert s.call(command, shell=True) == 0
@@ -96,15 +95,6 @@ def extra_module_path(path):
   sys.path.append(exs_path)
   yield
   sys.path = old_path
-
-@in_backend("none")
-@needs_backend("lite")
-@needs_seaborn
-def testGaussianGeweke():
-  with extra_module_path("examples"):
-    with temp_directory("geweke") as plots_dir:
-      import gaussian_geweke
-      gaussian_geweke.main(outdir=plots_dir, n_sample=2, burn_in=2, thin=2)
 
 @in_backend("none")
 @needs_backend("lite")
