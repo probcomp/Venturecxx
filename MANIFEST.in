@@ -543,6 +543,7 @@ include doc/stale-mac-install-instructions.md
 include doc/towards-operating-on-sufficient-statistics.md
 include doc/type-system.md
 include doc/venstan.md
+include examples/brownian/README
 include examples/brownian/data-gen.py
 include examples/brownian/drawing-plugin.py
 include examples/brownian/film.vnt
@@ -555,7 +556,6 @@ include examples/brownian/pic.vnt
 include examples/brownian/plot.vnt
 include examples/crosscat.vnt
 include examples/crp_2d_demo.py
-include examples/gaussian_funnel.py
 include examples/gaussian_geweke.py
 include examples/hmc_demo.py
 include examples/hmm.vnt
