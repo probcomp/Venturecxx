@@ -33,9 +33,6 @@ def locquoted(located_quoter, located_value, f):
     assert start < _vstart
     return ast.Located([start, vend], f(located_value))
 
-def loclist(items):
-    return ast.loclist(items)
-
 def expression_evaluation_instruction(e):
     return { 'instruction': ast.update_value(e, 'evaluate'), 'expression': e }
 
@@ -146,18 +143,18 @@ class Semantics(object):
         expr = [ast.update_value(k, val.symbol('assume')),
                 ast.map_value(val.symbol, n),
                 e]
-        return expression_evaluation_instruction(loclist(expr))
+        return expression_evaluation_instruction(ast.loclist(expr))
     def p_directive_assume_values(self, k, nl, e):
         expr = [ast.update_value(k, val.symbol('assume_values')),
                 nl,
                 e]
-        return expression_evaluation_instruction(loclist(expr))
+        return expression_evaluation_instruction(ast.loclist(expr))
     def p_directive_observe(self, k, e, e1):
         expr = [ast.update_value(k, val.symbol('observe')), e, e1]
-        return expression_evaluation_instruction(loclist(expr))
+        return expression_evaluation_instruction(ast.loclist(expr))
     def p_directive_predict(self, k, e):
         expr = [ast.update_value(k, val.symbol('predict')), e]
-        return expression_evaluation_instruction(loclist(expr))
+        return expression_evaluation_instruction(ast.loclist(expr))
 
     # command: Return { 'instruction': located(..., 'foo'), ... }.
     def p_command_infer(self, k, e):

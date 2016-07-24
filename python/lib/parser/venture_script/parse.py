@@ -33,10 +33,6 @@ def locquoted(located_quoter, located_value, f):
     assert start < vstart
     return ast.Located([start, vend], f(located_value))
 
-def loclist(items):
-    "Make a Located list of Located items, that spans their total extent."
-    return ast.loclist(items)
-
 def delocust(l):
     "Recursively remove location tags."
     # XXX Why do we bother with tuples in the first place?
@@ -292,7 +288,7 @@ class Semantics(object):
         assert ast.isloc(s)
         top = ast.update_value(slash, val.symbol('by_top'))
         intersect = ast.update_value(slash, val.symbol('by_slash'))
-        app = [intersect, loclist([top]), s]
+        app = [intersect, ast.loclist([top]), s]
         return ast.locmerge(top, s, app)
 
     def p_path_expression_some(self, more, slash, s):
