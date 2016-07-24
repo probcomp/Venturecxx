@@ -557,16 +557,6 @@ def needs_pystan(f):
       raise SkipTest("pystan not installed on this machine")
   return wrapped
 
-def needs_seaborn(f):
-  @nose.make_decorator(f)
-  def wrapped(*args):
-    try:
-      import seaborn
-      return f(*args)
-    except ImportError:
-      raise SkipTest("seaborn not installed on this machine")
-  return wrapped
-
 def capture_output(ripl, program):
   'Capture stdout; return the string headed for stdout and the result of the computation'
   old_stdout = sys.stdout
