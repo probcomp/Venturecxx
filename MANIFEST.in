@@ -568,14 +568,6 @@ include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits2.csv
 include examples/profile_tricky_coin.py
-include examples/regression_models/crp.vnt
-include examples/regression_models/crp2.vnt
-include examples/regression_models/hi_quadratic.vnt
-include examples/regression_models/logistic.vnt
-include examples/regression_models/pivot.vnt
-include examples/regression_models/quad_fourier.vnt
-include examples/regression_models/simple_fourier.vnt
-include examples/regression_models/simple_quadratic.vnt
 include examples/trickiness-concrete-2.vnts
 include examples/trickiness-concrete.vnts
 include examples/trickiness-ideal.vnts
