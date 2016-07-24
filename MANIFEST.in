@@ -568,6 +568,7 @@ include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits2.csv
 include examples/profile_tricky_coin.py
+include examples/dual-semantics/README
 include examples/dual-semantics/trickiness-concrete-2.vnts
 include examples/dual-semantics/trickiness-concrete.vnts
 include examples/dual-semantics/trickiness-ideal.vnts
