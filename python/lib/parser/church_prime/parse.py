@@ -27,9 +27,6 @@ from venture.parser import ast
 from venture.parser.church_prime import grammar
 from venture.parser.church_prime import scan
 
-def loctoken(located):
-    return located
-
 def locquoted(located_quoter, located_value, f):
     (_vstart, vend) = located_value.loc
     (start, _end) = located_quoter.loc
@@ -106,7 +103,7 @@ class Semantics(object):
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
-        label = ast.map_value(val.symbol, loctoken(l))
+        label = ast.map_value(val.symbol, l)
         if d['instruction'].value == 'evaluate':
             # The grammar only permits expressions that are calls to
             # the 'assume', 'observe', or 'predict' macros to be
@@ -138,7 +135,7 @@ class Semantics(object):
     # directive: Return { 'instruction': located(..., 'foo'), ... }.
     def p_directive_define(self, k, n, e):
         return { 'instruction': ast.update_value(k, 'define'),
-                 'symbol': ast.map_value(val.symbol, loctoken(n)), 'expression': e }
+                 'symbol': ast.map_value(val.symbol, n), 'expression': e }
     def p_directive_assume(self, k, n, e):
         # Fun fact.  This manipulation (and the similar treatment of
         # observe and predict, here and in the VentureScript parser)
@@ -150,7 +147,7 @@ class Semantics(object):
         # parsed from the string, but synthesized based on knowing
         # that its constituents appear in an 'assume' directive.
         expr = [ast.update_value(k, val.symbol('assume')),
-                ast.map_value(val.symbol, loctoken(n)),
+                ast.map_value(val.symbol, n),
                 e]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_assume_values(self, k, nl, e):
@@ -170,14 +167,14 @@ class Semantics(object):
         return { 'instruction': ast.update_value(k, 'infer'), 'expression': e }
     def p_command_load(self, k, pathname):
         return { 'instruction': ast.update_value(k, 'load'),
-                 'file': loctoken(pathname) }
+                 'file': pathname }
 
     # expression: Return located expression.
     def p_expression_symbol(self, name):
-        return ast.map_value(val.symbol, loctoken(name))
+        return ast.map_value(val.symbol, name)
     def p_expression_operator(self, op):
         assert op.value in operators
-        return ast.map_value(lambda op: val.symbol(operators[op]), loctoken(op))
+        return ast.map_value(lambda op: val.symbol(operators[op]), op)
     def p_expression_literal(self, value):
         return value
     def p_expression_quote(self, quote, e):
@@ -213,7 +210,7 @@ class Semantics(object):
     def p_names_none(self):
         return []
     def p_names_some(self, ns, n):
-        ns.append(ast.map_value(val.symbol, loctoken(n)))
+        ns.append(ast.map_value(val.symbol, n))
         return ns
 
     # literal: Return located `val'.
@@ -222,11 +219,11 @@ class Semantics(object):
     def p_literal_false(self, f):
         return ast.map_value(val.boolean, ast.update_value(f, False))
     def p_literal_integer(self, v):
-        return ast.map_value(val.number, loctoken(v))
+        return ast.map_value(val.number, v)
     def p_literal_real(self, v):
-        return ast.map_value(val.number, loctoken(v))
+        return ast.map_value(val.number, v)
     def p_literal_string(self, v):
-        return ast.map_value(val.string, loctoken(v))
+        return ast.map_value(val.string, v)
     def p_literal_json(self, type, open, value, close):
         t = type.value
         start, end = type.loc
