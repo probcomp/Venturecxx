@@ -97,14 +97,13 @@ path_step(edge)		::= primary(e).
 
 hash_tag(tag)		::= hash_tag(e) T_HASH(h) L_NAME(tag).
 hash_tag(tag_val)	::= hash_tag(e) T_HASH(h) L_NAME(tag) T_COLON(colon) applicative(value).
-hash_tag(none)		::= boolean_and(e).
+hash_tag(none)		::= boolean_or(e).
 
-/* XXX This AND/OR precedence is backwards from everyone else!  */
-boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).
-boolean_and(none)	::= boolean_or(e).
+boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) boolean_and(r).
+boolean_or(none)	::= boolean_and(e).
 
-boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) equality(r).
-boolean_or(none)	::= equality(e).
+boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) equality(r).
+boolean_and(none)	::= equality(e).
 
 equality(eq)		::= equality(l) K_EQ|T_EQ(op) comparison(r).
 equality(neq)		::= equality(l) K_NEQ|T_NEQ(op) comparison(r).

@@ -181,8 +181,8 @@ class Scanner(Plex.Scanner):
         # Also ~> for ->.
         (Plex.Str('~>'), grammar.T_RARR),
         (Plex.Str('#'), grammar.T_HASH),
-        (Plex.Str('||'), grammar.T_AND),
-        (Plex.Str('&&'), grammar.T_OR),
+        (Plex.Str('||'), grammar.T_OR),
+        (Plex.Str('&&'), grammar.T_AND),
         (Plex.Str('=='), grammar.T_EQ),
         (Plex.Str('!='), grammar.T_NEQ),
         (Plex.Str('<='), grammar.T_LE),
