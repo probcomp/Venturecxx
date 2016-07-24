@@ -564,6 +564,7 @@ include examples/on-teaching-exchangeable-coupling.txt
 include examples/plotting/bimodal.vnt
 include examples/plotting/dice_plot.vnt
 include examples/plotting/normal_plot.vnt
+include examples/ppaml-talk/README
 include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits2.csv
