@@ -27,9 +27,6 @@ from venture.parser import ast
 from venture.parser.church_prime import grammar
 from venture.parser.church_prime import scan
 
-def locmap(l, f):
-    return ast.map_value(f, l)
-
 def loctoken(located):
     return located
 
@@ -49,7 +46,7 @@ def loclist(items):
     return ast.loclist(items)
 
 def expression_evaluation_instruction(e):
-    return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
+    return { 'instruction': ast.update_value(e, 'evaluate'), 'expression': e }
 
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
@@ -112,7 +109,7 @@ class Semantics(object):
 
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
-        label = locmap(loctoken(l), val.symbol)
+        label = ast.map_value(val.symbol, loctoken(l))
         if d['instruction'].value == 'evaluate':
             # The grammar only permits expressions that are calls to
             # the 'assume', 'observe', or 'predict' macros to be
@@ -125,7 +122,7 @@ class Semantics(object):
             return locbracket(l, close, new_d)
         else:
             d['label'] = label
-            d['instruction'] = locmap(d['instruction'], lambda i: 'labeled_' + i)
+            d['instruction'] = ast.map_value(lambda i: 'labeled_' + i, d['instruction'])
             return locbracket(l, close, d)
     def p_instruction_unlabelled(self, open, d, close):
         return locbracket(open, close, d)
@@ -133,7 +130,7 @@ class Semantics(object):
         return locbracket(open, close, c)
     def p_instruction_expression(self, e):
         inst = expression_evaluation_instruction(e)
-        return locmap(e, lambda _: inst)
+        return ast.update_value(e, inst)
     def p_instruction_laberror(self, d):
         return 'error'
     def p_instruction_labdirerror(self):
@@ -144,7 +141,7 @@ class Semantics(object):
     # directive: Return { 'instruction': located(..., 'foo'), ... }.
     def p_directive_define(self, k, n, e):
         return { 'instruction': loctoken1(k, 'define'),
-                 'symbol': locmap(loctoken(n), val.symbol), 'expression': e }
+                 'symbol': ast.map_value(val.symbol, loctoken(n)), 'expression': e }
     def p_directive_assume(self, k, n, e):
         # Fun fact.  This manipulation (and the similar treatment of
         # observe and predict, here and in the VentureScript parser)
@@ -156,7 +153,7 @@ class Semantics(object):
         # parsed from the string, but synthesized based on knowing
         # that its constituents appear in an 'assume' directive.
         expr = [loctoken1(k, val.symbol('assume')),
-                locmap(loctoken(n), val.symbol),
+                ast.map_value(val.symbol, loctoken(n)),
                 e]
         return expression_evaluation_instruction(loclist(expr))
     def p_directive_assume_values(self, k, nl, e):
@@ -180,10 +177,10 @@ class Semantics(object):
 
     # expression: Return located expression.
     def p_expression_symbol(self, name):
-        return locmap(loctoken(name), val.symbol)
+        return ast.map_value(val.symbol, loctoken(name))
     def p_expression_operator(self, op):
         assert op.value in operators
-        return locmap(loctoken(op), lambda op: val.symbol(operators[op]))
+        return ast.map_value(lambda op: val.symbol(operators[op]), loctoken(op))
     def p_expression_literal(self, value):
         return value
     def p_expression_quote(self, quote, e):
@@ -219,20 +216,20 @@ class Semantics(object):
     def p_names_none(self):
         return []
     def p_names_some(self, ns, n):
-        ns.append(locmap(loctoken(n), val.symbol))
+        ns.append(ast.map_value(val.symbol, loctoken(n)))
         return ns
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
-        return locmap(loctoken1(t, True), val.boolean)
+        return ast.map_value(val.boolean, loctoken1(t, True))
     def p_literal_false(self, f):
-        return locmap(loctoken1(f, False), val.boolean)
+        return ast.map_value(val.boolean, loctoken1(f, False))
     def p_literal_integer(self, v):
-        return locmap(loctoken(v), val.number)
+        return ast.map_value(val.number, loctoken(v))
     def p_literal_real(self, v):
-        return locmap(loctoken(v), val.number)
+        return ast.map_value(val.number, loctoken(v))
     def p_literal_string(self, v):
-        return locmap(loctoken(v), val.string)
+        return ast.map_value(val.string, loctoken(v))
     def p_literal_json(self, type, open, value, close):
         t = type.value
         start, end = type.loc
