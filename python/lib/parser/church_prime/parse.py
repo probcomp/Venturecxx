@@ -23,51 +23,49 @@ import json
 from venture.exception import VentureException
 import venture.value.dicts as val
 
+from venture.parser import ast
 from venture.parser.church_prime import grammar
 from venture.parser.church_prime import scan
 
-def tokval((value, _start, _end)):
-    return value
-
-def located(loc, value):
-    # XXX Use a namedtuple, not a dict.
-    return { 'loc': loc, 'value': value }
+def tokval(located):
+    return located.value
 
 def locmap(l, f):
-    return { 'loc': l['loc'], 'value': f(l['value']) }
+    return ast.map_value(f, l)
 
-def loctoken((value, start, end)):
-    return located([start, end], value)
+def loctoken(located):
+    return located
 
-def loctoken1((_value, start, end), value):
-    return located([start, end], value)
+def loctoken1(located, value):
+    return ast.update_value(located, value)
 
-def locquoted((_value, start, _end), located_value, f):
-    (_vstart, vend) = located_value['loc']
+def locquoted(located_quoter, located_value, f):
+    (_vstart, vend) = located_value.loc
+    (start, _end) = located_quoter.loc
     assert start < _vstart
-    return located([start, vend], f(located_value))
+    return ast.Located([start, vend], f(located_value))
 
-def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
-    assert ostart <= oend
-    assert oend < cstart
-    assert cstart <= cend
-    return located([ostart, cend], value)
+def locbracket(loc1, loc2, value):
+    return ast.locmerge(loc1, loc2, value)
 
 def loclist(items):
-    assert len(items) >= 1
-    (start, _) = items[0]['loc']
-    (_, end) = items[-1]['loc']
-    return located([start, end], items)
+    return ast.loclist(items)
 
 def expression_evaluation_instruction(e):
     return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
 
 def delocust(l):
     # XXX Why do we bother with tuples in the first place?
-    if isinstance(l['value'], list) or isinstance(l['value'], tuple):
-        return [delocust(v) for v in l['value']]
+    if isinstance(l, dict) and sorted(l.keys()) == ['loc', 'value']:
+        return delocust(l['value'])
+    elif ast.isloc(l):
+        return delocust(l.value)
+    elif isinstance(l, list) or isinstance(l, tuple):
+        return [delocust(v) for v in l]
+    elif isinstance(l, dict):
+        return dict((k, delocust(v)) for k, v in l.iteritems())
     else:
-        return l['value']
+        return l
 
 operators = {
     '+':        'add',
@@ -118,14 +116,14 @@ class Semantics(object):
     # instruction: Return located { 'instruction': 'foo', ... }.
     def p_instruction_labelled(self, l, open, d, close):
         label = locmap(loctoken(l), val.symbol)
-        if d['instruction']['value'] == 'evaluate':
+        if d['instruction'].value == 'evaluate':
             # The grammar only permits expressions that are calls to
             # the 'assume', 'observe', or 'predict' macros to be
             # labeled with syntactic sugar.
             locexp = d['expression']
-            exp = locexp['value']
+            exp = locexp.value
             new_exp = exp + [label]
-            new_locexp = located(locexp['loc'], new_exp)
+            new_locexp = ast.Located(locexp.loc, new_exp)
             new_d = expression_evaluation_instruction(new_locexp)
             return locbracket(l, close, new_d)
         else:
@@ -187,7 +185,7 @@ class Semantics(object):
     def p_expression_symbol(self, name):
         return locmap(loctoken(name), val.symbol)
     def p_expression_operator(self, op):
-        assert op[0] in operators
+        assert op.value in operators
         return locmap(loctoken(op), lambda op: val.symbol(operators[op]))
     def p_expression_literal(self, value):
         return value
@@ -239,7 +237,8 @@ class Semantics(object):
     def p_literal_string(self, v):
         return locmap(loctoken(v), val.string)
     def p_literal_json(self, type, open, value, close):
-        t, start, end = type
+        t = type.value
+        start, end = type.loc
         if t == 'boolean':
             raise VentureException('parse', ('JSON not allowed for %s' % (t,)),
                 text_index=[start, end])
@@ -331,7 +330,7 @@ def string_complete_p(string):
                 parser.feed(token)
 
 def parse_instructions(string):
-    return parse_church_prime_string(string)
+    return map(ast.as_legacy_dict, parse_church_prime_string(string))
 
 def parse_instruction(string):
     ls = parse_instructions(string)
