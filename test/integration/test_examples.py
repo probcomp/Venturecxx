@@ -68,7 +68,7 @@ def checkVentureExampleRude(command):
 @gen_needs_ggplot
 def testVentureExamplesLitePlot():
   my_dir = os.path.abspath(os.path.dirname(__file__))
-  for ex in ["venture lite -f %s/../../examples/trickiness-ideal.vnts" % (my_dir,),
+  for ex in ["venture lite -f %s/../../examples/dual-semantics/trickiness-ideal.vnts" % (my_dir,),
   ]:
     yield checkVentureExampleRude, ex
 
@@ -82,8 +82,8 @@ def testVentureExamplesPumaPlot():
     "venture puma -f %s/examples/plotting/bimodal.vnt" % (root,),
     "venture puma -f %s/examples/plotting/dice_plot.vnt" % (root,),
     "venture puma -f %s/examples/plotting/normal_plot.vnt" % (root,),
-    "venture puma -f %s/examples/trickiness-concrete.vnts" % (root,),
-    "venture puma -f %s/examples/trickiness-concrete-2.vnts" % (root,),
+    "venture puma -f %s/examples/dual-semantics/trickiness-concrete.vnts" % (root,),
+    "venture puma -f %s/examples/dual-semantics/trickiness-concrete-2.vnts" % (root,),
   ]:
     yield checkVentureExampleRude, ex
 

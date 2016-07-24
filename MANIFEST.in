@@ -568,9 +568,9 @@ include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits2.csv
 include examples/profile_tricky_coin.py
-include examples/trickiness-concrete-2.vnts
-include examples/trickiness-concrete.vnts
-include examples/trickiness-ideal.vnts
+include examples/dual-semantics/trickiness-concrete-2.vnts
+include examples/dual-semantics/trickiness-concrete.vnts
+include examples/dual-semantics/trickiness-ideal.vnts
 include examples/tutorial-2015/BayesOpt_gpmem_sequence.png
 include examples/tutorial-2015/basics.lvnt.erb
 include examples/tutorial-2015/curve-fitting.py
