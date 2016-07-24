@@ -27,9 +27,6 @@ from venture.parser import ast
 from venture.parser.church_prime import grammar
 from venture.parser.church_prime import scan
 
-def tokval(located):
-    return located.value
-
 def locmap(l, f):
     return ast.map_value(f, l)
 
@@ -245,9 +242,9 @@ class Semantics(object):
         return locbracket(type, close, { 'type': t, 'value': value })
 
     # json: Return json object.
-    def p_json_string(self, v):                 return tokval(v)
-    def p_json_integer(self, v):                return tokval(v)
-    def p_json_real(self, v):                   return tokval(v)
+    def p_json_string(self, v):                 return v.value
+    def p_json_integer(self, v):                return v.value
+    def p_json_real(self, v):                   return v.value
     def p_json_list(self, l):                   return l
     def p_json_dict(self, d):                   return d
 
@@ -271,7 +268,7 @@ class Semantics(object):
     def p_json_dict_entries_error(self, e):     return { 'error': 'error' }
 
     # json_dict_entry: Return (key, value) tuple.
-    def p_json_dict_entry_e(self, key, value):  return (tokval(key), value)
+    def p_json_dict_entry_e(self, key, value):  return (key.value, value)
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
 def parse_church_prime(f, context):

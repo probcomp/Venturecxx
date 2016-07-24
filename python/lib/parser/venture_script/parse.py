@@ -27,17 +27,6 @@ from venture.parser import ast
 from venture.parser.venture_script import grammar
 from venture.parser.venture_script import scan
 
-# Data structures
-# A "Token" is a 3-tuple consisting of a value, a start index, and an
-#   end index.
-# A "Located" object is a dict with that object in the "value" field
-#   and a location in the "loc" field.  The location is a 2-list of a
-#   start index and an end index.
-
-def tokval(located):
-    "The value in a token."
-    return located.value
-
 def isloc(obj):
     "Is the argument a Located object?"
     return ast.isloc(obj)
@@ -284,8 +273,8 @@ class Semantics(object):
     def _p_binop(self, l, op, r):
         assert isloc(l)
         assert isloc(r)
-        assert tokval(op) in operators
-        app = [locmap(loctoken1(op, operators[tokval(op)]), val.symbol), l, r]
+        assert op.value in operators
+        app = [locmap(loctoken1(op, operators[op.value]), val.symbol), l, r]
         return locmerge(l, r, app)
     def _p_exp(self, e):
         assert isloc(e)
@@ -502,9 +491,9 @@ class Semantics(object):
         return locbracket(t, c, {'type': t0, 'value': v})
 
     # json: Return json object.
-    def p_json_string(self, v):                 return tokval(v)
-    def p_json_integer(self, v):                return tokval(v)
-    def p_json_real(self, v):                   return tokval(v)
+    def p_json_string(self, v):                 return v.value
+    def p_json_integer(self, v):                return v.value
+    def p_json_real(self, v):                   return v.value
     def p_json_list(self, l):                   return l
     def p_json_dict(self, d):                   return d
 
@@ -528,7 +517,7 @@ class Semantics(object):
     def p_json_dict_entries_error(self, e):     return { 'error': 'error' }
 
     # json_dict_entry: Return (key, value) tuple.
-    def p_json_dict_entry_e(self, key, value):  return (tokval(key), value)
+    def p_json_dict_entry_e(self, key, value):  return (key.value, value)
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
 def parse(f, context):
