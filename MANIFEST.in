@@ -600,6 +600,7 @@ include examples/tutorial-2015/mk_frame.vnts
 include examples/tutorial-2015/mk_outlier_frame.vnts
 include examples/tutorial-2015/multiline_plot_plugin.py
 include examples/tutorial-2015/regress_mem.py
+include examples/venstan/README
 include examples/venstan/normal_normal.vnts
 include external/README
 include external/lemonade/COPYING
