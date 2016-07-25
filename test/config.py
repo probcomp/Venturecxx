@@ -68,6 +68,7 @@ To write a new test:
 
 from StringIO import StringIO
 from inspect import isgeneratorfunction
+import random
 import sys
 
 from nose import SkipTest
@@ -565,3 +566,29 @@ def capture_output(ripl, program):
   res = ripl.execute_program(program)
   sys.stdout = old_stdout
   return res, captured.getvalue()
+
+def stochasticTest(f):
+  """Make a random test reproducible.
+
+The decorated test function must accept an argument named 'seed'.  It
+is expected to be deterministic for fixed seed.  During successive
+test runs, it will be given different values for the 'seed' argument;
+if it should ever fail or give an error, the seed will be reported in
+the test output.
+
+The seed given to a test can be controlled by passing --tc=seed:foo at
+the command line.  Thus, reproducibility of potentially rare errors.
+"""
+  @nose.make_decorator(f)
+  def wrapped(*args, **kwargs):
+    if config['seed'] is None:
+      seed = random.randint(1, 2**31 - 1)
+    else:
+      seed = int(config['seed'])
+    try:
+      return f(*args, seed=seed, **kwargs)
+    except Exception as e:
+      info = sys.exc_info()
+      print "To reproduce, use --tc=seed:%d" % (seed,)
+      raise e, None, info[2]
+  return wrapped
