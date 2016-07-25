@@ -164,3 +164,57 @@
                          (incorporate x5 10)
                          (return (+ x1 x2 x3 x4 x5)))
                      (v_binomial_state)))))]
+
+;;; collapsed beta binomial as a full procedure
+[define make_beta_binomial_f_defn
+  '(lambda (a b)
+     (make_full_sp
+      '(lambda (a b)
+         (dict
+          (list 'trace 'apply 'proposal_kernel)
+          (list
+           trace: (binomial_state)
+           apply:
+           (lambda (handle app_id n)
+             (do (N <- (binomial_N))
+                 (K <- (binomial_K))
+                 (let theta (beta (+ a K) (+ b (- N K))))
+                 (let k (binomial n theta))
+                 (binomial_add n k)
+                 (return k)))
+           proposal_kernel:
+           (lambda (handle app_id)
+             (dict
+              (list 'extract 'regen 'restore)
+              (list
+               extract:
+               (lambda (k n)
+                 (do (binomial_remove n k)
+                     (return (pair 0 k))))
+               regen:
+               (lambda (n)
+                 (do (N <- (binomial_N))
+                     (K <- (binomial_K))
+                     (let theta (beta (+ a K) (+ b (- N K))))
+                     (let k (binomial n theta))
+                     (binomial_add n k)
+                     (return (pair 0 k))))
+               restore:
+               (lambda (n k)
+                 (binomial_add n k))))))))
+      a b))]
+
+;;; basic example
+[define example4
+  (lambda ()
+    (run_in
+     (do (assume make_beta_binomial_f ,make_beta_binomial_f_defn)
+         (assume f (make_beta_binomial_f 1 1))
+         (assume x1 (f 10))
+         (assume x2 (f 10))
+         (assume x3 (f 10))
+         (assume x4 (f 10))
+         (assume x5 (f 10))
+         (result <- (predict (+ x1 x2 x3 x4 x5)))
+         (return (debug 'result result)))
+     (blank_trace)))]

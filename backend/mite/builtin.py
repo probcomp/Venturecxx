@@ -10,6 +10,7 @@ import venture.mite.traces
 import venture.mite.dep_graph
 import venture.mite.sps.lite_sp
 import venture.mite.sps.vs_simulation_sp
+import venture.mite.sps.vs_full_sp
 import venture.mite.sps.binomial_state
 import venture.mite.sps.crp_state
 import venture.mite.sps.prelude
