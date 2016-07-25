@@ -10,14 +10,17 @@ from venture.mite.traces import BlankTrace
 
 class MakeSimulationSP(SimulationSP):
   def simulate(self, inputs, prng):
-    assert len(inputs) == 1
-    defns = t.List(t.Exp).asPython(inputs[0])
+    constructor = t.Exp.asPython(inputs[0])
+    ctor_inputs = inputs[1:]
     seed = prng.py_prng.randint(1, 2**31 - 1)
     helper_trace = BlankTrace(seed)
-    for name, expr in defns:
-      addr = helper_trace.next_base_address()
-      helper_trace.eval_request(addr, expr, helper_trace.global_env)
-      helper_trace.bind_global(name, addr)
+    addr = helper_trace.next_base_address()
+    names = ['var{}'.format(i) for i in range(len(ctor_inputs))]
+    values = [Node(None, val) for val in ctor_inputs]
+    expr = [constructor] + names
+    env = VentureEnvironment(helper_trace.global_env, names, values)
+    helper_trace.eval_request(addr, expr, env)
+    helper_trace.bind_global("the_sp", addr)
     return MadeSimulationSP(helper_trace)
 
 class MadeSimulationSP(SimulationSP):
@@ -42,7 +45,10 @@ class MadeSimulationSP(SimulationSP):
     addr = helper_trace.next_base_address()
     names = ['var{}'.format(i) for i in range(len(inputs))]
     values = [Node(None, val) for val in inputs]
-    expr = ['first', [['action_func', [method] + names], 'trace']]
+    expr = ['first',
+            [['action_func',
+              [['lookup', 'the_sp', ['quote', method]]] + names],
+             ['lookup', 'the_sp', ['quote', 'trace']]]]
     env = VentureEnvironment(helper_trace.global_env, names, values)
     w, value = helper_trace.eval_request(addr, expr, env)
     assert w == 0

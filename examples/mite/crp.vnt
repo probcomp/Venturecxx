@@ -36,33 +36,38 @@
 [define make_crp_s_defn
   '(lambda (alpha)
      (make_simulation_sp
-      `((alpha ,alpha)
-        (trace (crp_state))
-        (simulate
-         (lambda ()
-           (do (table_counts <- (crp_table_counts))
-               (next_table <- (crp_next_table))
-               (let occupied (keys table_counts))
-               (let counts (values table_counts))
-               (let table (categorical (normalize (pair alpha (to_list counts)))
-                                       (pair next_table (to_list occupied))))
-               (return table))))
-        (log_density
-         (lambda (table)
-           (do (table_counts <- (crp_table_counts))
-               (num_customers <- (crp_num_customers))
-               (let denom (log (+ alpha num_customers)))
-               (let num
-                   (if (contains table_counts table)
-                       (log (lookup table_counts table))
-                       (log alpha)))
-               (return (- num denom)))))
-        (incorporate
-         (lambda (table)
-           (crp_seat table 1)))
-        (unincorporate
-         (lambda (table)
-           (crp_seat table -1))))))]
+      '(lambda (alpha)
+         (dict
+          (list 'trace 'simulate 'log_density 'incorporate 'unincorporate)
+          (list
+           trace: (crp_state)
+           simulate:
+           (lambda ()
+             (do (table_counts <- (crp_table_counts))
+                 (next_table <- (crp_next_table))
+                 (let occupied (keys table_counts))
+                 (let counts (values table_counts))
+                 (let table (categorical
+                             (normalize (pair alpha (to_list counts)))
+                             (pair next_table (to_list occupied))))
+                 (return table)))
+           log_density:
+           (lambda (table)
+             (do (table_counts <- (crp_table_counts))
+                 (num_customers <- (crp_num_customers))
+                 (let denom (log (+ alpha num_customers)))
+                 (let num
+                     (if (contains table_counts table)
+                         (log (lookup table_counts table))
+                         (log alpha)))
+                 (return (- num denom))))
+           incorporate:
+           (lambda (table)
+             (crp_seat table 1))
+           unincorporate:
+           (lambda (table)
+             (crp_seat table -1)))))
+      alpha))]
 
 ;;; basic CRP example
 [define example2
