@@ -1,0 +1,17 @@
+This directory contains examples of SPs and inference programs written
+against the new Venture backend.
+
+For now, they can be run like this:
+
+$ venture mite -f [path-to-file] -e "define _ = [example-name]()"
+
+For example, to run the first traces example, you would run
+
+$ venture mite -f examples/mite/traces.vnt -e "define _ = example1()"
+
+Currently, the set of extant examples is:
+- traces.vnt: various examples of trace metaprogramming and inference
+  programming
+- beta_binomial.vnt: implementations of the beta-binomial SP
+- crp.vnt: an implementation of the CRP
+- crp.vnts: a translation of crp.vnt into the concrete syntax
