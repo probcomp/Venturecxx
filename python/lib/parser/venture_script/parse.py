@@ -530,7 +530,7 @@ def string_complete_p(string):
         else:
             if token[0] == 0:   # EOF
                 # Implicit ; at EOF.
-                semi = (';', scanner.cur_pos, scanner.cur_pos)
+                semi = ast.Located([scanner.cur_pos, scanner.cur_pos], ';')
                 try:
                     parser.feed((grammar.T_SEMI, semi))
                     # If the semi parses, then we had a complete string
