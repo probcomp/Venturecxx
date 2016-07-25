@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.lite.address import emptyAddress
+from venture.lite.address import emptyList
 from venture.lite.env import VentureEnvironment
 from venture.lite.psp import DeterministicPSP, ESRRefOutputPSP
 from venture.lite.request import Request,ESR
@@ -42,7 +42,7 @@ class MSPRequestPSP(DeterministicPSP):
     id = str(vals)
     exp = ["memoizedSP"] + [["quote",val] for val in vals]
     env = VentureEnvironment(None,["memoizedSP"],[self.sharedOperatorNode])
-    return Request([ESR(id,exp,emptyAddress,env)])
+    return Request([ESR(id,exp,emptyList.append(id),env)])
 
 registerBuiltinSP("mem",typed_nr(MakeMSPOutputPSP(),
                                  [SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)],
