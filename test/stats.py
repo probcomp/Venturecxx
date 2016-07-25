@@ -103,9 +103,9 @@ def fisherMethod(pvals):
     chisq = -2 * sum([math.log(p) for p in pvals])
     return stats.chi2.sf(chisq, 2*len(pvals))
 
-def repeatTest(func, *args):
+def repeatTest(func, *args, **kwargs):
   globalReportingThreshold = float(config["global_reporting_threshold"])
-  result = func(*args)
+  result = func(*args, **kwargs)
   assert isinstance(result, TestResult)
   if ignore_inference_quality():
     return result
@@ -117,7 +117,7 @@ def repeatTest(func, *args):
   else:
     print "Retrying suspicious test"
     def trial():
-      answer = func(*args)
+      answer = func(*args, **kwargs)
       sys.stdout.write(".")
       return answer
     results = [result] + [trial() for _ in range(1,5)]
@@ -141,8 +141,8 @@ def statisticalTest(f):
 
   """
   @nose.make_decorator(f)
-  def wrapped(*args):
-    reportTest(repeatTest(f, *args))
+  def wrapped(*args, **kwargs):
+    reportTest(repeatTest(f, *args, **kwargs))
   return wrapped
 
 

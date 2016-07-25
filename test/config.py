@@ -235,7 +235,7 @@ def testSomethingAboutPuma():
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_in_backend for test generator %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       name = config["get_ripl"]
       if backend in ["lite", "puma"] and not name == backend:
         raise SkipTest(f.__name__ + " doesn't test " + name)
@@ -243,7 +243,7 @@ def testSomethingAboutPuma():
       old = disable_get_ripl
       disable_get_ripl = False if backend is "any" else True
       try:
-        return f(*args)
+        return f(*args, **kwargs)
       finally:
         disable_get_ripl = old
     wrapped.backend = backend
@@ -274,7 +274,7 @@ def testSomeThingsAboutPuma():
   def wrap(f):
     assert isgeneratorfunction(f), "Use in_backend for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       name = config["get_ripl"]
       if backend in ["lite", "puma"] and name is not backend:
         raise SkipTest(f.__name__ + " doesn't test " + name)
@@ -282,7 +282,7 @@ def testSomeThingsAboutPuma():
       old = disable_get_ripl
       disable_get_ripl = False if backend is "any" else True
       try:
-        for t in f(*args): yield t
+        for t in f(*args, **kwargs): yield t
       finally:
         disable_get_ripl = old
     wrapped.backend = backend
@@ -295,12 +295,12 @@ def needs_backend(backend):
     assert not isgeneratorfunction(f), \
       "Use gen_needs_backend for test generator %s" % (f.__name__,)
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       try:
         s.backend(backend).make_combined_ripl()
       except Exception as e:
         raise SkipTest(f.__name__ + " needs " + backend)
-      return f(*args)
+      return f(*args, **kwargs)
     return wrapped
   return wrap
 
@@ -310,12 +310,12 @@ def gen_needs_backend(backend):
     assert isgeneratorfunction(f), \
       "Use needs_backend for non-generator test %s" % (f.__name__,)
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       try:
         s.backend(backend).make_combined_ripl()
       except Exception as e:
         raise SkipTest(f.__name__ + " needs " + backend)
-      for t in f(*args):
+      for t in f(*args, **kwargs):
         yield t
     return wrapped
   return wrap
@@ -325,12 +325,12 @@ def broken_in(backend, reason = None):
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_broken_in for test generator %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       ripl = config["get_ripl"]
       if ripl == backend:
         msg = " because " + reason if reason is not None else ""
         raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
-      return f(*args)
+      return f(*args, **kwargs)
     return wrapped
   return wrap
 
@@ -339,12 +339,12 @@ def gen_broken_in(backend, reason = None):
   def wrap(f):
     assert isgeneratorfunction(f), "Use broken_in for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       ripl = config["get_ripl"]
       if ripl == backend:
         msg = " because " + reason if reason is not None else ""
         raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
-      for t in f(*args): yield t
+      for t in f(*args, **kwargs): yield t
     return wrapped
   return wrap
 
@@ -386,12 +386,12 @@ this into account.
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_on_inf_prim for test generator %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       global disable_default_infer
       old = disable_default_infer
       disable_default_infer = False if primitive is "any" else True
       try:
-        return f(*args)
+        return f(*args, **kwargs)
       finally:
         disable_default_infer = old
     wrapped.inf_prim = primitive
@@ -436,12 +436,12 @@ takes this into account.
   def wrap(f):
     assert isgeneratorfunction(f), "Use on_inf_prim for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       global disable_default_infer
       old = disable_default_infer
       disable_default_infer = False if primitive is "any" else True
       try:
-        for t in f(*args): yield t
+        for t in f(*args, **kwargs): yield t
       finally:
         disable_default_infer = old
     wrapped.inf_prim = primitive
@@ -455,9 +455,9 @@ general-purpose inference programs except rejection sampling.
   """
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not rejectionSampling():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_rejection_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -475,9 +475,9 @@ general-purpose inference programs except sub-sampled MH.
   """
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not subSampling():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_sub_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -495,9 +495,9 @@ general-purpose inference programs except particle Gibbs.
   """
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not doingParticleGibbs():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_doing_particle_gibbs = True # TODO Skip by these tags in all-crashes & co
@@ -510,9 +510,9 @@ def doingParticleGibbs():
 def skipWhenInParallel(reason):
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not inParallel():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_in_parallel = True # TODO Skip by these tags in all-crashes & co
@@ -528,10 +528,10 @@ def inParallel():
 def needs_ggplot(f):
   assert not isgeneratorfunction(f), "Use gen_needs_ggplot for generator test %s" % f.__name__
   @nose.make_decorator(f)
-  def wrapped(*args):
+  def wrapped(*args, **kwargs):
     try:
       import venture.ggplot             # pylint: disable=unused-variable
-      return f(*args)
+      return f(*args, **kwargs)
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
   return wrapped
@@ -539,20 +539,20 @@ def needs_ggplot(f):
 def gen_needs_ggplot(f):
   assert isgeneratorfunction(f), "Use needs_ggplot for non-generator test %s" % f.__name__
   @nose.make_decorator(f)
-  def wrapped(*args):
+  def wrapped(*args, **kwargs):
     try:
       import venture.ggplot
-      for t in f(*args): yield t
+      for t in f(*args, **kwargs): yield t
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
   return wrapped
 
 def needs_pystan(f):
   @nose.make_decorator(f)
-  def wrapped(*args):
+  def wrapped(*args, **kwargs):
     try:
       import pystan
-      return f(*args)
+      return f(*args, **kwargs)
     except ImportError:
       raise SkipTest("pystan not installed on this machine")
   return wrapped
