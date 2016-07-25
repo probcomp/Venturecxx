@@ -25,6 +25,13 @@
     (let ((result ((action_func act) (copy state))))
       (first result)))]
 
+[define with
+  (lambda (state act)
+    (inference_action
+     (lambda (t)
+       (let ((result ((action_func act) state)))
+         (pair (first result) t)))))]
+
 [define repeat
   (lambda (n act)
     (if (<= n 0)
