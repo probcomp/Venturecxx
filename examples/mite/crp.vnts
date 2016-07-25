@@ -1,0 +1,75 @@
+// partial translation of crp.vnt into concrete syntax
+
+define make_crp_s_defn = quote((alpha) -> {
+  make_simulation_sp(quote((alpha) -> {
+    dict(
+      list([|trace|], [|simulate|], [|log_density|], [|incorporate|], [|unincorporate|]),
+      list(
+        trace: crp_state(),
+        simulate: () -> {
+          table_counts <- crp_table_counts();
+          next_table <- crp_next_table();
+          let occupied = keys(table_counts);
+          let counts = values(table_counts);
+          let table = categorical(
+            normalize(pair(alpha, to_list(counts))),
+            pair(next_table, to_list(occupied)));
+          return(table)
+        },
+        log_density: (table) -> {
+          table_counts <- crp_table_counts();
+          num_customers <- crp_num_customers();
+          let denom = log(alpha + num_customers);
+          let num =
+              if (contains(table_counts, table)) {
+                log(lookup(table_counts, table))
+              } else {
+                log(alpha)
+              };
+          return(num - denom)
+        },
+        incorporate: (table) -> {
+          crp_seat(table, 1)
+        },
+        unincorporate: (table) -> {
+          crp_seat(table, -1)
+        }))
+  }), alpha)
+});
+
+define example2 = () -> {
+  run_in({
+    assume make_crp_s = unquote(make_crp_s_defn);
+    assume f = make_crp_s(1);
+    assume x1 = f();
+    assume x2 = f();
+    assume x3 = f();
+    assume x4 = f();
+    assume x5 = f();
+    result <- predict list(x1, x2, x3, x4, x5);
+    return(debug("result", result))
+  }, blank_trace())
+};
+
+define example2c = () -> {
+  run_in({
+    assume make_crp_s = unquote(make_crp_s_defn);
+    assume f = make_crp_s(1);
+    assume x1 = f();
+    assume x2 = f();
+    assume x3 = f();
+    assume x4 = f();
+    assume x5 = f();
+    s <- pyselectf("{
+  directive(3): {'type': 'constrained', 'val': atom1},
+  directive(4): {'type': 'constrained', 'val': atom2},
+  directive(6): {'type': 'constrained', 'val': atom2},
+  directive(7): {'type': 'constrained', 'val': atom2},
+}", dict(list([|atom1|], [|atom2|]), list(atom<1>, atom<2>)));
+    rev <- extract(s);
+    weight <- regen(s, rest(rev));
+    result <- predict list(x1, x2, x3, x4, x5);
+    return(list(debug("result", result),
+                debug("weight", weight)))
+  }, flat_trace())
+}
