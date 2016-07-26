@@ -40,8 +40,19 @@ class MadeFullSP(VentureSP):
   def proposal_kernel(self, trace_handle, app_id):
     handle = t.Blob.asVentureValue(trace_handle)
     app_id = t.Blob.asVentureValue(app_id)
-    kernel_dict = self.run_in_helper_trace('proposal_kernel', [handle, app_id])
+    kernel_dict = self.apply_in_helper_trace('proposal_kernel', [handle, app_id])
     return ProxyKernel(self.helper_trace, kernel_dict)
+
+  def apply_in_helper_trace(self, method, inputs):
+    helper_trace = self.helper_trace
+    addr = helper_trace.next_base_address()
+    names = ['var{}'.format(i) for i in range(len(inputs))]
+    values = [Node(None, val) for val in inputs]
+    expr = [['lookup', 'the_sp', ['quote', method]]] + names
+    env = VentureEnvironment(helper_trace.global_env, names, values)
+    w, value = helper_trace.eval_request(addr, expr, env)
+    assert w == 0
+    return value
 
   def run_in_helper_trace(self, method, inputs):
     helper_trace = self.helper_trace
