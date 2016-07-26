@@ -192,10 +192,19 @@ class Regenerator(Evaluator):
                 sp.env is old_sp.env):
           return None
       for (arg, old_arg) in zip(args, old_args):
-        if arg.value != old_arg.value:
+        if not self.is_same_arg(arg, old_arg):
           return None
       # wrap it in a dict to distinguish from None
       return {"value": fragment}
+
+  def is_same_arg(self, arg, old_arg):
+    if (isinstance(arg.value, SPRef) and
+        isinstance(old_arg.value, SPRef)):
+      arg_sp = self.trace.deref_sp(arg.value)
+      old_arg_sp = self.trace.deref_sp(old_arg.value)
+      return arg_sp.value is old_arg_sp.value
+    else:
+      return arg.value == old_arg.value
 
 
 class Restorer(Regenerator):
