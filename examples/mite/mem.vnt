@@ -3,7 +3,7 @@
      (make_full_sp
       '(lambda (f)
          (dict
-          (list 'trace 'apply)
+          (list 'trace 'apply 'proposal_kernel)
           (list
            trace: (mem_table)
            apply:
@@ -20,7 +20,55 @@
                                (value_at addr))))
                          (mem_assoc x y)
                          (mem_incr x)
-                         (return y))))))))
+                         (return y)))))
+           proposal_kernel:
+           (lambda (handle app_id)
+             (dict
+              (list 'extract 'regen 'restore)
+              (list
+               extract:
+               (lambda (y x)
+                 (do (mem_decr x)
+                     (count <- (mem_count x))
+                     (if (= count 0)
+                         (do (mem_dissoc x)
+                             (with handle (free_request x)))
+                         (return nil))
+                     (return (pair 0 nil))))
+               regen:
+               (lambda (x)
+                 (do (has_value <- (mem_has_value x))
+                     (if has_value
+                         (do (y <- (mem_lookup x))
+                             (mem_incr x)
+                             (return (pair 0 y)))
+                         (do (let exp `(,f ,x))
+                             (let env (get_empty_environment))
+                             ;; TODO should this restore instead?
+                             ;; The present definition behaves
+                             ;; non-exchangeably in the lightweight
+                             ;; setting, because later applications
+                             ;; will see earlier applications in the
+                             ;; mem table but not vice versa.
+                             (y <- (with handle
+                               (do (addr <- (new_request x exp env))
+                                   (value_at addr))))
+                             (mem_assoc x y)
+                             (mem_incr x)
+                             (return (pair 0 y))))))
+               restore:
+               (lambda (x _)
+                 (do (has_value <- (mem_has_value x))
+                     (if has_value
+                         (do (y <- (mem_lookup x))
+                             (mem_incr x)
+                             (return y))
+                         (do (y <- (with handle
+                               (do (addr <- (restore_request x))
+                                   (value_at addr))))
+                             (mem_assoc x y)
+                             (mem_incr x)
+                             (return y)))))))))))
       f))]
 
 ;;; basic mem example
