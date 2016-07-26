@@ -1,0 +1,34 @@
+[define mem_defn
+  '(lambda (f)
+     (make_full_sp
+      '(lambda (f)
+         (dict
+          (list 'trace 'apply)
+          (list
+           trace: (mem_table)
+           apply:
+           (lambda (handle app_id x)
+             (do (has_value <- (mem_has_value x))
+                 (if has_value
+                     (do (y <- (mem_lookup x))
+                         (mem_incr x)
+                         (return y))
+                     (do (let exp `(,f ,x))
+                         (let env (get_empty_environment)) ; TODO env
+                         (y <- (with handle
+                           (do (addr <- (new_request x exp env))
+                               (value_at addr))))
+                         (mem_assoc x y)
+                         (mem_incr x)
+                         (return y))))))))
+      f))]
+
+;;; basic mem example
+[define example1
+  (lambda ()
+    (run_in
+     (do (assume mem ,mem_defn)
+         (assume f (mem (lambda (x) (normal 0 1))))
+         (result <- (predict (list (f 1) (f 2) (f 3) (f 2) (f 1))))
+         (return (debug 'result result)))
+     (blank_trace)))]
