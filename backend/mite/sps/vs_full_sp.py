@@ -87,7 +87,7 @@ class ProxyKernel(ApplicationKernel):
 
   def restore(self, inputs, trace_frag):
     inputs = [node.value for node in inputs] # TODO expose refs
-    self.run_in_helper_trace('restore', inputs + [trace_frag])
+    return self.run_in_helper_trace('restore', inputs + [trace_frag])
 
   def run_in_helper_trace(self, method, inputs):
     helper_trace = self.helper_trace

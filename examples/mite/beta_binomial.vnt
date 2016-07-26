@@ -201,7 +201,8 @@
                      (return (pair 0 k))))
                restore:
                (lambda (n k)
-                 (binomial_add n k))))))))
+                 (do (binomial_add n k)
+                     (return k)))))))))
       a b))]
 
 ;;; basic example
