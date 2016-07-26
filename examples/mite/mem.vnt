@@ -118,3 +118,52 @@
          (rev <- (extract s))
          (regen s (rest rev)))
      (flat_trace)))]
+
+;;; another regen example
+
+[define example3
+  (lambda ()
+    (run_in
+     (do (assume mem ,mem_defn)
+         (assume f (mem (lambda (x) (normal 0 1))))
+         (assume x1 (flip))
+         (assume x2 (flip))
+         (assume y (list (f x1) (f x2)))
+         (predict (debug 'result y))
+
+         (s <- (pyselectf "{
+  directive(3): {'type': 'constrained', 'val': t},
+  directive(4): {'type': 'constrained', 'val': t},
+}" (dict (list 't 'f) (list true false))))
+         (rev <- (extract s))
+         (regen s (rest rev))
+
+         (s <- (pyselectf "{
+  directive(3): {'type': 'constrained', 'val': t},
+  directive(4): {'type': 'constrained', 'val': f},
+}" (dict (list 't 'f) (list true false))))
+         (rev <- (extract s))
+         (regen s (rest rev))
+
+         (s <- (pyselectf "{
+  directive(3): {'type': 'constrained', 'val': f},
+  directive(4): {'type': 'constrained', 'val': f},
+}" (dict (list 't 'f) (list true false))))
+         (rev <- (extract s))
+         (regen s (rest rev))
+
+         (s <- (pyselectf "{
+  directive(3): {'type': 'constrained', 'val': t},
+  directive(4): {'type': 'constrained', 'val': f},
+}" (dict (list 't 'f) (list true false))))
+         (rev <- (extract s))
+         (regen s (rest rev))
+
+         (s <- (pyselectf "{
+  directive(3): {'type': 'constrained', 'val': t},
+  directive(4): {'type': 'constrained', 'val': t},
+}" (dict (list 't 'f) (list true false))))
+         (rev <- (extract s))
+         (regen s (rest rev)))
+     (flat_trace)))]
+
