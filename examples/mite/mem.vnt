@@ -80,3 +80,41 @@
          (result <- (predict (list (f 1) (f 2) (f 3) (f 2) (f 1))))
          (return (debug 'result result)))
      (blank_trace)))]
+
+;;; regen example
+[define example2
+  (lambda ()
+    (run_in
+     (do (assume mem ,mem_defn)
+         (assume f (mem (lambda (x) (normal 0 1))))
+         (assume x1 (f 1))
+         (assume x2 (f 2))
+         (assume x3 (f 3))
+         (assume x4 (f 2))
+         (assume x5 (f 1))
+         (predict (debug 'result (list x1 x2 x3 x4 x5)))
+
+         (s <- (pyselectf "{
+  request(request(directive(1), directive(2)),
+          key):
+      {'type': 'proposal'}
+}" (dict (list 'key) (list 1))))
+         (rev <- (extract s))
+         (regen s (rest rev))
+
+         (s <- (pyselectf "{
+  request(request(directive(1), directive(2)),
+          key):
+      {'type': 'proposal'}
+}" (dict (list 'key) (list 2))))
+         (rev <- (extract s))
+         (regen s (rest rev))
+
+         (s <- (pyselectf "{
+  request(request(directive(1), directive(2)),
+          key):
+      {'type': 'proposal'}
+}" (dict (list 'key) (list 3))))
+         (rev <- (extract s))
+         (regen s (rest rev)))
+     (flat_trace)))]
