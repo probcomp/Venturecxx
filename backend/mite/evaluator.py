@@ -184,18 +184,27 @@ class Regenerator(Evaluator):
     else:
       (fragment, old_sp, old_args) = self.fragment[addr]
       # check if the parents have changed
-      if old_sp is not sp:
-        if not (isinstance(sp, CompoundSP) and
-                isinstance(old_sp, CompoundSP) and
-                sp.params == old_sp.params and
-                sp.exp == old_sp.exp and
-                sp.env is old_sp.env):
-          return None
+      if not self.is_same_sp(sp, old_sp):
+        return None
       for (arg, old_arg) in zip(args, old_args):
         if not self.is_same_arg(arg, old_arg):
           return None
       # wrap it in a dict to distinguish from None
       return {"value": fragment}
+
+  def is_same_sp(self, sp, old_sp):
+    # XXX this mostly relies on object identity, which is too strict in
+    # some cases and too lax in others (mostly SPs with mutable state)
+    # should we instead serialize the SP's state and compare contents?
+    if sp is old_sp:
+      return True
+    if (isinstance(sp, CompoundSP) and
+        isinstance(old_sp, CompoundSP) and
+        sp.params == old_sp.params and
+        sp.exp == old_sp.exp and
+        sp.env is old_sp.env):
+      return True
+    return False
 
   def is_same_arg(self, arg, old_arg):
     if (isinstance(arg.value, SPRef) and
