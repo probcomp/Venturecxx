@@ -44,6 +44,7 @@ from venture.lite.infer.subsampled_mh import SubsampledMHOperator
 from venture.lite.infer.subsampled_mh import subsampledMixMH
 from venture.lite.regen import regenAndAttach
 import venture.lite.value as v
+import venture.lite.types as t
 
 def parse_arguments(trace, args):
   assert len(args) >= 3
@@ -229,12 +230,16 @@ def primitive_infer(trace, exp):
             NesterovAcceleratedGradientAscentOperator(rate, int(steps))))
   elif operator == "rejection":
     (scaffolder, transitions, extra) = dispatch_arguments(trace, exp)
-    if len(extra) == 1:
-      trials = int(extra[0])
+    if len(extra) >= 1 and extra[0] in t.NumberType():
+      logBound = extra[0].getNumber()
+    else:
+      logBound = None
+    if len(extra) == 2:
+      trials = int(extra[1])
     else:
       trials = None
     return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, RejectionOperator(None, trials)))
+      mixMH(trace, scaffolder, RejectionOperator(logBound, trials)))
   elif operator == "bogo_possibilize":
     (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \

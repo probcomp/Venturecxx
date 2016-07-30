@@ -414,19 +414,27 @@ The ``transitions`` argument specifies how many times to do this.
 Returns the average number of nodes touched per transition in each particle.
 """)
 
-register_trace_method_sp("rejection", transition_oper_type([t.NumberType("attempt_bound : number")], min_req_args=1), desc="""\
+register_trace_method_sp("rejection", transition_oper_type([t.AnyType("density_bound : maybe number"), t.NumberType("attempt_bound : number")], min_req_args=1), desc="""\
 Sample from the local conditional by rejection sampling.
 
 Not available in the Puma backend.  Not all the builtin procedures
 support all the density bound information necessary for this.
 
-The ``attempt_bound`` bound argument, if supplied, indicates how many
+The ``density_bound`` argument, if supplied, indicates the maximum
+density the requested subproblem could obtain (in log space).  If
+omitted or `nil`, Venture will attempt to compute this bound
+automatically, but this process may be somewhat brittle.
+
+The ``attempt_bound`` argument, if supplied, indicates how many
 attempts to make.  If no sample is accepted after that many trials,
 stop, and leave the local state as it was.  Warning: bounded rejection
 is not a Bayes-sound inference algorithm.  If `attempt_bound` is not
 given, keep trying until acceptance (possibly leaving the session
-unresponsive).  Note: if three arguments are supplied, the last one is
-taken to be the number of transitions, not the attempt bound.
+unresponsive).
+
+Note: Regardless of whether some arguments are omitted, the last
+optional argument given is taken to be the number of transitions, not
+the density or attempt bound.
 
 The ``transitions`` argument specifies how many times to do this.
 Specifying more than 1 transition is redundant if the `block` is
