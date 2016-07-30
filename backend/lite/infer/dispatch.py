@@ -234,7 +234,7 @@ def primitive_infer(trace, exp):
     else:
       trials = None
     return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, RejectionOperator(trials)))
+      mixMH(trace, scaffolder, RejectionOperator(None, trials)))
   elif operator == "bogo_possibilize":
     (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \

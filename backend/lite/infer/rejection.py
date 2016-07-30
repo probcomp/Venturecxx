@@ -67,13 +67,17 @@ class RejectionOperator(InPlaceOperator):
   Bayesian Statistics Without Tears: A Sampling-Resampling Perspective
   A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
   http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
-  def __init__(self, trials):
+  def __init__(self, logBound, trials):
     super(RejectionOperator, self).__init__()
+    self.logBound = logBound
     self.trials = trials
 
   def propose(self, trace, scaffold):
     self.prepare(trace, scaffold)
-    logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    if self.logBound is None:
+      logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    else:
+      logBound = self.logBound
     accept = False
     attempt = 0
     while not accept and (self.trials is None or self.trials > attempt):
