@@ -116,7 +116,7 @@ class SimulationLKernel(LKernel):
     """An upper bound on the value of weight over the variation
     possible by changing the values of everything in the arguments
     whose value is None.  Useful for rejection sampling."""
-    raise VentureBuiltinLKernelMethodError("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
+    raise VentureBuiltinLKernelMethodError("Cannot rejection auto-bound with weight-unbounded LKernel of type %s" % type(self))
 
 class DeltaLKernel(LKernel):
   def reverseWeight(self, _trace, _oldValue, _args): return 0

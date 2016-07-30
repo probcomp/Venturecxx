@@ -66,7 +66,7 @@ def testCMVN2D_mu2():
 
   return reportKnownMean(5, mu2)
 
-@skipWhenRejectionSampling("Cannot rejection sample cmvn AAA")
+@skipWhenRejectionSampling("Cannot rejection auto-bound cmvn AAA")
 @statisticalTest
 def testCMVN2D_AAA():
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")

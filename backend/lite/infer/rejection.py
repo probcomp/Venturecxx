@@ -55,9 +55,9 @@ def computeRejectionBound(trace, scaffold, border):
         appNode = trace.getConstrainableNode(node)
         logBound += logBoundAt(appNode)
       except MissingEsrParentError:
-        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+        raise Exception("Can't automatically compute rejection density bound when observing resimulation of unknown code")
       except NoSPRefError:
-        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+        raise Exception("Can't automatically compute rejection density bound when observing resimulation of unknown code")
   return logBound
 
 class RejectionOperator(InPlaceOperator):
