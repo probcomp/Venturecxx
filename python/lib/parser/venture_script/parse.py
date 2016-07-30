@@ -287,14 +287,14 @@ class Semantics(object):
     def p_path_expression_one(self, slash, s):
         assert ast.isloc(s)
         top = ast.update_value(slash, val.symbol('by_top'))
-        intersect = ast.update_value(slash, val.symbol('by_slash'))
+        intersect = ast.update_value(slash, val.symbol('by_walk'))
         app = [intersect, ast.loclist([top]), s]
         return ast.locmerge(top, s, app)
 
     def p_path_expression_some(self, more, slash, s):
         # XXX Is this just _p_binop with the "slash" operator?
         assert ast.isloc(s)
-        intersect = ast.update_value(slash, val.symbol('by_slash'))
+        intersect = ast.update_value(slash, val.symbol('by_walk'))
         app = [intersect, more, s]
         return ast.locmerge(more, s, app)
 
