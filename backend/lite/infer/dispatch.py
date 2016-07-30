@@ -91,7 +91,12 @@ def dispatch_arguments(trace, args):
   else:
     # Assume old scope-block form
     (scope, block, transitions, extra) = parse_arguments(trace, args)
-    return ([BlockScaffoldIndexer(scope, block)], transitions, extra)
+    if block == "each":
+      the_scope = trace.getScope(scope)
+      blocks = the_scope.keys()
+      return ([BlockScaffoldIndexer(scope, b) for b in blocks], transitions, extra)
+    else:
+      return ([BlockScaffoldIndexer(scope, block)], transitions, extra)
 
 def transloop(trace, transitions, operate):
   ct = 0
