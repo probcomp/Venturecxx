@@ -158,7 +158,7 @@ registerBuiltinSP("exp", unaryNum(careful_exp,
     sim_grad=lambda args, direction: [direction * careful_exp(args[0])],
     descr="Returns the exp of its argument"))
 
-registerBuiltinSP("log", unaryNum(math.log,
+registerBuiltinSP("log", unaryNum(np.log,
     sim_grad=lambda args, direction: [direction * (1 / float(args[0]))],
     descr="Returns the log of its argument"))
 
