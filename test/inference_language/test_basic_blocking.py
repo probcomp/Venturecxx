@@ -100,6 +100,7 @@ def testBlockingExample3():
   assert olda != newa
   assert oldb != newb
 
+@broken_in("puma", "Puma does not support the 'each' block keyword (yet).")
 @on_inf_prim("mh")
 def testBlockingExample4():
   ripl = get_ripl()
