@@ -87,11 +87,11 @@ def dispatch_arguments(trace, args):
     (transitions, extra) = parse_transitions_extra(args[2:])
     # TODO Detect the case when the selection is guaranteed to produce
     # no random choices and abort (like parse_arguments does)
-    return (search.TraceSearchIndexer(selection_blob.datum), transitions, extra)
+    return ([search.TraceSearchIndexer(selection_blob.datum)], transitions, extra)
   else:
     # Assume old scope-block form
     (scope, block, transitions, extra) = parse_arguments(trace, args)
-    return (BlockScaffoldIndexer(scope, block), transitions, extra)
+    return ([BlockScaffoldIndexer(scope, block)], transitions, extra)
 
 def transloop(trace, transitions, operate):
   ct = 0
@@ -106,19 +106,29 @@ def transloop(trace, transitions, operate):
   else:
     return 0.0
 
+def scaffolder_loop(scaffolders, operate):
+  def doit():
+    ct = 0
+    for scaffolder in scaffolders:
+      ct += operate(scaffolder)
+    return ct/len(scaffolders)
+  return doit
+
 def primitive_infer(trace, exp):
   operator = exp[0]
   if operator == "mh":
-    (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, MHOperator()))
+    (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, MHOperator())
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "func_mh":
-    (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, FuncMHOperator()))
+    (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, FuncMHOperator())
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "draw_scaffold":
-    (scaffolder, _transitions, _) = dispatch_arguments(trace, exp)
-    drawScaffold(trace, scaffolder)
+    (scaffolders, _transitions, _) = dispatch_arguments(trace, exp)
+    drawScaffold(trace, scaffolders[0])
   elif operator == "mh_kernel_update":
     (scope, block, transitions, extra) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
@@ -137,35 +147,41 @@ def primitive_infer(trace, exp):
     return transloop(trace, transitions, lambda : \
       do_subsampled_mh_make_consistent(trace, scope, block, extra))
   elif operator == "meanfield":
-    (scaffolder, transitions, extra) = dispatch_arguments(trace, exp)
+    (scaffolders, transitions, extra) = dispatch_arguments(trace, exp)
     steps = int(extra[0])
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, MeanfieldOperator(steps, 0.0001)))
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, MeanfieldOperator(steps, 0.0001))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "hmc":
-    (scaffolder, transitions, (epsilon, L)) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, HamiltonianMonteCarloOperator(epsilon, int(L))))
+    (scaffolders, transitions, (epsilon, L)) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, HamiltonianMonteCarloOperator(epsilon, int(L)))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "gibbs":
-    (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, EnumerativeGibbsOperator()))
+    (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, EnumerativeGibbsOperator())
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "emap":
-    (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, EnumerativeMAPOperator()))
+    (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, EnumerativeMAPOperator())
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "gibbs_update":
     (scope, block, transitions, _) = parse_arguments(trace, exp)
     return transloop(trace, transitions, lambda : \
       mixMH(trace, BlockScaffoldIndexer(scope, block, updateValues=True),
             EnumerativeGibbsOperator()))
   elif operator == "slice":
-    (scaffolder, transitions, (w, m)) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, StepOutSliceOperator(w, m)))
+    (scaffolders, transitions, (w, m)) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, StepOutSliceOperator(w, m))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "slice_doubling":
-    (scaffolder, transitions, (w, p)) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, DoublingSliceOperator(w, p)))
+    (scaffolders, transitions, (w, p)) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, DoublingSliceOperator(w, p))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "pgibbs":
     (scope, block, transitions, extra) = parse_arguments(trace, exp)
     particles = int(extra[0])
@@ -220,16 +236,18 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePMAPOperator(particles)))
   elif operator == "grad_ascent":
-    (scaffolder, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, GradientAscentOperator(rate, int(steps))))
+    (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, GradientAscentOperator(rate, int(steps)))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "nesterov":
-    (scaffolder, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder,
-            NesterovAcceleratedGradientAscentOperator(rate, int(steps))))
+    (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder,
+                   NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "rejection":
-    (scaffolder, transitions, extra) = dispatch_arguments(trace, exp)
+    (scaffolders, transitions, extra) = dispatch_arguments(trace, exp)
     if len(extra) >= 1 and extra[0] in t.NumberType():
       logBound = extra[0].getNumber()
     else:
@@ -238,15 +256,17 @@ def primitive_infer(trace, exp):
       trials = int(extra[1])
     else:
       trials = None
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, RejectionOperator(logBound, trials)))
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, RejectionOperator(logBound, trials))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "bogo_possibilize":
-    (scaffolder, transitions, _) = dispatch_arguments(trace, exp)
-    return transloop(trace, transitions, lambda : \
-      mixMH(trace, scaffolder, BogoPossibilizeOperator()))
+    (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, BogoPossibilizeOperator())
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "print_scaffold_stats":
-    (scaffolder, _transitions, _) = dispatch_arguments(trace, exp)
-    scaffold = scaffolder.sampleIndex(trace)
+    (scaffolders, _transitions, _) = dispatch_arguments(trace, exp)
+    scaffold = scaffolders[0].sampleIndex(trace)
     scaffold.show()
     return scaffold.numAffectedNodes()
   else: raise Exception("INFER %s is not implemented" % operator)
