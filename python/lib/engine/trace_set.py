@@ -327,10 +327,10 @@ if freeze has been used.
     try:
       self.create_trace_pool([traces[i]], [weights[i]])
       ans = f(traces[i])
-      new_trace = self.retrieve_traces()[0]
-      new_weight = self.log_weights[0]
-      traces = traces[0:i] + [new_trace] + traces[i+1:]
-      weights = weights[0:i] + [new_weight] + weights[i+1:]
+      new_traces = self.retrieve_traces()
+      new_weights = self.log_weights
+      traces = traces[0:i] + new_traces + traces[i+1:]
+      weights = weights[0:i] + new_weights + weights[i+1:]
       return ans
     finally:
       self.mode = mode
