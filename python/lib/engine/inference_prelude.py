@@ -276,12 +276,39 @@ prelude = [
 
 ["reset_to_prior", """\
 .. _reset_to_prior:
-.. object:: reset_to_prior <inference action>
+.. object:: reset_to_prior <inference action returning ()>
 
   Reset all particles to the prior.  Also reset their weights to the likelihood.
 
   This is equivalent to ``likelihood_weight()``.""",
 "(likelihood_weight)"],
+
+
+["duplicate_particle", """\
+.. _duplicate_particle:
+.. function:: duplicate_particle(<int>)
+
+  :rtype: <inference action returning ()>
+
+Duplicate the given particle, conserving its weight.  The copy is initialized
+with zero weight (negative infinity in log space).
+""",
+"""\
+(lambda (i)
+  (on_particle i
+    (do (ws <- (particle_log_weights))
+        (resample 2)
+        (set_particle_log_weights (array (lookup ws 0) (log 0))))))"""],
+
+["add_particle", """\
+.. _add_particle:
+.. object:: add_particle <inference action returning ()>
+
+Add a new particle, sampled from the prior and weighted by its likelihood.
+In case different extant particles have different priors, as can happen
+if freeze was used, it's the prior of particle 0.
+""",
+"(do (duplicate_particle 0) (on_particle 1 reset_to_prior))"],
 
 ["run", """\
 .. function:: run(<inference action returning a>)
