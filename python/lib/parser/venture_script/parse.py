@@ -310,6 +310,9 @@ class Semantics(object):
         app = [by_tag_value, name, value]
         return ast.locmerge(by_tag_value, value, app)
 
+    def p_path_step_star(self, star):
+        return ast.update_value(star, [val.symbol('by_star')])
+
     def p_hash_tag_tag(self, e, h, tag):
         tag_proc = ast.update_value(h, val.symbol('tag'))
         name = locquoted(h, tag, val.quasiquote)

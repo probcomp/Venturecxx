@@ -114,6 +114,28 @@ def testSmoke3():
   (get_current_values s))"""))
 
 @broken_in("puma", "Puma does not implement subproblem selection")
+def testSugarySmoke():
+  # The sugared version of testSmoke3
+  r = get_ripl()
+  r.assume("items", "(mem (lambda (i) (tag 'item i (normal 0 1))))")
+  r.assume("total", "(tag 'total 0 (+ (items 1) (items 2) (items 3)))")
+  r.force("(items 1)", 1)
+  r.force("(items 2)", 2)
+  r.force("(items 3)", 3)
+  eq_(r.sample("total"), 6)
+  def all(things):
+    eq_([1, 2, 3], sorted(things))
+  def one(thing):
+    assert thing == [1] or thing == [2] or thing == [3]
+  r.set_mode("venture_script")
+  all(r.infer("""{
+  s <- select(minimal_subproblem(/?total));
+  get_current_values(s)}"""))
+  one(r.infer("""{
+  s <- select(minimal_subproblem(random_singleton(/*)));
+  get_current_values(s)}"""))
+
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testPoster():
   r = get_ripl(seed=0)
   r.set_mode("venture_script")

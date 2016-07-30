@@ -39,6 +39,7 @@ UnionDict = namedtuple("UnionDict", ["source"])
 Union = namedtuple("Union", ["sources"])
 FetchTag = namedtuple("FetchTag", ["name"])
 Top = namedtuple("Top", [])
+Star = namedtuple("Star", [])
 MinimalSubproblem = namedtuple("MinimalSubproblem", ["source"])
 
 def is_search_ast(thing):
@@ -122,6 +123,9 @@ def interpret(prog, trace):
        (isinstance(prog.edge.datum, FetchTag) or isinstance(prog.edge.datum, Lookup)):
       (thing2, wt2) = interpret(Extent(prog.edge.datum), trace)
       return (intersect(extent(thing, trace), thing2), wt + wt2)
+    elif prog.edge in t.ForeignBlobType() and \
+         isinstance(prog.edge.datum, Star):
+      return (extent(thing, trace), wt)
     else:
       return (follow_edge(thing, prog.edge, trace), wt)
   elif isinstance(prog, Extent):
@@ -301,6 +305,10 @@ Union the given selections.
 
 inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType(), descr="""
 Select the "top" of the model, whose dynamic extent is all random choices.
+"""))
+
+inf.registerBuiltinInferenceSP("by_star", deterministic_typed(Star, [], t.ForeignBlobType(), descr="""
+Walk to all the random choices in the dynamic extent of the source.
 """))
 
 inf.registerBuiltinInferenceSP("minimal_subproblem", \
