@@ -100,6 +100,21 @@ def testBlockingExample3():
   assert olda != newa
   assert oldb != newb
 
+@on_inf_prim("mh")
+def testBlockingExample4():
+  ripl = get_ripl()
+  ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
+  ripl.assume("b", "(tag 0 1 (normal 1.0 1.0))", label="b")
+  for _ in range(10):
+    olda = ripl.report("a")
+    oldb = ripl.report("b")
+    # A deterministic sweep should touch each relevant block.
+    ripl.infer("(mh 0 each 1)")
+    newa = ripl.report("a")
+    newb = ripl.report("b")
+    assert olda != newa
+    assert oldb != newb
+
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
 @on_inf_prim("rejection")

@@ -191,7 +191,7 @@ don't actually read the state (e.g., for doing IO)"""
 
 inferenceSPsList = []
 
-inferenceKeywords = [ "default", "all", "none", "one", "ordered" ]
+inferenceKeywords = [ "default", "all", "none", "one", "each", "ordered" ]
 
 def registerBuiltinInferenceSP(name, sp_obj):
   inferenceSPsList.append([name, sp_obj])
