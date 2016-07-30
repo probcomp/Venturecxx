@@ -186,7 +186,7 @@ class TraceSet(object):
     self._did_to_label = {}
 
   def reinit_inference_problem(self, num_particles=1):
-    """Unincorporate all observations and return to the prior.
+    """Return to the prior.
 
 First perform a resample with the specified number of particles
 (default 1).  The choice of which particles will be returned to the
