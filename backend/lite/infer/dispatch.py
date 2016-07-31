@@ -300,9 +300,12 @@ def do_subsampled_mh_make_consistent(trace, scope, block, extra):
   return SubsampledMHOperator().makeConsistent(trace, scaffolder)
 
 def log_likelihood_at(trace, args):
-  (scaffolder, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
+  (scaffolders, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
   if transitions > 0:
-    scaffold = scaffolder.sampleIndex(trace)
+    # Don't want to think about the interaction between 'each' and the
+    # value this is supposed to return.
+    assert len(scaffolders) == 1, "log_likelihood_at doesn't support 'each'"
+    scaffold = scaffolders[0].sampleIndex(trace)
     (_rhoWeight, rhoDB) = detachAndExtract(trace, scaffold)
     xiWeight = regenAndAttach(trace, scaffold, True, rhoDB, OrderedDict())
     # Old state restored, don't need to do anything else
@@ -311,9 +314,12 @@ def log_likelihood_at(trace, args):
     return 0.0
 
 def log_joint_at(trace, args):
-  (scaffolder, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
+  (scaffolders, transitions, _) = dispatch_arguments(trace, ("bogon",) + args)
   if transitions > 0:
-    scaffold = scaffolder.sampleIndex(trace)
+    # Don't want to think about the interaction between 'each' and the
+    # value this is supposed to return.
+    assert len(scaffolders) == 1, "log_joint_at doesn't support 'each'"
+    scaffold = scaffolders[0].sampleIndex(trace)
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace, pnodes)
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues,
