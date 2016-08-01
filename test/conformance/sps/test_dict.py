@@ -32,31 +32,31 @@ from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testDict0():
-  assert get_ripl().predict("(is_dict (dict (array) (array)))")
+  assert get_ripl().predict("(is_dict (dict))")
 
 @on_inf_prim("none")
 def testDict01():
-  assert get_ripl().predict("(is_dict (dict (array 1) (array 2)))")
+  assert get_ripl().predict("(is_dict (dict (array 1 2)))")
 
 @on_inf_prim("none")
 def testDictSize0():
-  assert get_ripl().predict("(size (dict (array) (array)))") == 0
+  assert get_ripl().predict("(size (dict))") == 0
 
 @on_inf_prim("none")
 def testDictSize1():
-  assert get_ripl().predict("(size (dict (array 1) (array 2)))") == 1
+  assert get_ripl().predict("(size (dict (array 1 2)))") == 1
 
 @on_inf_prim("none")
 def testDictSize2():
-  assert get_ripl().predict("(size (dict (array 1 5) (array 2 6)))") == 2
+  assert get_ripl().predict("(size (dict (array 1 2) (array 5 6)))") == 2
 
 @statisticalTest
 def testDict1():
   ripl = get_ripl()
 
   ripl.assume("x","(bernoulli 1.0)")
-  ripl.assume("d","""(dict (array (quote x) (quote y))
-                           (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  ripl.assume("d","""(dict (array (quote x) (normal 0.0 1.0))
+                           (array (quote y) (normal 10.0 1.0)))""")
   ripl.predict("""(normal (+
                            (lookup d (quote x))
                            (lookup d (quote y))
@@ -69,8 +69,8 @@ def testDict1():
 @on_inf_prim("none")
 def testDict2():
   ripl = get_ripl()
-  ripl.assume("d","""(dict (array (quote x) (quote y))
-                           (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  ripl.assume("d","""(dict (array (quote x) (normal 0.0 1.0))
+                           (array  (quote y) (normal 10.0 1.0)))""")
   ripl.predict("(contains d (quote x))",label="p1")
   ripl.predict("(contains d (quote y))",label="p2")
   ripl.predict("(contains d (quote z))",label="p3")
@@ -82,8 +82,8 @@ def testDict2():
 @on_inf_prim("none")
 def testDict3():
   ripl = get_ripl()
-  ripl.assume("d","""(dict (array atom<1> atom<2>)
-                           (array (normal 0.0 1.0) (normal 10.0 1.0)))""")
+  ripl.assume("d","""(dict (array atom<1> (normal 0.0 1.0))
+                           (array atom<2> (normal 10.0 1.0)))""")
   ripl.predict("(contains d atom<1>)",label="p1")
   ripl.predict("(contains d atom<2>)",label="p2")
   ripl.predict("(contains d atom<3>)",label="p3")
@@ -95,5 +95,5 @@ def testDict3():
 @on_inf_prim("none")
 def testStack():
   ripl = get_ripl()
-  val = ripl.sample("(dict (array 1) (array 4))", type=True)
+  val = ripl.sample("(dict (array 1 4))", type=True)
   assert val == ripl.sample(val, type=True)
