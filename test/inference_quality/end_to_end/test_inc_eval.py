@@ -39,15 +39,16 @@ def loadEnvironments(ripl):
 (lambda ()
   (list
     (dict
-      (array (quote bernoulli) (quote normal) (quote add)
-             (quote mul) (quote biplex))
-      (array (ref bernoulli) (ref normal) (ref add)
-             (ref mul) (ref biplex)))))
+      (array (quote bernoulli) (ref bernoulli))
+      (array (quote normal) (ref normal))
+      (array (quote add) (ref add))
+      (array (quote mul) (ref mul))
+      (array (quote biplex) (ref biplex)))))
 """)
 
   ripl.assume("extend_env","""
   (lambda (outer_env syms vals)
-    (pair (dict syms vals) outer_env))
+    (pair (to_dict (zip syms vals)) outer_env))
 """)
 
   ripl.assume("find_symbol","""

@@ -136,15 +136,25 @@ registerBuiltinSP("zip", deterministic_typed(zip,
     descr="zip returns a list of lists, where the i-th nested list " \
           "contains the i-th element from each of the input arguments"))
 
+def mk_dict(*entries):
+  return dict([(e.lookup(v.VentureNumber(0)), e.lookup(v.VentureNumber(1)))
+               for e in entries])
+
 registerBuiltinSP("dict",
-  deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
-    [t.HomogeneousListType(t.AnyType("k")),
-     t.HomogeneousListType(t.AnyType("v"))],
+    deterministic_typed(mk_dict,
+    [t.AnyType("2-tuple(k, v)")],
     t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v")),
-    descr="dict returns the dictionary mapping the given keys to their " \
-          "respective given values.  It is an error if the given lists " \
-          "are not the same length."))
+    descr="dict returns the dictionary mapping each of the given keys to their " \
+          "respective given values.",
+    variadic=True))
 registerBuiltinSP("is_dict", type_test(t.DictType()))
+
+registerBuiltinSP("to_dict",
+  deterministic_typed(lambda entries: mk_dict(*entries),
+    [t.HomogeneousListType(t.AnyType("2-tuple(k, v)"))],
+     t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v")),
+     descr="to_dict returns the dictionary mapping each of the given keys to their " \
+           "respective given values."))
 
 registerBuiltinSP("keys",
   deterministic_typed(lambda d: d.keys(),
