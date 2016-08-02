@@ -242,6 +242,9 @@ class FlatTrace(AbstractTrace):
     return all(self.results[id] == self.observations[id]
                for id in self.observations)
 
+  def unregister_request(self, addr):
+    del self.requests[addr]
+
   def unregister_constant(self, addr):
     del self.results[addr]
 

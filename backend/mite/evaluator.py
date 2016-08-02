@@ -121,6 +121,13 @@ class Regenerator(Evaluator):
       fragment = {} # addr -> result value
     self.fragment = fragment
 
+  def uneval_request(self, addr):
+    (exp, env) = self.trace.requests[addr]
+    weight = self.uneval_family(addr, exp, env)
+    self.trace.unregister_request(addr)
+    self.fragment[addr, 'request'] = (exp, env)
+    return weight
+
   def uneval_family(self, addr, exp, env):
     weight = 0
 
@@ -217,6 +224,11 @@ class Regenerator(Evaluator):
 class Restorer(Regenerator):
   """Restore from the trace fragment produced by uneval."""
 
+  def restore_request(self, addr):
+    (exp, env) = self.fragment[addr, 'request']
+    self.trace.register_request(addr, exp, env)
+    return self.eval_family(addr, exp, env)
+
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
@@ -240,14 +252,12 @@ class RegeneratingTraceHandle(TraceHandle):
 
   def free_request(self, request_id):
     addr = self.request_address(request_id)
-    (exp, env) = self.trace.requests[addr]
-    w = self.regenerator.uneval_family(addr, exp, env)
+    w = self.regenerator.uneval_request(addr)
     assert w == 0
     return request_id
 
   def restore_request(self, request_id):
     addr = self.request_address(request_id)
-    (exp, env) = self.trace.requests[addr]
-    w, _ = self.regenerator.eval_family(addr, exp, env)
+    w, _ = self.regenerator.restore_request(addr)
     assert w == 0
     return request_id
