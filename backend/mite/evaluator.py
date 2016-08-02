@@ -154,10 +154,12 @@ class Regenerator(Evaluator):
 
     kernel = self.scaffold.kernel_at(sp, handle, addr)
     if kernel is None:
-      kernel = sp.proposal_kernel(handle, addr)
+      weight = 0
+      fragment = value
+    else:
+      (weight, fragment) = kernel.extract(value, args)
 
-    (weight, fragment) = kernel.extract(value, args)
-    self.fragment[addr] = (fragment, sp, args)
+    self.store_fragment(addr, sp, args, fragment)
     return weight
 
   def apply_sp(self, addr, sp_node, args):
@@ -167,35 +169,27 @@ class Regenerator(Evaluator):
 
     kernel = self.scaffold.kernel_at(sp, handle, addr)
     if kernel is None:
-      kernel = sp.proposal_kernel(handle, addr)
-      fragment = self.fragment_to_maybe_restore(addr, sp, args)
+      weight = 0
+      value = self.retrieve_fragment(addr, sp, args)
     else:
-      fragment = None
+      (weight, value) = kernel.regen(args)
 
-    if fragment is not None:
-      return (0, kernel.restore(args, fragment["value"]))
-    else:
-      return kernel.regen(args)
+    return (weight, value)
 
-  def fragment_to_maybe_restore(self, addr, sp, args):
-    if addr not in self.fragment:
-      # nothing to restore
-      return None
-    else:
-      (fragment, old_sp, old_args) = self.fragment[addr]
-      # check if the parents have changed
-      if not self.is_same_sp(sp, old_sp):
-        return None
-      for (arg, old_arg) in zip(args, old_args):
-        if not self.is_same_arg(arg, old_arg):
-          return None
-      # wrap it in a dict to distinguish from None
-      return {"value": fragment}
+  def store_fragment(self, addr, sp, args, fragment):
+    self.fragment[addr] = (fragment, sp, args)
+
+  def retrieve_fragment(self, addr, sp, args):
+    (fragment, old_sp, old_args) = self.fragment[addr]
+
+    # consistency check
+    assert self.is_same_sp(sp, old_sp)
+    for (arg, old_arg) in zip(args, old_args):
+      assert self.is_same_arg(arg, old_arg)
+
+    return fragment
 
   def is_same_sp(self, sp, old_sp):
-    # XXX this mostly relies on object identity, which is too strict in
-    # some cases and too lax in others (mostly SPs with mutable state)
-    # should we instead serialize the SP's state and compare contents?
     if sp is old_sp:
       return True
     if (isinstance(sp, CompoundSP) and
@@ -225,12 +219,13 @@ class Restorer(Regenerator):
       self.trace, sp_node.address, self)
 
     kernel = self.scaffold.kernel_at(sp, handle, addr)
+    fragment = self.retrieve_fragment(addr, sp, args)
     if kernel is None:
-      kernel = sp.proposal_kernel(handle, addr)
+      value = fragment
+    else:
+      value = kernel.restore(args, fragment)
 
-    fragment = self.fragment_to_maybe_restore(addr, sp, args)
-    assert fragment is not None
-    return (0, kernel.restore(args, fragment["value"]))
+    return (0, value)
 
 
 class RegeneratingTraceHandle(TraceHandle):

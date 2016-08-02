@@ -133,8 +133,10 @@
          (assume x3 (f))
          (assume x4 (f))
          (assume x5 (f))
-         (observe (array x1 x2 x4 x5)
-                  (array atom<1> atom<2> atom<2> atom<2>))
+         (observe x1 atom<1>)
+         (observe x2 atom<2>)
+         (observe x4 atom<2>)
+         (observe x5 atom<2>)
          (s <- (pyselectf "{
   directive(3): {'type': 'constrained', 'val': atom1},
   directive(4): {'type': 'constrained', 'val': atom2},

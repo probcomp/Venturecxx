@@ -124,18 +124,19 @@ def testSelectRegen1(trace):
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
             (assume y (normal x 1))
-            (assume f (lambda (x y) (+ x y 1)))
-            (z <- (predict (list x y)))
+            (x <- (predict x))
+            (y <- (predict y))
             (s <- (pyselect "{
-                     directive(2): {'type': 'proposal'}
+                     directive(2): {'type': 'proposal'},
                    }"))
             (weight_and_fragment <- (extract s))
             (regen s (rest weight_and_fragment))
-            (z_ <- (predict (list x y)))
-            (return (list z z_)))
+            (x_ <- (predict x))
+            (y_ <- (predict y))
+            (return (list x x_ y y_)))
         (%s))
 """ % trace)
-  (x, y), (x_, y_) = result
+  (x, x_, y, y_) = result
   assert_equal(x, x_)
   assert_not_equal(y, y_)
 
@@ -148,18 +149,20 @@ def testSelectRegen2(trace):
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
             (assume y (normal x 1))
-            (assume f (lambda (x y) (+ x y 1)))
-            (z <- (predict (list x y)))
+            (x <- (predict x))
+            (y <- (predict y))
             (s <- (pyselect "{
-                     directive(1): {'type': 'proposal'}
+                     directive(1): {'type': 'proposal'},
+                     directive(2): {'type': 'proposal'},
                    }"))
             (weight_and_fragment <- (extract s))
             (regen s (rest weight_and_fragment))
-            (z_ <- (predict (list x y)))
-            (return (list z z_)))
+            (x_ <- (predict x))
+            (y_ <- (predict y))
+            (return (list x x_ y y_)))
         (%s))
 """ % trace)
-  (x, y), (x_, y_) = result
+  (x, x_, y, y_) = result
   assert_not_equal(x, x_)
   assert_not_equal(y, y_)
 
@@ -172,20 +175,20 @@ def testSelectRegen3(trace):
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
             (assume y (normal x 1))
-            (assume f (lambda (x y) (+ x y 1)))
-            (z <- (predict (list x y)))
+            (x <- (predict x))
+            (y <- (predict y))
             (s <- (pyselectf "{
                      directive(2): {'type': 'constrained',
                                     'val': y}
                    }" (dict (list 'y) (list 4))))
             (weight_and_fragment <- (extract s))
             (weight <- (regen s (rest weight_and_fragment)))
-            (z_ <- (predict (list x y)))
-            (return (list z z_ weight)))
+            (x_ <- (predict x))
+            (y_ <- (predict y))
+            (return (list x x_ y y_ weight)))
         (%s))
 """ % trace)
-  (x, y), (x_, y_), weight = result
+  (x, x_, y, y_, weight) = result
   assert_equal(x, x_)
-  assert_not_equal(y, y_)
   assert_equal(y_, 4)
   assert_almost_equal(weight, scipy.stats.norm(x_, 1).logpdf(y_))
