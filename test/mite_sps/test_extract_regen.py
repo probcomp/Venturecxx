@@ -192,3 +192,31 @@ def testSelectRegen3(trace):
   assert_equal(x, x_)
   assert_equal(y_, 4)
   assert_almost_equal(weight, scipy.stats.norm(x_, 1).logpdf(y_))
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testSelectRegen4(trace):
+  if trace == "graph_trace":
+    raise SkipTest("regen not yet implemented for graph trace")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y (normal x 1))
+            (x <- (predict x))
+            (y <- (predict y))
+            (s <- (pyselectf "{
+                     directive(1): {'type': 'proposal'},
+                     directive(2): {'type': 'constrained',
+                                    'val': y},
+                   }" (dict (list 'y) (list y))))
+            (weight_and_fragment <- (extract s))
+            (weight <- (regen s (rest weight_and_fragment)))
+            (x_ <- (predict x))
+            (y_ <- (predict y))
+            (return (list x x_ y y_ weight)))
+        (%s))
+""" % trace)
+  (x, x_, y, y_, weight) = result
+  assert_not_equal(x, x_)
+  assert_equal(y, y_)
+  assert_almost_equal(weight, scipy.stats.norm(x_, 1).logpdf(y_))
