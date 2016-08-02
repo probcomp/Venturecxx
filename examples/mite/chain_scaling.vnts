@@ -1,0 +1,248 @@
+define run_program = (chain, iters, trace_type) -> {
+  run_in({
+    chain;
+    repeat(iters, single_site_step)
+  }, trace_type())
+};
+
+define flat5 = (iters) -> run_program(chain5, iters, flat_trace);
+define flat10 = (iters) -> run_program(chain10, iters, flat_trace);
+define flat20 = (iters) -> run_program(chain20, iters, flat_trace);
+define flat50 = (iters) -> run_program(chain50, iters, flat_trace);
+
+define graph5 = (iters) -> run_program(chain5, iters, graph_trace);
+define graph10 = (iters) -> run_program(chain10, iters, graph_trace);
+define graph20 = (iters) -> run_program(chain20, iters, graph_trace);
+define graph50 = (iters) -> run_program(chain50, iters, graph_trace);
+
+define single_site_step = {
+  let selectors = [
+    "directive(1)",
+    "directive(2)",
+    "directive(3)",
+    "directive(4)",
+    "directive(5)"
+  ];
+  let selector = selectors[uniform_discrete(0, 5)];
+  subproblem <- single_site_subproblem(selector);
+  resimulation_step(subproblem)
+};
+
+define chain5 = {
+  // hidden states
+  assume x1 = flip();
+  assume x2 = flip(biplex(x1, 0.7, 0.3));
+  assume x3 = flip(biplex(x2, 0.7, 0.3));
+  assume x4 = flip(biplex(x3, 0.7, 0.3));
+  assume x5 = flip(biplex(x4, 0.7, 0.3));
+
+  // observations
+  assume y1 = flip(biplex(x1, 0.9, 0.1));
+  assume y2 = flip(biplex(x2, 0.9, 0.1));
+  assume y3 = flip(biplex(x3, 0.9, 0.1));
+  assume y4 = flip(biplex(x4, 0.9, 0.1));
+  assume y5 = flip(biplex(x5, 0.9, 0.1));
+
+  return(nil)
+};
+
+define chain10 = {
+  // hidden states
+  assume x1 = flip();
+  assume x2 = flip(biplex(x1, 0.7, 0.3));
+  assume x3 = flip(biplex(x2, 0.7, 0.3));
+  assume x4 = flip(biplex(x3, 0.7, 0.3));
+  assume x5 = flip(biplex(x4, 0.7, 0.3));
+  assume x6 = flip(biplex(x5, 0.7, 0.3));
+  assume x7 = flip(biplex(x6, 0.7, 0.3));
+  assume x8 = flip(biplex(x7, 0.7, 0.3));
+  assume x9 = flip(biplex(x8, 0.7, 0.3));
+  assume x10 = flip(biplex(x9, 0.7, 0.3));
+
+  // observations
+  assume y1 = flip(biplex(x1, 0.9, 0.1));
+  assume y2 = flip(biplex(x2, 0.9, 0.1));
+  assume y3 = flip(biplex(x3, 0.9, 0.1));
+  assume y4 = flip(biplex(x4, 0.9, 0.1));
+  assume y5 = flip(biplex(x5, 0.9, 0.1));
+  assume y6 = flip(biplex(x6, 0.9, 0.1));
+  assume y7 = flip(biplex(x7, 0.9, 0.1));
+  assume y8 = flip(biplex(x8, 0.9, 0.1));
+  assume y9 = flip(biplex(x9, 0.9, 0.1));
+  assume y10 = flip(biplex(x10, 0.9, 0.1));
+
+  return(nil)
+};
+
+define chain20 = {
+  // hidden states
+  assume x1 = flip();
+  assume x2 = flip(biplex(x1, 0.7, 0.3));
+  assume x3 = flip(biplex(x2, 0.7, 0.3));
+  assume x4 = flip(biplex(x3, 0.7, 0.3));
+  assume x5 = flip(biplex(x4, 0.7, 0.3));
+  assume x6 = flip(biplex(x5, 0.7, 0.3));
+  assume x7 = flip(biplex(x6, 0.7, 0.3));
+  assume x8 = flip(biplex(x7, 0.7, 0.3));
+  assume x9 = flip(biplex(x8, 0.7, 0.3));
+  assume x10 = flip(biplex(x9, 0.7, 0.3));
+  assume x11 = flip(biplex(x10, 0.7, 0.3));
+  assume x12 = flip(biplex(x11, 0.7, 0.3));
+  assume x13 = flip(biplex(x12, 0.7, 0.3));
+  assume x14 = flip(biplex(x13, 0.7, 0.3));
+  assume x15 = flip(biplex(x14, 0.7, 0.3));
+  assume x16 = flip(biplex(x15, 0.7, 0.3));
+  assume x17 = flip(biplex(x16, 0.7, 0.3));
+  assume x18 = flip(biplex(x17, 0.7, 0.3));
+  assume x19 = flip(biplex(x18, 0.7, 0.3));
+  assume x20 = flip(biplex(x19, 0.7, 0.3));
+
+  // observations
+  assume y1 = flip(biplex(x1, 0.9, 0.1));
+  assume y2 = flip(biplex(x2, 0.9, 0.1));
+  assume y3 = flip(biplex(x3, 0.9, 0.1));
+  assume y4 = flip(biplex(x4, 0.9, 0.1));
+  assume y5 = flip(biplex(x5, 0.9, 0.1));
+  assume y6 = flip(biplex(x6, 0.9, 0.1));
+  assume y7 = flip(biplex(x7, 0.9, 0.1));
+  assume y8 = flip(biplex(x8, 0.9, 0.1));
+  assume y9 = flip(biplex(x9, 0.9, 0.1));
+  assume y10 = flip(biplex(x10, 0.9, 0.1));
+  assume y11 = flip(biplex(x11, 0.9, 0.1));
+  assume y12 = flip(biplex(x12, 0.9, 0.1));
+  assume y13 = flip(biplex(x13, 0.9, 0.1));
+  assume y14 = flip(biplex(x14, 0.9, 0.1));
+  assume y15 = flip(biplex(x15, 0.9, 0.1));
+  assume y16 = flip(biplex(x16, 0.9, 0.1));
+  assume y17 = flip(biplex(x17, 0.9, 0.1));
+  assume y18 = flip(biplex(x18, 0.9, 0.1));
+  assume y19 = flip(biplex(x19, 0.9, 0.1));
+  assume y20 = flip(biplex(x20, 0.9, 0.1));
+
+  return(nil)
+};
+
+define chain50 = {
+  // hidden states
+  assume x1 = flip();
+  assume x2 = flip(biplex(x1, 0.7, 0.3));
+  assume x3 = flip(biplex(x2, 0.7, 0.3));
+  assume x4 = flip(biplex(x3, 0.7, 0.3));
+  assume x5 = flip(biplex(x4, 0.7, 0.3));
+  assume x6 = flip(biplex(x5, 0.7, 0.3));
+  assume x7 = flip(biplex(x6, 0.7, 0.3));
+  assume x8 = flip(biplex(x7, 0.7, 0.3));
+  assume x9 = flip(biplex(x8, 0.7, 0.3));
+  assume x10 = flip(biplex(x9, 0.7, 0.3));
+  assume x11 = flip(biplex(x10, 0.7, 0.3));
+  assume x12 = flip(biplex(x11, 0.7, 0.3));
+  assume x13 = flip(biplex(x12, 0.7, 0.3));
+  assume x14 = flip(biplex(x13, 0.7, 0.3));
+  assume x15 = flip(biplex(x14, 0.7, 0.3));
+  assume x16 = flip(biplex(x15, 0.7, 0.3));
+  assume x17 = flip(biplex(x16, 0.7, 0.3));
+  assume x18 = flip(biplex(x17, 0.7, 0.3));
+  assume x19 = flip(biplex(x18, 0.7, 0.3));
+  assume x20 = flip(biplex(x19, 0.7, 0.3));
+  assume x21 = flip(biplex(x20, 0.7, 0.3));
+  assume x22 = flip(biplex(x21, 0.7, 0.3));
+  assume x23 = flip(biplex(x22, 0.7, 0.3));
+  assume x24 = flip(biplex(x23, 0.7, 0.3));
+  assume x25 = flip(biplex(x24, 0.7, 0.3));
+  assume x26 = flip(biplex(x25, 0.7, 0.3));
+  assume x27 = flip(biplex(x26, 0.7, 0.3));
+  assume x28 = flip(biplex(x27, 0.7, 0.3));
+  assume x29 = flip(biplex(x28, 0.7, 0.3));
+  assume x30 = flip(biplex(x29, 0.7, 0.3));
+  assume x31 = flip(biplex(x30, 0.7, 0.3));
+  assume x32 = flip(biplex(x31, 0.7, 0.3));
+  assume x33 = flip(biplex(x32, 0.7, 0.3));
+  assume x34 = flip(biplex(x33, 0.7, 0.3));
+  assume x35 = flip(biplex(x34, 0.7, 0.3));
+  assume x36 = flip(biplex(x35, 0.7, 0.3));
+  assume x37 = flip(biplex(x36, 0.7, 0.3));
+  assume x38 = flip(biplex(x37, 0.7, 0.3));
+  assume x39 = flip(biplex(x38, 0.7, 0.3));
+  assume x40 = flip(biplex(x39, 0.7, 0.3));
+  assume x41 = flip(biplex(x40, 0.7, 0.3));
+  assume x42 = flip(biplex(x41, 0.7, 0.3));
+  assume x43 = flip(biplex(x42, 0.7, 0.3));
+  assume x44 = flip(biplex(x43, 0.7, 0.3));
+  assume x45 = flip(biplex(x44, 0.7, 0.3));
+  assume x46 = flip(biplex(x45, 0.7, 0.3));
+  assume x47 = flip(biplex(x46, 0.7, 0.3));
+  assume x48 = flip(biplex(x47, 0.7, 0.3));
+  assume x49 = flip(biplex(x48, 0.7, 0.3));
+  assume x50 = flip(biplex(x49, 0.7, 0.3));
+
+  // observations
+  assume y1 = flip(biplex(x1, 0.9, 0.1));
+  assume y2 = flip(biplex(x2, 0.9, 0.1));
+  assume y3 = flip(biplex(x3, 0.9, 0.1));
+  assume y4 = flip(biplex(x4, 0.9, 0.1));
+  assume y5 = flip(biplex(x5, 0.9, 0.1));
+  assume y6 = flip(biplex(x6, 0.9, 0.1));
+  assume y7 = flip(biplex(x7, 0.9, 0.1));
+  assume y8 = flip(biplex(x8, 0.9, 0.1));
+  assume y9 = flip(biplex(x9, 0.9, 0.1));
+  assume y10 = flip(biplex(x10, 0.9, 0.1));
+  assume y11 = flip(biplex(x11, 0.9, 0.1));
+  assume y12 = flip(biplex(x12, 0.9, 0.1));
+  assume y13 = flip(biplex(x13, 0.9, 0.1));
+  assume y14 = flip(biplex(x14, 0.9, 0.1));
+  assume y15 = flip(biplex(x15, 0.9, 0.1));
+  assume y16 = flip(biplex(x16, 0.9, 0.1));
+  assume y17 = flip(biplex(x17, 0.9, 0.1));
+  assume y18 = flip(biplex(x18, 0.9, 0.1));
+  assume y19 = flip(biplex(x19, 0.9, 0.1));
+  assume y20 = flip(biplex(x20, 0.9, 0.1));
+  assume y21 = flip(biplex(x21, 0.9, 0.1));
+  assume y22 = flip(biplex(x22, 0.9, 0.1));
+  assume y23 = flip(biplex(x23, 0.9, 0.1));
+  assume y24 = flip(biplex(x24, 0.9, 0.1));
+  assume y25 = flip(biplex(x25, 0.9, 0.1));
+  assume y26 = flip(biplex(x26, 0.9, 0.1));
+  assume y27 = flip(biplex(x27, 0.9, 0.1));
+  assume y28 = flip(biplex(x28, 0.9, 0.1));
+  assume y29 = flip(biplex(x29, 0.9, 0.1));
+  assume y30 = flip(biplex(x30, 0.9, 0.1));
+  assume y31 = flip(biplex(x31, 0.9, 0.1));
+  assume y32 = flip(biplex(x32, 0.9, 0.1));
+  assume y33 = flip(biplex(x33, 0.9, 0.1));
+  assume y34 = flip(biplex(x34, 0.9, 0.1));
+  assume y35 = flip(biplex(x35, 0.9, 0.1));
+  assume y36 = flip(biplex(x36, 0.9, 0.1));
+  assume y37 = flip(biplex(x37, 0.9, 0.1));
+  assume y38 = flip(biplex(x38, 0.9, 0.1));
+  assume y39 = flip(biplex(x39, 0.9, 0.1));
+  assume y40 = flip(biplex(x40, 0.9, 0.1));
+  assume y41 = flip(biplex(x41, 0.9, 0.1));
+  assume y42 = flip(biplex(x42, 0.9, 0.1));
+  assume y43 = flip(biplex(x43, 0.9, 0.1));
+  assume y44 = flip(biplex(x44, 0.9, 0.1));
+  assume y45 = flip(biplex(x45, 0.9, 0.1));
+  assume y46 = flip(biplex(x46, 0.9, 0.1));
+  assume y47 = flip(biplex(x47, 0.9, 0.1));
+  assume y48 = flip(biplex(x48, 0.9, 0.1));
+  assume y49 = flip(biplex(x49, 0.9, 0.1));
+  assume y50 = flip(biplex(x50, 0.9, 0.1));
+
+  return(nil)
+};
+
+
+// util
+define resimulation_step = (subproblem) -> {
+  rev <- extract(subproblem);
+  let w_rev = first(rev);
+  let trace_fragment = rest(rev);
+  w_fwd <- regen(subproblem, trace_fragment);
+  consistent <- check_consistent();
+  if (consistent && log_flip(w_fwd - w_rev)) {
+    return(nil)
+  }
+  else {
+    extract(subproblem);
+    restore(subproblem, trace_fragment)
+  }
+};
