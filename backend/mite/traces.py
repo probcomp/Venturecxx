@@ -106,8 +106,7 @@ class AbstractTrace(ITrace):
     return addresses.directive(self.directive_counter)
 
   def eval_request(self, addr, exp, env):
-    self.register_request(addr, exp, env)
-    weight, value = Evaluator(self).eval_family(addr, exp, env)
+    weight, value = Evaluator(self).eval_request(addr, exp, env)
     return (weight, value)
 
   def bind_global(self, symbol, addr):

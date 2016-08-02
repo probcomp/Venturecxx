@@ -20,6 +20,10 @@ class Evaluator(object):
   def __init__(self, trace):
     self.trace = trace
 
+  def eval_request(self, addr, exp, env):
+    self.trace.register_request(addr, exp, env)
+    return self.eval_family(addr, exp, env)
+
   def eval_family(self, addr, exp, env):
     weight = 0
     value = None
