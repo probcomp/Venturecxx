@@ -1,10 +1,5 @@
 from collections import namedtuple
 
-from venture.exception import VentureException
-from venture.lite.address import List
-from venture.lite.node import isConstantNode
-from venture.lite.node import isLookupNode
-from venture.lite.node import isOutputNode
 from venture.lite.value import SPRef
 import venture.lite.exp as e
 
