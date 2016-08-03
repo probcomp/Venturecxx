@@ -332,16 +332,16 @@ def is_val(obj):
 
   Only checks the top level, not recursively."""
   # Python lists are ok, because those represent arrays.
-  return is_stack_dict(obj) or isinstance(obj, python_list)
+  return is_basic_val(obj) or isinstance(obj, python_list)
 
-def is_stack_dict(obj):
+def is_basic_val(obj):
   """Checks whether ``obj`` is a valid unannotated literal Venture object.
 
   Only checks the top level, not recursively."""
   return isinstance(obj, python_dict) and "type" in obj and "value" in obj
 
-def is_stack_dict_of_type(tp, obj):
+def is_basic_val_of_type(tp, obj):
   """Checks whether ``obj`` is a valid unannotated literal Venture object of the given type.
 
   Only checks the top level, not recursively.  Types as in `val`."""
-  return is_stack_dict(obj) and obj["type"] is tp
+  return is_basic_val(obj) and obj["type"] is tp

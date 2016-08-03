@@ -54,7 +54,7 @@ class LiteralSyntax(Syntax):
 
 class ListMacro(Macro):
   def applies(self, exp):
-    return isinstance(exp, list) or v.is_stack_dict_of_type("array", exp)
+    return isinstance(exp, list) or v.is_basic_val_of_type("array", exp)
   def expand(self, exp):
     exp = self._canonicalize(exp)
     expanded = []

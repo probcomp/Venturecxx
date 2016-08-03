@@ -98,7 +98,7 @@ def register_macro(m):
   macros.append(m)
 
 def expand(exp):
-  if v.is_stack_dict_of_type("array", exp):
+  if v.is_basic_val_of_type("array", exp):
     exp = _canonicalize(exp)
   for macro in macros:
     if macro.applies(exp):
@@ -106,7 +106,7 @@ def expand(exp):
   raise VentureException('parse', "Unrecognizable expression " + str(exp), expression_index=[])
 
 def _canonicalize(exp):
-  if v.is_stack_dict_of_type("array", exp):
+  if v.is_basic_val_of_type("array", exp):
     exp = exp["value"]
   if isinstance(exp, list):
     return [_canonicalize(e) for e in exp]
