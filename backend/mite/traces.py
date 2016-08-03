@@ -304,6 +304,21 @@ class FlatTrace(AbstractTrace):
       (exp, env) = self.requests[addr]
       x.eval_family(addr, exp, env)
 
+  def weight_bound(self, subproblem):
+    from venture.mite.evaluator import WeightBounder
+    x = WeightBounder(self, subproblem)
+    weight = 0
+    for i in reversed(range(self.directive_counter)):
+      addr = addresses.directive(i+1)
+      (exp, env) = self.requests[addr]
+      weight += x.uneval_family(addr, exp, env)
+    for i in range(self.directive_counter):
+      addr = addresses.directive(i+1)
+      (exp, env) = self.requests[addr]
+      w, _ = x.eval_family(addr, exp, env)
+      weight += w
+    return weight
+
 
 register_trace_type("_trace", ITrace, {
   "next_base_address": trace_action("next_base_address", [], t.Blob),

@@ -256,3 +256,30 @@ class RegeneratingTraceHandle(TraceHandle):
     w, _ = self.regenerator.restore_request(addr)
     assert w == 0
     return request_id
+
+
+# TODO maybe move this to a separate file
+
+# TODO if there are going to be a lot of these, maybe abstract the
+# traversal itself so we don't have to subclass Regenerator all the
+# time?
+class WeightBounder(Regenerator):
+  def unapply_sp(self, addr, value, sp_node, args):
+    sp = sp_node.value
+    fragment = value
+    self.store_fragment(addr, sp, args, fragment)
+    return 0
+
+  def apply_sp(self, addr, sp_node, args):
+    sp = sp_node.value
+    handle = RegeneratingTraceHandle(
+      self.trace, sp_node.address, self)
+
+    kernel = self.scaffold.kernel_at(sp, handle, addr)
+    if kernel is None:
+      weight = 0
+    else:
+      weight = kernel.weight_bound(args)
+    value = self.retrieve_fragment(addr, sp, args)
+
+    return (weight, value)
