@@ -23,37 +23,37 @@ from venture.parser.venture_script import subscanner
 import venture.value.dicts as e
 
 def mk_my_scanner():
-    def doit(char):
-        if char in [" ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-            return (False, None)
-        else:
-            return (True, ast.Located([0, 0], e.number(9)))
-    return doit
+  def doit(char):
+    if char in [" ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+      return (False, None)
+    else:
+      return (True, ast.Located([0, 0], e.number(9)))
+  return doit
 
 def testSubscannerSmoke():
-    r = get_ripl()
-    r.set_mode("venture_script")
-    r.register_language("troll", mk_my_scanner)
-    eq_(10, r.evaluate("1 + @{troll 42}"))
-    eq_(10, r.evaluate("1 + @{troll 27 }"))
-    eq_(10, r.evaluate("1 + @{troll 4 3 3}"))
-    eq_(18, r.evaluate("@{troll 4 3 3} + @{troll 7}"))
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.register_language("troll", mk_my_scanner)
+  eq_(10, r.evaluate("1 + @{troll 42}"))
+  eq_(10, r.evaluate("1 + @{troll 27 }"))
+  eq_(10, r.evaluate("1 + @{troll 4 3 3}"))
+  eq_(18, r.evaluate("@{troll 4 3 3} + @{troll 7}"))
 
 class MyReadingScanner(object):
-    def __init__(self, stream):
-        self.stream = stream
+  def __init__(self, stream):
+    self.stream = stream
 
-    def read(self):
-        char = self.stream.read(1)
-        while char in [" ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
-            char = self.stream.read(1)
-        return (ast.Located([0, 0], e.number(9)),)
+  def read(self):
+    char = self.stream.read(1)
+    while char in [" ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+      char = self.stream.read(1)
+    return (ast.Located([0, 0], e.number(9)),)
 
 def testReadingSubscannerSmoke():
-    r = get_ripl()
-    r.set_mode("venture_script")
-    r.register_language("troll", lambda : subscanner.Scanner(MyReadingScanner))
-    eq_(10, r.evaluate("1 + @{troll 42}"))
-    eq_(10, r.evaluate("1 + @{troll 27 }"))
-    eq_(10, r.evaluate("1 + @{troll 4 3 3}"))
-    eq_(18, r.evaluate("@{troll 4 3 3} + @{troll 7}"))
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.register_language("troll", lambda : subscanner.Scanner(MyReadingScanner))
+  eq_(10, r.evaluate("1 + @{troll 42}"))
+  eq_(10, r.evaluate("1 + @{troll 27 }"))
+  eq_(10, r.evaluate("1 + @{troll 4 3 3}"))
+  eq_(18, r.evaluate("@{troll 4 3 3} + @{troll 7}"))
