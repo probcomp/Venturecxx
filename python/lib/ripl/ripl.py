@@ -117,11 +117,88 @@ class Ripl():
                     "Mode {} is not implemented by this RIPL".format(mode))
 
     def register_language(self, name, language):
+        """Register the parser for an embedded sublanguage.
+
+        Subsequently parsed source code will recognize substrings of the form::
+
+            @{<name> <code-in-the-language>}
+
+        and execute them according to the semantics of the registered language.
+
+        The ``name`` parameter is a string, and serves, together with
+        the ``@{`` token, to mark to Venture the beginning of an
+        utterance in the registered language.
+
+        The ``language`` parameter is a constructor for a Python
+        callable responsible for parsing the language into an
+        appropriate embedding in Venture's abstract syntax.
+
+        We now describe the interface to sublanguage parsers in
+        detail.  On encountering ``@{<name>``, the VentureScript
+        parser stops interpreting the input stream as VentureScript,
+        and defers to the corresponding registered sublanguage parser.
+        Specifically, the VentureScript parser calls the ``language``
+        object with no arguments to allow it to initialize.
+        Initialization must return a Python callable, ``subscan``.
+        The VentureScript parser proceeds to call ``subscan``
+        repeatedly, with one input character at a time.  Each call to
+        ``subscan`` must return a 2-tuple, ``(done, result)``.  If
+        ``done`` is ``False``, the ``result`` is ignored and the
+        VentureScript parser will call ``subscan`` again with the next
+        character.  If ``done`` is ``True``, the ``result`` must be a
+        valid VentureScript abstract syntax tree (see below).  The
+        ``result`` will be spliced in at this point in the parse, and
+        the VentureScript parser will resume parsing standard
+        VentureScript.  This ``subscan`` instance will not be called
+        again, but if another invocation in the same sublanguage
+        occurs, the ``language`` object will be invoked again to
+        initialize a new one.
+
+        Note from this interface that the sublanguage is responsible
+        for detecting a complete valid utterance.  The characters come
+        in one at a time because the VentureScript parser cannot
+        predict where the utterance will end without asking the
+        sublanguage.
+
+        The `venture.parser.subscan` module contains an adapter that
+        does a control inversion on the above interface.  The
+        inversion allows one to write a sublanguage with a library
+        like Plex that expects to scan a file-like object itself,
+        rather than exposing a callable that consumes characters.
+
+        There are no restrictions on the parse tree that a subparser
+        may emit.  In principle, this permits very deep integration of
+        arbitrary syntaxes, provided their underlying implementation
+        can be expressed as calls to appropriate Venture macros or
+        stochastic procedures.  It is also possible to fall back to
+        very shallow integration---just consume a valid utterance and
+        emit a syntax tree consisting of applying the target
+        interpreter (packaged as a stochastic procedure) to a quoted
+        string.
+
+        The VentureScript abstract syntax tree API comes in two parts.
+
+        - Bare abstract syntax trees may be constructed by methods of
+          the `venture.value.dicts` module.
+
+        - A parser expected to emit a syntax tree annotated with
+          source code locations, using the `Located` class in the
+          `venture.parser.ast` module.
+
+        Embedded sublanguage syntaxes are only available in the
+        VentureScript surface syntax, not the Church' syntax.  The
+        latter parses to abstract syntax more directly, so just
+        calling the implementation SP(s) of the desired sublanguage is
+        more natural in that context.
+        """
         if name in self._languages:
             raise ValueError('Language already registered: %r' % (name,))
         self._languages[name] = language
 
     def deregister_language(self, name, language):
+        """Deregister the parser for an embedded sublanguage.
+
+        Subsequently parsed source code will not recognize that language."""
         assert self._languages[name] is language
         del self._languages[name]
 
