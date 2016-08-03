@@ -48,7 +48,7 @@ class Scaffold(object):
 
   def getPrincipalNodes(self):
     # Return a list so that repeated traversals have the same order
-    return [n for n in OrderedSet.union(*self.setsOfPNodes)]
+    return [n for n in OrderedFrozenSet.union(*self.setsOfPNodes)]
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1

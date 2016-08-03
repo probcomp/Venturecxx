@@ -352,6 +352,13 @@ def test_shell():
 
 def test_loading():
   vnt = spawn_venture()
+  def expect_random_seed_message():
+    vnt.expect_exact("Initial random seed is ")
+    vnt.expect(r"\w+")
+    vnt.expect_exact(" (to reproduce run, use -s ")
+    vnt.expect(r"\w+")
+    vnt.expect_exact(")\r\n")
+    vnt.expect_prompt()
   fvnts = tempfile.NamedTemporaryFile(suffix="play.vnts", delete=False)
   fvnts.write('print("I am a venture script")\n')
   fvnts.close()
@@ -384,7 +391,7 @@ def __venture_start__(*args, **kwargs):
   vnt.expect_exact("Strng(I am a venture script)\r\n")
   vnt.expect_prompt()
   vnt.send_command("clear")
-  assert vnt.read_to_prompt() == ""
+  expect_random_seed_message()
   # Now in the other order:
   vnt.send_command("load_plugin %s" % plgn)
   vnt.expect_exact("I am a plugin at load time\r\n")
@@ -405,9 +412,9 @@ def __venture_start__(*args, **kwargs):
   vnt.expect_exact("Strng(I am a venture script)\r\n")
   vnt.expect_prompt()
   vnt.send_command("clear")
-  assert vnt.read_to_prompt() == ""
+  expect_random_seed_message()
   vnt.send_command("reload")  # No longer have anything to reload.
-  assert vnt.read_to_prompt() == ""
+  expect_random_seed_message()
   os.unlink(vnts)
   os.unlink(plgn)
 

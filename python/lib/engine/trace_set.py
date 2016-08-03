@@ -17,6 +17,7 @@
 
 import cPickle as pickle
 import contextlib
+import copy
 import random
 
 import numpy.random as npr
@@ -185,7 +186,7 @@ class TraceSet(object):
     self._did_to_label = {}
 
   def reinit_inference_problem(self, num_particles=1):
-    """Unincorporate all observations and return to the prior.
+    """Return to the prior.
 
 First perform a resample with the specified number of particles
 (default 1).  The choice of which particles will be returned to the
@@ -326,10 +327,10 @@ if freeze has been used.
     try:
       self.create_trace_pool([traces[i]], [weights[i]])
       ans = f(traces[i])
-      new_trace = self.retrieve_traces()[0]
-      new_weight = self.log_weights[0]
-      traces = traces[0:i] + [new_trace] + traces[i+1:]
-      weights = weights[0:i] + [new_weight] + weights[i+1:]
+      new_traces = self.retrieve_traces()
+      new_weights = self.log_weights
+      traces = traces[0:i] + new_traces + traces[i+1:]
+      weights = weights[0:i] + new_weights + weights[i+1:]
       return ans
     finally:
       self.mode = mode
@@ -337,9 +338,6 @@ if freeze has been used.
 
   def primitive_infer(self, exp):
     return self.traces.map('primitive_infer', exp)
-
-  def logscore(self): return self.traces.at_distinguished('getGlobalLogScore')
-  def logscore_all(self): return self.traces.map('getGlobalLogScore')
 
   def get_entropy_info(self):
     return { 'unconstrained_random_choices' : self.traces.at_distinguished('numRandomChoices') }
@@ -396,6 +394,8 @@ if freeze has been used.
     traces = [self.restore_trace(dump) for dump in other.retrieve_dumps()]
     self.mode = other.mode
     self.create_trace_pool(traces, other.log_weights)
+    self._did_to_label = copy.copy(other._did_to_label)
+    self._label_to_did = copy.copy(other._label_to_did)
 
   def set_profiling(self, enabled=True):
       self.traces.map('set_profiling', enabled)

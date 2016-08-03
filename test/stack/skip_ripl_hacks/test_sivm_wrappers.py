@@ -56,7 +56,7 @@ class TestVentureSivm(unittest.TestCase):
     def testListDirectives(self):
         self.sivm.predict(v.number(1))
         self.sivm.predict(v.number(2),label='xx2')
-        assert_equal(len(self.sivm.list_directives()['directives']),2)
+        assert_equal(len(self.sivm.list_directives()),2)
 
     def testObserve(self):
         self.sivm.observe([v.symbol('normal'), v.number(0), v.number(1)],
@@ -69,7 +69,7 @@ class TestVentureSivm(unittest.TestCase):
         self.sivm.predict(v.number(2),label='xx2')
         self.sivm.forget(did1)
         self.sivm.forget('xx2')
-        assert_equal(len(self.sivm.list_directives()['directives']),0)
+        assert_equal(len(self.sivm.list_directives()),0)
 
     def testForceAndSample(self):
         self.sivm.assume('x',[v.symbol('normal'), v.number(0), v.number(1)])

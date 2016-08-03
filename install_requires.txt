@@ -1,13 +1,13 @@
 numpy>=1.8
 scipy>=0.13
 
-# Saving and restoring ripls
-dill
-
 # Plotf
 matplotlib>=1.3.1
 patsy>=0.2 # Transitive through included ggplot
 pandas>=0.14
+
+# The profiler also depends on pandas, in that it produces results as
+# a DataFrame.
 
 # Debug pictures of scaffolds
 networkx

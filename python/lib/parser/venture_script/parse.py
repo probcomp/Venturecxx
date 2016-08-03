@@ -23,63 +23,29 @@ import json
 from venture.exception import VentureException
 import venture.value.dicts as val
 
+from venture.parser import ast
 from venture.parser.venture_script import grammar
 from venture.parser.venture_script import scan
 
-def tokval((value, _start, _end)):
-    return value
-
-def isloc(obj):
-    return isinstance(obj, dict) and sorted(obj.keys()) == ['loc', 'value']
-
-def located(loc, value):
-    # XXX Use a namedtuple, not a dict.
-    return {'loc': loc, 'value': value}
-
-def locval(lv, v):
-    return {'loc': lv['loc'], 'value': v}
-
-def locmap(l, f):
-    return {'loc': l['loc'], 'value': f(l['value'])}
-
-def locmerge(lv0, lv1, v):
-    start0, end0 = lv0['loc']
-    start1, end1 = lv1['loc']
-    assert start0 < end1
-    return {'loc': [start0, end1], 'value': v}
-
-def loctoken((value, start, end)):
-    return located([start, end], value)
-
-def loctoken1((_value, start, end), value):
-    return located([start, end], value)
-
-def locquoted((_value, start, _end), located_value, f):
-    (_vstart, vend) = located_value['loc']
-    assert start < _vstart
-    return located([start, vend], f(located_value))
-
-def locbracket((_ovalue, ostart, oend), (_cvalue, cstart, cend), value):
-    assert ostart <= oend
-    assert oend < cstart
-    assert cstart <= cend
-    return located([ostart, cend], value)
-
-def loclist(items):
-    assert len(items) >= 1
-    (start, _) = items[0]['loc']
-    (_, end) = items[-1]['loc']
-    return located([start, end], items)
-
-def expression_evaluation_instruction(e):
-    return { 'instruction': locmap(e, lambda _: 'evaluate'), 'expression': e }
+def locquoted(located_quoter, located_value, f):
+    (vstart, vend) = located_value.loc
+    (start, _end) = located_quoter.loc
+    assert start < vstart
+    return ast.Located([start, vend], f(located_value))
 
 def delocust(l):
+    "Recursively remove location tags."
     # XXX Why do we bother with tuples in the first place?
-    if isinstance(l['value'], list) or isinstance(l['value'], tuple):
-        return [delocust(v) for v in l['value']]
+    if isinstance(l, dict) and sorted(l.keys()) == ['loc', 'value']:
+        return delocust(l['value'])
+    elif ast.isloc(l):
+        return delocust(l.value)
+    elif isinstance(l, list) or isinstance(l, tuple):
+        return [delocust(v) for v in l]
+    elif isinstance(l, dict):
+        return dict((k, delocust(v)) for k, v in l.iteritems())
     else:
-        return l['value']
+        return l
 
 def adjlocust(l, o):
     start, end = l['loc']
@@ -114,13 +80,15 @@ class Semantics(object):
     def parse_failed(self):
         assert self.answer is None
         raise VentureException('text_parse', 'Syntax error!')
-    def syntax_error(self, (number, (text, start, end))):
+    def syntax_error(self, (number, located)):
         # XXX Should not raise here -- should accumulate errors and
         # report them all at the end.
         #
         # XXX Should adapt lemonade to support passing a message, and
         # make the generated parser say which tokens (and, ideally,
         # nonterminals) it was expecting instead.
+        text = located.value
+        (start, end) = located.loc
         raise VentureException('text_parse',
             ('Syntax error at %s (token %d)' % (repr(text), number)),
             text_index=[start, end])
@@ -128,7 +96,7 @@ class Semantics(object):
     # Venture start symbol: store result in self.answer, return none.
     def p_venture_top(self, insts):
         for i in insts:
-            assert isloc(i)
+            assert ast.isloc(i)
         self.answer = insts
 
     # instructions: Return list of located instructions.
@@ -136,7 +104,7 @@ class Semantics(object):
         return []
     def p_instructions_some(self, insts, inst):
         if inst is not None:
-            assert isloc(inst)
+            assert ast.isloc(inst)
             insts.append(inst)
         return insts
 
@@ -144,189 +112,233 @@ class Semantics(object):
     def p_instruction_opt_none(self):
         return None
     def p_instruction_opt_some(self, inst):
-        assert isloc(inst)
+        assert ast.isloc(inst)
         return inst
 
     # instruction: Return located {'instruction': 'foo', ...}.
     def p_instruction_command(self, c):
-        assert isloc(c)
+        assert ast.isloc(c)
         return c
     def p_instruction_statement(self, e):
-        i = locval(e, 'evaluate')
-        return locval(e, {'instruction': i, 'expression': e})
+        i = ast.update_value(e, 'evaluate')
+        return ast.update_value(e, {'instruction': i, 'expression': e})
 
     # labelled: Return located expression.
     def p_labelled_directive(self, l, d):
-        label = locmap(loctoken(l), val.symbol)
-        exp = d['value']
+        label = ast.map_value(val.symbol, l)
+        exp = d.value
         new_exp = exp + [label]
-        new_d = locmerge(label, d, new_exp)
+        new_d = ast.locmerge(label, d, new_exp)
         return new_d
     def p_labelled_directive_prog(self, dol, lab_exp, d):
-        label = locmerge(loctoken(dol), lab_exp, val.unquote(lab_exp))
-        exp = d['value']
+        label = ast.locmerge(dol, lab_exp, val.unquote(lab_exp))
+        exp = d.value
         new_exp = exp + [label]
-        new_d = locmerge(label, d, new_exp)
+        new_d = ast.locmerge(label, d, new_exp)
         return new_d
 
     # directive: Return located expression.
     def p_directive_assume(self, k, n, eq, e):
-        assert isloc(e)
-        i = loctoken1(k, val.symbol('assume'))
-        s = locmap(loctoken(n), val.symbol)
+        assert ast.isloc(e)
+        i = ast.update_value(k, val.symbol('assume'))
+        s = ast.map_value(val.symbol, n)
         app = [i, s, e]
-        return locmerge(i, e, app)
+        return ast.locmerge(i, e, app)
     def p_directive_assume_prog(self, k, dol, sym_exp, eq, e):
-        assert isloc(e)
-        assert isloc(sym_exp)
-        i = loctoken1(k, val.symbol('assume'))
-        app = [i, locmerge(loctoken(dol), sym_exp, val.unquote(sym_exp)), e]
-        return locmerge(i, e, app)
+        assert ast.isloc(e)
+        assert ast.isloc(sym_exp)
+        i = ast.update_value(k, val.symbol('assume'))
+        app = [i, ast.locmerge(dol, sym_exp, val.unquote(sym_exp)), e]
+        return ast.locmerge(i, e, app)
     def p_directive_observe(self, k, e, eq, e1):
-        assert isloc(e)
-        assert isloc(e1)
-        i = loctoken1(k, val.symbol('observe'))
+        assert ast.isloc(e)
+        assert ast.isloc(e1)
+        i = ast.update_value(k, val.symbol('observe'))
         app = [i, e, e1]
-        return locmerge(i, e1, app)
+        return ast.locmerge(i, e1, app)
     def p_directive_predict(self, k, e):
-        assert isloc(e)
-        i = loctoken1(k, val.symbol('predict'))
+        assert ast.isloc(e)
+        i = ast.update_value(k, val.symbol('predict'))
         app = [i, e]
-        return locmerge(i, e, app)
+        return ast.locmerge(i, e, app)
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_define(self, k, n, eq, e):
-        assert isloc(e)
-        i = loctoken1(k, 'define')
-        s = locmap(loctoken(n), val.symbol)
-        return locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
+        assert ast.isloc(e)
+        i = ast.update_value(k, 'define')
+        s = ast.map_value(val.symbol, n)
+        return ast.locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
     def p_command_infer(self, k, e):
-        assert isloc(e)
-        i = loctoken1(k, 'infer')
-        return locmerge(i, e, {'instruction': i, 'expression': e})
+        assert ast.isloc(e)
+        i = ast.update_value(k, 'infer')
+        return ast.locmerge(i, e, {'instruction': i, 'expression': e})
     def p_command_load(self, k, pathname):
-        i = loctoken1(k, 'load')
-        p = loctoken(pathname)
-        return locmerge(i, p, {'instruction': i, 'file': p})
+        i = ast.update_value(k, 'load')
+        return ast.locmerge(i, pathname, {'instruction': i, 'file': pathname})
 
     # body: Return located expression.
     def p_body_do(self, ss, semi, e):
-        assert isloc(ss)
+        assert ast.isloc(ss)
         if e is None:
-            e = loctoken1(semi, val.symbol('pass'))
-        assert isloc(e)
-        do = locmerge(ss, e, val.symbol('do'))
-        return locmerge(ss, e, [do] + ss['value'] + [e])
+            e = ast.update_value(semi, val.symbol('pass'))
+        assert ast.isloc(e)
+        do = ast.locmerge(ss, e, val.symbol('do'))
+        return ast.locmerge(ss, e, [do] + ss.value + [e])
     def p_body_exp(self, e):
-        assert isloc(e)
+        assert ast.isloc(e)
         return e
 
     # statements: Return located list of located bindings.
     def p_statements_one(self, s):
-        assert isloc(s)
-        return locval(s, [s])
+        assert ast.isloc(s)
+        return ast.update_value(s, [s])
     def p_statements_many(self, ss, semi, s):
-        assert isloc(s)
-        assert isloc(s)
-        ss['value'].append(s)
-        return locmerge(ss, s, ss['value'])
+        assert ast.isloc(s)
+        assert ast.isloc(s)
+        ss.value.append(s)
+        return ast.locmerge(ss, s, ss.value)
 
+    # statement: Return located statement
     def p_statement_let(self, l, n, eq, e):
-        assert isloc(e)
-        let = loctoken1(l, val.symbol('let'))
-        n = locmap(loctoken(n), val.symbol)
-        return locmerge(let, e, [let, n, e])
+        assert ast.isloc(e)
+        let = ast.update_value(l, val.symbol('let'))
+        n = ast.map_value(val.symbol, n)
+        return ast.locmerge(let, e, [let, n, e])
     def p_statement_assign(self, n, eq, e):
-        assert isloc(e)
-        let = loctoken1(eq, val.symbol('let'))
-        n = locmap(loctoken(n), val.symbol)
-        return locmerge(n, e, [let, n, e])
+        assert ast.isloc(e)
+        let = ast.update_value(eq, val.symbol('let'))
+        n = ast.map_value(val.symbol, n)
+        return ast.locmerge(n, e, [let, n, e])
     def p_statement_letrec(self, l, n, eq, e):
-        assert isloc(e)
-        let = loctoken1(l, val.symbol('letrec'))
-        n = locmap(loctoken(n), val.symbol)
-        return locmerge(let, e, [let, n, e])
+        assert ast.isloc(e)
+        let = ast.update_value(l, val.symbol('letrec'))
+        n = ast.map_value(val.symbol, n)
+        return ast.locmerge(let, e, [let, n, e])
     def p_statement_mutrec(self, l, n, eq, e):
-        assert isloc(e)
-        let = loctoken1(l, val.symbol('mutrec'))
-        n = locmap(loctoken(n), val.symbol)
-        return locmerge(let, e, [let, n, e])
+        assert ast.isloc(e)
+        let = ast.update_value(l, val.symbol('mutrec'))
+        n = ast.map_value(val.symbol, n)
+        return ast.locmerge(let, e, [let, n, e])
     def p_statement_letvalues(self, l, po, names, pc, eq, e):
-        assert isloc(e)
-        assert all(map(isloc, names))
-        let = loctoken1(l, val.symbol('let_values'))
-        names = locbracket(po, pc, names)
-        return locmerge(let, e, [let, names, e])
+        assert ast.isloc(e)
+        assert all(map(ast.isloc, names))
+        let = ast.update_value(l, val.symbol('let_values'))
+        names = ast.locmerge(po, pc, names)
+        return ast.locmerge(let, e, [let, names, e])
     def p_statement_labelled(self, d):
-        assert isloc(d)
+        assert ast.isloc(d)
         return d
     def p_statement_none(self, e):
-        assert isloc(e)
+        assert ast.isloc(e)
         return e
 
     # expression_opt: Return located expression or None.
     def p_expression_opt_none(self):
         return None
     def p_expression_opt_some(self, e):
-        assert isloc(e)
+        assert ast.isloc(e)
         return e
 
     def _p_binop(self, l, op, r):
-        assert isloc(l)
-        assert isloc(r)
-        assert tokval(op) in operators
-        app = [locmap(loctoken1(op, operators[tokval(op)]), val.symbol), l, r]
-        return locmerge(l, r, app)
+        assert ast.isloc(l)
+        assert ast.isloc(r)
+        assert op.value in operators
+        app = [ast.map_value(val.symbol, ast.update_value(op, operators[op.value])), l, r]
+        return ast.locmerge(l, r, app)
     def _p_exp(self, e):
-        assert isloc(e)
+        assert ast.isloc(e)
         return e
 
     # expression: Return located expression.
     p_expression_top = _p_exp
     def p_do_bind_bind(self, n, op, e):
-        assert isloc(e)
-        n = loctoken(n)
+        assert ast.isloc(e)
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
-        return locmerge(n, e, [n, locmap(loctoken(op), lambda s: val.symbol("<-")), e])
+        return ast.locmerge(n, e, [n, ast.update_value(op, val.symbol("<-")), e])
     def p_do_bind_labelled(self, n, op, l):
-        assert isloc(l)
-        n = loctoken(n)
+        assert ast.isloc(l)
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
-        return locmerge(n, l, [n, locmap(loctoken(op), lambda s: val.symbol("<-")), l])
+        return ast.locmerge(n, l, [n, ast.update_value(op, val.symbol("<-")), l])
     def p_action_directive(self, d):
-        assert isloc(d)
+        assert ast.isloc(d)
         return d
     def p_action_force(self, k, e1, eq, e2):
-        assert isloc(e1)
-        assert isloc(e2)
-        i = loctoken1(k, val.symbol('force'))
+        assert ast.isloc(e1)
+        assert ast.isloc(e2)
+        i = ast.update_value(k, val.symbol('force'))
         app = [i, e1, e2]
-        return locmerge(i, e2, app)
+        return ast.locmerge(i, e2, app)
     def p_action_sample(self, k, e):
-        assert isloc(e)
-        i = loctoken1(k, val.symbol('sample'))
+        assert ast.isloc(e)
+        i = ast.update_value(k, val.symbol('sample'))
         app = [i, e]
-        return locmerge(i, e, app)
+        return ast.locmerge(i, e, app)
     def p_arrow_one(self, param, op, body):
-        assert isloc(body)
-        param = locmap(loctoken(param), val.symbol)
-        return locmerge(param, body, [
-            locmap(loctoken1(op, 'lambda'), val.symbol),
-            locval(param, [param]),
+        assert ast.isloc(body)
+        param = ast.map_value(val.symbol, param)
+        return ast.locmerge(param, body, [
+            ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
+            ast.update_value(param, [param]),
             body,
         ])
     def p_arrow_tuple(self, po, params, pc, op, body):
-        assert isloc(body)
-        return locmerge(loctoken(po), body, [
-            locmap(loctoken1(op, 'lambda'), val.symbol),
-            locbracket(po, pc, params),
+        assert ast.isloc(body)
+        return ast.locmerge(po, body, [
+            ast.map_value(val.symbol, ast.update_value(op, 'lambda')),
+            ast.locmerge(po, pc, params),
             body,
         ])
+
+    def p_path_expression_one(self, slash, s):
+        assert ast.isloc(s)
+        top = ast.update_value(slash, val.symbol('by_top'))
+        intersect = ast.update_value(slash, val.symbol('by_walk'))
+        app = [intersect, ast.loclist([top]), s]
+        return ast.locmerge(top, s, app)
+
+    def p_path_expression_some(self, more, slash, s):
+        # XXX Is this just _p_binop with the "slash" operator?
+        assert ast.isloc(s)
+        intersect = ast.update_value(slash, val.symbol('by_walk'))
+        app = [intersect, more, s]
+        return ast.locmerge(more, s, app)
+
+    def p_path_step_tag(self, q, tag):
+        by_tag = ast.update_value(q, val.symbol('by_tag'))
+        name = locquoted(q, tag, val.quasiquote)
+        app = [by_tag, name]
+        return ast.locmerge(by_tag, name, app)
+
+    def p_path_step_tag_val(self, q, tag, eq, value):
+        by_tag_value = ast.update_value(q, val.symbol('by_tag_value'))
+        name = locquoted(q, tag, val.quasiquote)
+        app = [by_tag_value, name, value]
+        return ast.locmerge(by_tag_value, value, app)
+
+    def p_path_step_star(self, star):
+        return ast.update_value(star, [val.symbol('by_star')])
+
+    def p_hash_tag_tag(self, e, h, tag):
+        tag_proc = ast.update_value(h, val.symbol('tag'))
+        name = locquoted(h, tag, val.quasiquote)
+        value = ast.update_value(h, val.string("default"))
+        app = [tag_proc, name, value, e]
+        return ast.locmerge(e, tag_proc, app)
+
+    def p_hash_tag_tag_val(self, e, h, tag, colon, value):
+        tag_proc = ast.update_value(h, val.symbol('tag'))
+        name = locquoted(h, tag, val.quasiquote)
+        app = [tag_proc, name, value, e]
+        return ast.locmerge(e, value, app)
+
     p_do_bind_none = _p_exp
     p_action_none = _p_exp
+    p_arrow_pathexp = _p_exp
     p_arrow_none = _p_exp
+    p_path_step_edge = _p_exp
+    p_hash_tag_none = _p_exp
     p_boolean_or_or = _p_binop
     p_boolean_or_none = _p_exp
     p_boolean_and_and = _p_binop
@@ -349,17 +361,17 @@ class Semantics(object):
     p_exponential_none = _p_exp
 
     def p_applicative_app(self, fn, o, args, c):
-        assert isloc(fn)
+        assert ast.isloc(fn)
         for arg in args:
-            assert isloc(arg)
-        return locmerge(fn, loctoken(c), [fn] + args)
+            assert ast.isloc(arg)
+        return ast.locmerge(fn, c, [fn] + args)
     def p_applicative_lookup(self, a, o, index, c):
-        assert isloc(a)
-        assert isloc(index)
-        lookup = loctoken1(o, val.sym('lookup'))
-        return locmerge(a, loctoken(c), [lookup, a, index])
+        assert ast.isloc(a)
+        assert ast.isloc(index)
+        lookup = ast.update_value(o, val.sym('lookup'))
+        return ast.locmerge(a, c, [lookup, a, index])
     def p_applicative_none(self, e):
-        assert isloc(e)
+        assert ast.isloc(e)
         return e
 
     # arglist, args: Return list of located expressions.
@@ -371,44 +383,43 @@ class Semantics(object):
     def p_tagged_kw(self, name, colon, e): return e
 
     def p_primary_paren(self, o, es, c):
-        assert isinstance(es, list) and all(map(isloc, es))
+        assert isinstance(es, list) and all(map(ast.isloc, es))
         if len(es) == 1:
             [e] = es
-            return locbracket(o, c, e['value'])
+            return ast.locmerge(o, c, e.value)
         else:
-            construction = [locmap(loctoken1(o, 'values_list'), val.symbol)] + es
-            return locbracket(o, c, construction)
+            construction = [ast.map_value(val.symbol, ast.update_value(o, 'values_list'))] + es
+            return ast.locmerge(o, c, construction)
     def p_primary_brace(self, o, e, c):
-        assert isloc(e)
-        return locbracket(o, c, e['value'])
+        assert ast.isloc(e)
+        return ast.locmerge(o, c, e.value)
     def p_primary_proc(self, k, po, params, pc, bo, body, bc):
-        assert isloc(body)
-        return locbracket(k, bc, [
-            locmap(loctoken1(k, 'lambda'), val.symbol),
-            locbracket(po, pc, params),
+        assert ast.isloc(body)
+        return ast.locmerge(k, bc, [
+            ast.map_value(val.symbol, ast.update_value(k, 'lambda')),
+            ast.locmerge(po, pc, params),
             body,
         ])
     def p_primary_if(self, k, po, p, pc, co, c, cc, ke, ao, a, ac):
-        assert isloc(p)
-        assert isloc(c)
-        assert isloc(a)
-        return locbracket(k, ac,
-            [locmap(loctoken1(k, 'if'), val.symbol), p, c, a])
+        assert ast.isloc(p)
+        assert ast.isloc(c)
+        assert ast.isloc(a)
+        return ast.locmerge(k, ac,
+            [ast.map_value(val.symbol, ast.update_value(k, 'if')), p, c, a])
     def p_primary_qquote(self, o, b, c):
-        return locbracket(o, c, val.quasiquote(b))
+        return ast.locmerge(o, c, val.quasiquote(b))
     def p_primary_unquote(self, op, e):
-        op = loctoken(op)
-        return locmerge(op, e,
-            val.quote(locmerge(op, e, val.unquote(e))))
+        return ast.locmerge(op, e,
+            val.quote(ast.locmerge(op, e, val.unquote(e))))
     def p_primary_array(self, o, a, c):
         assert isinstance(a, list)
-        construction = [locmap(loctoken1(o, 'array'), val.symbol)] + a
-        return locbracket(o, c, construction)
+        construction = [ast.map_value(val.symbol, ast.update_value(o, 'array'))] + a
+        return ast.locmerge(o, c, construction)
     def p_primary_literal(self, l):
-        assert isloc(l)
+        assert ast.isloc(l)
         return l
     def p_primary_symbol(self, s):
-        return locmap(loctoken(s), val.symbol)
+        return ast.map_value(val.symbol, s)
     def p_primary_language(self, ll):
         l, start, _end = ll
         assert isloc(l), '%r' % (l,)
@@ -419,9 +430,9 @@ class Semantics(object):
     def p_paramlist_none(self):                 return []
     def p_paramlist_some(self, params):         return params
     def p_params_one(self, param):
-        return [locmap(loctoken(param), val.symbol)]
+        return [ast.map_value(val.symbol, param)]
     def p_params_many(self, params, c, param):
-        params.append(locmap(loctoken(param), val.symbol))
+        params.append(ast.map_value(val.symbol, param))
         return params
 
     # arraybody, arrayelts: Return list of located expressions.
@@ -432,17 +443,18 @@ class Semantics(object):
 
     # literal: Return located `val'.
     def p_literal_true(self, t):
-        return locmap(loctoken1(t, True), val.boolean)
+        return ast.map_value(val.boolean, ast.update_value(t, True))
     def p_literal_false(self, f):
-        return locmap(loctoken1(f, False), val.boolean)
+        return ast.map_value(val.boolean, ast.update_value(f, False))
     def p_literal_integer(self, v):
-        return locmap(loctoken(v), val.number)
+        return ast.map_value(val.number, v)
     def p_literal_real(self, v):
-        return locmap(loctoken(v), val.number)
+        return ast.map_value(val.number, v)
     def p_literal_string(self, v):
-        return locmap(loctoken(v), val.string)
+        return ast.map_value(val.string, v)
     def p_literal_json(self, t, v, c):
-        t0, start, end = t
+        t0 = t.value
+        start, end = t.loc
         assert t0[-1] == '<'
         t0 = t0[:-1]
         if t0 == 'boolean':
@@ -450,12 +462,12 @@ class Semantics(object):
             raise VentureException('text_parse',
                 ('JSON not allowed for %s' % (t0,)),
                 text_index=[start, end])
-        return locbracket(t, c, {'type': t0, 'value': v})
+        return ast.locmerge(t, c, {'type': t0, 'value': v})
 
     # json: Return json object.
-    def p_json_string(self, v):                 return tokval(v)
-    def p_json_integer(self, v):                return tokval(v)
-    def p_json_real(self, v):                   return tokval(v)
+    def p_json_string(self, v):                 return v.value
+    def p_json_integer(self, v):                return v.value
+    def p_json_real(self, v):                   return v.value
     def p_json_list(self, l):                   return l
     def p_json_dict(self, d):                   return d
 
@@ -479,7 +491,7 @@ class Semantics(object):
     def p_json_dict_entries_error(self, e):     return { 'error': 'error' }
 
     # json_dict_entry: Return (key, value) tuple.
-    def p_json_dict_entry_e(self, key, value):  return (tokval(key), value)
+    def p_json_dict_entry_e(self, key, value):  return (key.value, value)
     def p_json_dict_entry_error(self, value):   return ('error', value)
 
 def parse(f, context, languages=None):
@@ -500,7 +512,7 @@ def parse(f, context, languages=None):
             break
     assert isinstance(semantics.answer, list)
     for i in semantics.answer:
-        assert isloc(i)
+        assert ast.isloc(i)
     return semantics.answer
 
 def parse_string(string, languages=None):
@@ -534,7 +546,7 @@ def string_complete_p(string, languages=None):
         else:
             if token[0] == 0:   # EOF
                 # Implicit ; at EOF.
-                semi = (';', scanner.cur_pos, scanner.cur_pos)
+                semi = ast.Located([scanner.cur_pos, scanner.cur_pos], ';')
                 try:
                     parser.feed((grammar.T_SEMI, semi))
                     # If the semi parses, then we had a complete string
@@ -546,7 +558,7 @@ def string_complete_p(string, languages=None):
                 parser.feed(token)
 
 def parse_instructions(string, languages=None):
-    return parse_string(string, languages)
+    return map(ast.as_legacy_dict, parse_string(string, languages))
 
 def parse_instruction(string, languages=None):
     ls = parse_instructions(string, languages)
@@ -682,6 +694,8 @@ class VentureScriptParser(object):
         assert 'type' in symbol
         assert symbol['type'] == 'symbol'
         return tagged_value_to_string(symbol)
+    def unparse_symbol_quoted(self, symbol):
+        return "'" + self.unparse_symbol(symbol)
     def unparse_value(self, value):
         return value_to_string(value)
     def unparse_json(self, obj):
@@ -705,12 +719,9 @@ class VentureScriptParser(object):
         'freeze': [('directive_id', unparse_integer)],
         'labeled_freeze': [('label', unparse_symbol)],
         'report': [('directive_id', unparse_integer)],
-        'labeled_report': [('label', unparse_symbol)],
+        'labeled_report': [('label', unparse_symbol_quoted)],
         'infer': [('expression', unparse_expression)],
         'clear': [],
-        'list_directives': [],
-        'get_directive': [('directive_id', unparse_integer)],
-        'labeled_get_directive': [('label', unparse_symbol)],
         'force': [('expression', unparse_expression), ('value', unparse_value)],
         'sample': [('expression', unparse_expression)],
         'continuous_inference_status': [],
@@ -728,7 +739,6 @@ class VentureScriptParser(object):
         unparsers = self.unparsers[i]
         if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
                  'report', 'labeled_report', 'clear',
-                 'list_directives', 'get_directive', 'labeled_get_directive',
                  'force', 'sample', 'continuous_inference_status',
                  'start_continuous_inference', 'stop_continuous_inference',
         ]:

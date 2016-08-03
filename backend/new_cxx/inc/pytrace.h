@@ -55,7 +55,6 @@ struct PyTrace
   void setSeed(size_t seed);
   size_t getSeed();
 
-  double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 
   double makeConsistent();

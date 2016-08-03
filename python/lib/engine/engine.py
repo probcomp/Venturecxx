@@ -16,16 +16,17 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import contextmanager
+import cPickle
 import cStringIO as StringIO
 import random
 import threading
 import time
 
-import dill
-
 from venture.engine.inference import Infer
 from venture.engine.trace_set import TraceSet
 from venture.exception import VentureException
+import venture.lite.inference_sps as inf
+import venture.untraced.trace_search # So the SPs get registered
 import venture.lite.value as vv
 import venture.value.dicts as v
 
@@ -37,7 +38,6 @@ class Engine(object):
     self.model = self.new_model(backend)
     self.directiveCounter = 0
     self.inferrer = None
-    import venture.lite.inference_sps as inf
     self.foreign_sps = {}
     self.inference_sps = dict(inf.inferenceSPsList)
     self.callbacks = {}
@@ -301,7 +301,6 @@ class Engine(object):
     ans = trace.Trace(self._py_rng.randint(1, 2**31 - 1))
     for name,sp in self.inferenceSPsList():
       ans.bindPrimitiveSP(name, sp)
-    import venture.lite.inference_sps as inf
     for word in inf.inferenceKeywords:
       if not ans.boundInGlobalEnv(word):
         ans.bindPrimitiveName(word, vv.VentureSymbol(word))
@@ -315,8 +314,6 @@ class Engine(object):
     next_trace.sealEnvironment()
 
   def primitive_infer(self, exp): return self.model.primitive_infer(exp)
-  def logscore(self): return self.model.logscore()
-  def logscore_all(self): return self.model.logscore_all()
   def get_entropy_info(self): return self.model.get_entropy_info()
 
   def get_seed(self):
@@ -372,10 +369,10 @@ class Engine(object):
     data['directiveCounter'] = self.directiveCounter
     data['extra'] = extra
     version = '0.2'
-    dill.dump((data, version), stream)
+    cPickle.dump((data, version), stream)
 
   def load_io(self, stream):
-    (data, version) = dill.load(stream)
+    (data, version) = cPickle.load(stream)
     assert version == '0.2', "Incompatible version or unrecognized object"
     self.directiveCounter = data['directiveCounter']
     self.model.load(data)
@@ -398,23 +395,17 @@ class Engine(object):
     return self.load_io(StringIO.StringIO(string))
 
   def convert(self, backend):
-    engine = backend.make_engine(
-      persistent_inference_trace=self.persistent_inference_trace,
-      seed=self._py_rng.randint(1, 2**31 - 1),
-    )
-    if self.persistent_inference_trace:
-      engine.infer_trace = self.infer_trace # TODO Copy?
-    engine.directiveCounter = self.directiveCounter
-    engine.model.convertFrom(self.model)
-    return engine
+    model = self.new_model(backend)
+    model.convertFrom(self.model)
+    self.model = model
 
   def to_lite(self):
     from venture.shortcuts import Lite
-    return self.convert(Lite())
+    self.convert(Lite())
 
   def to_puma(self):
     from venture.shortcuts import Puma
-    return self.convert(Puma())
+    self.convert(Puma())
 
   def set_profiling(self, enabled=True): self.model.set_profiling(enabled)
   def clear_profiling(self): self.model.clear_profiling()

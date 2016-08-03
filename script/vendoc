@@ -25,6 +25,8 @@ import subprocess
 from venture.lite.builtin import builtInSPsIter
 from venture.lite.inference_sps import inferenceSPsList
 import venture.sivm.macro # To register the macros
+import venture.engine.inference # To register the inference SPs that live there
+import venture.untraced.trace_search # To register the inference SPs that live there
 from venture.sivm.macro_system import macros
 import venture.engine.inference_prelude
 from venture.shortcuts import Lite

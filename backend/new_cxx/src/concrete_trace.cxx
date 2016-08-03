@@ -678,7 +678,6 @@ double ConcreteTrace::likelihoodWeight() {
 }
 
 int ConcreteTrace::getSeed() { assert(false); }
-double ConcreteTrace::getGlobalLogScore() { assert(false); }
 
 
 bool ConcreteTrace::hasAAAMadeSPAux(OutputNode * makerNode)

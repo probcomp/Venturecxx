@@ -128,32 +128,6 @@ size_t PyTrace::getSeed() {
   return 0;
 }
 
-double PyTrace::getGlobalLogScore()
-{
-  // TODO This algorithm is totally wrong:
-  // https://app.asana.com/0/16653194948424/20100308871203
-  double ls = 0.0;
-  for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
-       iter != trace->unconstrainedChoices.end();
-       ++iter) {
-    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
-    boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    boost::shared_ptr<Args> args = trace->getArgs(node);
-    if (psp->canAbsorb(trace.get(), node, NULL)) {
-      ls += psp->logDensity(trace->getGroundValue(node), args);
-    }
-  }
-  for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
-       iter != trace->constrainedChoices.end();
-       ++iter) {
-    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
-    boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    boost::shared_ptr<Args> args = trace->getArgs(node);
-    ls += psp->logDensity(trace->getGroundValue(node), args);
-  }
-  return ls;
-}
-
 uint32_t PyTrace::numUnconstrainedChoices()
 {
   return trace->numUnconstrainedChoices();
@@ -363,7 +337,6 @@ BOOST_PYTHON_MODULE(libpumatrace)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
-    .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("primitive_infer", &PyTrace::primitive_infer)

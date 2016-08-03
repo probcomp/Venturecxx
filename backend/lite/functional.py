@@ -78,6 +78,28 @@ registerBuiltinSP(
                        t.RequestType("<array b>"))),
        ESRArrayOutputPSP()))
 
+class ArrayMap2RequestPSP(DeterministicPSP):
+    def simulate(self, args):
+        (operator, operands1, operands2) = args.operandValues()
+        exps = [[operator, e.quote(operand1), e.quote(operand2)]
+                for operand1, operand2 in zip(operands1, operands2)]
+        env = VentureEnvironment()
+        return Request([ESR((args.node, i), exp, emptyAddress, env)
+                        for i, exp in enumerate(exps)])
+
+    def description(self, name):
+        return "%s(func, vals1, vals2) returns the results of applying" \
+            " a binary function to each pair of values in the given two arrays" % name
+
+registerBuiltinSP(
+    "mapv2",
+    SP(TypedPSP(ArrayMap2RequestPSP(),
+                SPType([SPType([t.AnyType("a"), t.AnyType("b")], t.AnyType("c")),
+                        t.HomogeneousArrayType(t.AnyType("a")),
+                        t.HomogeneousArrayType(t.AnyType("b"))],
+                       t.RequestType("<array c>"))),
+       ESRArrayOutputPSP()))
+
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()

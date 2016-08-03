@@ -21,6 +21,7 @@ import StringIO
 
 import venture.plex as Plex
 
+from venture.parser import ast
 from venture.parser.venture_script import grammar
 
 # XXX Automatically confirm we at least mention all tokens mentioned
@@ -182,6 +183,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('[|'), grammar.T_LOXFORD),
         (Plex.Str('|]'), grammar.T_ROXFORD),
         (Plex.Str('$'), grammar.T_LDOLLAR),
+        (Plex.Str('?'), grammar.T_QUESTION),
         (Plex.Str('='), grammar.T_EQDEF),
         # Hack ~ to mean = everywhere but be available for reasons of
         # code style.  If we later want to adjust the system to
@@ -194,8 +196,9 @@ class Scanner(Plex.Scanner):
         (Plex.Str('->'), grammar.T_RARR),
         # Also ~> for ->.
         (Plex.Str('~>'), grammar.T_RARR),
-        (Plex.Str('||'), grammar.T_AND),
-        (Plex.Str('&&'), grammar.T_OR),
+        (Plex.Str('#'), grammar.T_HASH),
+        (Plex.Str('||'), grammar.T_OR),
+        (Plex.Str('&&'), grammar.T_AND),
         (Plex.Str('=='), grammar.T_EQ),
         (Plex.Str('!='), grammar.T_NEQ),
         (Plex.Str('<='), grammar.T_LE),
@@ -249,4 +252,4 @@ class Scanner(Plex.Scanner):
             length = len(self.text)
         end = self.cur_pos
         start = end - length
-        Plex.Scanner.produce(self, token, (value, start, end - 1))
+        Plex.Scanner.produce(self, token, ast.Located([start, end-1], value))

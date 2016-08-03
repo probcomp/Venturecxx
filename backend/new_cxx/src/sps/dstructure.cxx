@@ -87,10 +87,11 @@ VentureValuePtr DictOutputPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   MapVVPtrVVPtr d;
-  vector<VentureValuePtr> syms = args->operandValues[0]->getArray();
-  vector<VentureValuePtr> vals = args->operandValues[1]->getArray();
-  if(syms.size() != vals.size()) throw "Dict must take equal numbers of keys and values.";
-  for (size_t i = 0; i < syms.size(); ++i) { d[syms[i]] = vals[i]; }
+  for (size_t i = 0; i < args->operandValues.size(); ++i) {
+    VentureValuePtr key = args->operandValues[i]->lookup(VentureValuePtr(new VentureNumber(0)));
+    VentureValuePtr val = args->operandValues[i]->lookup(VentureValuePtr(new VentureNumber(1)));
+    d[key] = val;
+  }
   return VentureValuePtr(new VentureDictionary(d));
 }
 

@@ -342,8 +342,6 @@ tests_require = [
     'nose-cov>=1.6',
     'flaky',
     'pexpect',
-    'seaborn', # For examples/gaussian_geweke.py
-    'statsmodels', # For examples/gaussian_geweke.py
     'cython', # Because it has to be installed before pystan, and pip
               # does the wrong thing with ordering packages pulled in
               # as dependencies.
@@ -379,13 +377,13 @@ setup (
     },
     packages = packages,
     package_dir = {
-        "venture": "python/lib/",
+        "venture": "python/lib",
         "venture.ggplot": "external/ggplot/dist/ggplot",
-        "venture.lite": "backend/lite/",
-        "venture.untraced": "backend/untraced/",
-        "venture.plex": "external/plex/dist/Plex/",
-        "venture.puma": "backend/new_cxx/",
-        "venture.test": "test/",
+        "venture.lite": "backend/lite",
+        "venture.untraced": "backend/untraced",
+        "venture.plex": "external/plex/dist/Plex",
+        "venture.puma": "backend/new_cxx",
+        "venture.test": "test",
     },
     package_data = {
         '': ['*.vnt'],
