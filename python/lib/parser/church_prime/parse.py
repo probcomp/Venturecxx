@@ -316,7 +316,10 @@ def parse_church_prime_string(string, languages=None):
 
 
 def string_complete_p(string, languages=None):
-    assert languages is None
+    if languages:
+        import warnings
+        warnings.warn('Church Prime supports no sublanguages: %r' %
+            (languages,))
     scanner = scan.Scanner(StringIO.StringIO(string), '(string)')
     semantics = Semantics()
     parser = grammar.Parser(semantics)
