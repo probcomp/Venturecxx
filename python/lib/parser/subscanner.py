@@ -43,6 +43,15 @@ class _Dead(Exception):
   pass
 
 class Reader(object):
+  """An input stream for consumption by a Plex-like scanner for a VentureScript sublanguage.
+
+  The consuming scanner is expected to call `read` to fetch input.
+  The requested block size is ignored and input is given one character
+  at a time.
+
+  Relevant instances will be constructed by `Scanner`; do not make
+  instance of `Reader` directly.
+  """
   def __init__(self, char_queue, token_queue):
     self._char_queue = char_queue
     self._token_queue = token_queue
@@ -58,13 +67,40 @@ def _scan_thread(scan, char_queue, token_queue):
   try:
     reader = Reader(char_queue, token_queue)
     scanner = scan(reader)
-    token, _text = scanner.read()
+    token = scanner.read()[0]
     token_queue.put(token)
   except _Dead:
     pass
 
 class Scanner(object):
+  """Adapter from a Plex-like scanner to a callable scanner as needed in a VentureScript sublanguage.
+
+  Usage::
+
+      class MyScanner(Plex.Scanner):
+        def __init__(self, stream):
+          ...
+      ripl.register_language("some name", lambda : Scanner(MyScanner))
+  """
   def __init__(self, scanner):
+    """Initialize the callable scanner.
+
+    The input ``scanner`` object must be a constructor for a Plex-like
+    scanner.  Specifically, ``scanner`` will be called with one
+    argument representing the input stream (an instance of `Reader`).
+    It must return an object that has a ``read()`` method, which, when
+    called, consumes some quantity of the input stream represented by
+    the `Reader` and returns a sequence consisting of the parsed
+    result in the first location and an arbitrary collection of
+    additional values.  (Plex scanners return a 2-tuple by default.)
+
+    The input scanner must consume only as much input as needed to
+    determine the boundary of a complete utterance in its language, as
+    additional characters cannot be put back into the input stream for
+    consumption by the surrounding VentureScript parser.  The
+    sublanguage must consume the closing curly brace in the ``@{<name>
+    <utterance>}`` syntax, but no additional characters.
+    """
     char_queue = Queue.Queue()
     token_queue = Queue.Queue()
     self._thread = threading.Thread(
