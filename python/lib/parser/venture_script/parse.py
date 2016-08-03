@@ -422,8 +422,10 @@ class Semantics(object):
     def p_primary_symbol(self, s):
         return ast.map_value(val.symbol, s)
     def p_primary_language(self, ll):
-        l, start, _end = ll
-        assert isloc(l), '%r' % (l,)
+        assert ast.isloc(ll), '%r' % (ll,)
+        l = ll.value
+        (start, _end) = ll.loc
+        assert ast.isloc(l), '%r' % (l,)
         l_ = adjlocust(l, start)
         return l_
 
