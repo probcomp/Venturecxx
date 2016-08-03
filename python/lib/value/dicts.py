@@ -26,7 +26,7 @@ The main elements of constructing bare abstract syntax are
 
 - `symbol` or `sym` for variables
 
-- `app` for combining forms
+- `app` for combining forms, whose components are abstract syntax
 
 - the other functions (`number`, `boolean`, etc) for literals
 

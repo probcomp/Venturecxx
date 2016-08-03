@@ -781,6 +781,7 @@ include refman/venture.lite.sp.rst
 include refman/venture.lite.sp_help.rst
 include refman/venture.lite.types.rst
 include refman/venture.lite.value.rst
+include refman/venture.parser.api.rst
 include refman/venture.ripl.ripl.rst
 include refman/venture.shortcuts.rst
 include refman/venture.value.dicts.rst
