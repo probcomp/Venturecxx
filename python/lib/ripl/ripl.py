@@ -133,38 +133,50 @@ class Ripl():
         callable responsible for parsing the language into an
         appropriate embedding in Venture's abstract syntax.
 
-        We now describe the interface to sublanguage parsers in
-        detail.  On encountering ``@{<name>``, the VentureScript
-        parser stops interpreting the input stream as VentureScript,
-        and defers to the corresponding registered sublanguage parser.
-        Specifically, the VentureScript parser calls the ``language``
-        object with no arguments to allow it to initialize.
-        Initialization must return a Python callable, ``subscan``.
-        The VentureScript parser proceeds to call ``subscan``
-        repeatedly, with one input character at a time.  Each call to
-        ``subscan`` must return a 2-tuple, ``(done, result)``.  If
-        ``done`` is ``False``, the ``result`` is ignored and the
-        VentureScript parser will call ``subscan`` again with the next
-        character.  If ``done`` is ``True``, the ``result`` must be a
-        valid VentureScript abstract syntax tree (see below).  The
-        ``result`` will be spliced in at this point in the parse, and
-        the VentureScript parser will resume parsing standard
-        VentureScript.  This ``subscan`` instance will not be called
-        again, but if another invocation in the same sublanguage
-        occurs, the ``language`` object will be invoked again to
-        initialize a new one.
+        Here is the interface to sublanguage parsers in
+        detail:
+
+        - On encountering ``@{<name>``, the VentureScript
+          parser stops interpreting the input stream as VentureScript,
+          and defers to the corresponding registered sublanguage parser.
+          Specifically, the VentureScript parser calls the ``language``
+          object with no arguments to allow it to initialize.
+
+        - Initialization must return a Python callable, ``subscan``.
+
+        - The VentureScript parser proceeds to call ``subscan``
+          repeatedly, with one input character at a time.  Each call to
+          ``subscan`` must return a 2-tuple, ``(done, result)``.
+
+        - If ``done`` is ``False``, the ``result`` is ignored and the
+          VentureScript parser will call ``subscan`` again with the next
+          character.
+
+        - If ``done`` is ``True``, the ``result`` must be a
+          valid VentureScript abstract syntax tree (see below).  The
+          ``result`` will be spliced in at this point in the parse, and
+          the VentureScript parser will resume parsing standard
+          VentureScript.  This ``subscan`` instance will not be called
+          again, but if another invocation in the same sublanguage
+          occurs, the ``language`` object will be invoked again to
+          initialize a new one.
 
         Note from this interface that the sublanguage is responsible
         for detecting a complete valid utterance.  The characters come
         in one at a time because the VentureScript parser cannot
         predict where the utterance will end without asking the
-        sublanguage.
+        sublanguage (and, due to internal technical limitations,
+        cannot give the sublanguage the entire input stream and
+        continue from the unconsumed portion).
 
         The `venture.parser.subscan` module contains an adapter that
         does a control inversion on the above interface.  The
         inversion allows one to write a sublanguage with a library
         like Plex that expects to scan a file-like object itself,
         rather than exposing a callable that consumes characters.
+        However, the sublanguage must not read the given file-like
+        object beyond the end of the utterance, as there is no way to
+        put unused characters back.
 
         There are no restrictions on the parse tree that a subparser
         may emit.  In principle, this permits very deep integration of
@@ -178,18 +190,19 @@ class Ripl():
 
         The VentureScript abstract syntax tree API comes in two parts.
 
-        - Bare abstract syntax trees may be constructed by methods of
+        - Bare abstract syntax trees may are constructed by methods of
           the `venture.value.dicts` module.
 
-        - A parser expected to emit a syntax tree annotated with
+        - A parser is expected to emit a syntax tree annotated with
           source code locations, using the `Located` class in the
           `venture.parser.ast` module.
 
         Embedded sublanguage syntaxes are only available in the
-        VentureScript surface syntax, not the Church' syntax.  The
-        latter parses to abstract syntax more directly, so just
+        VentureScript surface syntax, not the abstract surface syntax.  The
+        latter parses to abstract syntax trees more directly, so just
         calling the implementation SP(s) of the desired sublanguage is
         more natural in that context.
+
         """
         if name in self._languages:
             raise ValueError('Language already registered: %r' % (name,))
