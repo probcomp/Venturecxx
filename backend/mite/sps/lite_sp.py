@@ -38,6 +38,9 @@ class LiteSP(SimulationSP):
   def unincorporate(self, output, inputs):
     return self.wrapped_sp.outputPSP.unincorporate(output, self.wrap_args(inputs))
 
+  def log_density_bound(self, output, inputs):
+    return self.wrapped_sp.outputPSP.logDensityBound(output, self.wrap_args(inputs))
+
 for name, sp in builtInSPs().iteritems():
   if isinstance(sp.requestPSP, NullRequestPSP):
     registerBuiltinSP(name, LiteSP(sp))

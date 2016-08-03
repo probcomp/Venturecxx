@@ -18,6 +18,9 @@ class VentureSP(VentureValue):
   def log_density(self, _value, _inputs):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
 
+  def log_density_bound(self, _value, _inputs):
+    raise VentureBuiltinSPMethodError("Cannot compute log density bound")
+
   def proposal_kernel(self, trace_handle, application_id):
     return DefaultProposalKernel(self, trace_handle, application_id)
 
@@ -43,6 +46,9 @@ class ApplicationKernel(object):
   def restore(self, _inputs, _trace_fragment):
     raise VentureBuiltinSPMethodError("Restore not implemented")
 
+  def weight_bound(self, _inputs):
+    raise VentureBuiltinSPMethodError("Cannot compute weight bound")
+
 class DefaultProposalKernel(ApplicationKernel):
   def __init__(self, sp, trace_handle, application_id):
     self.sp = sp
@@ -60,6 +66,10 @@ class DefaultProposalKernel(ApplicationKernel):
   def restore(self, inputs, trace_fragment):
     return self.sp.restore(
       self.trace_handle, self.application_id, inputs, trace_fragment)
+
+  def weight_bound(self, _inputs):
+    # weight is always 0
+    return 0
 
 
 class SimulationSP(VentureSP):
@@ -124,6 +134,11 @@ class SimulationConstrainedKernel(ApplicationKernel):
     input_values = [node.value for node in inputs]
     self.sp.incorporate(output, input_values)
     return output
+
+  def weight_bound(self, inputs):
+    input_values = [node.value for node in inputs]
+    output = self.val
+    return self.sp.log_density_bound(output, input_values)
 
 
 class RequestReferenceSP(VentureSP):
