@@ -15,18 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-"""The VentureScript abstract syntax.
+"""Location-annotated VentureScript abstract syntax, as produced by parsers.
 
-The abstract syntax is very simple.
-- Python lists of abstract syntax are procedure and macro application
-- Stack dicts of symbol type are variable references
-- Everything else is a constant
+Is you are writing a parser for a VentureScript sublanguage, produce
+`Located` objects as described here.
 
-Parsers emit abstract syntax trees annotated with location
-information.  Each node in the returned syntax tree is a Located
-object, carrying the raw abstract syntax and the location (as a 2-list
-of the starting and ending character index, inclusive on both sides).
+The bare abstract syntax of Venture is a recursive structure described
+in `venture.value.dicts`.  Parsers emit abstract syntax trees
+annotated with location information.  Each node in the returned syntax
+tree is a `Located` object, carrying the raw abstract syntax and the
+location (as a 2-list of the starting and ending character index,
+inclusive on both sides).  For example, the parse for ``1 + 2`` would be
+constructed as::
 
+    import venture.value.dicts as e
+
+    one  = Located([0, 0], e.number(1))
+    plus = Located([2, 2], e.symbol("+"))
+    two  = Located([4, 4], e.number(2))
+    Located([0, 4], e.app(plus, one, two))
 """
 
 from collections import namedtuple
@@ -34,16 +41,21 @@ from collections import namedtuple
 Located = namedtuple("Located", ["loc", "value"])
 
 def isloc(obj):
+    "Check whether the given object is a `Located` instance."
     return isinstance(obj, Located)
 
 def update_value(located, v):
+    "Return a new `Located` instance with the same location and a new value."
     return Located(located.loc, v)
 
 def map_value(f, located):
+    """Return a new `Located` instance with the same location and a computed value.
+
+    The new value is computed by applying ``f`` to the value in ``located``."""
     return Located(located.loc, f(located.value))
 
 def loclist(items):
-    """Locate a list of Located items.  The list spans the items' total extent.
+    """Create a `Located` list of `Located` items.  The list spans the items' total extent.
 
 Assumes the items are in ascending order of location.
 """
@@ -53,13 +65,20 @@ Assumes the items are in ascending order of location.
     return Located([start, end], items)
 
 def locmerge(lv0, lv1, v):
-    "Construct a Located object with the given value that spans the extent of the given Located objects."
+    """Create a `Located` object with the given value.
+
+    The extent the result spans the extent of the two given `Located`
+    objects, which must be in location order.
+    """
     (start, _) = lv0.loc
     (_, end) = lv1.loc
     assert start < end
     return Located([start, end], v)
 
 def as_legacy_dict(located):
+    """Convert a `Located` object to a legacy Python dict representation.
+
+    New code should not use this."""
     if isinstance(located, Located):
         return {"value": as_legacy_dict(located.value), "loc": located.loc}
     elif isinstance(located, list) or isinstance(located, tuple):
