@@ -48,11 +48,12 @@ def delocust(l):
         return l
 
 def adjlocust(l, o):
-    start, end = l['loc']
-    v = l['value']
+    "Recursively shift location tags by the given offset."
+    start, end = l.loc
+    v = l.value
     if isinstance(v, list) or isinstance(v, tuple):
         v = [adjlocust(u, o) for u in v]
-    return {'loc': [start + o, end + o], 'value': v}
+    return ast.Located([start + o, end + o], v)
 
 operators = {
     '+':        'add',
