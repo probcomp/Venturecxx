@@ -33,7 +33,7 @@ class MadeFullSP(VentureSP):
     inputs = [node.value for node in inputs] # TODO expose refs
     return self.run_in_helper_trace('apply', [handle, app_id] + inputs)
 
-  def logDensity(self, output, inputs):
+  def log_density(self, output, inputs):
     logp = self.run_in_helper_trace('log_density', [output] + inputs)
     return t.Number.asPython(logp)
 

@@ -30,7 +30,7 @@ class MadeSimulationSP(SimulationSP):
   def simulate(self, inputs, _prng):
     return self.run_in_helper_trace('simulate', inputs)
 
-  def logDensity(self, output, inputs):
+  def log_density(self, output, inputs):
     logp = self.run_in_helper_trace('log_density', [output] + inputs)
     return t.Number.asPython(logp)
 

@@ -15,7 +15,7 @@ class VentureSP(VentureValue):
   def restore(self, _trace_handle, _application_id, _inputs, _trace_fragment):
     raise VentureBuiltinSPMethodError("Cannot restore previous state")
 
-  def logDensity(self, _value, _inputs):
+  def log_density(self, _value, _inputs):
     raise VentureBuiltinSPMethodError("Cannot assess log density")
 
   def proposal_kernel(self, trace_handle, application_id):
@@ -108,7 +108,7 @@ class SimulationConstrainedKernel(ApplicationKernel):
     input_values = [node.value for node in inputs]
     self.sp.unincorporate(output, input_values)
     if output == self.val:
-      weight = self.sp.logDensity(output, input_values)
+      weight = self.sp.log_density(output, input_values)
     else:
       weight = float('-inf')
     return (weight, output)
@@ -116,7 +116,7 @@ class SimulationConstrainedKernel(ApplicationKernel):
   def regen(self, inputs):
     input_values = [node.value for node in inputs]
     output = self.val
-    weight = self.sp.logDensity(output, input_values)
+    weight = self.sp.log_density(output, input_values)
     self.sp.incorporate(output, input_values)
     return (weight, output)
 

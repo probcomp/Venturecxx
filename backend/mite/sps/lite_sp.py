@@ -29,7 +29,7 @@ class LiteSP(SimulationSP):
       result = LiteSP(result.sp, result.spAux)
     return result
 
-  def logDensity(self, output, inputs):
+  def log_density(self, output, inputs):
     return self.wrapped_sp.outputPSP.logDensity(output, self.wrap_args(inputs))
 
   def incorporate(self, output, inputs):
