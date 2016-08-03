@@ -131,7 +131,7 @@ def scan_string_end(scanner, text):
 
 def scan_language(scanner, text):
     assert text.startswith('@{')
-    assert scanner.current_language == None
+    assert scanner.current_language is None
     language = text[len('@{'):]
     if language not in scanner.languages:
         scanner.produce(-1)
