@@ -910,6 +910,7 @@ include test/integration/test_console.py
 include test/integration/test_doc_autogen.py
 include test/integration/test_examples.py
 include test/integration/test_plugin_loading.py
+include test/integration/test_sublanguages.py
 include test/integration/test_venstan.py
 include test/lite-config.py
 include test/manual/all.sh
