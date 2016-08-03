@@ -169,7 +169,7 @@ class Ripl():
         cannot give the sublanguage the entire input stream and
         continue from the unconsumed portion).
 
-        The `venture.parser.subscan` module contains an adapter that
+        The `venture.parser.venture_script.subscanner` module contains an adapter that
         does a control inversion on the above interface.  The
         inversion allows one to write a sublanguage with a library
         like Plex that expects to scan a file-like object itself,

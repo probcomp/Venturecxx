@@ -81,26 +81,24 @@ class Scanner(object):
         def __init__(self, stream):
           ...
       ripl.register_language("some name", lambda : Scanner(MyScanner))
+
+  The ``scanner`` object provided to ``__init__`` must be a constructor for a Plex-like
+  scanner.  Specifically, ``scanner`` will be called with one
+  argument representing the input stream (an instance of `Reader`).
+  It must return an object that has a ``read()`` method, which, when
+  called, consumes some quantity of the input stream represented by
+  the `Reader` and returns a sequence consisting of the parsed
+  result in the first location and an arbitrary collection of
+  additional values.  (Plex scanners return a 2-tuple by default.)
+
+  The input scanner must consume only as much input as needed to
+  determine the boundary of a complete utterance in its language, as
+  additional characters cannot be put back into the input stream for
+  consumption by the surrounding VentureScript parser.  The
+  sublanguage must consume the closing curly brace in the ``@{<name>
+  <utterance>}`` syntax, but no additional characters.
   """
   def __init__(self, scanner):
-    """Initialize the callable scanner.
-
-    The input ``scanner`` object must be a constructor for a Plex-like
-    scanner.  Specifically, ``scanner`` will be called with one
-    argument representing the input stream (an instance of `Reader`).
-    It must return an object that has a ``read()`` method, which, when
-    called, consumes some quantity of the input stream represented by
-    the `Reader` and returns a sequence consisting of the parsed
-    result in the first location and an arbitrary collection of
-    additional values.  (Plex scanners return a 2-tuple by default.)
-
-    The input scanner must consume only as much input as needed to
-    determine the boundary of a complete utterance in its language, as
-    additional characters cannot be put back into the input stream for
-    consumption by the surrounding VentureScript parser.  The
-    sublanguage must consume the closing curly brace in the ``@{<name>
-    <utterance>}`` syntax, but no additional characters.
-    """
     char_queue = Queue.Queue()
     token_queue = Queue.Queue()
     self._thread = threading.Thread(
