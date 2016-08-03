@@ -89,4 +89,4 @@ def testRollingResample():
   rolling_resample = "(repeat 5 (do add_particle (resample 1)))"
   predictions2 = collectSamples(ripl, "pid", infer=rolling_resample)
 
-  return reportSameContinuous(predictions1, predictions2, True)
+  return reportSameContinuous(predictions1, predictions2)
