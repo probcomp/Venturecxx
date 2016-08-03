@@ -340,8 +340,27 @@ def is_basic_val(obj):
   Only checks the top level, not recursively."""
   return isinstance(obj, python_dict) and "type" in obj and "value" in obj
 
+def basic_val_type(obj):
+  """Returns the type of the Venture object ``obj``.
+
+  Types are as in `val`."""
+  return obj["type"]
+
+def basic_val_content(obj):
+  """Returns the raw content of the Venture object ``obj``."""
+  return obj["value"]
+
 def is_basic_val_of_type(tp, obj):
   """Checks whether ``obj`` is a valid unannotated literal Venture object of the given type.
 
   Only checks the top level, not recursively.  Types as in `val`."""
   return is_basic_val(obj) and obj["type"] is tp
+
+def basic_val_of_type_content(tp, obj):
+  """Returns the raw content of the Venture object ``obj`` if it has type ``tp``, else ``None``.
+
+  Types as in `val`."""
+  if is_basic_val_of_type(tp, obj):
+    return basic_val_content(obj)
+  else:
+    return None
