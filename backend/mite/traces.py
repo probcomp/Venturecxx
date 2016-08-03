@@ -58,6 +58,9 @@ class ITrace(object):
   def restore(self, subproblem, trace_fragment):
     raise NotImplementedError
 
+  def weight_bound(self, subproblem):
+    raise NotImplementedError
+
 
 class AbstractTrace(ITrace):
   # common implementation of trace interface
@@ -318,6 +321,7 @@ register_trace_type("_trace", ITrace, {
   "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
   "regen": trace_action("regen", [t.Blob, t.Blob], t.Number),
   "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),
+  "weight_bound": trace_action("weight_bound", [t.Blob], t.Number),
 })
 
 
