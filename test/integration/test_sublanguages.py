@@ -36,3 +36,4 @@ def testSubscannerSmoke():
     eq_(10, r.evaluate("1 + @{troll 42}"))
     eq_(10, r.evaluate("1 + @{troll 27 }"))
     eq_(10, r.evaluate("1 + @{troll 4 3 3}"))
+    eq_(18, r.evaluate("@{troll 4 3 3} + @{troll 7}"))

@@ -142,6 +142,8 @@ def scan_language(scanner, text):
 def scan_language_char(scanner, text):
     done, result = scanner.current_language(text)
     if done:
+        del scanner.current_language
+        scanner.current_language = None
         scanner.produce(grammar.L_LANGUAGE, result)
         scanner.begin('')
 
