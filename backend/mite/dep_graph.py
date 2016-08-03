@@ -5,9 +5,12 @@ from venture.lite.value import SPRef
 from venture.untraced.node import Node
 
 import venture.mite.address as addresses
+from venture.mite.sp import VentureSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import AbstractTrace
 from venture.mite.traces import VentureTraceConstructorSP
+
+from venture.mite.evaluator import Regenerator, Restorer
 
 
 class DependencyNode(object):
@@ -105,6 +108,100 @@ class DependencyGraphTrace(AbstractTrace):
     return all(self.results[id] == self.observations[id]
                for id in self.observations)
 
+  def unregister_made_sp(self, addr):
+    sp = self.made_sps[addr]
+    del self.made_sps[addr]
+    self.results[addr] = sp
+    return sp
+
+  def single_site_subproblem(self, code):
+    from venture.mite.scaffold import MinimalScaffold
+    from venture.mite.scaffold import single_site_scaffold
+    address = eval(code, vars(addresses))
+    return single_site_scaffold(self, address)
+
+  def extract(self, subproblem):
+    x = DependencyGraphRegenerator(self, subproblem)
+    weight = x.extract_subproblem()
+    return (weight, x.fragment)
+
+  def regen(self, subproblem, trace_fragment):
+    x = DependencyGraphRegenerator(self, subproblem, trace_fragment)
+    weight = x.regen_subproblem()
+    return weight
+
+  def restore(self, subproblem, trace_fragment):
+    x = DependencyGraphRestorer(self, subproblem, trace_fragment)
+    x.regen_subproblem()
+
 
 registerBuiltinSP("graph_trace", VentureTraceConstructorSP(
   DependencyGraphTrace))
+
+
+class DependencyGraphRegenerator(Regenerator):
+  def extract_subproblem(self):
+    weight = 0
+    for addr in reversed(self.scaffold.kernels):
+      weight += self.extract(addr)
+    return weight
+
+  def regen_subproblem(self):
+    weight = 0
+    for addr in self.scaffold.kernels:
+      weight += self.regen(addr)
+    return weight
+
+  def extract(self, addr):
+    weight = 0
+
+    node = self.trace.nodes[addr]
+    if isinstance(node, LookupNode):
+      del self.trace.results[addr]
+    else:
+      # unapply
+      assert isinstance(node, ApplicationNode)
+      value = self.trace.value_at(addr)
+      if isinstance(value, SPRef) and value.makerNode is addr:
+        value = self.trace.unregister_made_sp(addr)
+      del self.trace.results[addr]
+
+      sp_node = self.trace.deref_sp(
+        self.trace.value_at(node.operator_addr))
+
+      args = []
+      for subaddr in node.operand_addrs:
+        args.append(Node(subaddr, self.trace.value_at(subaddr)))
+
+      weight += self.unapply_sp(addr, value, sp_node, args)
+
+    return weight
+
+  def regen(self, addr):
+    weight = 0
+
+    node = self.trace.nodes[addr]
+    if isinstance(node, LookupNode):
+      self.trace.results[addr] = self.trace.value_at(node.orig_addr)
+    else:
+      # SP application
+      assert isinstance(node, ApplicationNode)
+      sp_node = self.trace.deref_sp(
+        self.trace.value_at(node.operator_addr))
+
+      args = []
+      for subaddr in node.operand_addrs:
+        args.append(Node(subaddr, self.trace.value_at(subaddr)))
+
+      w, value = self.apply_sp(addr, sp_node, args)
+      weight += w
+
+      self.trace.results[addr] = value
+      if isinstance(value, VentureSP):
+        _value = self.trace.register_made_sp(addr, value)
+
+    return weight
+
+
+class DependencyGraphRestorer(DependencyGraphRegenerator, Restorer):
+  pass

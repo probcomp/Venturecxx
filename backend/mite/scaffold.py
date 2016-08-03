@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import venture.mite.address as addresses
 from venture.mite.sp import ApplicationKernel
 
@@ -32,7 +34,7 @@ def single_site_scaffold(trace, principal_address):
   # extract-restore pass through the program and intercept the
   # requests it makes.
 
-  kernels = {}
+  kernels = OrderedDict()
   affected = set()
 
   def traverse(addr, exp, env):
@@ -40,6 +42,7 @@ def single_site_scaffold(trace, principal_address):
     if e.isVariable(exp):
       result_node = env.findSymbol(exp)
       if result_node.address in affected:
+        kernels[addr] = {'type': 'propagate_lookup'}
         affected.add(addr)
     elif (e.isSelfEvaluating(exp) or
           e.isQuotation(exp) or
