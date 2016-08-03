@@ -40,19 +40,6 @@ import numbers
 python_list = list
 python_dict = dict
 
-def is_val(obj):
-  """Checks whether the outermost layer of obj looks like it could
-validly be an unannotated Venture syntax object."""
-  # Python lists are ok, because those represent arrays.
-  return is_stack_dict(obj) or isinstance(obj, python_list)
-
-def is_stack_dict(obj):
-  """Checks whether the outermost layer of obj looks like an actual stack dict."""
-  return isinstance(obj, python_dict) and "type" in obj and "value" in obj
-
-def is_stack_dict_of_type(tp, obj):
-  return is_stack_dict(obj) and obj["type"] is tp
-
 def number(v):
   """Construct a Venture (floating-point) number.
 
@@ -339,3 +326,22 @@ def val(t, v):
   The effect is the same as calling that function from this module.
 """
   return {"type":t, "value":v}
+
+def is_val(obj):
+  """Checks whether ``obj`` is a valid unannotated Venture syntax object.
+
+  Only checks the top level, not recursively."""
+  # Python lists are ok, because those represent arrays.
+  return is_stack_dict(obj) or isinstance(obj, python_list)
+
+def is_stack_dict(obj):
+  """Checks whether ``obj`` is a valid unannotated literal Venture object.
+
+  Only checks the top level, not recursively."""
+  return isinstance(obj, python_dict) and "type" in obj and "value" in obj
+
+def is_stack_dict_of_type(tp, obj):
+  """Checks whether ``obj`` is a valid unannotated literal Venture object of the given type.
+
+  Only checks the top level, not recursively.  Types as in `val`."""
+  return is_stack_dict(obj) and obj["type"] is tp
