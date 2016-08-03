@@ -730,11 +730,13 @@ include python/lib/engine/trace_set.py
 include python/lib/exception.py
 include python/lib/multiprocess.py
 include python/lib/parser/__init__.py
+include python/lib/parser/ast.py
 include python/lib/parser/church_prime/__init__.py
 include python/lib/parser/church_prime/grammar.py
 include python/lib/parser/church_prime/grammar.y
 include python/lib/parser/church_prime/parse.py
 include python/lib/parser/church_prime/scan.py
+include python/lib/parser/subscanner.py
 include python/lib/parser/venture_script/__init__.py
 include python/lib/parser/venture_script/grammar.py
 include python/lib/parser/venture_script/grammar.y
