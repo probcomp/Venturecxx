@@ -12,6 +12,7 @@ Please be patient as we fill the documentation in.
    venture.ripl.ripl.rst
    venture.value.dicts.rst
    venture.parser.ast.rst
+   venture.parser.venture_script.subscanner.rst
    venture.lite.sp.rst
    venture.lite.psp.rst
    venture.lite.sp_help.rst
