@@ -536,23 +536,6 @@ class ChurchPrimeParser(object):
         return float(string) if '.' in string else int(string)
 
     # XXX ???
-    def split_program(self, string, languages=None):
-        '''Split STRING into a sequence of instructions.
-
-        Return a two-element list containing
-        [0] a list of substrings, one for each instruction; and
-        [1] a list of [start, end] positions of each instruction in STRING.
-        '''
-        ls = parse_instructions(string, languages)
-        locs = [l['loc'] for l in ls]
-        # XXX + 1?
-        strings = [string[loc[0] : loc[1] + 1] for loc in locs]
-        # XXX Sort??
-        sortlocs = [list(sorted(loc)) for loc in locs]
-        # XXX List???
-        return [strings, sortlocs]
-
-    # XXX ???
     def split_instruction(self, string, languages=None):
         '''Split STRING into a dict of instruction operands.
 

@@ -402,11 +402,6 @@ class Ripl():
     # Text manipulation
     ############################################
 
-    def split_program(self,program_string):
-        p = self._cur_parser()
-        languages = self._languages
-        return p.split_program(program_string, languages)
-
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
             return [self.directive_id_to_mode[directive_id], self._get_raw_text(directive_id)]
