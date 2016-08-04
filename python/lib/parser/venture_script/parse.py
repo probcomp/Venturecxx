@@ -566,7 +566,7 @@ def parse_instructions(string, languages=None):
 def parse_instruction(string, languages=None):
     ls = parse_instructions(string, languages)
     if len(ls) != 1:
-        raise VentureException('text_parse', 'Expected a single instruction')
+        raise VentureException('text_parse', "Expected a single instruction.  String:\n'%s'\nParse:\n%s" % (string, ls))
     return ls[0]
 
 def parse_expression(string, languages=None):
