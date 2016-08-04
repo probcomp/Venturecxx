@@ -413,6 +413,11 @@ class ChurchPrimeParser(object):
             the_parser = ChurchPrimeParser()
         return the_parser
 
+    def parse_instructions(self, string, languages=None):
+        '''Parse STRING as a list of instructions.'''
+        l = parse_instructions(string, languages)
+        return delocust(l)
+
     def parse_instruction(self, string, languages=None):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string, languages)

@@ -240,26 +240,15 @@ class Ripl():
         p = self._cur_parser()
         languages = self._languages
         try:
-            strings, _locs = self.split_program(instructions)
+            parsed = p.parse_instructions(instructions, languages)
         except VentureException as e:
             if self._do_not_annotate:
                 raise
             self._raise_annotated(e, instructions)
-        else:
-            stringable_instruction = None
-            try:
-                ret_value = None
-                for string in strings:
-                    stringable_instruction = string
-                    parsed_instruction = p.parse_instruction(string, languages)
-                    ret_value = \
-                        self._execute_parsed_instruction(parsed_instruction,
-                            stringable_instruction)
-            except VentureException as e:
-                if self._do_not_annotate or stringable_instruction is None:
-                    raise
-                self._raise_annotated(e, stringable_instruction)
-            return ret_value
+        ret_value = None
+        for inst in parsed:
+            ret_value = self.execute_instruction(inst)
+        return ret_value
 
     def execute_instruction(self, instruction=None):
         p = self._cur_parser()
@@ -377,7 +366,7 @@ class Ripl():
     def parse_program(self, program_string):
         p = self._cur_parser()
         languages = self._languages
-        instructions, _positions = p.split_program(program_string, languages)
+        instructions = p.parse_instructions(program_string, languages)
         return [self._ensure_parsed(i) for i in instructions]
 
     def execute_program(self, program_string, type=True):
