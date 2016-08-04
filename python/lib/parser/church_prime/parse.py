@@ -416,7 +416,7 @@ class ChurchPrimeParser(object):
     def parse_instruction(self, string, languages=None):
         '''Parse STRING as a single instruction.'''
         l = parse_instruction(string, languages)
-        return dict((k, delocust(v)) for k, v in l['value'].iteritems())
+        return delocust(l)
 
     def parse_locexpression(self, string, languages=None):
         '''Parse STRING as an expression, and include location records.'''
