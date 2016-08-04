@@ -377,17 +377,17 @@ class Ripl():
     def parse_program(self, program_string):
         p = self._cur_parser()
         languages = self._languages
-        instructions, positions = p.split_program(program_string, languages)
-        return [self._ensure_parsed(i) for i in instructions], positions
+        instructions, _positions = p.split_program(program_string, languages)
+        return [self._ensure_parsed(i) for i in instructions]
 
     def execute_program(self, program_string, type=True):
-        res = self.execute_parsed_program(*self.parse_program(program_string))
+        res = self.execute_parsed_program(self.parse_program(program_string))
         if not type:
             return u.strip_types([r["value"] for r in res])
         else:
             return res
 
-    def execute_parsed_program(self, instructions, _positions):
+    def execute_parsed_program(self, instructions):
         vals = []
         for instruction in instructions:
             if instruction['instruction'] == "load":
@@ -1087,7 +1087,7 @@ Open issues:
         Load the library of Venture helper functions
         '''
         if Ripl._parsed_prelude is not None:
-            self.execute_parsed_program(*Ripl._parsed_prelude)
+            self.execute_parsed_program(Ripl._parsed_prelude)
             # Keep track of the number of directives in the prelude. Only
             # works if the ripl is cleared immediately before loading the
             # prelude, but that's the implicit assumption in the
