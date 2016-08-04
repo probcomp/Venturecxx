@@ -171,8 +171,17 @@ class BlankTrace(AbstractTrace):
     self.maybe_record_result(addr, value)
 
   def maybe_record_result(self, addr, value):
-    if isinstance(addr, (addresses.directive, addresses.request)):
+    if isinstance(addr, addresses.directive):
       self.results[addr] = value
+    elif isinstance(addr, addresses.request):
+      # record the result of a request, in case the value at the same
+      # id is requested again (like mem).
+      # XXX except we don't want to have to store the result of every
+      # compound procedure call, so...
+      # heuristic: if the request id is an address, assume it's unique
+      # and won't be requested again
+      if not isinstance(addr.request_id, addresses.Address):
+        self.results[addr] = value
 
   def register_made_sp(self, addr, sp):
     ret = SPRef((addr, sp))
