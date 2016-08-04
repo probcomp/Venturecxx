@@ -91,19 +91,18 @@ class TraceHandle(object):
     return addresses.request(self.sp_addr, request_id)
 
   def new_request(self, request_id, exp, env):
-    # TODO return Node(value, address) so that SPs don't have to use
-    # requestedValue all the time; this way the untraced interpreter
-    # doesn't have to retain requests with non-repeatable request_ids.
     addr = self.request_address(request_id)
-    w, _ = self.trace.eval_request(addr, exp, env)
+    w, value = self.trace.eval_request(addr, exp, env)
     assert w == 0
-    return request_id
+    return Node(addr, value)
 
-  def value_at(self, request_id):
-    # TODO have this accept a Node(value, address),
-    # as returned by new_request
+  def get_request(self, request_id):
     addr = self.request_address(request_id)
-    return self.trace.value_at(addr)
+    value = self.trace.value_at(addr)
+    return Node(addr, value)
+
+  def value_at(self, node):
+    return node.value
 
 
 class Regenerator(Evaluator):
@@ -249,13 +248,12 @@ class RegeneratingTraceHandle(TraceHandle):
     addr = self.request_address(request_id)
     w = self.regenerator.uneval_request(addr)
     assert w == 0
-    return request_id
 
   def restore_request(self, request_id):
     addr = self.request_address(request_id)
-    w, _ = self.regenerator.restore_request(addr)
+    w, value = self.regenerator.restore_request(addr)
     assert w == 0
-    return request_id
+    return Node(addr, value)
 
 
 # TODO maybe move this to a separate file

@@ -25,5 +25,5 @@ class CompoundSP(VentureSP):
     return None
 
   def restore(self, trace_handle, application_id, _inputs, _frag):
-    trace_handle.restore_request(application_id)
-    return trace_handle.value_at(application_id)
+    result = trace_handle.restore_request(application_id)
+    return trace_handle.value_at(result)
