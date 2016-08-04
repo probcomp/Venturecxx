@@ -139,30 +139,3 @@ class SimulationConstrainedKernel(ApplicationKernel):
     input_values = [node.value for node in inputs]
     output = self.val
     return self.sp.log_density_bound(output, input_values)
-
-
-class RequestReferenceSP(VentureSP):
-  def __init__(self):
-    self.request_map = {}
-
-  @override(VentureSP)
-  def apply(self, trace_handle, application_id, inputs):
-    assert application_id not in self.request_map
-    raddr = self.request(trace_handle, application_id, inputs)
-    self.request_map[application_id] = raddr
-    return trace_handle.value_at(raddr)
-
-  @override(VentureSP)
-  def unapply(self, trace_handle, application_id, _output, _inputs):
-    raddr = self.request_map.pop(application_id)
-    trace_handle.free_request(raddr)
-    return raddr
-
-  @override(VentureSP)
-  def restore(self, trace_handle, application_id, _inputs, raddr):
-    trace_handle.restore_request(raddr)
-    self.request_map[application_id] = raddr
-    return trace_handle.value_at(raddr)
-
-  def request(self, _trace_handle, _application_id, _inputs):
-    raise VentureBuiltinSPMethodError("Request not implemented!")
