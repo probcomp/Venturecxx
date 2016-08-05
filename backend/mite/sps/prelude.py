@@ -13,9 +13,8 @@ with open(venture.mite.__path__[0] + '/prelude.vnt') as f:
   prelude_source = f.read()
 
 parser = ChurchPrimeParser.instance()
-instructions, _ = parser.split_program(prelude_source)
-for instruction in instructions:
-  instr = parser.parse_instruction(instruction)
+instructions = parser.parse_instructions(prelude_source)
+for instr in instructions:
   assert instr['instruction'] == 'define'
   name = t.Symbol.asPython(v.VentureValue.fromStackDict(instr['symbol']))
   expr = _modify_expression(desugar_expression(instr['expression']))
