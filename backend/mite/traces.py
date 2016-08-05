@@ -285,6 +285,11 @@ class FlatTrace(AbstractTrace):
     from venture.mite.scaffold import single_site_scaffold
     return single_site_scaffold(self, address)
 
+  def single_site_constraint(self, address, value):
+    from venture.mite.scaffold import single_site_scaffold
+    kernel = {'type': 'constrained', 'val': value}
+    return single_site_scaffold(self, address, kernel)
+
   def extract(self, subproblem):
     x = Regenerator(self, subproblem)
     weight = 0
@@ -340,6 +345,7 @@ register_trace_type("_trace", ITrace, {
   "pyselect": trace_action("pyselect", [t.String], t.Blob),
   "pyselectf": trace_action("pyselect", [t.String, t.Dict(t.Symbol, t.Object)], t.Blob),
   "single_site_subproblem": trace_action("single_site_subproblem", [t.Blob], t.Blob),
+  "single_site_constraint": trace_action("single_site_constraint", [t.Blob, t.Object], t.Blob),
   "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
   "regen": trace_action("regen", [t.Blob, t.Blob], t.Number),
   "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),

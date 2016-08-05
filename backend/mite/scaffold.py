@@ -26,7 +26,7 @@ class DefaultAllScaffold(object):
 
 
 
-def single_site_scaffold(trace, principal_address):
+def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # lightweight implementation to find a single-site scaffold.
   # very brittle and doesn't work on requests at all, for now.
 
@@ -36,6 +36,9 @@ def single_site_scaffold(trace, principal_address):
 
   kernels = OrderedDict()
   affected = set()
+
+  if principal_kernel is None:
+    principal_kernel = {'type': 'proposal'}
 
   def traverse(addr, exp, env):
     import venture.lite.exp as e
@@ -56,7 +59,7 @@ def single_site_scaffold(trace, principal_address):
         traverse(subaddr, subexp, env)
         parents_affected.append(subaddr in affected)
       if addr == principal_address:
-        kernels[addr] = {'type': 'proposal'}
+        kernels[addr] = principal_kernel
         affected.add(addr)
       elif parents_affected[0]:
         # operator changed
