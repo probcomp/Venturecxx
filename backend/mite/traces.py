@@ -43,10 +43,10 @@ class ITrace(object):
   def register_observation(self, address, value):
     raise NotImplementedError
 
-  def value_at(self, address):
+  def get_observations(self):
     raise NotImplementedError
 
-  def check_consistent(self):
+  def value_at(self, address):
     raise NotImplementedError
 
   def extract(self, subproblem):
@@ -138,9 +138,8 @@ class AbstractTrace(ITrace):
   def register_observation(self, addr, value):
     self.observations[addr] = value
 
-  def check_consistent(self):
-    return all(self.results[id] == self.observations[id]
-               for id in self.observations)
+  def get_observations(self):
+    return self.observations
 
   # remainder of the interface, to be implemented by subclasses
 
@@ -326,7 +325,7 @@ register_trace_type("_trace", ITrace, {
   "bind_global": trace_action("bind_global", [t.Symbol, t.Blob], t.Nil),
   "register_observation": trace_action("register_observation", [t.Blob, t.Object], t.Nil),
   "value_at": trace_action("value_at", [t.Blob], t.Object),
-  "check_consistent": trace_action("check_consistent", [], t.Bool),
+  "get_observations": trace_action("get_observations", [], t.Dict(t.Blob, t.Object)),
   "split_trace": trace_action("copy", [], t.Blob),
   "select": trace_action("select", [t.Object], t.Blob),
   "pyselect": trace_action("pyselect", [t.String], t.Blob),

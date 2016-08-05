@@ -31,6 +31,21 @@
                       (loop loop)))))
         (loop loop)))]
 
+[define check_consistent
+  (lambda ()
+    (do (observations <- (get_observations))
+        (let loop
+            (lambda (loop addrs vals)
+              (do (if (is_empty addrs)
+                      (return true)
+                      (do (let addr (first addrs))
+                          (let obs_val (first vals))
+                          (cur_val <- (value_at addr))
+                          (if (= obs_val cur_val)
+                              (loop loop (rest addrs) (rest vals))
+                              (return false)))))))
+        (loop loop (keys observations) (values observations))))]
+
 [define example2
   (lambda ()
     (run_in (split_rejection_loop
