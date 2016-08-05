@@ -114,12 +114,6 @@ class DependencyGraphTrace(AbstractTrace):
     self.results[addr] = sp
     return sp
 
-  def single_site_subproblem(self, code):
-    from venture.mite.scaffold import MinimalScaffold
-    from venture.mite.scaffold import single_site_scaffold
-    address = eval(code, vars(addresses))
-    return single_site_scaffold(self, address)
-
   def extract(self, subproblem):
     x = DependencyGraphRegenerator(self, subproblem)
     weight = x.extract_subproblem()

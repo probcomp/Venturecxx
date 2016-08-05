@@ -116,6 +116,24 @@ class AbstractTrace(ITrace):
     value = self.value_at(addr)
     self.global_env.addBinding(symbol, Node(addr, value))
 
+  def select(self, _selector):
+    from venture.mite.scaffold import DefaultAllScaffold
+    return DefaultAllScaffold()
+
+  def pyselect(self, code, ctx=None):
+    from venture.mite.scaffold import MinimalScaffold
+    selector = eval(code, vars(addresses), ctx)
+    return MinimalScaffold(selector)
+
+  def single_site_subproblem(self, address):
+    from venture.mite.scaffold import single_site_scaffold
+    return single_site_scaffold(self, address)
+
+  def single_site_constraint(self, address, value):
+    from venture.mite.scaffold import single_site_scaffold
+    kernel = {'type': 'constrained', 'val': value}
+    return single_site_scaffold(self, address, kernel)
+
   # remainder of the interface, to be implemented by subclasses
 
   def register_request(self, addr, exp, env):
@@ -271,24 +289,6 @@ class FlatTrace(AbstractTrace):
     del self.made_sps[addr]
     self.results[addr] = sp
     return sp
-
-  def select(self, _selector):
-    from venture.mite.scaffold import DefaultAllScaffold
-    return DefaultAllScaffold()
-
-  def pyselect(self, code, ctx=None):
-    from venture.mite.scaffold import MinimalScaffold
-    selector = eval(code, vars(addresses), ctx)
-    return MinimalScaffold(selector)
-
-  def single_site_subproblem(self, address):
-    from venture.mite.scaffold import single_site_scaffold
-    return single_site_scaffold(self, address)
-
-  def single_site_constraint(self, address, value):
-    from venture.mite.scaffold import single_site_scaffold
-    kernel = {'type': 'constrained', 'val': value}
-    return single_site_scaffold(self, address, kernel)
 
   def extract(self, subproblem):
     x = Regenerator(self, subproblem)
