@@ -180,7 +180,7 @@ def testSelectRegen3(trace):
             (s <- (pyselectf "{
                      directive(2): {'type': 'constrained',
                                     'val': y}
-                   }" (dict (list 'y) (list 4))))
+                   }" (dict (list 'y 4))))
             (weight_and_fragment <- (extract s))
             (weight <- (regen s (rest weight_and_fragment)))
             (x_ <- (predict x))
@@ -208,7 +208,7 @@ def testSelectRegen4(trace):
                      directive(1): {'type': 'proposal'},
                      directive(2): {'type': 'constrained',
                                     'val': y},
-                   }" (dict (list 'y) (list y))))
+                   }" (dict (list 'y y))))
             (weight_and_fragment <- (extract s))
             (weight <- (regen s (rest weight_and_fragment)))
             (x_ <- (predict x))
