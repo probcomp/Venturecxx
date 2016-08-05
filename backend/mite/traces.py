@@ -281,10 +281,8 @@ class FlatTrace(AbstractTrace):
     selector = eval(code, vars(addresses), ctx)
     return MinimalScaffold(selector)
 
-  def single_site_subproblem(self, code):
-    from venture.mite.scaffold import MinimalScaffold
+  def single_site_subproblem(self, address):
     from venture.mite.scaffold import single_site_scaffold
-    address = eval(code, vars(addresses))
     return single_site_scaffold(self, address)
 
   def extract(self, subproblem):
@@ -341,7 +339,7 @@ register_trace_type("_trace", ITrace, {
   "select": trace_action("select", [t.Object], t.Blob),
   "pyselect": trace_action("pyselect", [t.String], t.Blob),
   "pyselectf": trace_action("pyselect", [t.String, t.Dict(t.Symbol, t.Object)], t.Blob),
-  "single_site_subproblem": trace_action("single_site_subproblem", [t.String], t.Blob),
+  "single_site_subproblem": trace_action("single_site_subproblem", [t.Blob], t.Blob),
   "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
   "regen": trace_action("regen", [t.Blob, t.Blob], t.Number),
   "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),
