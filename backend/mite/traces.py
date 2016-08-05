@@ -73,6 +73,7 @@ class AbstractTrace(ITrace):
     self.py_prng = random.Random(prng.randint(1, 2**31 - 1))
     self.directive_counter = 0
     self.global_env = VentureEnvironment(self.builtin_environment())
+    self.observations = {}
 
   def builtin_environment(self):
     from venture.mite.builtin import builtInSPs
@@ -134,6 +135,13 @@ class AbstractTrace(ITrace):
     kernel = {'type': 'constrained', 'val': value}
     return single_site_scaffold(self, address, kernel)
 
+  def register_observation(self, addr, value):
+    self.observations[addr] = value
+
+  def check_consistent(self):
+    return all(self.results[id] == self.observations[id]
+               for id in self.observations)
+
   # remainder of the interface, to be implemented by subclasses
 
   def register_request(self, addr, exp, env):
@@ -154,13 +162,7 @@ class AbstractTrace(ITrace):
   def deref_sp(self, sp_ref):
     raise NotImplementedError
 
-  def register_observation(self, addr, value):
-    raise NotImplementedError
-
   def value_at(self, addr):
-    raise NotImplementedError
-
-  def check_consistent(self):
     raise NotImplementedError
 
 
@@ -174,7 +176,6 @@ class BlankTrace(AbstractTrace):
 
   def __init__(self, seed):
     self.results = OrderedDict()
-    self.observations = {}
     super(BlankTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env): pass
@@ -212,15 +213,8 @@ class BlankTrace(AbstractTrace):
     (addr, sp) = sp_ref.makerNode
     return Node(addr, sp)
 
-  def register_observation(self, addr, value):
-    self.observations[addr] = value
-
   def value_at(self, addr):
     return self.results[addr]
-
-  def check_consistent(self):
-    return all(self.results[id] == self.observations[id]
-               for id in self.observations)
 
 
 class FlatTrace(AbstractTrace):
@@ -262,15 +256,8 @@ class FlatTrace(AbstractTrace):
     sp = self.made_sps[addr]
     return Node(addr, sp)
 
-  def register_observation(self, addr, value):
-    self.observations[addr] = value
-
   def value_at(self, addr):
     return self.results[addr]
-
-  def check_consistent(self):
-    return all(self.results[id] == self.observations[id]
-               for id in self.observations)
 
   def unregister_request(self, addr):
     del self.requests[addr]

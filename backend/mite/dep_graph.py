@@ -60,7 +60,6 @@ class DependencyGraphTrace(AbstractTrace):
     self.made_sps = {}
     self.nodes = {}
     self.children = {}
-    self.observations = {}
     super(DependencyGraphTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
@@ -98,15 +97,8 @@ class DependencyGraphTrace(AbstractTrace):
     sp = self.made_sps[addr]
     return Node(addr, sp)
 
-  def register_observation(self, addr, value):
-    self.observations[addr] = value
-
   def value_at(self, addr):
     return self.results[addr]
-
-  def check_consistent(self):
-    return all(self.results[id] == self.observations[id]
-               for id in self.observations)
 
   def unregister_made_sp(self, addr):
     sp = self.made_sps[addr]
