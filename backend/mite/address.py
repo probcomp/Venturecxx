@@ -1,6 +1,10 @@
 from weakref import WeakValueDictionary
 
 from venture.lite.address import List
+import venture.lite.types as t
+
+from venture.mite.sp import SimulationSP
+from venture.mite.sp_registry import registerBuiltinSP
 
 class InternedObject(object):
   """A class whose instances are interned, so that they can be hashed
@@ -54,3 +58,22 @@ builtin = BuiltinAddress
 directive = DirectiveAddress
 request = RequestAddress
 subexpression = SubexpressionAddress
+
+
+## VentureScript bindings for constructing addresses
+
+class AddressMakerSP(SimulationSP):
+  def __init__(self, python_maker, input_types):
+    self.python_maker = python_maker
+    self.input_types = input_types
+
+  def simulate(self, inputs, _prng):
+    assert len(inputs) == len(self.input_types)
+    inputs = [in_t.asPython(value)
+              for in_t, value in zip(self.input_types, inputs)]
+    return t.Blob.asVentureValue(self.python_maker(*inputs))
+
+registerBuiltinSP("builtin", AddressMakerSP(builtin, [t.String]))
+registerBuiltinSP("toplevel", AddressMakerSP(directive, [t.Int]))
+registerBuiltinSP("request", AddressMakerSP(request, [t.Blob, t.Object]))
+registerBuiltinSP("subexpression", AddressMakerSP(subexpression, [t.Int, t.Blob]))
