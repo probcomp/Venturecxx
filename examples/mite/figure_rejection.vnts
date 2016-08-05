@@ -1,0 +1,56 @@
+define prior = () ~> {
+  run_in({
+    assume x ~ normal(0, 1);
+    assume y ~ normal(x, 1);
+    observe y = 4;
+    predict x
+  }, flat_trace())
+};
+
+define posterior = () ~> {
+  run_in({
+    assume x ~ normal(0, 1);
+    assume y ~ normal(x, 1);
+    observe y = 4;
+    incorporate_constraint(toplevel(2), 4);
+    subproblem <- single_site_subproblem(toplevel(1));
+    rejection_sample(subproblem);
+    predict x
+  }, flat_trace())
+};
+
+define rejection_sample = (subproblem) -> {
+  bound <- weight_bound(subproblem);
+  rejection_sample_given_bound(subproblem, bound)
+};
+
+define rejection_sample_given_bound = (subproblem, bound) -> {
+  package <- extract(subproblem);
+  let (old_weight, trace_fragment) = package;
+  new_weight <- regen(subproblem, trace_fragment);
+  consistent <- check_consistent();
+  if (consistent && log_flip(new_weight - bound)) {
+    pass
+  }
+  else {
+    rejection_sample_given_bound(subproblem, bound)
+  }
+};
+
+// stubbed for now
+define pass = return(nil);
+
+define extract = {
+  let old_extract = extract;
+  (subproblem) -> {
+    package <- old_extract(subproblem);
+    return((first(package), rest(package)))
+  }
+};
+
+define incorporate_constraint = (addr, val) -> {
+  subproblem <- single_site_constraint(addr, val);
+  package <- extract(subproblem);
+  let (weight, trace_fragment) = package;
+  regen(subproblem, trace_fragment)
+};
