@@ -100,8 +100,9 @@
             (flat_trace)))]
 
 [define incorporate_constraint
-  (lambda (subproblem)
-    (do (rev <- (extract subproblem))
+  (lambda (addr value)
+    (do (subproblem <- (single_site_constraint addr value))
+        (rev <- (extract subproblem))
         (let trace_frag (rest rev))
         (regen subproblem trace_frag)))]
 
@@ -122,20 +123,12 @@
     (run_in (do (assume x (normal 0 1))
                 (assume y (normal x 1))
                 (observe y 4)
-                (s <- (pyselectf "{
-                         directive(2): {'type': 'constrained',
-                                        'val': y}
-                       }" (dict (list 'y) (list 4))))
-                (weight <- (incorporate_constraint s))
+                (weight <- (incorporate_constraint (toplevel 2) 4))
                 (return (debug 'weight weight))
                 (repeat 100
-                  (do (s <- (pyselectf "{
-                               directive(1): {'type': 'proposal'},
-                               directive(2): {'type': 'constrained',
-                                              'val': y}
-                             }" (dict (list 'y) (list 4))))
+                  (do (s <- (single_site_subproblem (toplevel 1)))
                       (resimulation_step s)
-                      (x <- (predict x))
+                      (x <- (value_at (toplevel 1)))
                       (return (debug 'x x)))))
             (flat_trace)))]
 
@@ -159,19 +152,11 @@
     (run_in (do (assume x (normal 0 1))
                 (assume y (normal x 1))
                 (observe y 4)
-                (s <- (pyselectf "{
-                         directive(2): {'type': 'constrained',
-                                        'val': y}
-                       }" (dict (list 'y) (list 4))))
-                (weight <- (incorporate_constraint s))
+                (weight <- (incorporate_constraint (toplevel 2) 4))
                 (return (debug 'weight weight))
                 (repeat 10
-                  (do (s <- (pyselectf "{
-                               directive(1): {'type': 'proposal'},
-                               directive(2): {'type': 'constrained',
-                                              'val': y}
-                             }" (dict (list 'y) (list 4))))
+                  (do (s <- (single_site_subproblem (toplevel 1)))
                       (rejection_auto_bound s)
-                      (x <- (predict x))
+                      (x <- (value_at (toplevel 1)))
                       (return (debug 'x x)))))
             (flat_trace)))]
