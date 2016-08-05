@@ -142,5 +142,7 @@ def register_record(name, *fields):
   for (f, a) in zip(fields, accessors):
     registerBuiltinSP(f, a)
 
+vv.registerVentureType(VentureRecord)
+
 register_record("inference_action", "action_func")
 register_record("make_ref", "ref_get")

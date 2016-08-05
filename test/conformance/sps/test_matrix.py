@@ -75,3 +75,8 @@ class TestMatrixVector(object):
   def testVectorTimesMatrix(self):
     assert array_equal(self.ripl.sample("(vector_times_matrix v1 m1)"), [-7, 1])
     assert array_equal(self.ripl.sample("(vector_times_matrix v2 m1)"), [-4, 3])
+
+  @on_inf_prim("none")
+  def testMatrixTrace(self):
+    assert self.ripl.sample("(matrix_trace (matrix (array (array -5.5 2.) (array 3. 4.0))))") == -1.5
+    assert self.ripl.sample("(matrix_trace (matrix (array (array 0.))))") == 0.

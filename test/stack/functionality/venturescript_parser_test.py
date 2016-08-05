@@ -526,16 +526,16 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
 
     def test_unquote(self):
         self.run_legacy_test( '${e}',
-                [['quote', ['unquote', v.sym('e')]]],
+                [[v.sym('quote'), [v.sym('unquote'), v.sym('e')]]],
                 'unquote')
         self.run_legacy_test( '$e',
-                [['quote', ['unquote', v.sym('e')]]],
+                [[v.sym('quote'), [v.sym('unquote'), v.sym('e')]]],
                 'unquote')
         self.run_legacy_test( '${e + 1}',
-                [['quote', ['unquote', [v.sym('add'), v.sym('e'), v.num(1)]]]],
+                [[v.sym('quote'), [v.sym('unquote'), [v.sym('add'), v.sym('e'), v.num(1)]]]],
                 'unquote')
         self.run_legacy_test( '$e + 1',
-                [[v.sym('add'), ['quote', ['unquote', v.sym('e')]], v.num(1)]],
+                [[v.sym('add'), [v.sym('quote'), [v.sym('unquote'), v.sym('e')]], v.num(1)]],
                 'unquote')
 
 
@@ -552,12 +552,6 @@ class TestVentureScriptParser(unittest.TestCase):
                     'expression':[v.sym('assume'), v.sym('a'),
                                   [v.sym('b'), v.sym('c'), v.sym('d')]]}
         self.assertEqual(output, expected)
-
-    def test_split_program(self):
-        output = self.p.split_program(' define blah = count<132>;infer 132')
-        instructions = ['define blah = count<132>','infer 132']
-        indices = [[1,24],[26,34]]
-        self.assertEqual(output,[instructions, indices])
 
     def test_split_instruction(self):
         output = self.p.split_instruction(' define blah = count<132>')

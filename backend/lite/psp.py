@@ -303,7 +303,7 @@ class PSP(object):
     TODO Communicate the maker's fixed parameters here to enable more
     precise bounds.
     """
-    raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure "
+    raise VentureBuiltinSPMethodError("Cannot rejection auto-bound AAA procedure "
       "with unbounded log density of data.")
 
 class IArgs(object):

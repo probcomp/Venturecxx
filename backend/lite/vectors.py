@@ -200,3 +200,9 @@ registerBuiltinSP("matrix_solve",
     [t.MatrixType(), t.MatrixType()],
     t.MatrixType(),
     descr="%s(A, B) returns the solution to the matrix equation AX = B."))
+
+registerBuiltinSP("matrix_trace",
+  deterministic_typed(np.trace,
+    [t.MatrixType()],
+    t.NumberType(),
+    descr="%s(x) returns the trace (in the algebraic sense) of matrix x."))

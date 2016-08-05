@@ -42,19 +42,19 @@ instruction(command)	::= command(c).
 instruction(statement)	::= statement(e).
 
 labelled(directive)	::= L_NAME(l) T_COLON directive(d).
-labelled(directive_prog)	::= T_LDOLLAR(dol) primary(lab_exp) T_COLON directive(d).
+labelled(directive_prog)::= T_LDOLLAR(dol) primary(lab_exp) T_COLON directive(d).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
 directive(assume_prog)	::= K_ASSUME(k) T_LDOLLAR(dol) primary(sym_exp) T_EQDEF(eq) expression(e).
 directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(define)	::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
+command(define)		::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
 command(infer)		::= K_INFER(k) expression(e).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
 body(do)		::= statements(ss) T_SEMI(semi) expression_opt(e).
 body(exp)		::= expression(e).
-statements(one)	::= statement(s).
+statements(one)		::= statement(s).
 statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
 
 /* TODO deprecate "assign" in favor of let */
@@ -65,7 +65,7 @@ statement(mutrec)	::= K_AND(l) L_NAME(n) T_EQDEF(eq) expression(e).
 statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
 				T_EQDEF(eq) expression(e).
 statement(labelled)	::= labelled(d).
-statement(none)	::= expression(e).
+statement(none)		::= expression(e).
 
 expression_opt(none)	::= .
 expression_opt(some)	::= expression(e).
@@ -84,14 +84,27 @@ action(none)		::= arrow(e).
 arrow(one)		::= L_NAME(param) T_RARR(op) expression(body).
 arrow(tuple)		::= T_LROUND(po) arraybody(params) T_RROUND(pc)
 				T_RARR(op) expression(body).
-arrow(none)		::= boolean_and(e).
+arrow(pathexp)		::= path_expression(e).
+arrow(none)		::= hash_tag(e).
 
-/* XXX This AND/OR precedence is backwards from everyone else!  */
-boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) boolean_or(r).
-boolean_and(none)	::= boolean_or(e).
+/* My implementation of slash actually wants to be left-associated. */
+path_expression(one)	::= T_DIV(slash) path_step(s).
+path_expression(some)	::= path_expression(more) T_DIV(slash) path_step(s).
 
-boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) equality(r).
-boolean_or(none)	::= equality(e).
+path_step(tag)		::= T_QUESTION(q) L_NAME(tag).
+path_step(tag_val)	::= T_QUESTION(q) L_NAME(tag) T_EQ(eq) primary(value).
+path_step(star)		::= T_MUL(star).
+path_step(edge)		::= primary(e).
+
+hash_tag(tag)		::= hash_tag(e) T_HASH(h) L_NAME(tag).
+hash_tag(tag_val)	::= hash_tag(e) T_HASH(h) L_NAME(tag) T_COLON(colon) applicative(value).
+hash_tag(none)		::= boolean_or(e).
+
+boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) boolean_and(r).
+boolean_or(none)	::= boolean_and(e).
+
+boolean_and(and)	::= boolean_and(l) K_AND|T_AND(op) equality(r).
+boolean_and(none)	::= equality(e).
 
 equality(eq)		::= equality(l) K_EQ|T_EQ(op) comparison(r).
 equality(neq)		::= equality(l) K_NEQ|T_NEQ(op) comparison(r).
@@ -141,6 +154,7 @@ primary(unquote)	::= T_LDOLLAR(op) primary(e).
 primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
+primary(language)	::= L_LANGUAGE(ll).
 
 paramlist(none)		::= .
 paramlist(some)		::= params(params).

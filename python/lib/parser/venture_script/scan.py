@@ -21,6 +21,7 @@ import StringIO
 
 import venture.plex as Plex
 
+from venture.parser import ast
 from venture.parser.venture_script import grammar
 
 # XXX Automatically confirm we at least mention all tokens mentioned
@@ -129,6 +130,23 @@ def scan_string_end(scanner, text):
     scanner.produce(grammar.L_STRING, string, length)
     scanner.begin('')
 
+def scan_language(scanner, text):
+    assert text.startswith('@{')
+    assert scanner.current_language is None
+    language = text[len('@{'):]
+    if language not in scanner.languages:
+        scanner.produce(-1)
+    scanner.current_language = scanner.languages[language]()
+    scanner.begin('LANGUAGE')
+
+def scan_language_char(scanner, text):
+    done, result = scanner.current_language(text)
+    if done:
+        del scanner.current_language
+        scanner.current_language = None
+        scanner.produce(grammar.L_LANGUAGE, result)
+        scanner.begin('')
+
 class Scanner(Plex.Scanner):
     line_comment = Plex.Str('//') + Plex.Rep(Plex.AnyBut('\n'))
     whitespace = Plex.Any('\f\n\r\t ')
@@ -167,6 +185,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('[|'), grammar.T_LOXFORD),
         (Plex.Str('|]'), grammar.T_ROXFORD),
         (Plex.Str('$'), grammar.T_LDOLLAR),
+        (Plex.Str('?'), grammar.T_QUESTION),
         (Plex.Str('='), grammar.T_EQDEF),
         # Hack ~ to mean = everywhere but be available for reasons of
         # code style.  If we later want to adjust the system to
@@ -179,8 +198,9 @@ class Scanner(Plex.Scanner):
         (Plex.Str('->'), grammar.T_RARR),
         # Also ~> for ->.
         (Plex.Str('~>'), grammar.T_RARR),
-        (Plex.Str('||'), grammar.T_AND),
-        (Plex.Str('&&'), grammar.T_OR),
+        (Plex.Str('#'), grammar.T_HASH),
+        (Plex.Str('||'), grammar.T_OR),
+        (Plex.Str('&&'), grammar.T_AND),
         (Plex.Str('=='), grammar.T_EQ),
         (Plex.Str('!='), grammar.T_NEQ),
         (Plex.Str('<='), grammar.T_LE),
@@ -197,6 +217,7 @@ class Scanner(Plex.Scanner):
         (integer,       scan_integer),
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
+        (Plex.Str('@{') + name, scan_language),
         (Plex.AnyChar,  -1),    # Invalid -- error.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
@@ -206,12 +227,17 @@ class Scanner(Plex.Scanner):
             (Plex.Rep1(Plex.AnyBut('\\"')),     scan_string_text),
             # XXX Report EOF inside string.
         ]),
+        Plex.State('LANGUAGE', [
+            (Plex.AnyChar,      scan_language_char),
+        ]),
     ])
 
-    def __init__(self, file, name):
+    def __init__(self, file, name, languages=None):
         Plex.Scanner.__init__(self, self.lexicon, file, name)
         self.stringio = None
         self.string_start = None
+        self.languages = {} if languages is None else languages
+        self.current_language = None
 
     # Override produce so we can consistently record a position with
     # each token, and use the position as character offset from the
@@ -228,4 +254,4 @@ class Scanner(Plex.Scanner):
             length = len(self.text)
         end = self.cur_pos
         start = end - length
-        Plex.Scanner.produce(self, token, (value, start, end - 1))
+        Plex.Scanner.produce(self, token, ast.Located([start, end-1], value))

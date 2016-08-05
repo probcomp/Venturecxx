@@ -107,13 +107,6 @@ class TestChurchPrimeParser(unittest.TestCase):
                                    [v.symbol('lambda'), [], v.number(0.0)]]}
         self.assertEqual(output, expected)
 
-    def test_split_program(self):
-        # FIXME: this test should pass, but should be revised since infer has changed
-        output = self.p.split_program(' ( force blah count<132>)[ infer 132 ]')
-        instructions = ['( force blah count<132>)','[ infer 132 ]']
-        indices = [[1,24],[25,37]]
-        self.assertEqual(output,[instructions, indices])
-
     def test_split_instruction(self):
         output = self.p.split_instruction(' [define blah count<132> ]')
         print output

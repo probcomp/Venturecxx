@@ -82,6 +82,9 @@ def deterministic_typed(f, args_types, return_type, descr=None, sim_grad=None, *
 def binaryNum(f, sim_grad=None, descr=None):
   return deterministic_typed(f, [t.NumberType(), t.NumberType()], t.NumberType(), sim_grad=sim_grad, descr=descr)
 
+def binaryNumInt(f, sim_grad=None, descr=None):
+  return deterministic_typed(f, [t.NumberType(), t.NumberType()], t.IntegerType(), sim_grad=sim_grad, descr=descr)
+
 def binaryNumS(output):
   return typed_nr(output, [t.NumberType(), t.NumberType()], t.NumberType())
 

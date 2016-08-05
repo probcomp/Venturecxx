@@ -47,6 +47,10 @@ def testCompare():
   assert not get_ripl().predict("(> 1 2)")
   assert not get_ripl().predict("(>= 1 2)")
 
+@on_inf_prim("none")
+def testRecordSmoke():
+  assert not get_ripl().evaluate("(eq 1 (return 1))")
+
 def testBasicCDFs():
   yield checkCDF, "(normal 1 1)", scipy.stats.norm(loc=1, scale=1).cdf
   yield checkCDF, "(uniform_continuous 0 1)", lambda x: x

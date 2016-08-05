@@ -39,7 +39,7 @@ def strip_types_from_dict_values(value):
 _RIPL_FUNCTIONS = [
         'get_mode','list_available_modes','set_mode',
         'execute_instruction','execute_program',
-        'split_program','get_text',
+        'get_text',
         'expression_index_to_text_index','assume','predict',
         'observe','forget','report','infer',
         'clear','list_directives','get_directive',

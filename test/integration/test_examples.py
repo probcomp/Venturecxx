@@ -28,7 +28,6 @@ from venture.test.config import gen_needs_backend
 from venture.test.config import gen_needs_ggplot
 from venture.test.config import in_backend
 from venture.test.config import needs_backend
-from venture.test.config import needs_seaborn
 
 def checkVentureExample(command):
   assert s.call(command, shell=True) == 0
@@ -69,7 +68,7 @@ def checkVentureExampleRude(command):
 @gen_needs_ggplot
 def testVentureExamplesLitePlot():
   my_dir = os.path.abspath(os.path.dirname(__file__))
-  for ex in ["venture lite -f %s/../../examples/trickiness-ideal.vnts" % (my_dir,),
+  for ex in ["venture lite -f %s/../../examples/dual-semantics/trickiness-ideal.vnts" % (my_dir,),
   ]:
     yield checkVentureExampleRude, ex
 
@@ -83,8 +82,8 @@ def testVentureExamplesPumaPlot():
     "venture puma -f %s/examples/plotting/bimodal.vnt" % (root,),
     "venture puma -f %s/examples/plotting/dice_plot.vnt" % (root,),
     "venture puma -f %s/examples/plotting/normal_plot.vnt" % (root,),
-    "venture puma -f %s/examples/trickiness-concrete.vnts" % (root,),
-    "venture puma -f %s/examples/trickiness-concrete-2.vnts" % (root,),
+    "venture puma -f %s/examples/dual-semantics/trickiness-concrete.vnts" % (root,),
+    "venture puma -f %s/examples/dual-semantics/trickiness-concrete-2.vnts" % (root,),
   ]:
     yield checkVentureExampleRude, ex
 
@@ -99,24 +98,7 @@ def extra_module_path(path):
 
 @in_backend("none")
 @needs_backend("lite")
-@needs_seaborn
-def testGaussianGeweke():
-  with extra_module_path("examples"):
-    with temp_directory("geweke") as plots_dir:
-      import gaussian_geweke
-      gaussian_geweke.main(outdir=plots_dir, n_sample=2, burn_in=2, thin=2)
-
-@in_backend("none")
-@needs_backend("lite")
 def testCrp2dDemo():
   with extra_module_path("examples"):
     import crp_2d_demo
     crp_2d_demo.doit(num_points=2, num_frames=3, show_pics=False)
-
-@in_backend("none")
-@needs_backend("lite")
-def testHmcDemo():
-  with extra_module_path("examples"):
-    with temp_directory("hmc") as plot_dir:
-      import hmc_demo
-      hmc_demo.doit(nsamples=3, nruns=1, plot_dir=plot_dir, contour_res=2)

@@ -120,7 +120,7 @@ class MVNormalOutputPSP(RandomPSP):
       raise Exception('TODO: Find an analytical form for the maximum of the '\
         'log density of MVNormal for fixed x, mu, but varying sigma')
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
 
   def description(self,name):
     return '  %s(mean, covariance) samples a vector according to the '\
@@ -317,7 +317,7 @@ class NormalOutputPSP(RandomPSP):
       # (x-mu)^2 = sigma^2
       return self.logDensityNumeric(x, [mu, abs(x-mu)])
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
 
   def simulate(self, args):
     return self.simulateNumeric(args.operandValues(), args.np_prng())
@@ -438,7 +438,7 @@ class VonMisesOutputPSP(RandomPSP):
     elif x is not None and mu is not None:
       raise Exception("TODO What is the bound for a vonmises varying kappa?")
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
 
   def gradientOfLogDensity(self, x, args):
     (mu, kappa) = args.operandValues()
@@ -469,7 +469,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensityBoundNumeric(self, _, low, high):
     if low is None or high is None:
       # Unbounded
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
     else:
       return -math.log(high - low)
 

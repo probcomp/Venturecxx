@@ -96,8 +96,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     `# Exclude HsVenture because it isn't release quality`\
     `# (also not merged, but compile results appear in my working tree)` \
     --exclude=backend/hs \
-    `# Exclude Terminal because it's unused and copyright-intermixed` \
-    --exclude=demos/jsripl/Terminal \
     `# Exclude release script to hide exclusion list` \
     --exclude=script/compare-release-content \
     --exclude=script/release-tarball \

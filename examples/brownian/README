@@ -1,0 +1,11 @@
+This is an example of several inference schemes operating on
+a brownian motion model.
+
+Interesting properties:
+- Custom state visualization showing inference operating.
+- Presented at the PPAML PI meeting in July 2014, and reused for the
+  NIPS 2014 prob prog workshop as part of the abstract on gradients.
+- Annoying to test mechanically due to visual+video nature, and
+  heavy dependency on pygame.
+- Hasn't been used or tested since 2014, probably somewhat bit-rotten,
+  and de-facto abandoned.
