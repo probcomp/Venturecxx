@@ -16,15 +16,8 @@ define graph20 = (iters) -> run_program(chain20, iters, graph_trace);
 define graph50 = (iters) -> run_program(chain50, iters, graph_trace);
 
 define single_site_step = {
-  let selectors = [
-    "directive(1)",
-    "directive(2)",
-    "directive(3)",
-    "directive(4)",
-    "directive(5)"
-  ];
-  let selector = selectors[uniform_discrete(0, 5)];
-  subproblem <- single_site_subproblem(selector);
+  let n = uniform_discrete(1, 5);
+  subproblem <- single_site_subproblem(toplevel(n));
   resimulation_step(subproblem)
 };
 
