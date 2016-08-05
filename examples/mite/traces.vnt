@@ -77,16 +77,16 @@
   (lambda ()
     (run_in (do (assume x (normal 0 1))
                 (assume y (normal x 1))
-                (x <- (predict x))
-                (y <- (predict y))
+                (x <- (value_at (toplevel 1)))
+                (y <- (value_at (toplevel 2)))
                 (return (debug 'xy (list x y)))
                 (s <- (pyselect "{
                          directive(2): {'type': 'proposal'}
                        }"))
                 (rho <- (extract s))
                 (regen s (rest rho))
-                (x <- (predict x))
-                (y <- (predict y))
+                (x <- (value_at (toplevel 1)))
+                (y <- (value_at (toplevel 2)))
                 (return (debug 'xy (list x y)))
                 (s <- (pyselect "{
                          directive(1): {'type': 'proposal'},
@@ -94,8 +94,8 @@
                        }"))
                 (rho <- (extract s))
                 (regen s (rest rho))
-                (x <- (predict x))
-                (y <- (predict y))
+                (x <- (value_at (toplevel 1)))
+                (y <- (value_at (toplevel 2)))
                 (return (debug 'xy (list x y))))
             (flat_trace)))]
 
