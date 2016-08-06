@@ -145,8 +145,8 @@ def statisticalTest(f):
   """
   @stochasticTest
   @nose.make_decorator(f)
-  def wrapped(*args, **kwargs):
-    reportTest(repeatTest(f, *args, **kwargs))
+  def wrapped(seed, *args, **kwargs):
+    reportTest(repeatTest(f, seed, *args, **kwargs))
   return wrapped
 
 
