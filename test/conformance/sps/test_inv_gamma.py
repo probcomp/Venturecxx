@@ -23,9 +23,9 @@ from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testInvGamma1():
+def testInvGamma1(seed):
   # Check that Gamma is parameterized correctly
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   # samples
   ripl.assume("a","(inv_gamma 10.0 10.0)", label="pid")
   observed = collectSamples(ripl,"pid")
