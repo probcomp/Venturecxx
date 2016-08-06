@@ -26,11 +26,11 @@ from venture.test.stats import statisticalTest
 
 @on_inf_prim("block mh")
 @statisticalTest
-def testMVNormalRandomWalkSoundness():
+def testMVNormalRandomWalkSoundness(seed):
   # This exercises the subtlety involving block proposals and delta
   # kernels described in the "joint-delta-kernels" footnote in
   # doc/on-latents.md.
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.assume("mean", "(multivariate_normal (array 0) (id_matrix 1))")
   r.assume("y", "(multivariate_normal mean (id_matrix 1))")
   predictions = [c[0] for c in

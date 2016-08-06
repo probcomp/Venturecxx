@@ -30,8 +30,8 @@ from venture.test.stats import statisticalTest
 # for row/column vectors, so I want to make that explicit.
 @on_inf_prim("any")
 @statisticalTest
-def testHMMSP1():
-  ripl = get_ripl()
+def testHMMSP1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (make_lazy_hmm
  (simplex 0.5 0.5)
@@ -56,8 +56,8 @@ def testHMMSP1():
 @on_inf_prim("any")
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testHMMSP2():
-  ripl = get_ripl()
+def testHMMSP2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (if (flip)
 (make_lazy_hmm
@@ -90,8 +90,8 @@ def testHMMSP2():
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Jenkins venture-crashes job 837 didn't like subsampling this, don't know why")
 @statisticalTest
-def testHMMSP3():
-  ripl = get_ripl()
+def testHMMSP3(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("z", "(flip)")
   ripl.assume("f", """
 (if z
@@ -122,8 +122,8 @@ def testHMMSP3():
 @on_inf_prim("any")
 @statisticalTest
 @skipWhenSubSampling("Jenkins venture-crashes job 837 didn't like subsampling this, don't know why")
-def testHMMSP4():
-  ripl = get_ripl()
+def testHMMSP4(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("z", "(flip)")
   ripl.assume("f", """
 (make_lazy_hmm
@@ -149,8 +149,8 @@ def testHMMSP4():
 
 @on_inf_prim("any")
 @statisticalTest
-def testHMMObservationZero():
-  ripl = get_ripl()
+def testHMMObservationZero(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (make_lazy_hmm
  (simplex 0.5 0.5)
