@@ -90,12 +90,6 @@ class TestRipl(unittest.TestCase):
     # Text manipulation
     ############################################
 
-    def test_split_program(self):
-        output = self.ripl.split_program(" ( force blah count<132>)[ infer 132 ]")
-        instructions = ['( force blah count<132>)','[ infer 132 ]']
-        indices = [[1,24],[25,37]]
-        self.assertEqual(output,[instructions, indices])
-
     def test_get_text(self):
         self.ripl.set_mode('church_prime')
         text = "mumble: [assume a (+ (if true 2 3) 4)]"
