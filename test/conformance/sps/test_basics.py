@@ -60,8 +60,8 @@ def testBasicCDFs():
   yield checkCDF, "(inv_gamma 1 2)", scipy.stats.invgamma(1, scale=2.0).cdf
 
 @statisticalTest
-def checkCDF(expr, cdf):
-  ripl = get_ripl()
+def checkCDF(expr, cdf, seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict(expr, label = "pid")
   predictions = collectSamples(ripl, "pid")
   return reportKnownContinuous(cdf, predictions, expr)
