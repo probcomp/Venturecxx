@@ -35,6 +35,10 @@ This module supplies facilities for testing in that style.  Of note:
   TestResult object, which represents the p-value.
 - The reportKnownFoo functions encapsulate standard statistical
   tests and return TestResult objects.
+- Every test annotated as a statisticalTest must accept a `seed`
+  argument which may be used to initialize PRNGs.  Every such test
+  should be deterministic given fixed seed, if possible, for better
+  reproducibility of failures.
 - This module respects the ignore_inference_quality configuration
   (which is on for the crash test suite and off for the inference
   quality test suite).
