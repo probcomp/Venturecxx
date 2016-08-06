@@ -46,14 +46,14 @@ def testWishartSmoke():
   assert np.all(m2 != 0)
 
 @statisticalTest
-def testWishartPrior1():
+def testWishartPrior1(seed):
   # Confirm that the diagonal elements of a Wishart are a chi-squared
   # distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(wishart s 5)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -63,14 +63,14 @@ def testWishartPrior1():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testWishartPrior2():
+def testWishartPrior2(seed):
   # Confirm that the diagonal elements of a Wishart are a chi-squared
   # distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(wishart s 4.2)")
   ripl.predict("(lookup m (pair 1 1))", label="prediction")
@@ -80,14 +80,14 @@ def testWishartPrior2():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testInvWishartPrior1():
+def testInvWishartPrior1(seed):
   # Confirm that the diagonal elements of an inverse Wishart are an
   # inverse Gamma distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(inv_wishart s 5)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -97,14 +97,14 @@ def testInvWishartPrior1():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testInvWishartPrior2():
+def testInvWishartPrior2(seed):
   # Confirm that the diagonal elements of an inverse Wishart are an
   # inverse Gamma distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(inv_wishart s 4.2)")
   ripl.predict("(lookup m (pair 1 1))", label="prediction")
@@ -114,14 +114,14 @@ def testInvWishartPrior2():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testWishartPrior3():
+def testWishartPrior3(seed):
   # Confirm that as dof increases, the elements of a Wishart obey the
   # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(id_matrix 3)")
   ripl.assume("m", "(wishart s 10000)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -130,14 +130,14 @@ def testWishartPrior3():
   return reportKnownGaussian(10000, 141, predictions)
 
 @statisticalTest
-def testWishartPrior4():
+def testWishartPrior4(seed):
   # Confirm that as dof increases, the elements of a Wishart obey the
   # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(id_matrix 3)")
   ripl.assume("m", "(wishart s 10000)")
   ripl.predict("(lookup m (pair 0 1))", label="prediction")
@@ -147,14 +147,14 @@ def testWishartPrior4():
 
 
 @statisticalTest
-def testInvWishartPrior3():
+def testInvWishartPrior3(seed):
   # Confirm that as dof increases, the elements of a Wishart obey the
   # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(scale_matrix 10000 (id_matrix 3))")
   ripl.assume("m", "(inv_wishart s 10000)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -163,14 +163,14 @@ def testInvWishartPrior3():
   return reportKnownGaussian(1, 0.0141, predictions)
 
 @statisticalTest
-def testInvWishartPrior4():
+def testInvWishartPrior4(seed):
   # Confirm that as dof increases, the elements of a Wishart obey the
   # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(scale_matrix 10000 (id_matrix 3))")
   ripl.assume("m", "(inv_wishart s 10000)")
   ripl.predict("(lookup m (pair 0 1))", label="prediction")
