@@ -128,8 +128,8 @@ def testReportedPosterior():
 @needs_pystan
 @broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 @statisticalTest
-def testInference():
-  r = get_ripl()
+def testInference(seed):
+  r = get_ripl(seed=seed)
   r.execute_program(normal_in_stan_snippet)
   r.execute_program("""
 (assume x (normal 0 1))
