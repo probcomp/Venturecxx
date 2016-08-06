@@ -33,9 +33,9 @@ def testPGibbsBasic1():
   yield checkPGibbsBasic1, "true"
 
 @statisticalTest
-def checkPGibbsBasic1(in_parallel):
+def checkPGibbsBasic1(in_parallel, seed):
   # Basic sanity test
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.predict("(bernoulli)",label="pid")
   infer = "(pgibbs default one 2 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
 
@@ -49,9 +49,9 @@ def testPGibbsBasic2():
   yield checkPGibbsBasic2, "true"
 
 @statisticalTest
-def checkPGibbsBasic2(in_parallel):
+def checkPGibbsBasic2(in_parallel, seed):
   # Basic sanity test
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("x","(flip 0.1)",label="pid")
   infer = "(pgibbs default one 2 %s %s)" % (default_num_transitions_per_sample(), in_parallel)
   predictions = collectSamples(ripl,"pid",infer=infer)
@@ -68,10 +68,10 @@ def testFuncPGibbsBlockingMHHMM1():
   yield checkPGibbsBlockingMHHMM1, "func_pgibbs"
 
 @statisticalTest
-def checkPGibbsBlockingMHHMM1(operator):
+def checkPGibbsBlockingMHHMM1(operator, seed):
   # The point of this is that it should give reasonable results in
   # very few transitions but with a large number of particles.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x0","(tag 0 0 (normal 0.0 1.0))")
   ripl.assume("x1","(tag 0 1 (normal x0 1.0))")
@@ -110,8 +110,8 @@ def testFuncPGibbsDynamicScope1():
   yield checkPGibbsDynamicScope1, "func_pgibbs"
 
 @statisticalTest
-def checkPGibbsDynamicScope1(operator):
-  ripl = get_ripl()
+def checkPGibbsDynamicScope1(operator, seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
   ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
@@ -142,8 +142,8 @@ def checkPGibbsDynamicScope1(operator):
 
 @on_inf_prim("pgibbs")
 @statisticalTest
-def testPGibbsDynamicScopeInterval():
-  ripl = get_ripl()
+def testPGibbsDynamicScopeInterval(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("transition_fn", "(lambda (x) (normal x 1.0))")
   ripl.assume("observation_fn", "(lambda (y) (normal y 1.0))")
