@@ -134,7 +134,7 @@ def test_compound_assume_inf_happening():
 @broken_in("puma", "Does not have refs: Issue #224.")
 @statisticalTest
 @skipWhenDoingParticleGibbs("Issue #531")
-def test_compound_assume_inf_first_element():
+def test_compound_assume_inf_first_element(seed):
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
     [assume b_ref (tag (quote b_scope) 0 (ref (normal -10 10)))]
@@ -145,7 +145,7 @@ def test_compound_assume_inf_first_element():
     [assume obs_2 (make_suff_stat_normal b 1)]
     """
 
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.execute_program(inf_test_prog)
 
     for _ in range(default_num_data()):
@@ -159,7 +159,7 @@ def test_compound_assume_inf_first_element():
 @statisticalTest
 @skipWhenRejectionSampling("Rejection takes too long to solve this")
 @skipWhenDoingParticleGibbs("Issue #531")
-def test_compound_assume_inf_second_element():
+def test_compound_assume_inf_second_element(seed):
     inf_test_prog ="""
     [assume a_ref (tag (quote a_scope) 0 (ref (normal 0 10)))]
     [assume b_ref (tag (quote b_scope) 0 (ref (normal -10 10)))]
@@ -170,7 +170,7 @@ def test_compound_assume_inf_second_element():
     [assume obs_2 (make_suff_stat_normal b 1)]
     """
 
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.execute_program(inf_test_prog)
 
     for _ in range(default_num_data()):
@@ -185,7 +185,7 @@ def test_compound_assume_inf_second_element():
 
 @statisticalTest
 @skipWhenDoingParticleGibbs("Issue #531")
-def test_model_without_compound_assume():
+def test_model_without_compound_assume(seed):
     inf_test_prog ="""
     [assume a (tag (quote a_scope) 0 (normal 0 10))]
     [assume b (tag (quote b_scope) 0 (normal -10 10))]
@@ -193,7 +193,7 @@ def test_model_without_compound_assume():
     [assume obs_2 (make_suff_stat_normal b 1)]
     """
 
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.execute_program(inf_test_prog)
 
     for _ in range(default_num_data()):
