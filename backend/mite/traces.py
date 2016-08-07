@@ -202,15 +202,14 @@ class BlankTrace(AbstractTrace):
         self.results[addr] = value
 
   def register_made_sp(self, addr, sp):
-    ret = SPRef((addr, sp))
+    ret = SPRef(Node(addr, sp))
     if addr in self.results:
       assert self.results[addr] is sp
       self.results[addr] = ret
     return ret
 
   def deref_sp(self, sp_ref):
-    (addr, sp) = sp_ref.makerNode
-    return Node(addr, sp)
+    return sp_ref.makerNode
 
   def value_at(self, addr):
     return self.results[addr]
@@ -247,11 +246,11 @@ class FlatTrace(AbstractTrace):
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
     self.made_sps[addr] = sp
-    self.results[addr] = ret = SPRef(addr)
+    self.results[addr] = ret = SPRef(Node(addr, sp))
     return ret
 
   def deref_sp(self, sp_ref):
-    addr = sp_ref.makerNode
+    addr = sp_ref.makerNode.address
     sp = self.made_sps[addr]
     return Node(addr, sp)
 

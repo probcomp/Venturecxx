@@ -89,11 +89,11 @@ class DependencyGraphTrace(AbstractTrace):
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
     self.made_sps[addr] = sp
-    self.results[addr] = ret = SPRef(addr)
+    self.results[addr] = ret = SPRef(Node(addr, sp))
     return ret
 
   def deref_sp(self, sp_ref):
-    addr = sp_ref.makerNode
+    addr = sp_ref.makerNode.address
     sp = self.made_sps[addr]
     return Node(addr, sp)
 
