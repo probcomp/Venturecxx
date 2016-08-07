@@ -13,6 +13,9 @@ from venture.lite.value import SPRef
 from venture.untraced.node import Node, normalize
 
 from venture.mite.evaluator import Evaluator, Regenerator, Restorer
+from venture.mite.scaffold import DefaultAllScaffold
+from venture.mite.scaffold import MinimalScaffold
+from venture.mite.scaffold import single_site_scaffold
 from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
@@ -118,20 +121,16 @@ class AbstractTrace(ITrace):
     self.global_env.addBinding(symbol, Node(addr, value))
 
   def select(self, _selector):
-    from venture.mite.scaffold import DefaultAllScaffold
     return DefaultAllScaffold()
 
   def pyselect(self, code, ctx=None):
-    from venture.mite.scaffold import MinimalScaffold
     selector = eval(code, vars(addresses), ctx)
     return MinimalScaffold(selector)
 
   def single_site_subproblem(self, address):
-    from venture.mite.scaffold import single_site_scaffold
     return single_site_scaffold(self, address)
 
   def single_site_constraint(self, address, value):
-    from venture.mite.scaffold import single_site_scaffold
     kernel = {'type': 'constrained', 'val': value}
     return single_site_scaffold(self, address, kernel)
 
