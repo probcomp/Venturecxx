@@ -11,6 +11,18 @@ define example_drift = (steps) ~> {
   }, flat_trace())
 };
 
+define traceplot = (steps) ~> {
+  run_in({
+    assume x ~ normal(0, 1);
+    assume y ~ normal(x, 1);
+    observe y = 4.0;
+    incorporate_constraint(toplevel(2), 4.0);
+    accumulate(steps, toplevel(1), {
+      custom_drift_mh_step();
+    })
+  }, flat_trace())
+};
+
 define custom_drift_mh_step = () -> {
   // read the current values of x and y from the trace
   x <- value_at(toplevel(1));

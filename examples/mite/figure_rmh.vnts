@@ -12,6 +12,19 @@ define example_resimulation = (steps) ~> {
   }, flat_trace())
 };
 
+define traceplot = (steps) ~> {
+  run_in({
+    assume x ~ normal(0, 1);
+    assume y ~ normal(x, 1);
+    observe y = 4.0;
+    incorporate_constraint(toplevel(2), 4.0);
+    accumulate(steps, toplevel(1), {
+      subproblem <- single_site_subproblem(toplevel(1));
+      resimulation_step(subproblem)
+    })
+  }, flat_trace())
+};
+
 define resimulation_step = (subproblem) -> {
   package <- extract(subproblem);
   let (old_weight, old_trace_fragment) = package;
