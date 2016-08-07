@@ -38,6 +38,15 @@
         (return nil)
         (do act (repeat (- n 1) act))))]
 
+[define accumulate
+  (lambda (n address infer_act)
+    (do (x <- (value_at address))
+        (if (<= n 0)
+            (return (list x))
+            (do infer_act
+                (xs <- (accumulate (- n 1) address infer_act))
+                (return (pair x xs))))))]
+
 ;; trace interface
 
 [define eval_toplevel
