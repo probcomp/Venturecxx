@@ -38,14 +38,14 @@ def prior_posterior_plot(fname, varname, results):
     kde=False, rug=True, norm_hist=True)
   support = np.linspace(xmin, xmax, 200)
   density = stats.norm(0, 1).pdf(support)
-  ax1.plot(support, density, color='#ccb974')
+  ax1.plot(support, density, color='orange', alpha=0.5)
   ax1.set_title('Prior')
   # plot the posterior
   seaborn.distplot(
     results['posterior'], ax=ax2,
     kde=False, rug=True, norm_hist=True)
   density = stats.norm(2, 0.5**0.5).pdf(support)
-  ax2.plot(support, density, color='#ccb974')
+  ax2.plot(support, density, color='orange', alpha=0.5)
   ax2.set_title('Posterior')
   # save
   ax2.set_xlim(xmin, xmax)

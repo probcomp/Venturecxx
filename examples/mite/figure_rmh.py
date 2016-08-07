@@ -46,7 +46,7 @@ def prior_posterior_plot(fname, varname, results):
       kde=False, rug=True, norm_hist=True)
     support = np.linspace(xmin, xmax, 200)
     density = stats.norm(2, 0.5**0.5).pdf(support)
-    ax.plot(support, density, color='#ccb974')
+    ax.plot(support, density, color='orange', alpha=0.5)
     ax.set_title('Resimulation MH (steps = {})'.format(steps))
   # save
   axes[-1].set_xlim(xmin, xmax)
