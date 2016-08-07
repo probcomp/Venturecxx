@@ -239,24 +239,3 @@ define resimulation_step = (subproblem) -> {
     restore(subproblem, trace_fragment)
   }
 };
-
-define check_consistent = () -> {
-  observations <- get_observations();
-  let loop = (loop, addrs, vals) -> {
-    if (is_empty(addrs)) {
-      return(true)
-    }
-    else {
-      let addr = first(addrs);
-      let obs_val = first(vals);
-      cur_val <- value_at(addr);
-      if (obs_val == cur_val) {
-        loop(loop, rest(addrs), rest(vals))
-      }
-      else {
-        return(false)
-      }
-    }
-  };
-  loop(loop, keys(observations), values(observations))
-};
