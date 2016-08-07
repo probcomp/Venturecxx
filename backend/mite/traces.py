@@ -256,6 +256,81 @@ class FlatTrace(AbstractTrace):
   def value_at(self, addr):
     return self.results[addr]
 
+  ## low level ops for manual inference programming
+
+  def set_value_at(self, addr, value):
+    # low level operation. may leave the trace in an inconsistent state
+    self.results[addr] = value
+
+  def apply_sp(self, addr, sp_ref, input_values):
+    # TODO for now this auto-derefs the SP; is this what we want, or
+    # should we just expose deref_sp separately?
+    sp_node = self.deref_sp(sp_ref)
+    inputs = []
+    for index, val in enumerate(input_values):
+      subaddr = addresses.subexpression(index + 1, addr)
+      inputs.append(Node(subaddr, val))
+    (weight, output) = Evaluator(self).apply_sp(addr, sp_node, inputs)
+    assert weight == 0
+    return output
+
+  def log_density_of_sp(self, sp_ref, output, input_values):
+    sp_node = self.deref_sp(sp_ref)
+    sp = sp_node.value
+    return sp.log_density(output, input_values)
+
+  def proposal_kernel(self, addr, sp_ref):
+    # XXX for now just store the dicts, with extra attributes
+    # TODO make it easier to construct trace handles.
+    return {'addr': addr, 'sp_ref': sp_ref, 'type': 'proposal'}
+
+  def constrained_kernel(self, addr, sp_ref, val):
+    return {'addr': addr, 'sp_ref': sp_ref,
+            'type': 'constrained', 'val': val}
+
+  def extract_kernel(self, kernel, output, input_values):
+    addr = kernel['addr']
+    sp_ref = kernel['sp_ref']
+    subproblem = MinimalScaffold({addr: kernel})
+    sp_node = self.deref_sp(sp_ref)
+    inputs = []
+    for index, val in enumerate(input_values):
+      subaddr = addresses.subexpression(index + 1, addr)
+      inputs.append(Node(subaddr, val))
+    ctx = Regenerator(self, subproblem)
+    weight = ctx.unapply_sp(addr, output, sp_node, inputs)
+    fragment = ctx.fragment
+    return (weight, fragment)
+
+  def regen_kernel(self, kernel, input_values, trace_fragment):
+    addr = kernel['addr']
+    sp_ref = kernel['sp_ref']
+    subproblem = MinimalScaffold({addr: kernel})
+    sp_node = self.deref_sp(sp_ref)
+    inputs = []
+    for index, val in enumerate(input_values):
+      subaddr = addresses.subexpression(index + 1, addr)
+      inputs.append(Node(subaddr, val))
+    ctx = Regenerator(self, subproblem, trace_fragment)
+    (weight, output) = ctx.apply_sp(addr, sp_node, inputs)
+    return (weight, output)
+
+  def restore_kernel(self, kernel, input_values, trace_fragment):
+    addr = kernel['addr']
+    sp_ref = kernel['sp_ref']
+    subproblem = MinimalScaffold({addr: kernel})
+    sp_node = self.deref_sp(sp_ref)
+    inputs = []
+    for index, val in enumerate(input_values):
+      subaddr = addresses.subexpression(index + 1, addr)
+      inputs.append(Node(subaddr, val))
+    ctx = Restorer(self, subproblem, trace_fragment)
+    (weight, output) = ctx.apply_sp(addr, sp_node, inputs)
+    assert weight == 0
+    return output
+
+  ## support for regen/extract
+
   def unregister_request(self, addr):
     del self.requests[addr]
 
@@ -323,6 +398,14 @@ register_trace_type("_trace", ITrace, {
   "bind_global": trace_action("bind_global", [t.Symbol, t.Blob], t.Nil),
   "register_observation": trace_action("register_observation", [t.Blob, t.Object], t.Nil),
   "value_at": trace_action("value_at", [t.Blob], t.Object),
+  "set_value_at": trace_action("set_value_at", [t.Blob, t.Object], t.Nil),
+  "apply_sp": trace_action("apply_sp", [t.Blob, t.Object, t.List(t.Object)], t.Object),
+  "log_density_of_sp": trace_action("log_density_of_sp", [t.Object, t.Object, t.List(t.Object)], t.Number),
+  "proposal_kernel_of_sp_at": trace_action("proposal_kernel", [t.Blob, t.Object], t.Blob),
+  "constrained_kernel_of_sp_at": trace_action("constrained_kernel", [t.Blob, t.Object, t.Object], t.Blob),
+  "extract_kernel": trace_action("extract_kernel", [t.Blob, t.Object, t.List(t.Object)], t.Pair(t.Number, t.Blob)),
+  "regen_kernel": trace_action("regen_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Pair(t.Number, t.Object)),
+  "restore_kernel": trace_action("restore_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Object),
   "get_observations": trace_action("get_observations", [], t.Dict(t.Blob, t.Object)),
   "split_trace": trace_action("copy", [], t.Blob),
   "select": trace_action("select", [t.Object], t.Blob),
