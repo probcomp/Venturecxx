@@ -2,7 +2,7 @@ define example_prior = () ~> {
   run_in({
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
-    observe y = 4;
+    observe y = 4.0;
     predict x
   }, flat_trace())
 };
@@ -11,8 +11,8 @@ define example_posterior = () ~> {
   run_in({
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
-    observe y = 4;
-    incorporate_constraint(toplevel(2), 4);
+    observe y = 4.0;
+    incorporate_constraint(toplevel(2), 4.0);
     subproblem <- single_site_subproblem(toplevel(1));
     rejection_sample(subproblem);
     predict x
