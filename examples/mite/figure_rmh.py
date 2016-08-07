@@ -8,6 +8,8 @@ import seaborn
 
 import venture.shortcuts as vs
 
+vnts_file = __file__.rsplit('.', 1)[0] + '.vnts'
+
 def compute_results(num_reps, stub=False):
   if stub:
     def stub_mh(steps):
@@ -22,7 +24,7 @@ def compute_results(num_reps, stub=False):
     }
   else:
     ripl = vs.Mite().make_ripl()
-    ripl.execute_program_from_file(__file__.replace('.py', '.vnts'))
+    ripl.execute_program_from_file(vnts_file)
 
     return {
       5: [ripl.evaluate('example_resimulation(5)') for _ in range(num_reps)],

@@ -8,6 +8,8 @@ import seaborn
 
 import venture.shortcuts as vs
 
+vnts_file = __file__.rsplit('.', 1)[0] + '.vnts'
+
 def compute_results(num_reps, stub=False):
   if stub:
     def stub_trajectory(steps):
@@ -19,11 +21,11 @@ def compute_results(num_reps, stub=False):
     }
   else:
     ripl = vs.Mite().make_ripl()
-    ripl.execute_program_from_file(__file__.replace('.py', '.vnts'))
+    ripl.execute_program_from_file(vnts_file)
     drift = [ripl.evaluate('traceplot(100)') for _ in range(num_reps)]
 
     ripl = vs.Mite().make_ripl()
-    ripl.execute_program_from_file(__file__.replace('drift', 'rmh').replace('.py', '.vnts'))
+    ripl.execute_program_from_file(vnts_file.replace('drift', 'rmh'))
     rmh = [ripl.evaluate('traceplot(100)') for _ in range(num_reps)]
 
     return {
