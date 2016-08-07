@@ -19,8 +19,8 @@ def compute_results(num_reps, stub=False):
     ripl.execute_program_from_file(__file__.replace('.py', '.vnts'))
 
     return {
-      'prior': [ripl.evaluate('prior()') for _ in range(num_reps)],
-      'posterior': [ripl.evaluate('posterior()') for _ in range(num_reps)],
+      'prior': [ripl.evaluate('example_prior()') for _ in range(num_reps)],
+      'posterior': [ripl.evaluate('example_posterior()') for _ in range(num_reps)],
     }
 
 def save(stub=False):

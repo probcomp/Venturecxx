@@ -25,9 +25,9 @@ def compute_results(num_reps, stub=False):
     ripl.execute_program_from_file(__file__.replace('.py', '.vnts'))
 
     return {
-      5: [ripl.evaluate('resimulation_mh(5)') for _ in range(num_reps)],
-      20: [ripl.evaluate('resimulation_mh(20)') for _ in range(num_reps)],
-      100: [ripl.evaluate('resimulation_mh(100)') for _ in range(num_reps)],
+      5: [ripl.evaluate('example_resimulation(5)') for _ in range(num_reps)],
+      20: [ripl.evaluate('example_resimulation(20)') for _ in range(num_reps)],
+      100: [ripl.evaluate('example_resimulation(100)') for _ in range(num_reps)],
     }
 
 def save(stub=False):

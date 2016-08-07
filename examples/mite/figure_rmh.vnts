@@ -1,4 +1,4 @@
-define resimulation_mh = (steps) ~> {
+define example_resimulation = (steps) ~> {
   run_in({
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
