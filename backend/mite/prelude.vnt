@@ -81,3 +81,10 @@
                               (loop loop (rest addrs) (rest vals))
                               (return false)))))))
         (loop loop (keys observations) (values observations))))]
+
+[define incorporate_constraint
+  (lambda (addr value)
+    (do (subproblem <- (single_site_constraint addr value))
+        (rev <- (extract subproblem))
+        (let trace_frag (rest rev))
+        (regen subproblem trace_frag)))]

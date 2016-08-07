@@ -36,10 +36,3 @@ define extract = {
     return((first(package), rest(package)))
   }
 };
-
-define incorporate_constraint = (addr, val) -> {
-  subproblem <- single_site_constraint(addr, val);
-  package <- extract(subproblem);
-  let (weight, trace_fragment) = package;
-  regen(subproblem, trace_fragment)
-};

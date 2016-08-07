@@ -99,13 +99,6 @@
                 (return (debug 'xy (list x y))))
             (flat_trace)))]
 
-[define incorporate_constraint
-  (lambda (addr value)
-    (do (subproblem <- (single_site_constraint addr value))
-        (rev <- (extract subproblem))
-        (let trace_frag (rest rev))
-        (regen subproblem trace_frag)))]
-
 [define resimulation_step
   (lambda (subproblem)
     (do (rev <- (extract subproblem))
