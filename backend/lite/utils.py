@@ -32,6 +32,29 @@ def override(interface_class):
 def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
 def extendedLog1p(x): return math.log1p(x) if x > -1 else float("-inf")
 
+def logsumexp(array):
+  """Given [log x_0, ..., log x_{n-1}], yield log (x_0 + ... + x_{n-1}).
+
+  Computed carefully to avoid overflow by computing x_i/max{x_i}
+  instead of x_i directly, and to propagate infinities and NaNs
+  appropriately.
+  """
+  if len(array) == 0:
+    return float('-inf')
+  m = max(array)
+
+  # m = +inf means addends are all +inf, hence so are sum and log.
+  # m = -inf means addends are all zero, hence so is sum, and log is
+  # -inf.  But if +inf and -inf are among the inputs, or if input is
+  # NaN, let the usual computation yield a NaN.
+  if math.isinf(m) and min(array) != -m and \
+     all(not math.isnan(a) for a in array):
+    return m
+
+  # Since m = max{a_0, a_1, ...}, it follows that a <= m for all a,
+  # so a - m <= 0; hence exp(a - m) is guaranteed not to overflow.
+  return m + extendedLog(sum(careful_exp(a - m) for a in array))
+
 def normalizeList(seq):
   denom = sum(seq)
   if denom > 0: return [ float(x)/denom for x in seq]
