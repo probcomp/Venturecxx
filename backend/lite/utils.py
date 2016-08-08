@@ -148,17 +148,23 @@ def careful_exp(x):
     return float("inf")
 
 def logistic(x):
+  """Logistic function: 1/(1 + e^{-x}).  Inverse of logit.
+
+  Maps log-odds space probabilities into direct-space in [0, 1].
+  """
   # logistic never overflows, but e^{-x} does if x is much less than
   # -log 2^(emax + 1) ~= -709.  Fortunately, for x <= -37, IEEE 754
   # double-precision arithmetic rounds 1 + e^{-x} to e^{-x} anyway,
   # giving the approximation 1/(1 + e^{-x}) ~= 1/e^{-x} = e^x, which
   # never overflows.
+  #
   if x <= -37:
     return np.exp(x)
   else:
     return 1/(1 + np.exp(-x))
 
 def T_logistic(x):
+  """Tangent vector of logistic function: (logistic(x), d/dx logistic(x))."""
   # If L is the logistic function, we have
   #
   #                 e^{-x}         e^{-x}         1
@@ -180,11 +186,13 @@ def T_logistic(x):
   # either one were near 1.  We could compute L(x) and L(-x)
   # separately, but that would cost two exps.  We instead compute L(x)
   # and L'(x) simultaneously in terms of e^{-x}.
+  #
   if x <= -37:
     # When x <= -37, so that 1 + e^{-x} ~= e^{-x}, we have
     #
     #   1/(1 + e^{-x}) = 1/e^{-x} = e^x
     #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
+    #
     ex = np.exp(x)
     return (ex, ex)
   else:
@@ -193,6 +201,10 @@ def T_logistic(x):
     return (1/ex1, ex/(ex1*ex1))
 
 def log_logistic(x):
+  """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
+
+  Maps log-odds space probabilities in \R into log-space in (-\infty, 0].
+  """
   if x <= -37:
     return x
   else:
@@ -200,17 +212,23 @@ def log_logistic(x):
     #
     # When x is large and positive, e^{-x} is small relative to 1, so
     # computing 1 + e^{-x} may lose precision, which log1p avoids.
+    #
     return -np.log1p(np.exp(-x))
 
 def d_log_logistic(x):
+  """Derivative of the log-logistic function: d/dx log logistic(x)."""
   # Since 1 - L(x) = L(-x) and L'(x) = L(x) (1 - L(x)) = L(x) L(-x),
   # we have
   #
   #     (log o L)'(x) = L'(x) log'(L(x)) = L(x) L(-x) / L(x) = L(-x).
+  #
   return logistic(-x)
 
 def logit(x):
-  # TODO Check the numeric analysis of this
+  """Logit function, x/(1 - x).  Inverse of logistic.
+
+  Maps direct-space probabilities in [0, 1] into log-odds space.
+  """
   return extendedLog(x / (1 - x))
 
 class FixedRandomness(object):
