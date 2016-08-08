@@ -22,6 +22,7 @@ from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import on_inf_prim
+from venture.test.config import stochasticTest
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
@@ -42,8 +43,8 @@ def replaceWithDefault(items, known, default):
   return ret
 
 @statisticalTest
-def testCRP1():
-  ripl = get_ripl()
+def testCRP1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f", "(make_crp 1)")
   ripl.observe("(f)", "atom<1>")
   ripl.observe("(f)", "atom<1>")
@@ -61,8 +62,8 @@ def testCRPCounter():
     yield checkCRPCounter, i
 
 @statisticalTest
-def checkCRPCounter(n):
-  ripl = get_ripl()
+def checkCRPCounter(n, seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f", "(make_crp 1)")
   ripl.observe("(f)", "atom<%d>" % n)
   ripl.predict("(f)", label="pid")
@@ -79,8 +80,9 @@ def testLogDensityOfData():
   yield checkLogDensityOfData, "(make_crp a)"
   yield checkLogDensityOfData, "(make_crp a d)"
 
-def checkLogDensityOfData(sampler):
-  ripl = get_ripl()
+@stochasticTest
+def checkLogDensityOfData(seed, sampler):
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(uniform_continuous 0 1)")
   ripl.assume("d", "(uniform_continuous 0 1)")
   ripl.assume("f", sampler)

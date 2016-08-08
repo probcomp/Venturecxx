@@ -22,18 +22,20 @@ from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import stochasticTest
 from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
-def testCMVNSmoke():
+@stochasticTest
+def testCMVNSmoke(seed):
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
-  get_ripl().predict("((make_niw_normal (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")
+  get_ripl(seed=seed).predict("((make_niw_normal (array 1.0 1.0) 2 2 (matrix (array (array 1.0 0.0) (array 0.0 1.0)))))")
 
 @statisticalTest
-def testCMVN2D_mu1():
+def testCMVN2D_mu1(seed):
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("m0","(array 5.0 5.0)")
   ripl.assume("k0","7.0")
   ripl.assume("v0","11.0")
@@ -48,10 +50,10 @@ def testCMVN2D_mu1():
   return reportKnownMean(5, mu1)
 
 @statisticalTest
-def testCMVN2D_mu2():
+def testCMVN2D_mu2(seed):
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("m0","(array 5.0 5.0)")
   ripl.assume("k0","7.0")
   ripl.assume("v0","11.0")
@@ -68,10 +70,10 @@ def testCMVN2D_mu2():
 
 @skipWhenRejectionSampling("Cannot rejection auto-bound cmvn AAA")
 @statisticalTest
-def testCMVN2D_AAA():
+def testCMVN2D_AAA(seed):
   if config["get_ripl"] != "lite": raise SkipTest("CMVN in lite only")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("m0","(array (normal 5.0 0.0001) (normal 5.0 0.0001))")
   ripl.assume("k0","7.0")
   ripl.assume("v0","11.0")

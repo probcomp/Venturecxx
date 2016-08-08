@@ -24,9 +24,9 @@ from venture.test.stats import reportKnownMean
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testPoisson1():
+def testPoisson1(seed):
   # Check that Poisson simulates and absorbs without crashing.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("lambda","(gamma 1 1)",label="pid")
   #ripl.predict("(poisson lambda)")
@@ -35,9 +35,9 @@ def testPoisson1():
   return reportKnownContinuous(scipy.stats.gamma(1, scale=1/1.0).cdf,predictions,"(gamma 1 1)")
 
 @statisticalTest
-def testPoisson2():
+def testPoisson2(seed):
   # Check that Poisson simulates correctly.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("lambda","5")
   ripl.predict("(poisson lambda)",label="pid")

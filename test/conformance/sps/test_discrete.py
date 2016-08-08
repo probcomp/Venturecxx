@@ -46,8 +46,8 @@ def testDirichletComparisonRegression():
 
 @broken_in('puma', "Puma does not define log_flip")
 @statisticalTest
-def testLogFlip():
-  ripl = get_ripl()
+def testLogFlip(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.predict('(log_flip (log 0.5))', label='pid')
 

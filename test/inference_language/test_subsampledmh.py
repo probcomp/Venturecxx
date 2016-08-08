@@ -65,8 +65,8 @@ def testSequentialTest():
 @broken_in('puma', "Subsampled MH only implemented in Lite.")
 @statisticalTest
 @on_inf_prim("subsampled_mh")
-def testNormalWithObserves1():
-  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0)
+def testNormalWithObserves1(seed):
+  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0, seed)
   predictions = collectSamples(ripl,"pid",infer="(subsampled_mh default one 2 3 0.01 false 0 false 50)")
   return reportKnownContinuous(cdf, predictions, "N(%f,%f^2)" % (post_mean, post_std))
 
@@ -74,15 +74,15 @@ def testNormalWithObserves1():
 @broken_in('puma', "Subsampled MH only implemented in Lite.")
 @statisticalTest
 @on_inf_prim("subsampled_mh")
-def testNormalWithObserves2():
-  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0)
+def testNormalWithObserves2(seed):
+  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0, seed)
   # The sample distribution is an approximation to cdf with the accuracy
   # controlled by epsilon, the fifth argument.
   predictions = collectSamples(ripl,"pid",infer="(subsampled_mh default one 2 3 0.01 true %f false 50)" % post_std)
   return reportKnownContinuous(cdf, predictions, "N(%f,%f^2)" % (post_mean, post_std))
 
-def setupNormalWithObserves(N, sigma):
-  ripl = get_ripl()
+def setupNormalWithObserves(N, sigma, seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("mu", "(normal 10.0 %f)" % sigma, label="pid")
   x = np.random.normal(10,1,N)
   for i in range(len(x)):

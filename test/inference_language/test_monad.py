@@ -112,8 +112,8 @@ def testMonadicObserve():
 
 @on_inf_prim("in_model")
 @statisticalTest
-def testModelSwitchingSmoke():
-  ripl = get_ripl(persistent_inference_trace=True)
+def testModelSwitchingSmoke(seed):
+  ripl = get_ripl(seed=seed, persistent_inference_trace=True)
   ripl.execute_program("""
 [define normal_through_model
   (lambda (mu sigma)
@@ -267,8 +267,8 @@ def testBackendSwitchingSmoke():
 
 @on_inf_prim("fork_model")
 @statisticalTest
-def testModelForkingSmoke():
-  ripl = get_ripl(persistent_inference_trace=True)
+def testModelForkingSmoke(seed):
+  ripl = get_ripl(seed=seed, persistent_inference_trace=True)
   ripl.execute_program("""
 [assume p (beta 1 1)]
 

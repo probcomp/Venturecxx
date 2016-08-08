@@ -33,9 +33,9 @@ from venture.test.stats import statisticalTest
 
 @on_inf_prim("any")
 @statisticalTest
-def testBernoulliIfNormal1():
+def testBernoulliIfNormal1(seed):
   # A simple program with bernoulli, if, and normal applications in the brush
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(if b (normal 0.0 1.0) (normal 10.0 1.0))", label="pid")
   predictions = collectSamples(ripl,"pid")
@@ -46,12 +46,12 @@ def testBernoulliIfNormal1():
 
 @on_inf_prim("any")
 @statisticalTest
-def testBernoulliIfNormal2():
+def testBernoulliIfNormal2(seed):
   # A simple program with bernoulli, if, and an absorbing application of normal
   if not collect_iid_samples():
     raise SkipTest("This test should not pass without reset.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("b", "(bernoulli 0.3)")
   ripl.predict("(normal (if b 0.0 10.0) 1.0)", label="pid")
   predictions = collectSamples(ripl,"pid")
@@ -62,10 +62,10 @@ def testBernoulliIfNormal2():
 
 @on_inf_prim("any")
 @statisticalTest
-def testNormalWithObserve1():
+def testNormalWithObserve1(seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
@@ -76,11 +76,11 @@ def testNormalWithObserve1():
 
 @on_inf_prim("any")
 @statisticalTest
-def testNormalWithObserve2a():
+def testNormalWithObserve2a(seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation.  The difference between this and 1 is an extra
   # predict, which apparently has a deleterious effect on mixing.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
@@ -91,10 +91,10 @@ def testNormalWithObserve2a():
 
 @on_inf_prim("any")
 @statisticalTest
-def testNormalWithObserve2b():
+def testNormalWithObserve2b(seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
@@ -105,11 +105,11 @@ def testNormalWithObserve2b():
 
 @on_inf_prim("any")
 @statisticalTest
-def testNormalWithObserve3():
+def testNormalWithObserve3(seed):
   # Checks the posterior of a Gaussian in a Linear-Gaussian-BN
   raise SkipTest("I do not know the right answer.  See issue "
                  "https://app.asana.com/0/9277419963067/9797699085006")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("b", "(normal a 1.0)")
   # Prior for b is normal with mean 10, variance 2 (precision 1/2)
@@ -130,9 +130,9 @@ def testNormalWithObserve3():
 
 @on_inf_prim("any")
 @statisticalTest
-def testStudentT1():
+def testStudentT1(seed):
   # Simple program involving simulating from a student_t
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(student_t 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 3.0)
   predictions = collectSamples(ripl,"pid")
@@ -152,10 +152,10 @@ def testStudentT1():
 
 @on_inf_prim("any")
 @statisticalTest
-def testStudentT2():
+def testStudentT2(seed):
   # Simple program involving simulating from a student_t, with basic
   # testing of loc and shape params.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(student_t 1.0 3 2)")
   ripl.assume("a", "(/ (- x 3) 2)")
   ripl.observe("(normal a 1.0)", 3.0)
@@ -184,9 +184,9 @@ def testStudentT2():
   "Leads to a scaffold structure that the current "
   "implementation of subsampling can't handle")
 @statisticalTest
-def testSprinkler1():
+def testSprinkler1(seed):
   # Classic Bayes-net example, with no absorbing when proposing to 'rain'
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("rain","(bernoulli 0.2)", label="pid")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")
   ripl.assume("grassWet","""
@@ -205,11 +205,11 @@ def testSprinkler1():
 @skipWhenSubSampling(
   "Leads to a scaffold structure that the current "
   "implementation of subsampling can't handle")
-def testSprinkler2():
+def testSprinkler2(seed):
   # Classic Bayes-net example, absorbing at 'sprinkler' when proposing
   # to 'rain'.  This test needs more iterations than most others,
   # because it mixes badly.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("rain","(bernoulli 0.2)", label="pid")
   ripl.assume("sprinkler","(bernoulli (if rain 0.01 0.4))")
   ripl.assume("grassWet","""
@@ -226,9 +226,9 @@ def testSprinkler2():
 
 @on_inf_prim("any")
 @statisticalTest
-def testBLOGCSI1():
+def testBLOGCSI1(seed):
   # Context-sensitive Bayes-net taken from BLOG examples
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("u","(bernoulli 0.3)")
   ripl.assume("v","(bernoulli 0.9)")
   ripl.assume("w","(bernoulli 0.1)")
@@ -241,9 +241,9 @@ def testBLOGCSI1():
 
 @on_inf_prim("any")
 @statisticalTest
-def testGeometric1():
+def testGeometric1(seed):
   # Geometric written with bernoullis and ifs, with absorbing at the condition.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("p","(if (flip) 0.5 0.5)")
   ripl.assume("geo","(lambda (p) (if (bernoulli p) 1 (+ 1 (geo p))))")
   ripl.predict("(geo p)",label="pid")

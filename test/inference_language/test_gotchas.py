@@ -38,9 +38,9 @@ def testInferWithNoEntropy():
   ripl.infer(defaultInfer())
   
 @statisticalTest
-def testOuterMix1():
+def testOuterMix1(seed):
   # Makes sure that the mix-mh weights are correct
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.predict("(if (bernoulli 0.5) (if (bernoulli 0.5) 2 3) 1)", label="pid")
 
   predictions = collectSamples(ripl,"pid")
