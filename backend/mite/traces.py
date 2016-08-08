@@ -1,28 +1,28 @@
+from collections import OrderedDict
 import copy
 import random
+
 import numpy as np
 
-from collections import OrderedDict
-
-import venture.mite.address as addresses
-import venture.lite.types as t
-import venture.lite.exp as e
-from venture.lite.env import VentureEnvironment, EnvironmentType
+from venture.lite.env import EnvironmentType
+from venture.lite.env import VentureEnvironment
 from venture.lite.value import SPRef
+from venture.untraced.node import Node
+import venture.lite.types as t
 
-from venture.untraced.node import Node, normalize
-
-from venture.mite.evaluator import Evaluator, Regenerator, Restorer
+from venture.mite.evaluator import Evaluator
+from venture.mite.evaluator import Regenerator
+from venture.mite.evaluator import Restorer
 from venture.mite.scaffold import DefaultAllScaffold
 from venture.mite.scaffold import MinimalScaffold
 from venture.mite.scaffold import single_site_scaffold
-from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
-from venture.mite.state import (register_trace_type,
-                                trace_property,
-                                trace_action,
-                                TraceConstructorSP)
+from venture.mite.state import TraceConstructorSP
+from venture.mite.state import register_trace_type
+from venture.mite.state import trace_action
+from venture.mite.state import trace_property
+import venture.mite.address as addresses
 
 
 class ITrace(object):

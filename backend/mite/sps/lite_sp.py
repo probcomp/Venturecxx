@@ -1,13 +1,10 @@
-import copy
-
 from venture.lite.builtin import builtInSPs
-from venture.lite.exception import VentureError
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_use import MockArgs
 
-from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sp import SimulationSP
+from venture.mite.sp_registry import registerBuiltinSP
 
 class LiteSP(SimulationSP):
   def __init__(self, wrapped_sp, wrapped_aux=None):

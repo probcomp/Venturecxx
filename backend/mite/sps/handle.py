@@ -1,8 +1,9 @@
-import venture.lite.types as t
 from venture.lite.env import EnvironmentType
+import venture.lite.types as t
 
 from venture.mite.evaluator import TraceHandle
-from venture.mite.state import register_trace_type, trace_action
+from venture.mite.state import register_trace_type
+from venture.mite.state import trace_action
 
 register_trace_type("_handle", TraceHandle, {
   "new_request": trace_action("new_request", [t.Object, t.Exp, EnvironmentType()], t.Blob),

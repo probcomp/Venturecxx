@@ -1,13 +1,13 @@
 from venture.parser.church_prime.parse import ChurchPrimeParser
-from venture.sivm.macro_system import desugar_expression
 from venture.sivm.core_sivm import _modify_expression
+from venture.sivm.macro_system import desugar_expression
 
 import venture.lite.exp as e
 import venture.lite.types as t
 import venture.lite.value as v
 
-import venture.mite
 from venture.mite.sp_registry import registerBuiltinSP
+import venture.mite
 
 with open(venture.mite.__path__[0] + '/prelude.vnt') as f:
   prelude_source = f.read()

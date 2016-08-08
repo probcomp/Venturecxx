@@ -1,13 +1,12 @@
 from collections import namedtuple
 
 from venture.lite.value import SPRef
+from venture.untraced.node import Node, normalize
 import venture.lite.exp as e
 
-from venture.untraced.node import Node, normalize
-
-import venture.mite.address as addresses
 from venture.mite.sp import VentureSP
 from venture.mite.sps.compound import CompoundSP
+import venture.mite.address as addresses
 
 class Evaluator(object):
   """Core of the evaluator."""

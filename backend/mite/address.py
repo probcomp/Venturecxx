@@ -1,6 +1,5 @@
 from weakref import WeakValueDictionary
 
-from venture.lite.address import List
 import venture.lite.types as t
 
 from venture.mite.sp import SimulationSP

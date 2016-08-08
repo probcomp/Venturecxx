@@ -1,8 +1,8 @@
 import venture.lite.types as t
 
-from venture.mite.state import (register_trace_type,
-                                trace_property,
-                                trace_action)
+from venture.mite.state import register_trace_type
+from venture.mite.state import trace_action
+from venture.mite.state import trace_property
 
 
 class BinomialState(object):

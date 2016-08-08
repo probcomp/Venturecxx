@@ -1,11 +1,10 @@
 from venture.lite.env import VentureEnvironment
-from venture.lite.exception import VentureError
 import venture.lite.types as t
 
 from venture.untraced.node import Node
 
-from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sp import SimulationSP
+from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import BlankTrace
 
 class MakeSimulationSP(SimulationSP):

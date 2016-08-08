@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
-import venture.mite.address as addresses
 from venture.mite.sp import ApplicationKernel
+import venture.mite.address as addresses
 
 class MinimalScaffold(object):
   def __init__(self, kernels):

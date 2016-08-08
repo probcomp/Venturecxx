@@ -1,9 +1,8 @@
-import venture.value.dicts as v
-
 from venture.engine import engine
-from venture.lite.value import VentureValue, SPRef
 from venture.lite.types import ExpressionType
-from venture.mite.traces import BlankTrace, FlatTrace
+from venture.lite.value import SPRef
+from venture.lite.value import VentureValue
+from venture.mite.traces import BlankTrace
 
 class Engine(engine.Engine):
   def init_inference_trace(self):

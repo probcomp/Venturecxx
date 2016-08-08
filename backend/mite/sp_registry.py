@@ -1,5 +1,3 @@
-import venture.lite.value as v
-
 _builtInSPs = {}
 
 def registerBuiltinSP(name, sp):

@@ -1,6 +1,6 @@
 import venture.lite.types as t
 
-from venture.mite.sp import VentureSP, SimulationSP
+from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 
 
