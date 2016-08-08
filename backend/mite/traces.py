@@ -6,6 +6,7 @@ import numpy as np
 
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
+from venture.lite.exception import VentureError
 from venture.lite.value import SPRef
 from venture.untraced.node import Node
 import venture.lite.types as t
@@ -175,6 +176,18 @@ class BlankTrace(AbstractTrace):
   def __init__(self, seed):
     self.results = OrderedDict()
     super(BlankTrace, self).__init__(seed)
+
+  def extract(self, _subproblem):
+    raise VentureError("Cannot extract from a BlankTrace.")
+
+  def regen(self, _subproblem, _trace_fragment):
+    raise VentureError("Cannot regen in a BlankTrace.")
+
+  def restore(self, _subproblem, _trace_fragment):
+    raise VentureError("Cannot restore in a BlankTrace.")
+
+  def weight_bound(self, _subproblem):
+    raise VentureError("Cannot compute weight bounds in a BlankTrace.")
 
   def register_request(self, addr, exp, env): pass
 
