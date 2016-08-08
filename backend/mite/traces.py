@@ -226,7 +226,6 @@ class FlatTrace(AbstractTrace):
     self.requests = {}
     self.results = OrderedDict()
     self.made_sps = {}
-    self.observations = {}
     super(FlatTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
