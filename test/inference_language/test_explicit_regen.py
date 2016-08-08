@@ -22,11 +22,12 @@ from venture.test.config import collectSamples
 from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
+from venture.test.config import stochasticTest
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 
-def custom_mh_ripl():
-  ripl = get_ripl(persistent_inference_trace=True)
+def custom_mh_ripl(seed):
+  ripl = get_ripl(persistent_inference_trace=True, seed=seed)
   ripl.define("custom_mh", """\
 (lambda (scope block)
   (do (subproblem <- (select scope block)) ; really, select by availability of log densities
@@ -43,8 +44,9 @@ def custom_mh_ripl():
 
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
-def testDetachRegenSmoke():
-  ripl = custom_mh_ripl()
+@stochasticTest
+def testDetachRegenSmoke(seed):
+  ripl = custom_mh_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(custom_mh default all)")
@@ -53,15 +55,15 @@ def testDetachRegenSmoke():
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
 @statisticalTest
-def testDetachRegenInference():
-  ripl = custom_mh_ripl()
+def testDetachRegenInference(seed):
+  ripl = custom_mh_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.observe("(normal x 1)", 2)
   predictions = collectSamples(ripl, "x", infer="(repeat %d (custom_mh default all))" % default_num_transitions_per_sample())
   return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
-def gaussian_drift_mh_ripl():
-  ripl = get_ripl(persistent_inference_trace=True)
+def gaussian_drift_mh_ripl(seed):
+  ripl = get_ripl(persistent_inference_trace=True, seed=seed)
   ripl.define("gaussian_drift_mh", """\
 (lambda (scope block sigma)
   (do (subproblem <- (select scope block))
@@ -82,8 +84,9 @@ def gaussian_drift_mh_ripl():
 @on_inf_prim("regen")
 @broken_in("puma", "Does not support the regen SP yet")
 @broken_in("mite", "Does not support regen_with_proposal yet")
-def testCustomProposalSmoke():
-  ripl = gaussian_drift_mh_ripl()
+@stochasticTest
+def testCustomProposalSmoke(seed):
+  ripl = gaussian_drift_mh_ripl(seed)
   ripl.assume("x", "(normal 0 1)")
   old = ripl.sample("x")
   ripl.infer("(repeat 5 (gaussian_drift_mh default all 0.1))")
@@ -93,8 +96,8 @@ def testCustomProposalSmoke():
 @broken_in("puma", "Does not support the regen SP yet")
 @broken_in("mite", "Does not support regen_with_proposal yet")
 @statisticalTest
-def testCustomProposalInference():
-  ripl = gaussian_drift_mh_ripl()
+def testCustomProposalInference(seed):
+  ripl = gaussian_drift_mh_ripl(seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.observe("(normal x 1)", 2)
   predictions = collectSamples(ripl, "x", infer="(repeat %d (gaussian_drift_mh default all 0.5))" % default_num_transitions_per_sample())

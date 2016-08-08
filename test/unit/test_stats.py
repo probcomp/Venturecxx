@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from scipy import stats
+import numpy as np
 
 from venture.test.config import in_backend
 from venture.test.stats import reportSameContinuous
@@ -24,9 +24,10 @@ from venture.test.stats import statisticalTest
 
 @in_backend("none")
 @statisticalTest
-def testTwoSampleKS():
-  data1 = stats.norm.rvs(size=100, loc=0., scale=1)
-  data2 = stats.norm.rvs(size=100, loc=0., scale=1)
+def testTwoSampleKS(seed):
+  rng = np.random.RandomState(seed)
+  data1 = rng.normal(size=100, loc=0., scale=1)
+  data2 = rng.normal(size=100, loc=0., scale=1)
   return reportSameContinuous(data1, data2)
 
 @in_backend("none")

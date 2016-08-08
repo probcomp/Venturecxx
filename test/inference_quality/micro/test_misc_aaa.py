@@ -40,12 +40,12 @@ def testMakeBetaBernoulli1():
       yield checkMakeBetaBernoulli1, maker, hyper
 
 @statisticalTest
-def checkMakeBetaBernoulli1(maker, hyper):
+def checkMakeBetaBernoulli1(maker, hyper, seed):
   if rejectionSampling() and hyper == "(normal 10.0 1.0)":
     raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", hyper)
   ripl.assume("f", "(%s a a)" % maker)
@@ -67,12 +67,12 @@ def testMakeBetaBernoulli2():
 # testing language feature interactions (in this case AAA with
 # constraint forwarding and brush).
 @statisticalTest
-def checkMakeBetaBernoulli2(maker):
+def checkMakeBetaBernoulli2(maker, seed):
   if rejectionSampling():
     raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((lambda () (%s ((lambda () a)) ((lambda () a)))))" % maker)
@@ -93,10 +93,10 @@ def testMakeBetaBernoulli3():
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
-def checkMakeBetaBernoulli3(maker):
+def checkMakeBetaBernoulli3(maker, seed):
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a a)" % maker)
@@ -121,10 +121,10 @@ def testMakeBetaBernoulli4():
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
-def checkMakeBetaBernoulli4(maker):
+def checkMakeBetaBernoulli4(maker, seed):
   if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", """
@@ -152,12 +152,12 @@ def testAAAParticleWeights():
     yield checkAAAParticleWeights, sp
 
 @statisticalTest
-def checkAAAParticleWeights(sp):
+def checkAAAParticleWeights(sp, seed):
   if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   if "dir_cat" in sp and config['get_ripl'] == 'puma':
     raise SkipTest("Dirichlet categorical in Puma does not accept objects parameter.  Issue #340")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "1.0")
   # bogus labelled directives, so the infer step can forget them
@@ -209,9 +209,9 @@ def checkAAAResampleSmoke(sp):
 
 @on_inf_prim("block mh")
 @statisticalTest
-def testAAAHyperInference():
+def testAAAHyperInference(seed):
   def try_at_five(maker):
-    r = get_ripl()
+    r = get_ripl(seed=seed)
     r.assume("mu", "(normal 0 1)")
     r.assume("obs", "(%s mu 1 1 1)" % maker)
     r.observe("(obs)", 5)

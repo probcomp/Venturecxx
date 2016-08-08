@@ -69,9 +69,9 @@ def testMemBasic3():
 @statisticalTest
 @on_inf_prim("any") # Not completely agnostic because uses MH, but
                     # responds to the default inference program
-def testMem1():
+def testMem1(seed):
   # MSPs should deal with their arguments changing under inference.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(mem (lambda (x) (bernoulli 0.5)))")
   ripl.predict("(f (bernoulli 0.5))")
   ripl.predict("(f (bernoulli 0.5))",label="pid")
@@ -80,9 +80,9 @@ def testMem1():
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
 
 @statisticalTest
-def testMem2():
+def testMem2(seed):
   # Ensures that all (f 1) and (f 2) are the same
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f 1)")
   ripl.assume("y","(f 1)")
@@ -101,9 +101,9 @@ def testMem2():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testMem3():
+def testMem3(seed):
   # Same as testMem3 but with booby traps
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","((lambda () (mem (lambda (y) (f (add y 1))))))")
   ripl.assume("x","(f ((if (bernoulli 0.5) (lambda () 1) (lambda () 1))))")
@@ -140,9 +140,9 @@ def testMem4():
   ripl.infer(40)
 
 @statisticalTest
-def testMemArray():
+def testMemArray(seed):
   # Same as testMem2 but when the arguments are arrays
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("x","(f (array 1 2))")
   ripl.assume("y","(f (array 1 2))")
@@ -161,9 +161,9 @@ def testMemArray():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testMemSP():
+def testMemSP(seed):
   # Same as testMem2 but when the arguments are SPs
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(mem (lambda (arg) (categorical (simplex 0.4 0.6) (array 1 2))))")
   ripl.assume("g","(lambda (x) x)")
   ripl.assume("h","(lambda (x) 1)")

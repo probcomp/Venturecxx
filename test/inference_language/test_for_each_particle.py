@@ -53,9 +53,9 @@ def testForEachParticleIsIndependent():
       yield checkForEachParticleIsIndependent, mode, prop
 
 @statisticalTest
-def checkForEachParticleIsIndependent(mode, prop):
+def checkForEachParticleIsIndependent(mode, prop, seed):
   n = max(2, default_num_samples())
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.infer("(resample%s %s)" % (mode, n))
   predictions = ripl.infer("(for_each_particle (sample (normal 0 1)))")
   return prop(predictions)
@@ -74,9 +74,9 @@ def testForEachParticleCustomMH():
 
 @broken_in("puma", "Does not support the regen SP yet")
 @statisticalTest
-def checkForEachParticleCustomMH(mode):
+def checkForEachParticleCustomMH(mode, seed):
   n = max(2, default_num_samples())
-  ripl = get_ripl(persistent_inference_trace=True)
+  ripl = get_ripl(seed=seed, persistent_inference_trace=True)
   ripl.define("drift_mh", """\
 (lambda (scope block)
   (mh_correct

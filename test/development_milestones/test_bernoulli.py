@@ -21,8 +21,8 @@ from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testBernoulli1():
-  ripl = get_ripl()
+def testBernoulli1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict("(bernoulli 0.3)", label="pid")
 
   predictions = collectSamples(ripl,"pid")
@@ -30,8 +30,8 @@ def testBernoulli1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testCategorical1():
-  ripl = get_ripl()
+def testCategorical1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict("(categorical (simplex 0.3 0.7))", label="pid")
 
   predictions = collectSamples(ripl,"pid")
@@ -39,8 +39,8 @@ def testCategorical1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testCategorical2():
-  ripl = get_ripl()
+def testCategorical2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict("(categorical (simplex 0.3 0.7) (array true false))", label="pid")
 
   predictions = collectSamples(ripl,"pid")

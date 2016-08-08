@@ -167,7 +167,9 @@ class Ripl():
         predict where the utterance will end without asking the
         sublanguage (and, due to internal technical limitations,
         cannot give the sublanguage the entire input stream and
-        continue from the unconsumed portion).
+        continue from the unconsumed portion).  It is responsibility
+        of the sublanguage to consume the ``}`` that closes the ``@{``
+        from the beginning of the invocation.
 
         The `venture.parser.venture_script.subscanner` module contains an adapter that
         does a control inversion on the above interface.  The

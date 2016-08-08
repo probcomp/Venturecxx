@@ -26,10 +26,10 @@ from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testCategorical1():
+def testCategorical1(seed):
   # A simple test that checks the interface of categorical and its
   # simulate method
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (array 1 2 3 4))")
   ripl.assume("y", "(categorical (simplex 0.2 0.6 0.2) (array 1 2 3))")
@@ -45,10 +45,10 @@ def testCategorical1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testCategoricalAbsorb():
+def testCategoricalAbsorb(seed):
   # A simple test that checks the interface of categorical and its
   # simulate and log density methods
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x","(simplex .1 .9)")
   ripl.assume("y","(simplex .55 .45)")
@@ -64,12 +64,12 @@ def testCategoricalDefault1():
   eq_(get_ripl().predict("(categorical (simplex 1))"), 0)
 
 @statisticalTest
-def testLogCategoricalAbsorb():
+def testLogCategoricalAbsorb(seed):
   # A simple test that checks the interface of log categorical and its
   # simulate and log density methods
   if config["get_ripl"] != "puma":
     raise SkipTest("log categorical only implemented in Puma")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x","(simplex (log .1) (log .9))")
   ripl.assume("y","(simplex (log .55) (log .45))")

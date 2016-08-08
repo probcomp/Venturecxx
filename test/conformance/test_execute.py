@@ -29,8 +29,8 @@ import venture.value.dicts as v
 
 @on_inf_prim("mh")
 @statisticalTest
-def testExecuteSmoke():
-  ripl = get_ripl()
+def testExecuteSmoke(seed):
+  ripl = get_ripl(seed=seed)
   predictions = []
   for _ in range(default_num_samples()):
     ripl.clear()

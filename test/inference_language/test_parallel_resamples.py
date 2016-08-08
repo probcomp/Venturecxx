@@ -45,9 +45,9 @@ def testResamplingSmoke():
     yield checkResamplingSmoke, mode
 
 @statisticalTest
-def checkResamplingSmoke(mode):
+def checkResamplingSmoke(mode, seed):
   n = default_num_samples()
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.infer("(resample%s %s)" % (mode, n))
   stack_dicts = r.sivm.core_sivm.engine.sample_all(r._ensure_parsed_expression("(normal 0 1)"))
   predictions = [d["value"] for d in stack_dicts]
@@ -69,11 +69,11 @@ def testResamplingSmoke3():
 
 @statisticalTest
 @on_inf_prim("resample")
-def testResamplingSmoke4():
+def testResamplingSmoke4(seed):
   # Check that limiting the number of processes doesn't screw up
   # inference too much.
   n = default_num_samples()
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.infer("(resample_multiprocess %s %s)" % (n, n/2)) # Limit the number of processes
   predictions = r.sample_all("(normal 0 1)")
   eq_(n, len(predictions))

@@ -133,10 +133,10 @@ def testObserveThenProcessStochastically1b():
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testObserveOutputOfIf1():
+def testObserveOutputOfIf1(seed):
   # It is natural to want deterministic conditionals in one's error
   # models.  Some cases Venture can handle gracefully.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("x","""
@@ -153,8 +153,8 @@ def testObserveOutputOfIf1():
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
 @broken_in("mite", "Mite doesn't know how to propagate observes downstream")
 @statisticalTest
-def testObserveThroughRef():
-  ripl = get_ripl()
+def testObserveThroughRef(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("coin", "(make_beta_bernoulli 1 1)")
   ripl.assume("items", "(list (ref (coin)) (ref (coin)))")
   ripl.observe("(deref (first items))", True)
