@@ -17,8 +17,8 @@ instructions = parser.parse_instructions(prelude_source)
 for instr in instructions:
   assert instr['instruction'] == 'define'
   name = t.Symbol.asPython(v.VentureValue.fromStackDict(instr['symbol']))
-  expr = _modify_expression(desugar_expression(instr['expression']))
-  expr = t.Exp.asPython(v.VentureValue.fromStackDict(expr))
+  expr_dict = _modify_expression(desugar_expression(instr['expression']))
+  expr = t.Exp.asPython(v.VentureValue.fromStackDict(expr_dict))
   assert e.isLambda(expr)
   (params, body) = e.destructLambda(expr)
   registerBuiltinSP(name, (params, body))

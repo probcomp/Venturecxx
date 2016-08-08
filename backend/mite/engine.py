@@ -8,7 +8,7 @@ class Engine(engine.Engine):
   def init_inference_trace(self):
     return BlankTrace(self._py_rng.randint(1, 2**31 - 1))
 
-  def new_model(self, _backend):
+  def new_model(self, _backend=None):
     return None
 
   def define(self, symbol, expr):

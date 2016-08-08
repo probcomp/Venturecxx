@@ -108,7 +108,7 @@ class Regenerator(Evaluator):
   """Unevaluate and regenerate according to a scaffold."""
 
   def __init__(self, trace, scaffold, fragment=None):
-    self.trace = trace
+    super(Regenerator, self).__init__(trace)
     self.scaffold = scaffold
     if fragment is None:
       fragment = {} # addr -> result value

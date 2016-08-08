@@ -81,7 +81,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
     if isinstance(sp, LiteSP):
       try:
         return not sp.wrapped_sp.outputPSP.canAbsorb(None, None, None)
-      except:
+      except Exception: # XXX Why is there a try-catch here anyway?
         return True
     else:
       return False
