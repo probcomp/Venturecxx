@@ -1,7 +1,9 @@
 import numbers
 from pprint import pprint
 
+import venture.lite.types as t
 import venture.lite.value as v
+import venture.parser.church_prime.parse as parse
 
 import venture.mite.address as addr
 
@@ -67,6 +69,10 @@ def _jsonable_exp(exp):
     return exp
   else:
     return _jsonable_vv(exp)
+
+def _jsonable_exp_alt(exp):
+  expr = t.Exp.asVentureValue(exp).asStackDict()
+  return parse.ChurchPrimeParser.instance().unparse_expression(expr)
 
 def _jsonable_vv(vv):
   if isinstance(vv, v.VentureNumber):
