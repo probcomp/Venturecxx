@@ -1,5 +1,5 @@
 import numbers
-from pprint import pprint
+from pprint import pformat
 
 import venture.lite.types as t
 import venture.lite.value as v
@@ -91,4 +91,4 @@ def _jsonable_vv(vv):
     raise Exception("Oops, missed venture value %s of type %s" % (vv, type(vv)))
 
 def json(trace):
-  return pprint(jsonable(trace), indent=2)
+  return pformat(jsonable(trace), indent=1)
