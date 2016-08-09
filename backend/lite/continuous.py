@@ -42,9 +42,14 @@ from venture.lite.sp_help import dispatching_psp
 from venture.lite.sp_help import no_request
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import careful_exp
+from venture.lite.utils import expm1
+from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logDensityMVNormal
+from venture.lite.utils import logsumexp
 from venture.lite.utils import numpy_force_number
 from venture.lite.utils import override
+from venture.lite.utils import simulateLogGamma
 import venture.lite.types as t
 
 
@@ -653,6 +658,109 @@ class BetaOutputPSP(RandomPSP):
 
 registerBuiltinSP("beta", typed_nr(BetaOutputPSP(),
   [t.PositiveType(), t.PositiveType()], t.ProbabilityType()))
+
+
+class LogBetaOutputPSP(RandomPSP):
+  def simulate(self, args):
+    np_rng = args.np_prng()
+    alpha, beta = args.operandValues()
+
+    # . log Beta(0, 0) is a pair of Dirac deltas at -inf and 0.
+    # . log Beta(0, b) is a Dirac delta at -inf.
+    # . log Beta(a, 0) is a Dirac delta at 0.
+    #
+    # For any a or b rounded to zero, this is the best we can do.
+    #
+    inf = float('inf')
+    if alpha == 0 and beta == 0:
+      return -inf if np_rng.randint(2) else 0
+    elif alpha == 0:
+      return -inf
+    elif beta == 0:
+      return 0
+    elif min(alpha, beta) < 1e-300:
+      # Avoid NaNs due to duelling infinities from log Gamma samples
+      # with shape below 1e-300.  If alpha and beta both exceed
+      # 1e-300, the log Gamma sampler never overflows.
+      #
+      return 0 if np_rng.uniform() < alpha/(alpha + beta) else -inf
+
+    # Given independent G ~ Gamma(alpha) and H ~ Gamma(beta), the
+    # well-known identity G/(G + H) ~ Beta(alpha, beta) lets us sample
+    # from the Beta distribution.  We want log G/(G + H).  If alpha or
+    # beta is small, G and H may be rounded to zero, whereas we can
+    # sample log G and log H without overflowing to -infinity,
+    # provided alpha and beta are at least 1e-300, and then we can
+    # compute log G - log (e^{log G} + e^{log H}).
+    #
+    log_G = simulateLogGamma(alpha, np_rng)
+    log_H = simulateLogGamma(beta, np_rng)
+    assert not math.isinf(log_G)
+    assert not math.isinf(log_H)
+    return log_G - logsumexp([log_G, log_H])
+
+  def logDensity(self, x, args):
+    # x = log y for a beta sample y, so its density is the beta
+    # density of y = e^x with the Jacobian dy/dx = e^x:
+    #
+    #   log p(x | a, b) = log [p(y | a, b) dy/dx]
+    #   = (a - 1) log y + (b - 1) log (1 - y) - log Beta(a, b) + log dy/dx
+    #   = (a - 1) log e^x + (b - 1) log (1 - e^x) - log B(a, b) + log e^x
+    #   = (a - 1) x + (b - 1) log (1 - e^x) - log B(a, b) + x
+    #   = a x + (b - 1) log (1 - e^x) - log B(a, b).
+    #
+    a, b = args.operandValues()
+    return a*x + (b - 1)*extendedLog1p(-careful_exp(x)) \
+      - scipy.special.betaln(a, b)
+
+  def gradientOfLogDensity(self, x, args):
+    # We seek the derivative of
+    #
+    #   L = log p(x | a, b) = a x + (b - 1) log (1 - e^x) - log B(a, b).
+    #
+    # Note that log1p'(x) = 1/(1 + x), so that
+    #
+    #   d/dx log (1 - e^x) = d/dx log1p(-e^x)
+    #     = (log1p o (-exp))'(x)
+    #     = log1p'(-exp(x)) * (-exp'(x))
+    #     = (1/(1 - e^x)) * (-e^x)
+    #     = -e^x/(1 - e^x)
+    #     = -[e^x e^-x]/[(1 - e^x) e^-x]
+    #     = -1/(e^-x - 1).
+    #
+    # Hence we have:
+    #
+    #   dL/dx = a - (b - 1)/(e^-x - 1)
+    #   dL/da = x - d/da log B(a, b)
+    #   dL/db = log (1 - e^x) - d/db log B(a, b).
+    #
+    # For the last terms, note that B(a, b) is symmetric in a, b; that
+    # B(a, b) = Gamma(a) Gamma(b) / Gamma(a + b); and that the digamma
+    # function F(x) = d/dx log Gamma(x).  Hence
+    #
+    #   d/da log B(a, b) = d/da log Gamma(a) Gamma(b) / Gamma(a + b)
+    #     = d/da [log Gamma(a) + log Gamma(b) - log Gamma(a + b)]
+    #     = d/da log Gamma(a) + d/da log Gamma(b) - d/da log Gamma(a + b)
+    #     = d/da log Gamma(a) - d/da log Gamma(a + b)
+    #     = F(a) - F(a + b),
+    #
+    # and likewise, by symmetry, d/db log B(a, b) = F(b) - F(a + b).
+    #
+    a, b = args.operandValues()
+    d_x = a - (b - 1)/expm1(-x)
+    d_a = x - spsp.digamma(a + b) - spsp.digamma(a)
+    d_b = log(-expm1(x)) - spsp.digamma(a + b) - spsp.digamma(b)
+    return (d_x, [d_a, d_b])
+
+  def description(self, name):
+    return "  %s(alpha, beta) returns the log-space representation of a" \
+      " sample from a Beta distribution" \
+      " with shape parameters alpha and beta." \
+      % (name,)
+
+
+registerBuiltinSP("log_beta", typed_nr(LogBetaOutputPSP(),
+  [t.PositiveType(), t.PositiveType()], t.NumberType()))
 
 
 class ExponOutputPSP(RandomPSP):
