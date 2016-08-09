@@ -106,29 +106,42 @@ def logpdf(X, Mu, Sigma):
 def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   """Gradient of multivariate normal logpdf with respect to parameters.
 
-  This does not compute the gradient with respect to the outputs.
+  If the mean and covariance matrices are given by functions Mu(p) and
+  Sigma(p) parametrized by a vector p in R^k, then given
 
-  XXX Actually, this does not give the gradient of the logpdf with
-  respect to Mu and Sigma -- that is, the linear map from an increment
-  in (Mu, Sigma) to an increment in the logpdf.  Instead, it evaluates
-  that linear map for a given increment in (Mu, Sigma).  So it's not
-  actually very useful, and recorded here only for future reference.
+        X                               (an array of n inputs),
+        Mu := Mu(p_0)                   (a vector in R^n)
+        dMu := [d/dp Mu(p)]_{p_0}       (an array of k increments in R^n),
+        Sigma := Sigma(p_0)             (a matrix in M(n, n)), and
+        dSigma := [d/dp Sigma(p)]_{p_0} (an array of k increments in M(n, n)),
 
-  The reason for this is that it's not clear we have -- in numpy
-  generally or in Venture specifically -- any representation A for the
-  linear functional of M(n, n) ---> R sending
+  this function computes the gradient
 
-      H |---> tr ((alpha alpha^T - Sigma^-1) H)
+        [d/dp log P(X | Mu(p), Sigma(p))]_{p_0}
+                                        (an array of k increments in R).
 
-  such that
+  In other words, the caller supplies X, Mu, and Sigma, along with
+  arrays of k increments in Mu and Sigma in all k possible parameter
+  directions, and this yields an array of increments in log P(X | Mu,
+  Sigma) in all k possible parameter directions.
 
-      H |---> numpy.dot(A, H)
+  Note that this does not explicitly compute
 
-  is the same map, where alpha = Sigma^-1 (X - Mu).  There is no nice
-  matrix representation of A because it is itself a linear functional
-  on n-by-n matrices, and any matrix is at most a (1,1)-tensor,
-  whereas we need a (0, n)-tensor.  Maybe numpy has some fancy tensor
-  representation for which numpy.dot will DTRT, but it's not clear.
+        [d/dMu log P(X | Mu, Sigma)]_{Mu(p_0)}
+  or
+        [d/dSigma log P(X | Mu, Sigma)]_{Sigma(p_0)},
+
+  which are higher-rank tensors than are convenient to represent in
+  numpy and Venture's automatic differentiation system; instead we
+  apply the chain rule internally given [d/dp Mu(p)]_{p_0} and [d/dp
+  Sigma(p)]_{p_0}.  In particular, for the Sigma case, we would need a
+  (0,n)-tensor representation of the linear map of M(n, n) ---> R
+  sending
+
+        H |---> tr ((alpha alpha^T - Sigma^-1) H),
+
+  where alpha = Sigma^-1 (X - Mu), which has no matrix representation
+  since all matrices are (1,1)-tensors.
   """
   # Derivative with respect to Mu, using the matrix calculus identity
   # d/du (u^T A u) = u^T (A + A^T), the chain rule, and symmetry of
