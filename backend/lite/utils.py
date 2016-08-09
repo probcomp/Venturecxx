@@ -254,6 +254,52 @@ def logit(x):
   """
   return extendedLog(x / (1 - x))
 
+def simulateLogGamma(shape, np_rng):
+  """Sample from log of standard Gamma distribution with given shape."""
+  if shape < 1:
+    # For shape < 1, if G ~ Gamma(shape + 1) and U ~ U[0, 1], then
+    # G * U^(1/shape) ~ Gamma(shape).  See
+    #
+    #       Luc Devroye, _Nonuniform Random Variate Generation_,
+    #       Springer-Verlag, 1986, Ch. IX `Continuous univariate
+    #       densities', Sec. 3.5 'Gamma variate generators when a
+    #       <= 1', p. 420,
+    #
+    # in particular option (3), the generator based on Stuart's
+    # theorem.  We compute log (G * U^(1/shape)) in log space by
+    # log G + (log U)/shape in order to avoid overflow when shape
+    # is very small.
+    #
+    G = np_rng.gamma(shape + 1)
+    U = np_rng.uniform()
+    return math.log(G) + math.log(U)/shape
+  else:
+    # Otherwise, if shape >= 1, simply take the log of a Gamma
+    # sample.  When shape = 1, the probability of any quantity
+    # rounded to zero is less than 1e-300 which is well below
+    # 2^-256 which will never happen.  Larger shapes give even
+    # smaller probability of yielding zero.
+    #
+    return math.log(np_rng.gamma(shape))
+
+def logDensityLogGamma(x, shape):
+  """Log density of the log of a Gamma sample with given shape."""
+  # For shape k, the Gamma PDF is
+  #
+  #     Gamma(y; k) = y^{k - 1} e^-y / Gamma(k),   or
+  #     log Gamma(y; k) = (k - 1) log y - y - log Gamma(k);
+  #
+  # hence if x = log y and thus y = e^x so dy/dx = d/dx e^x = e^x, we
+  # have
+  #
+  #     log LogGamma(x; k) = log [Gamma(y; k) dy/dx]
+  #       = (k - 1) log y - y - log Gamma(k) + log dy/dx
+  #       = (k - 1) log e^x - e^x - log Gamma(k) + log e^x
+  #       = (k - 1) x - e^x - log Gamma(k) + x
+  #       = k x - e^x - log Gamma(k).
+  #
+  return shape*x - careful_exp(x) - math.lgamma(shape)
+
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
 against fixed randomness.
