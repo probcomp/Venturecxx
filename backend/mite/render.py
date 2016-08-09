@@ -17,7 +17,7 @@ def jsonable(trace):
   return { "requests" : _jsonable_dict(trace.requests, _jsonable_address, _jsonable_request),
            "results" : _jsonable_dict(trace.results, _jsonable_address, _jsonable_vv),
            "observations" : _jsonable_dict(trace.observations, _jsonable_address, _jsonable_vv),
-           "global_env" : _jsonable_environment(trace.global_env) }
+           "global_env" : _jsonable_environment(trace.global_env, True) }
 
 def identity(x): return x
 
@@ -29,15 +29,23 @@ def _jsonable_dict(d, key_map, val_map=identity):
     ans[key_map(k)] = val_map(val)
   return ans
 
-def _jsonable_environment(e):
+def _jsonable_environment(e, show_global=False):
+  def show_frame():
+    return [_jsonable_dict(e.frame, identity, lambda n: _jsonable_address(n.address))] \
+      + _jsonable_environment(e.outerEnv, show_global)
   if e is None:
     return []
   elif e.outerEnv is None:
     # This is the builtin frame of the global environment; skip it since it's standard
     return []
+  elif e.outerEnv.outerEnv is None:
+    # This is the initial user frame of the global environment
+    if show_global:
+      return show_frame()
+    else:
+      return ['global_env']
   else:
-    return [_jsonable_dict(e.frame, identity, lambda n: _jsonable_address(n.address))] \
-      + _jsonable_environment(e.outerEnv)
+    return show_frame()
 
 def _jsonable_request((exp, env)):
   # TODO: Identify the global environment, and perhaps other
