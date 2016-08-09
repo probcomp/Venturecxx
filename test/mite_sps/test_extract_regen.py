@@ -37,7 +37,7 @@ def gen_for_each(items):
 @gen_for_each(["flat_trace", "graph_trace"])
 def testExtractRegen(trace):
   if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
+    raise SkipTest("graph trace doesn't support the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -57,7 +57,7 @@ def testExtractRegen(trace):
 @gen_for_each(["flat_trace", "graph_trace"])
 def testExtractRestore(trace):
   if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
+    raise SkipTest("graph trace doesn't support the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -77,7 +77,7 @@ def testExtractRestore(trace):
 @gen_for_each(["flat_trace", "graph_trace"])
 def testExtractRegenLambda(trace):
   if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
+    raise SkipTest("graph trace doesn't support the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -98,7 +98,7 @@ def testExtractRegenLambda(trace):
 @gen_for_each(["flat_trace", "graph_trace"])
 def testExtractRestoreLambda(trace):
   if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
+    raise SkipTest("graph trace can't detach the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -118,8 +118,6 @@ def testExtractRestoreLambda(trace):
 @gen_on_inf_prim("none")
 @gen_for_each(["flat_trace", "graph_trace"])
 def testSelectRegen1(trace):
-  if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -141,8 +139,6 @@ def testSelectRegen1(trace):
 @gen_on_inf_prim("none")
 @gen_for_each(["flat_trace", "graph_trace"])
 def testSelectRegen2(trace):
-  if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -164,8 +160,6 @@ def testSelectRegen2(trace):
 @gen_on_inf_prim("none")
 @gen_for_each(["flat_trace", "graph_trace"])
 def testSelectRegen3(trace):
-  if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
@@ -188,8 +182,6 @@ def testSelectRegen3(trace):
 @gen_on_inf_prim("none")
 @gen_for_each(["flat_trace", "graph_trace"])
 def testSelectRegen4(trace):
-  if trace == "graph_trace":
-    raise SkipTest("regen not yet implemented for graph trace")
   ripl = get_ripl()
   result = ripl.evaluate("""\
 (run_in (do (assume x (normal 0 1))
