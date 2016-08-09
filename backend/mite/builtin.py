@@ -12,6 +12,7 @@ import venture.mite.sps.lite_sp
 import venture.mite.sps.vs_simulation_sp
 import venture.mite.sps.vs_full_sp
 import venture.mite.sps.handle
+import venture.mite.sps.proc
 import venture.mite.sps.binomial_state
 import venture.mite.sps.crp_state
 import venture.mite.sps.mem_table
