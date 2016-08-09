@@ -1,8 +1,9 @@
 import json as j
-import numbers
 from collections import OrderedDict
 
+import venture.lite.types as t
 import venture.lite.value as v
+import venture.parser.church_prime.parse as parse
 
 import venture.mite.address as addr
 
@@ -60,14 +61,8 @@ def _jsonable_request_id(r_id):
     return str(r_id)
 
 def _jsonable_exp(exp):
-  if isinstance(exp, list):
-    return [_jsonable_exp(e) for e in exp]
-  elif isinstance(exp, basestring):
-    return exp
-  elif isinstance(exp, numbers.Number):
-    return exp
-  else:
-    return _jsonable_vv(exp)
+  expr = t.Exp.asVentureValue(exp).asStackDict()
+  return parse.ChurchPrimeParser.instance().unparse_expression(expr)
 
 def _jsonable_vv(vv):
   if isinstance(vv, v.VentureNumber):
