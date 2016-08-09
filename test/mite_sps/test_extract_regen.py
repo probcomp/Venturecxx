@@ -126,9 +126,7 @@ def testSelectRegen1(trace):
             (assume y (normal x 1))
             (x <- (predict x))
             (y <- (predict y))
-            (s <- (pyselect "{
-                     directive(2): {'type': 'proposal'},
-                   }"))
+            (s <- (single_site_subproblem (toplevel 2)))
             (weight_and_fragment <- (extract s))
             (regen s (rest weight_and_fragment))
             (x_ <- (predict x))
@@ -151,10 +149,7 @@ def testSelectRegen2(trace):
             (assume y (normal x 1))
             (x <- (predict x))
             (y <- (predict y))
-            (s <- (pyselect "{
-                     directive(1): {'type': 'proposal'},
-                     directive(2): {'type': 'proposal'},
-                   }"))
+            (s <- (single_site_subproblem (toplevel 1)))
             (weight_and_fragment <- (extract s))
             (regen s (rest weight_and_fragment))
             (x_ <- (predict x))
@@ -164,7 +159,7 @@ def testSelectRegen2(trace):
 """ % trace)
   (x, x_, y, y_) = result
   assert_not_equal(x, x_)
-  assert_not_equal(y, y_)
+  assert_equal(y, y_)
 
 @gen_on_inf_prim("none")
 @gen_for_each(["flat_trace", "graph_trace"])
@@ -177,10 +172,7 @@ def testSelectRegen3(trace):
             (assume y (normal x 1))
             (x <- (predict x))
             (y <- (predict y))
-            (s <- (pyselectf "{
-                     directive(2): {'type': 'constrained',
-                                    'val': y}
-                   }" (dict (list 'y 4))))
+            (s <- (single_site_constraint (toplevel 2) 4))
             (weight_and_fragment <- (extract s))
             (weight <- (regen s (rest weight_and_fragment)))
             (x_ <- (predict x))
@@ -204,11 +196,7 @@ def testSelectRegen4(trace):
             (assume y (normal x 1))
             (x <- (predict x))
             (y <- (predict y))
-            (s <- (pyselectf "{
-                     directive(1): {'type': 'proposal'},
-                     directive(2): {'type': 'constrained',
-                                    'val': y},
-                   }" (dict (list 'y y))))
+            (s <- (single_site_constraint (toplevel 1) 2))
             (weight_and_fragment <- (extract s))
             (weight <- (regen s (rest weight_and_fragment)))
             (x_ <- (predict x))
@@ -217,6 +205,7 @@ def testSelectRegen4(trace):
         (%s))
 """ % trace)
   (x, x_, y, y_, weight) = result
-  assert_not_equal(x, x_)
+  assert_equal(x_, 2)
   assert_equal(y, y_)
-  assert_almost_equal(weight, scipy.stats.norm(x_, 1).logpdf(y_))
+  assert_almost_equal(weight, (scipy.stats.norm(0, 1).logpdf(2) +
+                               scipy.stats.norm(2, 1).logpdf(y_)))
