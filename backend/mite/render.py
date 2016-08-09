@@ -1,5 +1,5 @@
-import json as j
 from collections import OrderedDict
+from pprint import pprint
 
 import venture.lite.types as t
 import venture.lite.value as v
@@ -22,7 +22,7 @@ def jsonable(trace):
 def identity(x): return x
 
 def _jsonable_dict(d, key_map, val_map=identity):
-  ans = OrderedDict()
+  ans = {}
   for (k, val) in d.iteritems():
     if isinstance(k, addr.BuiltinAddress):
       continue
@@ -81,4 +81,4 @@ def _jsonable_vv(vv):
     raise Exception("Oops, missed venture value %s of type %s" % (vv, type(vv)))
 
 def json(trace):
-  return j.dumps(jsonable(trace), indent=2)
+  return pprint(jsonable(trace), indent=2)
