@@ -107,34 +107,38 @@ def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   """Gradient of multivariate normal logpdf with respect to parameters.
 
   If the mean and covariance matrices are given by functions Mu(p) and
-  Sigma(p) parametrized by a vector p in R^k, then given
+  Sigma(q) parametrized by vectors p in R^k and q in R^l, then given
 
         X                               (an array of n inputs),
         Mu := Mu(p_0)                   (a vector in R^n)
         dMu := [d/dp Mu(p)]_{p_0}       (an array of k increments in R^n),
-        Sigma := Sigma(p_0)             (a matrix in M(n, n)), and
-        dSigma := [d/dp Sigma(p)]_{p_0} (an array of k increments in M(n, n)),
+        Sigma := Sigma(q_0)             (a matrix in M(n, n)), and
+        dSigma := [d/dq Sigma(q)]_{q_0} (an array of l increments in M(n, n)),
 
   this function computes the gradient
 
-        [d/dp log P(X | Mu(p), Sigma(p))]_{p_0}
-                                        (an array of k increments in R).
+        [d/dp log P(X | Mu(p), Sigma(q_0))]_{p_0}
+                                        (an array of k increments in R),
+        [d/dq log P(X | Mu(p_0), Sigma(q))]_{q_0}
+                                        (an array of l increments in R).
 
-  In other words, the caller supplies X, Mu, and Sigma, along with
-  arrays of k increments in Mu and Sigma in all k possible parameter
-  directions, and this yields an array of increments in log P(X | Mu,
-  Sigma) in all k possible parameter directions.
+  In other words, the caller supplies X, Mu, and Sigma, along with an
+  array of k increments in Mu and l increments in Sigma in all
+  possible directions of the parameters, and this yields an array of k
+  increments in P(X | Mu, Sigma) for all possible directions of p and
+  an array of l increments in P(X | Mu, Sigma) for all possible
+  directions of q.
 
   Note that this does not explicitly compute
 
-        [d/dMu log P(X | Mu, Sigma)]_{Mu(p_0)}
+        [d/dMu log P(X | Mu, Sigma)]_{Mu_0}
   or
-        [d/dSigma log P(X | Mu, Sigma)]_{Sigma(p_0)},
+        [d/dSigma log P(X | Mu, Sigma)]_{Sigma_0},
 
   which are higher-rank tensors than are convenient to represent in
   numpy and Venture's automatic differentiation system; instead we
-  apply the chain rule internally given [d/dp Mu(p)]_{p_0} and [d/dp
-  Sigma(p)]_{p_0}.  In particular, for the Sigma case, we would need a
+  apply the chain rule internally given [d/dp Mu(p)]_{p_0} and [d/dq
+  Sigma(q)]_{q_0}.  In particular, for the Sigma case, we would need a
   (0,n)-tensor representation of the linear map of M(n, n) ---> R
   sending
 
@@ -211,10 +215,10 @@ def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   # Compute Q = alpha alpha^T - Sigma^-1.
   Q = np.outer(alpha, alpha) - covf.inverse()
 
-  dlogp_dMu = np.array([np.dot(alpha, dmu_i) for dmu_i in dMu])
-  dlogp_dSigma = np.array([np.sum(Q*dsigma_i)/2. for dsigma_i in dSigma])
+  ddp = np.array([np.dot(alpha, dmu_i) for dmu_i in dMu])
+  ddq = np.array([np.sum(Q*dsigma_i)/2 for dsigma_i in dSigma])
 
-  return (dlogp_dMu, dlogp_dSigma)
+  return (ddp, ddq)
 
 def conditional(X2, Mu1, Mu2, Sigma11, Sigma12, Sigma21, Sigma22):
   """Parameters of conditional multivariate normal."""
