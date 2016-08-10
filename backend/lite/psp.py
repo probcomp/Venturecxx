@@ -15,10 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from utils import override
-from lkernel import DefaultAAALKernel,DefaultVariationalLKernel,LKernel
-from request import Request
-from exception import VentureBuiltinSPMethodError
+from venture.lite.exception import VentureBuiltinSPMethodError
+from venture.lite.lkernel import DefaultVariationalLKernel
+from venture.lite.lkernel import DeterministicMakerAAALKernel
+from venture.lite.lkernel import LKernel
+from venture.lite.request import Request
+from venture.lite.utils import override
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -49,15 +51,16 @@ class PSP(object):
   mechanism.  If you don't know what lkernels are, don't worry about
   it -- the defaults will do.
 
-  The general pattern of PSP methods is that they accept an Args
-  struct (and possibly some additional arguments) and compute
-  something about the stochastic process at that Args struct.  The
-  main thing the Args struct contains is the list of arguments this
+  The general pattern of PSP methods is that they accept an IArgs
+  instance (and possibly some additional arguments) and compute
+  something about the stochastic process in the context given by that
+  IArgs instance.  The
+  main thing the IArgs object contains is the list of arguments this
   stochastic process is applied to, but it also has a bunch of
   additional contextual information that can be useful for special
-  PSPs.  See node.py for the definition of Args.
+  PSPs.  See below for the definition of IArgs.
 
-  The data members of the Args struct will generally be represented as
+  The data members of the IArgs object will generally be represented as
   Venture values (instances of the venture.lite.value.VentureValue
   class).  The data returned from psp methods should generally also be
   instances of the VentureValue class, except methods that yield
@@ -67,7 +70,6 @@ class PSP(object):
   Most of the time, the requisite marshalling between VentureValues
   and corresponding Python representations is mechanical boilerplate,
   which can be taken care of for you by the TypedPSP class, which see.
-
   """
 
   def simulate(self, _args):
@@ -109,17 +111,17 @@ class PSP(object):
     this PSP appearing as the operator of a non-principal,
     non-absorbing scaffold node (that is, in the non-principal part of
     the DRG, or in the brush).
-
     """
-    raise VentureBuiltinSPMethodError("Cannot compute simulation gradient of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute simulation gradient of %s",
+      type(self))
 
   def isRandom(self):
     """Return whether this PSP is stochastic or not.  This is important
     because only nodes whose operators are random PSPs can be
     principal.
-
     """
-    raise VentureBuiltinSPMethodError("Do not know whether %s is random", type(self))
+    raise VentureBuiltinSPMethodError("Do not know whether %s is random",
+      type(self))
 
   def canAbsorb(self, _trace, _appNode, _parentNode):
     """Return whether this PSP, which is the operator of the given
@@ -131,9 +133,9 @@ class PSP(object):
     calls are assumed to be cumulative: if a PSP claims to be able to
     absorb changes to two of its parents individually, that amounts to
     claiming to absorb changes to both of them simultaneously.
-
     """
-    raise VentureBuiltinSPMethodError("Do not know whether %s can absorb", type(self))
+    raise VentureBuiltinSPMethodError("Do not know whether %s can absorb",
+      type(self))
 
   def logDensity(self, _value, _args):
     """Return the log-density of simulating the given value from the given args.
@@ -147,8 +149,10 @@ class PSP(object):
 
     Implementing this method is not strictly necessary for a valid
     PSP, but is very helpful for many purposes if the density
-    information is available.  See also canAbsorb."""
-    raise VentureBuiltinSPMethodError("Cannot compute log density of %s", type(self))
+    information is available.  See also canAbsorb.
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute log density of %s",
+      type(self))
 
   def gradientOfLogDensity(self, _value, _args):
     """Return the gradient of this PSP's logDensity function.  This method
@@ -158,7 +162,8 @@ class PSP(object):
     The gradient should be returned as a 2-tuple of the partial
     derivative with respect to the value and a list of the partial
     derivatives with respect to the arguments."""
-    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density of %s", type(self))
+    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density "
+      "of %s", type(self))
 
   def logDensityBound(self, _value, _args):
     """Return an upper bound on the possible log density of this PSP
@@ -166,7 +171,7 @@ class PSP(object):
     rejection sampling.
 
     Specifically, the value and any or all of the operands present in
-    the Args struct may be None.  Return an upper bound on the value
+    the IArgs instance may be None.  Return an upper bound on the value
     the logDensity function could take for any values substituted for
     the None arguments, but holding fixed the given non-None
     arguments.  See NormalOutputPSP for an example implementation.
@@ -178,28 +183,51 @@ class PSP(object):
     TODO maybe allow the logDensityBound to return None to indicate no
     bound, and in this case do not try to absorb at this node when
     doing rejection sampling?  Or should that be a separate method
-    called logDensityBounded?"""
-    raise VentureBuiltinSPMethodError("Cannot compute log density bound of %s", type(self))
+    called logDensityBounded?
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute log density bound of %s",
+      type(self))
 
   def incorporate(self,value,args):
     """Register that an application of this PSP produced the given value
     at the given args.  This is relevant only if the SP needs to
     maintain statistics about results of its applications (e.g., for
     collapsed models, or for external inference schemes that need to
-    maintain statistics)."""
+    maintain statistics).
+    """
     pass
 
   def unincorporate(self,value,args):
     """Unregister one instance of an application of this PSP producing the
     given value at the given args.  This is the inverse of
-    incorporate."""
+    incorporate.
+    """
     pass
+
+  def logDensityOfData(self, _aux):
+    """Return the log-density of simulating a dataset with the given
+    collected statistics.
+
+    This is relevant only for PSPs that collect statistics about their
+    uses via incorporate and unincorporate that are sufficient to bulk
+    absorb at all applications of the PSP, without traversing them.
+
+    Specifically return the sum of the log-density at each application
+    of this PSP; which is also the joint log-density of producing any
+    one permutation of the observed output sequence.  For some
+    distributions (e.g., Poisson), this may not be computable from the
+    traditional sufficient statisitc; in such a case, the sufficient
+    statistic should be augmented with sufficient information to
+    compute this.  For rationales for this specification, see
+    doc/on-log-density-of-counts.md.
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute log density of data of "
+      "%s", type(self))
 
   def canEnumerate(self):
     """Return whether this PSP can enumerate the space of its possible
     return values.  Enumeration is used only for principal nodes in
     enumerative Gibbs.
-
     """
     return False
 
@@ -212,84 +240,221 @@ class PSP(object):
     For enumerative Gibbs to work, logDensity must return a finite
     number for the probability of every value returned from this
     method, given the same arguments.
-
     """
-    raise VentureBuiltinSPMethodError("Cannot enumerate")
+    raise VentureBuiltinSPMethodError("Cannot enumerate %s.", type(self))
 
   def description(self, _name):
     """Return a string describing this PSP.  The string may include the
-    name argument, which is the symbol that the enclosing SP is bound
-    to.
-
+    name argument, which is the symbol that the enclosing SP is bound to.
     """
     return None
 
   def description_rst_format(self, _name):
     return None
 
-  def childrenCanAAA(self): return False
-  def getAAALKernel(self): return DefaultAAALKernel(self)
+  def childrenCanAAA(self):
+    return False
 
-  def hasVariationalLKernel(self): return False
-  def getVariationalLKernel(self,args): return DefaultVariationalLKernel(self, args)
+  def getAAALKernel(self):
+    raise VentureBuiltinSPMethodError("%s has no AAA LKernel", type(self))
 
-  def hasSimulationKernel(self): return False
-  def hasDeltaKernel(self): return False
+  def hasVariationalLKernel(self):
+    return False
 
-  def madeSpLogDensityOfCountsBound(self, _aux):
-    raise VentureBuiltinSPMethodError("Cannot rejection sample AAA procedure with unbounded log density of counts")
+  def getVariationalLKernel(self,args):
+    return DefaultVariationalLKernel(self, args)
+
+  def hasSimulationKernel(self):
+    return False
+
+  def hasDeltaKernel(self):
+    return False
+
+  def marginalLogDensityOfData(self, _aux, _args):
+    """Return the marginal of the made PSP's logDensityOfData function,
+    integrating over the output distribution of the maker for the
+    given args. This method is relevant only for random makers of PSPs
+    that collect sufficient statistics via incorporate and
+    unincorporate.
+
+    """
+    # a return value of NotImplemented means "defer to the made PSP's
+    # logDensityOfData" (suitable for deterministic makers).
+    # TODO: should this method replace logDensityOfData?
+    return NotImplemented
+
+  def gradientOfLogDensityOfData(self, _aux, _args):
+    """Return the gradient of the made PSP's logDensityOfData function.
+    This method is needed only for gradient-based methods and is
+    relevant only for makers of PSPs that collect sufficient
+    statistics via incorporate and unincorporate.
+
+    The gradient should be returned as a list of the partial
+    derivatives with respect to the arguments.
+
+    """
+    raise VentureBuiltinSPMethodError("Cannot compute gradient of log density of data of %s", type(self))
+
+  def madeSpLogDensityOfDataBound(self, _aux):
+    """Upper bound the logDensityOfData the made SP may report for the
+    given aux, up to arbitrary changes to the args wherewith the maker
+    is simulated.
+
+    TODO Communicate the maker's fixed parameters here to enable more
+    precise bounds.
+    """
+    raise VentureBuiltinSPMethodError("Cannot rejection auto-bound AAA procedure "
+      "with unbounded log density of data.")
+
+class IArgs(object):
+  """The evaluation context against which a (P)SP is executed.
+
+  This class serves as a container for documentation about the
+  evaluation context interface Lite (P)SPs expect.
+
+  """
+  def __init__(self):
+    self.operandNodes = None
+    """The identities of the arguments passed to the PSP.
+
+    These are used primarily by parametrically polymorphic PSPs, like
+    the RequestPSP in the implementation of lambda and the maker
+    corresponding to mem.
+    """
+    self.node = None
+    """The identity of the current application itself.
+
+    This is used mainly as a unique key to prevent auto-caching of
+    requests that are supposed to be generative.
+    """
+    self.env = None
+    """The lexical environment of the application.
+
+    This is only used by SPs that need to access it, like the
+    implementation of lambda, and get_current_environment.
+    """
+
+  def operandValues(self):
+    """The actual arguments this SP is called with."""
+    raise NotImplementedError
+
+  def spaux(self):
+    """The SP's saved auxiliary state."""
+    raise NotImplementedError
+
+  def madeSPAux(self):
+    """The made SP's saved auxiliary state, if this is an AAA maker application."""
+    raise NotImplementedError
+
+  def esrValues(self):
+    """The results of evaluation of requests the request stage made, if any."""
+    raise NotImplementedError
+
+  def esrNodes(self):
+    """The identities of the evaluations of requests the request stage made, if any."""
+    raise NotImplementedError
+
+  def requestValue(self):
+    """The request the requesting stage made, if any.  Rarely used."""
+    raise NotImplementedError
+
+  def py_prng(self):
+    """PRNG with Python's standard `random.Random` interface that may be used.
+
+    Mutable refence."""
+    raise NotImplementedError
+
+  def np_prng(self):
+    """PRNG with Numpy's `RandomState` interface that may be used.
+
+    Mutable reference."""
+    raise NotImplementedError
 
 class DeterministicPSP(PSP):
-  """Provides good default implementations of PSP methods for deterministic PSPs."""
+  """Provides good default implementations of PSP methods for deterministic
+  PSPs."""
+
   @override(PSP)
-  def isRandom(self): return False
+  def isRandom(self):
+    return False
+
   @override(PSP)
-  def canAbsorb(self, _trace, _appNode, _parentNode): return False
+  def canAbsorb(self, _trace, _appNode, _parentNode):
+    return False
+
   @override(PSP)
-  def logDensity(self, _value, _args): return 0
+  def logDensity(self, _value, _args):
+    return 0
+
   @override(PSP)
   def gradientOfLogDensity(self, _value, args):
-    return (0, [0 for _ in args.operandValues])
+    return (0, [0 for _ in args.operandNodes])
+
   @override(PSP)
   def logDensityBound(self, _value, _args): return 0
 
+class DeterministicMakerAAAPSP(DeterministicPSP):
+  """Provides good default implementations of PSP methods for PSPs that
+  are deterministic makers whose children can absorb at applications.
+  """
+
+  def childrenCanAAA(self):
+    return True
+
+  def getAAALKernel(self):
+    return DeterministicMakerAAALKernel(self)
+
 class NullRequestPSP(DeterministicPSP):
   @override(DeterministicPSP)
-  def simulate(self, _args): return Request()
+  def simulate(self, _args):
+    return Request()
+
   @override(PSP)
-  def gradientOfSimulate(self, args, _value, _direction): return [0 for _ in args.operandValues]
+  def gradientOfSimulate(self, args, _value, _direction):
+    return [0 for _ in args.operandNodes]
+
   @override(DeterministicPSP)
-  def canAbsorb(self, _trace, _appNode, _parentNode): return True
+  def canAbsorb(self, _trace, _appNode, _parentNode):
+    return True
 
 class ESRRefOutputPSP(DeterministicPSP):
   @override(DeterministicPSP)
-  def simulate(self,args):
-    assert len(args.esrNodes) ==  1
-    return args.esrValues[0]
+  def simulate(self, args):
+    assert len(args.esrNodes()) ==  1
+    return args.esrValues()[0]
 
   @override(PSP)
   def gradientOfSimulate(self, args, _value, direction):
-    return [0 for _ in args.operandValues] + [direction]
+    return [0 for _ in args.operandNodes] + [direction]
 
   @override(DeterministicPSP)
   def gradientOfLogDensity(self, _value, args):
-    return (0, [0 for _ in args.operandValues + args.esrNodes])
+    return (0, [0 for _ in args.operandNodes + args.esrNodes()])
 
   @override(DeterministicPSP)
   def canAbsorb(self,trace,appNode,parentNode):
-    return parentNode != trace.esrParentsAt(appNode)[0] and parentNode != appNode.requestNode
+    return parentNode != trace.esrParentsAt(appNode)[0] \
+        and parentNode != appNode.requestNode
 
 class RandomPSP(PSP):
-  """Provides good default implementations of (two) PSP methods for (assessable) stochastic PSPs."""
+  """Provides good default implementations of (two) PSP methods for
+  (assessable) stochastic PSPs.
+  """
   @override(PSP)
-  def isRandom(self): return True
+  def isRandom(self):
+    return True
+
   @override(PSP)
-  def canAbsorb(self, _trace, _appNode, _parentNode): return True
+  def canAbsorb(self, _trace, _appNode, _parentNode):
+    return True
 
 class LikelihoodFreePSP(RandomPSP):
-  """Provides good default implementations of (two) PSP methods for likelihood-free stochastic PSPs."""
+  """Provides good default implementations of (two) PSP methods for
+  likelihood-free stochastic PSPs.
+  """
   @override(PSP)
-  def canAbsorb(self, _trace, _appNode, _parentNode): return False
+  def canAbsorb(self, _trace, _appNode, _parentNode):
+    return False
 
 class TypedPSP(PSP):
   """Wrapper that implements the PSP interface by marshalling and
@@ -302,18 +467,17 @@ class TypedPSP(PSP):
   objects rather than Venture Values.
   TODO: Perhaps delegates of TypedPSP should not be subclasses of PSP,
   but of another base class named something like PythonPSP.
-
   """
 
   def __init__(self, psp, f_type):
     """The first argument is the PSP-like delegate, that is expected to
-    all the work, operating on Python representations of the data.
+    do all the work, operating on Python representations of the data.
 
     The second argument is the type signature, which controls the
     marshalling and unmarshalling.  The type signature itself must be
     an instance of venture.lite.sp.SPType, and those are built
     predominantly out of instances of (subclasses of)
-    venture.lite.value.VentureType.  See also the "Types" section
+    venture.lite.types.VentureType.  See also the "Types" section
     of doc/type-system.md.
 
     """
@@ -321,45 +485,75 @@ class TypedPSP(PSP):
     self.psp = psp
 
   def simulate(self,args):
-    return self.f_type.wrap_return(self.psp.simulate(self.f_type.unwrap_args(args)))
+    return self.f_type.wrap_return(
+      self.psp.simulate(self.f_type.unwrap_args(args)))
+
   def gradientOfSimulate(self, args, value, direction):
     # TODO Should gradientOfSimulate unwrap the direction and wrap the
     # answers using the gradient_type, like gradientOfLogDensity does?
     # Or do I want to use the vector space structure of gradients
     # given by the Venture values inside the Python methods?
-    return self.psp.gradientOfSimulate(self.f_type.unwrap_args(args), self.f_type.unwrap_return(value), direction)
-  def logDensity(self,value,args):
-    return self.psp.logDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+    return self.psp.gradientOfSimulate(
+      self.f_type.unwrap_args(args), self.f_type.unwrap_return(value), direction)
+
+  def logDensity(self, value, args):
+    return self.psp.logDensity(
+      self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+
   def gradientOfLogDensity(self, value, args):
-    (dvalue, dargs) = self.psp.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.gradient_type().wrap_return(dvalue), self.f_type.gradient_type().wrap_arg_list(dargs))
+    (dvalue, dargs) = self.psp.gradientOfLogDensity(
+      self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+    return (self.f_type.gradient_type().wrap_return(dvalue),
+      self.f_type.gradient_type().wrap_arg_list(dargs))
+
   def logDensityBound(self, value, args):
-    return self.psp.logDensityBound(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-  def incorporate(self,value,args):
-    return self.psp.incorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-  def unincorporate(self,value,args):
-    return self.psp.unincorporate(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-  def enumerateValues(self,args):
-    return [self.f_type.wrap_return(v) for v in self.psp.enumerateValues(self.f_type.unwrap_args(args))]
+    return self.psp.logDensityBound(
+      self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+
+  def incorporate(self, value, args):
+    return self.psp.incorporate(self.f_type.unwrap_return(value),
+      self.f_type.unwrap_args(args))
+
+  def unincorporate(self, value, args):
+    return self.psp.unincorporate(self.f_type.unwrap_return(value),
+      self.f_type.unwrap_args(args))
+
+  def logDensityOfData(self, aux):
+    return self.psp.logDensityOfData(aux)
+
+  def enumerateValues(self, args):
+    return [self.f_type.wrap_return(v) for v in
+        self.psp.enumerateValues(self.f_type.unwrap_args(args))]
+
   def isRandom(self):
     return self.psp.isRandom()
-  def canAbsorb(self,trace,appNode,parentNode):
+
+  def canAbsorb(self, trace, appNode, parentNode):
     return self.psp.canAbsorb(trace, appNode, parentNode)
 
   def childrenCanAAA(self):
     return self.psp.childrenCanAAA()
+
   def getAAALKernel(self):
     return TypedLKernel(self.psp.getAAALKernel(), self.f_type)
 
-  def canEnumerate(self): return self.psp.canEnumerate()
+  def canEnumerate(self):
+    return self.psp.canEnumerate()
 
   def hasVariationalLKernel(self): return self.psp.hasVariationalLKernel()
-  def getVariationalLKernel(self,args):
-    return TypedVariationalLKernel(self.psp.getVariationalLKernel(self.f_type.unwrap_args(args)), self.f_type)
 
-  def hasSimulationKernel(self): return self.psp.hasSimulationKernel()
-  def hasDeltaKernel(self): return self.psp.hasDeltaKernel()
-  def getDeltaKernel(self,args): return TypedLKernel(self.psp.getDeltaKernel(args),self.f_type)
+  def getVariationalLKernel(self, args):
+    return TypedVariationalLKernel(self.psp.getVariationalLKernel(
+      self.f_type.unwrap_args(args)), self.f_type)
+
+  def hasSimulationKernel(self):
+    return self.psp.hasSimulationKernel()
+
+  def hasDeltaKernel(self):
+    return self.psp.hasDeltaKernel()
+
+  def getDeltaKernel(self, args):
+    return TypedLKernel(self.psp.getDeltaKernel(args), self.f_type)
   # TODO Wrap the simulation and delta kernels properly (once those are tested)
 
   def description(self,name):
@@ -371,35 +565,113 @@ class TypedPSP(PSP):
     signature = ".. function:: " + self.f_type.name_rst_format(name)
     return (signature, self.psp.description(name))
 
-  # TODO Is this method part of the psp interface?
-  def logDensityOfCounts(self,aux):
-    return self.psp.logDensityOfCounts(aux)
+class DispatchingPSP(PSP):
+  def __init__(self, f_types, psps):
+    self.f_types = f_types
+    self.psps = psps
+    self.f_type = f_types[0] # TODO Hack to pacify SP.venture_type for now
+
+  def _disptach(self, args):
+    for (f_type, psp) in zip(self.f_types, self.psps):
+      if f_type.args_match(args):
+        return psp
+    return self.psps[0] # And hope coersion succeeds
+
+  def simulate(self, args):
+    return self._disptach(args).simulate(args)
+
+  def gradientOfSimulate(self, args, value, direction):
+    return self._disptach(args).gradientOfSimulate(args, value, direction)
+
+  def logDensity(self, value, args):
+    return self._disptach(args).logDensity(value, args)
+
+  def gradientOfLogDensity(self, value, args):
+    return self._disptach(args).gradientOfLogDensity(value, args)
+
+  def logDensityBound(self, value, args):
+    return self._disptach(args).logDensityBound(value, args)
+
+  def incorporate(self, value, args):
+    return self._disptach(args).incorporate(value, args)
+
+  def unincorporate(self, value, args):
+    return self._disptach(args).unincorporate(value, args)
+
+  def enumerateValues(self, args):
+    return self._disptach(args).enumerateValues(args)
+
+  # Is this really the right treatment of methods that don't give args?
+  def logDensityOfData(self, aux):
+    return self.psps[0].logDensityOfData(aux)
+
+  def isRandom(self):
+    return self.psps[0].isRandom()
+
+  def canAbsorb(self, trace, appNode, parentNode):
+    return self.psps[0].canAbsorb(trace, appNode, parentNode)
+
+  def childrenCanAAA(self):
+    return self.psps[0].childrenCanAAA()
+
+  def getAAALKernel(self):
+    return self.psps[0].getAAALKernel()
+
+  def canEnumerate(self):
+    return self.psps[0].canEnumerate()
+
+  def hasVariationalLKernel(self):
+    return self.psps[0].hasVariationalLKernel()
+
+  def getVariationalLKernel(self, args):
+    return self._disptach(args).getVariationalLKernel(args)
+
+  def hasSimulationKernel(self):
+    return self.psps[0].hasSimulationKernel()
+
+  def hasDeltaKernel(self):
+    return self.psps[0].hasDeltaKernel()
+
+  def getDeltaKernel(self, args):
+    return self._disptach(args).getDeltaKernel(args)
+
+  def description(self, name):
+    return self.psps[0].description(name)
+
+  def description_rst_format(self, name):
+    return self.psps[0].description_rst_format(name)
 
 class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
     self.kernel = kernel
     self.f_type = f_type
 
-  def simulate(self, trace, oldValue, args):
-    return self.f_type.wrap_return(self.kernel.simulate(trace, self.f_type.unwrap_return(oldValue),
-                                                        self.f_type.unwrap_args(args)))
-  def weight(self, trace, newValue, oldValue, args):
-    return self.kernel.weight(trace, self.f_type.unwrap_return(newValue),
-                              self.f_type.unwrap_return(oldValue),
-                              self.f_type.unwrap_args(args))
+  def forwardSimulate(self, trace, oldValue, args):
+    return self.f_type.wrap_return(self.kernel.forwardSimulate(
+      trace, self.f_type.unwrap_return(oldValue), self.f_type.unwrap_args(args)))
+
+  def forwardWeight(self, trace, newValue, oldValue, args):
+    return self.kernel.forwardWeight(trace, self.f_type.unwrap_return(newValue),
+      self.f_type.unwrap_return(oldValue), self.f_type.unwrap_args(args))
 
   def reverseWeight(self, trace, oldValue, args):
-    return self.kernel.reverseWeight(trace,
-                                     self.f_type.unwrap_return(oldValue),
-                                     self.f_type.unwrap_args(args))
+    return self.kernel.reverseWeight(trace, self.f_type.unwrap_return(oldValue),
+      self.f_type.unwrap_args(args))
 
-  def weightBound(self, trace, newValue, oldValue, args):
-    return self.kernel.weightBound(trace, self.f_type.unwrap_return(newValue),
-                                   self.f_type.unwrap_return(oldValue),
-                                   self.f_type.unwrap_args(args))
+  def gradientOfReverseWeight(self, trace, value, args):
+    (dvalue, dargs) = self.kernel.gradientOfReverseWeight(trace,
+      self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+    return (self.f_type.gradient_type().wrap_return(dvalue),
+      self.f_type.gradient_type().wrap_arg_list(dargs))
+
+  def weightBound(self, trace, value, args):
+    return self.kernel.weightBound(trace, self.f_type.unwrap_return(value),
+      self.f_type.unwrap_args(args))
 
 class TypedVariationalLKernel(TypedLKernel):
   def gradientOfLogDensity(self, value, args):
-    return self.kernel.gradientOfLogDensity(self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+    return self.kernel.gradientOfLogDensity(
+      self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
+
   def updateParameters(self, gradient, gain, stepSize):
     return self.kernel.updateParameters(gradient, gain, stepSize)

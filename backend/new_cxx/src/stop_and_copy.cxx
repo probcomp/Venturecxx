@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -53,6 +53,10 @@
 // because copy_pointer encapsulates the cycle-breaking at the heart
 // of the algorithm (and calls the object's copy_help method only if
 // needed).
+//
+// Note also that one needs to #include "stop-and-copy.h" for the
+// above template to work.  I found the compilation error rather
+// inscrutable.
 
 size_t ForwardingMap::count(const void* k) const
 {
@@ -71,7 +75,7 @@ PyTrace* PyTrace::stop_and_copy() const
   return answer;
 }
 
-shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy() const
+boost::shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy() const
 {
   ForwardingMap forward = ForwardingMap();
   return this->copy_help(&forward);
@@ -84,18 +88,16 @@ shared_ptr<ConcreteTrace> ConcreteTrace::stop_and_copy() const
 template <typename T>
 T* copy_pointer(const T* v, ForwardingMap* forward)
 {
-  if (v == NULL)
-  {
+  if (v == NULL) {
     return NULL;
   }
-  if (forward->count(v) > 0)
-  {
+  if (forward->count(v) > 0) {
     return (T*)(*forward)[v];
   } else {
     T* answer = dynamic_cast<T*>(v->copy_help(forward));
     assert(answer);
-    if (answer != v)
-    { // Should put an appropriate forwarding pointer in the
+    if (answer != v) {
+      // Should put an appropriate forwarding pointer in the
       // forwarding map.
       assert(forward->count(v) > 0);
       assert(answer == (*forward)[v]);
@@ -105,27 +107,21 @@ T* copy_pointer(const T* v, ForwardingMap* forward)
 }
 
 template <typename T>
-shared_ptr<T> copy_shared(const shared_ptr<T>& v, ForwardingMap* forward)
+boost::shared_ptr<T> copy_shared(const boost::shared_ptr<T>& v, ForwardingMap* forward)
 {
-  if (v.get() == 0)
-  {
+  if (v.get() == 0) {
     return v;
-  }
-  else if (forward->shared_ptrs.count(v.get()) > 0)
-  {
+  } else if (forward->shared_ptrs.count(v.get()) > 0) {
     // Make sure that any given raw pointer gets at most one shared
     // pointer made out of it
     return static_pointer_cast<T> (forward->shared_ptrs[v.get()]);
-  }
-  else if (forward->count(v.get()) > 0)
-  {
-    shared_ptr<T> answer = shared_ptr<T>( (T*)(*forward)[v.get()] );
+  } else if (forward->count(v.get()) > 0) {
+    boost::shared_ptr<T> answer = boost::shared_ptr<T>( (T*)(*forward)[v.get()] );
     forward->shared_ptrs[v.get()] = answer;
     return answer;
   } else {
     T* result = copy_pointer(v.get(), forward);
-    if (result == v.get())
-    {
+    if (result == v.get()) {
       // No copying was needed
       return v;
     } else {
@@ -141,19 +137,17 @@ template <typename T>
 set<T*> copy_set(const set<T*>& s, ForwardingMap* forward)
 {
   set<T*> answer = set<T*>();
-  BOOST_FOREACH(T* obj, s)
-  {
+  BOOST_FOREACH(T* obj, s) {
     answer.insert(copy_pointer(obj, forward));
   }
   return answer;
 }
 
 template <typename T>
-set<shared_ptr<T> > copy_set_shared(const set<shared_ptr<T> >& s, ForwardingMap* forward)
+set<boost::shared_ptr<T> > copy_set_shared(const set<boost::shared_ptr<T> >& s, ForwardingMap* forward)
 {
-  set<shared_ptr<T> > answer = set<shared_ptr<T> >();
-  BOOST_FOREACH(shared_ptr<T> obj, s)
-  {
+  set<boost::shared_ptr<T> > answer = set<boost::shared_ptr<T> >();
+  BOOST_FOREACH(boost::shared_ptr<T> obj, s) {
     answer.insert(copy_shared(obj, forward));
   }
   return answer;
@@ -164,20 +158,18 @@ map<K*, V> copy_map_k(const map<K*, V>& m, ForwardingMap* forward)
 {
   map<K*, V> answer = map<K*, V>();
   typename map<K*, V>::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     answer[copy_pointer((*itr).first, forward)] = (*itr).second;
   }
   return answer;
 }
 
 template <typename K, typename V>
-map<shared_ptr<K>, V> copy_map_shared_k(const map<shared_ptr<K>, V>& m, ForwardingMap* forward)
+map<boost::shared_ptr<K>, V> copy_map_shared_k(const map<boost::shared_ptr<K>, V>& m, ForwardingMap* forward)
 {
-  map<shared_ptr<K>, V> answer = map<shared_ptr<K>, V>();
-  typename map<shared_ptr<K>, V>::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  map<boost::shared_ptr<K>, V> answer = map<boost::shared_ptr<K>, V>();
+  typename map<boost::shared_ptr<K>, V>::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     answer[copy_shared((*itr).first, forward)] = (*itr).second;
   }
   return answer;
@@ -188,32 +180,29 @@ map<K, V*> copy_map_v(const map<K, V*>& m, ForwardingMap* forward)
 {
   map<K, V*> answer = map<K, V*>();
   typename map<K, V*>::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     answer[(*itr).first] = copy_pointer((*itr).second, forward);
   }
   return answer;
 }
 
 template <typename K, typename V>
-map<K, shared_ptr<V> > copy_map_shared_v(const map<K, shared_ptr<V> >& m, ForwardingMap* forward)
+map<K, boost::shared_ptr<V> > copy_map_shared_v(const map<K, boost::shared_ptr<V> >& m, ForwardingMap* forward)
 {
-  map<K, shared_ptr<V> > answer = map<K, shared_ptr<V> >();
-  typename map<K, shared_ptr<V> >::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  map<K, boost::shared_ptr<V> > answer = map<K, boost::shared_ptr<V> >();
+  typename map<K, boost::shared_ptr<V> >::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     answer[(*itr).first] = copy_shared((*itr).second, forward);
   }
   return answer;
 }
 
 template <typename K, typename V>
-map<K*, shared_ptr<V> > copy_map_kv(const map<K*, shared_ptr<V> >& m, ForwardingMap* forward)
+map<K*, boost::shared_ptr<V> > copy_map_kv(const map<K*, boost::shared_ptr<V> >& m, ForwardingMap* forward)
 {
-  map<K*, shared_ptr<V> > answer = map<K*, shared_ptr<V> >();
-  typename map<K*, shared_ptr<V> >::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  map<K*, boost::shared_ptr<V> > answer = map<K*, boost::shared_ptr<V> >();
+  typename map<K*, boost::shared_ptr<V> >::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     answer[copy_pointer((*itr).first, forward)] = copy_shared((*itr).second, forward);
   }
   return answer;
@@ -223,15 +212,13 @@ typedef SamplableMap<set<Node*> > BlocksMap;
 BlocksMap copy_blocks_map(const BlocksMap& m, ForwardingMap* forward)
 {
   BlocksMap answer = BlocksMap();
-  for(typename vector<pair<VentureValuePtr,set<Node*> > >::const_iterator itr = m.a.begin();
-      itr != m.a.end(); ++itr)
-  {
-    answer.a.push_back( pair<VentureValuePtr,set<Node*> >(copy_shared((*itr).first, forward),
+  for(vector<pair<VentureValuePtr, set<Node*> > >::const_iterator itr = m.a.begin();
+      itr != m.a.end(); ++itr) {
+    answer.a.push_back( pair<VentureValuePtr, set<Node*> >(copy_shared((*itr).first, forward),
                                                           copy_set((*itr).second, forward)));
   }
-  for(typename MapVVPtrInt::const_iterator itr = m.d.begin();
-      itr != m.d.end(); ++itr)
-  {
+  for(MapVVPtrInt::const_iterator itr = m.d.begin();
+      itr != m.d.end(); ++itr) {
     answer.d[copy_shared((*itr).first, forward)] = (*itr).second;
   }
   return answer;
@@ -240,9 +227,8 @@ BlocksMap copy_blocks_map(const BlocksMap& m, ForwardingMap* forward)
 ScopesMap copy_scopes_map(const ScopesMap& m, ForwardingMap* forward)
 {
   ScopesMap answer = ScopesMap();
-  typename ScopesMap::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  ScopesMap::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     SamplableMap<std::set<Node*> > explictly_typed = copy_blocks_map((*itr).second, forward);
     answer[copy_shared((*itr).first, forward)] = explictly_typed;
   }
@@ -254,8 +240,7 @@ boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEq
 {
   boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual> answer = boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual>();
   typename boost::unordered_map<VentureValuePtr, V, HashVentureValuePtr, VentureValuePtrsEqual>::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
+  for(itr = m.begin(); itr != m.end(); ++itr) {
     answer[copy_shared((*itr).first, forward)] = copy_shared((*itr).second, forward);
   }
   return answer;
@@ -265,33 +250,30 @@ template <typename V>
 vector<V*> copy_vector(const vector<V*>& v, ForwardingMap* forward)
 {
   vector<V*> answer = vector<V*>();
-  BOOST_FOREACH(V* val, v)
-    {
-      answer.push_back(copy_pointer(val, forward));
-    }
+  BOOST_FOREACH(V* val, v) {
+    answer.push_back(copy_pointer(val, forward));
+  }
   return answer;
 }
 
 template <typename V>
-vector<shared_ptr<V> > copy_vector_shared(const vector<shared_ptr<V> >& v, ForwardingMap* forward)
+vector<boost::shared_ptr<V> > copy_vector_shared(const vector<boost::shared_ptr<V> >& v, ForwardingMap* forward)
 {
-  vector<shared_ptr<V> > answer = vector<shared_ptr<V> >();
-  BOOST_FOREACH(shared_ptr<V> val, v)
-    {
-      answer.push_back(copy_shared(val, forward));
-    }
+  vector<boost::shared_ptr<V> > answer = vector<boost::shared_ptr<V> >();
+  BOOST_FOREACH(boost::shared_ptr<V> val, v) {
+    answer.push_back(copy_shared(val, forward));
+  }
   return answer;
 }
 
 template <typename K, typename V>
-map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(const map<K*, vector<shared_ptr<V> > >& m, ForwardingMap* forward)
+map<K*, vector<boost::shared_ptr<V> > > copy_map_k_vectorv(const map<K*, vector<boost::shared_ptr<V> > >& m, ForwardingMap* forward)
 {
-  map<K*, vector<shared_ptr<V> > > answer = map<K*, vector<shared_ptr<V> > >();
-  typename map<K*, vector<shared_ptr<V> > >::const_iterator itr;
-  for(itr = m.begin(); itr != m.end(); ++itr)
-  {
-    if (!((*itr).second.empty()))
-    { // Avoid inserting empty entries; their keys may be stale, and
+  map<K*, vector<boost::shared_ptr<V> > > answer = map<K*, vector<boost::shared_ptr<V> > >();
+  typename map<K*, vector<boost::shared_ptr<V> > >::const_iterator itr;
+  for(itr = m.begin(); itr != m.end(); ++itr) {
+    if (!((*itr).second.empty())) {
+      // Avoid inserting empty entries; their keys may be stale, and
       // they get auto-generated if needed.
       answer[copy_pointer((*itr).first, forward)] = copy_vector_shared((*itr).second, forward);
     }
@@ -303,9 +285,10 @@ map<K*, vector<shared_ptr<V> > > copy_map_k_vectorv(const map<K*, vector<shared_
 |* Concrete Traces                                                   *|
 \*********************************************************************/
 
-shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward) const
+boost::shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward) const
 {
-  shared_ptr<ConcreteTrace> answer = shared_ptr<ConcreteTrace>(new ConcreteTrace);
+  boost::shared_ptr<ConcreteTrace> answer = boost::shared_ptr<ConcreteTrace>(new ConcreteTrace);
+  gsl_rng_memcpy(answer->getRNG(), this->getRNG());
   answer->globalEnvironment = copy_shared(this->globalEnvironment, forward);
   answer->unconstrainedChoices = copy_set(this->unconstrainedChoices, forward);
   answer->constrainedChoices = copy_set(this->constrainedChoices, forward);
@@ -320,6 +303,7 @@ shared_ptr<ConcreteTrace> ConcreteTrace::copy_help(ForwardingMap* forward) const
   answer->values = copy_map_kv(this->values, forward);
   answer->observedValues = copy_map_kv(this->observedValues, forward);
   answer->builtInNodes = copy_set_shared(this->builtInNodes, forward);
+  answer->boundForeignSPNodes = copy_set_shared(this->boundForeignSPNodes, forward);
   answer->seekInconsistencies();
   return answer;
 }

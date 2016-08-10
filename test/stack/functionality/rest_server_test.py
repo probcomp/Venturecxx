@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 # -*- coding: utf-8 -*-
 import unittest
 import json
@@ -21,7 +22,7 @@ from nose.plugins.attrib import attr
 
 from venture.server import RiplRestServer
 from venture.server import utils
-from venture.shortcuts import make_venture_script_ripl, make_combined_ripl
+from venture.shortcuts import Lite
 
 class ServerTestCase(unittest.TestCase):
 
@@ -47,7 +48,7 @@ class ServerTestCase(unittest.TestCase):
 class TestRestServer(ServerTestCase):
 
     def setUp(self):
-        ripl = make_venture_script_ripl()
+        ripl = Lite().make_venture_script_ripl()
         args = ['assume']
         self.server = utils.RestServer(ripl,args)
         self.client = self.server.test_client()
@@ -74,7 +75,7 @@ class TestRestServer(ServerTestCase):
 class TestRiplRestServer(ServerTestCase):
 
     def setUp(self):
-        ripl = make_combined_ripl()
+        ripl = Lite().make_combined_ripl()
         self.server = RiplRestServer(ripl)
         self.client = self.server.test_client()
 

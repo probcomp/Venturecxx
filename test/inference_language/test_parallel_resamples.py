@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,12 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 import threading
-import scipy.stats
 
-from venture.test.config import get_ripl, default_num_samples, gen_on_inf_prim, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from nose.tools import eq_
+from nose import SkipTest
+
+from venture.test.config import default_num_samples
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @gen_on_inf_prim("resample")
 def testSynchronousIsSerial():
@@ -40,13 +45,13 @@ def testResamplingSmoke():
     yield checkResamplingSmoke, mode
 
 @statisticalTest
-def checkResamplingSmoke(mode):
+def checkResamplingSmoke(mode, seed):
   n = default_num_samples()
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.infer("(resample%s %s)" % (mode, n))
   stack_dicts = r.sivm.core_sivm.engine.sample_all(r._ensure_parsed_expression("(normal 0 1)"))
   predictions = [d["value"] for d in stack_dicts]
-  return reportKnownContinuous(scipy.stats.norm(loc=0, scale=1).cdf, predictions, "N(0,1)")
+  return reportKnownGaussian(0, 1, predictions)
 
 @on_inf_prim("resample")
 def testResamplingSmoke2():
@@ -64,12 +69,22 @@ def testResamplingSmoke3():
 
 @statisticalTest
 @on_inf_prim("resample")
-def testResamplingSmoke4():
-  "Check that limiting the number of processes doesn't screw up inference too much."
+def testResamplingSmoke4(seed):
+  # Check that limiting the number of processes doesn't screw up
+  # inference too much.
   n = default_num_samples()
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.infer("(resample_multiprocess %s %s)" % (n, n/2)) # Limit the number of processes
-  stack_dicts = r.sivm.core_sivm.engine.sample_all(r._ensure_parsed_expression("(normal 0 1)"))
-  eq_(n, len(stack_dicts))
-  predictions = [d["value"] for d in stack_dicts]
-  return reportKnownContinuous(scipy.stats.norm(loc=0, scale=1).cdf, predictions, "N(0,1)")
+  predictions = r.sample_all("(normal 0 1)")
+  eq_(n, len(predictions))
+  return reportKnownGaussian(0, 1, predictions)
+
+@on_inf_prim("resample_serializing")
+def testSerializingTracesWithRandomSPs():
+  # Check that the presence of random variables that are SPs does not
+  # mess up resampling.
+  raise SkipTest("Still can't serialize random SPs")
+  r = get_ripl()
+  r.infer("(resample_serializing 2)")
+  r.assume("foo", "(categorical (simplex 0.5 0.5) (array (lambda () 1) (lambda () 2)))")
+  r.infer("(resample_serializing 2)")

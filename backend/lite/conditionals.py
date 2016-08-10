@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,27 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, TypedPSP
-from request import Request,ESR
-from sp import SPType
-import value as v
+import numpy as np
 
-# TODO This is used very little because the stack expands if to biplex.  Flush?
-class BranchRequestPSP(DeterministicPSP):
-  def simulate(self,args): 
-#    print "branchRequest::simulate()"
-    assert not args.operandValues[0] is None
-    if args.operandValues[0]:
-      expIndex = 1
-    else:
-      expIndex = 2
-    exp = args.operandValues[expIndex]
-    # point to the source code location of the expression
-    addr = args.operandNodes[expIndex].address.last.append(1)
-    return Request([ESR(args.node,exp,addr,args.env)])
+from venture.lite.sp import SPType
+from venture.lite.sp_help import deterministic_psp
+from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import no_request
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
-  def description(self,name):
-    return "%s evaluates either exp1 or exp2 in the current environment and returns the result.  Is itself deterministic, but the chosen expression may involve a stochastic computation." % name
+generic_biplex = dispatching_psp(
+  [SPType([t.BoolType(), t.AnyType(), t.AnyType()], t.AnyType()),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())], t.ArrayUnboxedType(t.NumberType()))],
+  [deterministic_psp(lambda p, c, a: c if p else a,
+                     sim_grad=lambda args, direction: [0, direction, 0] if args[0] else [0, 0, direction],
+                     descr="biplex returns either its second or third argument, depending on the first."),
+   deterministic_psp(np.where,
+                     # TODO sim_grad
+                     descr="vector-wise biplex")])
 
-def branch_request_psp():
-  return TypedPSP(BranchRequestPSP(), SPType([v.BoolType(), v.ExpressionType(), v.ExpressionType()], v.RequestType("<object>")))
+registerBuiltinSP("biplex", no_request(generic_biplex))

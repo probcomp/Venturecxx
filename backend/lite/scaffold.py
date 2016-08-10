@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,25 +15,40 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import LookupNode, RequestNode, OutputNode
-from value import SPRef
-from omegadb import OmegaDB
-from detach import unapplyPSP
-from regen import applyPSP
+from collections import OrderedDict
+
+from venture.lite.detach import unapplyPSP
+from venture.lite.node import isLookupNode
+from venture.lite.node import isOutputNode
+from venture.lite.node import isRequestNode
+from venture.lite.omegadb import OmegaDB
+from venture.lite.orderedset import OrderedFrozenSet
+from venture.lite.orderedset import OrderedSet
+from venture.lite.regen import applyPSP
+from venture.lite.value import SPRef
 
 class Scaffold(object):
-  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None):
+  def __init__(self,setsOfPNodes=None,regenCounts=None,absorbing=None,aaa=None,border=None,lkernels=None,brush=None,drg=None):
     self.setsOfPNodes = setsOfPNodes if setsOfPNodes else [] # [Set Node]
-    self.regenCounts = regenCounts if regenCounts else {} # {Node:Int}
-    self.absorbing = absorbing if absorbing else set() # Set Node
-    self.aaa = aaa if aaa else set() # Set Node
+    assert all(isinstance(pnodes, OrderedFrozenSet) for pnodes in self.setsOfPNodes)
+    self.regenCounts = regenCounts if regenCounts else OrderedDict() # {Node:Int}
+    assert isinstance(self.regenCounts, OrderedDict)
+    self.absorbing = absorbing if absorbing else OrderedFrozenSet() # Set Node
+    assert isinstance(self.absorbing, OrderedFrozenSet)
+    self.aaa = aaa if aaa else OrderedFrozenSet() # Set Node
+    assert isinstance(self.aaa, OrderedFrozenSet)
     self.border = border if border else [] # [[Node]]
-    self.lkernels = lkernels if lkernels else {} # {Node:LKernel}
-    self.brush = brush if brush else set() # Set Node
+    self.lkernels = lkernels if lkernels else OrderedDict() # {Node:LKernel}
+    assert isinstance(self.lkernels, OrderedDict)
+    self.brush = brush if brush else OrderedFrozenSet() # Set Node
+    assert isinstance(self.brush, OrderedFrozenSet)
+    self.drg = drg if drg else OrderedFrozenSet() # Set Node
+    assert isinstance(self.drg, OrderedFrozenSet)
+    # Store the drg for introspection; not directly read by regen/detach
 
   def getPrincipalNodes(self):
     # Return a list so that repeated traversals have the same order
-    return [n for n in set.union(*self.setsOfPNodes)]
+    return [n for n in OrderedFrozenSet.union(*self.setsOfPNodes)]
   def getRegenCount(self,node): return self.regenCounts[node]
   def incrementRegenCount(self,node): self.regenCounts[node] += 1
   def decrementRegenCount(self,node): self.regenCounts[node] -= 1
@@ -50,11 +65,15 @@ class Scaffold(object):
     return pnodes[0]
   def isBrush(self, node): return node in self.brush
 
+  def numAffectedNodes(self):
+    return len(self.regenCounts)
+
   def show(self):
     print "---Scaffold---"
     print "# pnodes: " + str(len(self.getPrincipalNodes()))
     print "# absorbing nodes: " + str(len(self.absorbing))
     print "# aaa nodes: " + str(len(self.aaa))
+    print "# brush nodes: " + str(len(self.brush))
     print "border lengths: " + str([len(segment) for segment in self.border])
     print "# lkernels: " + str(len(self.lkernels))
 
@@ -63,6 +82,7 @@ class Scaffold(object):
     print "pnodes: " + str(self.getPrincipalNodes())
     print "absorbing nodes: " + str(self.absorbing)
     print "aaa nodes: " + str(self.aaa)
+    print "brush nodes: " + str(self.brush)
     print "borders: " + str(self.border)
     print "lkernels: " + str(self.lkernels)
 
@@ -104,10 +124,10 @@ def updateValuesAtScaffold(trace,scaffold,updatedNodes):
 def updateValueAtNode(trace, scaffold, node, updatedNodes):
   # Strong assumption! Only consider resampling nodes in the scaffold.
   if node not in updatedNodes and scaffold.isResampling(node):
-    if isinstance(node, LookupNode):
+    if isLookupNode(node):
       updateValueAtNode(trace, scaffold, node.sourceNode, updatedNodes)
       trace.setValueAt(node, trace.valueAt(node.sourceNode))
-    elif isinstance(node, OutputNode):
+    elif isOutputNode(node):
       # Assume SPRef and AAA nodes are always updated.
       psp = trace.pspAt(node)
       if not isinstance(trace.valueAt(node), SPRef) and not psp.childrenCanAAA():
@@ -124,7 +144,7 @@ def update(trace, node):
   scaffold = Scaffold()
   omegaDB = OmegaDB()
   unapplyPSP(trace, node, scaffold, omegaDB)
-  applyPSP(trace,node,scaffold,False,omegaDB,{})
+  applyPSP(trace,node,scaffold,False,omegaDB,OrderedDict())
 
 
 def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArgs=None, hardBorder=None, updateValues=False):
@@ -132,11 +152,11 @@ def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArg
     hardBorder = []
   assert len(hardBorder) <= 1
 
-  cDRG,cAbsorbing,cAAA = set(),set(),set()
-  indexAssignments = {}
+  cDRG,cAbsorbing,cAAA = OrderedSet(),OrderedSet(),OrderedSet()
+  indexAssignments = OrderedDict()
   assert isinstance(setsOfPNodes,list)
   for i in range(len(setsOfPNodes)):
-    assert isinstance(setsOfPNodes[i],set)
+    assert isinstance(setsOfPNodes[i],OrderedFrozenSet)
     extendCandidateScaffold(trace,setsOfPNodes[i],cDRG,cAbsorbing,cAAA,indexAssignments,i,hardBorder)
 
   brush = findBrush(trace,cDRG)
@@ -146,16 +166,20 @@ def constructScaffold(trace, setsOfPNodes, useDeltaKernels=False, deltaKernelArg
   for node in hardBorder: assert node in border
   lkernels = loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs)
   borderSequence = assignBorderSequnce(border,indexAssignments,len(setsOfPNodes))
-  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush)
+  scaffold = Scaffold(setsOfPNodes,regenCounts,absorbing,aaa,borderSequence,lkernels,brush,drg)
 
   if updateValues:
-    updateValuesAtScaffold(trace,scaffold,set())
+    updateValuesAtScaffold(trace,scaffold,OrderedSet())
 
   return scaffold
 
 def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder):
   if node not in hardBorder:
-    if node not in drg or node not in indexAssignments or indexAssignments[node] is not i or node in absorbing or node in aaa:
+    if node not in drg or \
+       node not in indexAssignments or \
+       indexAssignments[node] is not i or \
+       node in absorbing or \
+       node in aaa:
       q.extend([(n,False,node) for n in trace.childrenAt(node)])
   if node in absorbing: absorbing.remove(node)
   if node in aaa: aaa.remove(node)
@@ -163,8 +187,8 @@ def addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBord
   indexAssignments[node] = i
 
 def addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i):
-  assert not node in drg
-  assert not node in aaa
+  assert node not in drg
+  assert node not in aaa
   absorbing.add(node)
   indexAssignments[node] = i
 
@@ -180,26 +204,26 @@ def extendCandidateScaffold(trace,pnodes,drg,absorbing,aaa,indexAssignments,i,ha
 
   while q:
     node,isPrincipal,parentNode = q.pop()
-    if node in drg and not node in aaa:
+    if node in drg and node not in aaa:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
-    elif isinstance(node,LookupNode) or node.operatorNode in drg:
+    elif isLookupNode(node) or node.operatorNode in drg:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
     # TODO temporary: once we put all uncollapsed AAA procs into AEKernels, this line won't be necessary
     elif node in aaa:
-      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)      
+      addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
     elif (not isPrincipal) and trace.pspAt(node).canAbsorb(trace,node,parentNode):
       addAbsorbingNode(drg,absorbing,aaa,node,indexAssignments,i)
-    elif trace.pspAt(node).childrenCanAAA(): 
+    elif trace.pspAt(node).childrenCanAAA():
       addAAANode(drg,aaa,absorbing,node,indexAssignments,i)
-    else: 
+    else:
       addResamplingNode(trace,drg,absorbing,aaa,q,node,indexAssignments,i,hardBorder)
 
 def findBrush(trace,cDRG):
-  disableCounts = {}
-  disabledRequests = set()
-  brush = set()
+  disableCounts = OrderedDict()
+  disabledRequests = OrderedSet()
+  brush = OrderedSet()
   for node in cDRG:
-    if isinstance(node,RequestNode):
+    if isRequestNode(node):
       disableRequests(trace,node,disableCounts,disabledRequests,brush)
   return brush
 
@@ -207,7 +231,7 @@ def disableRequests(trace,node,disableCounts,disabledRequests,brush):
   if node in disabledRequests: return
   disabledRequests.add(node)
   for esrParent in trace.esrParentsAt(node.outputNode):
-    if not esrParent in disableCounts: disableCounts[esrParent] = 0
+    if esrParent not in disableCounts: disableCounts[esrParent] = 0
     disableCounts[esrParent] += 1
     if disableCounts[esrParent] == esrParent.numRequests:
       disableFamily(trace,esrParent,disableCounts,disabledRequests,brush)
@@ -215,11 +239,11 @@ def disableRequests(trace,node,disableCounts,disabledRequests,brush):
 def disableFamily(trace,node,disableCounts,disabledRequests,brush):
   if node in brush: return
   brush.add(node)
-  if isinstance(node,OutputNode):
+  if isOutputNode(node):
     brush.add(node.requestNode)
     disableRequests(trace,node.requestNode,disableCounts,disabledRequests,brush)
     disableFamily(trace,node.operatorNode,disableCounts,disabledRequests,brush)
-    for operandNode in node.operandNodes: 
+    for operandNode in node.operandNodes:
       disableFamily(trace,operandNode,disableCounts,disabledRequests,brush)
 
 def removeBrush(cDRG,cAbsorbing,cAAA,brush):
@@ -242,11 +266,11 @@ def findBorder(trace,drg,absorbing,aaa):
 
 def maybeIncrementAAARegenCount(trace,regenCounts,aaa,node):
   value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode in aaa: 
+  if isinstance(value,SPRef) and value.makerNode in aaa:
     regenCounts[value.makerNode] += 1
 
 def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
-  regenCounts = {}
+  regenCounts = OrderedDict()
   for node in drg:
     if node in aaa:
       regenCounts[node] = 1 # will be added to shortly
@@ -264,20 +288,23 @@ def computeRegenCounts(trace,drg,absorbing,aaa,border,brush,hardBorder):
         maybeIncrementAAARegenCount(trace,regenCounts,aaa,parent)
 
     for node in brush:
-      if isinstance(node,OutputNode):
+      if isOutputNode(node):
         for esrParent in trace.esrParentsAt(node):
           maybeIncrementAAARegenCount(trace,regenCounts,aaa,esrParent)
-      elif isinstance(node,LookupNode):
+      elif isLookupNode(node):
         maybeIncrementAAARegenCount(trace,regenCounts,aaa,node.sourceNode)
 
   return regenCounts
 
 def loadKernels(trace,drg,aaa,useDeltaKernels,deltaKernelArgs):
-  lkernels = { node : trace.pspAt(node).getAAALKernel() for node in aaa}
+  lkernels = OrderedDict(
+    (node, trace.pspAt(node).getAAALKernel()) for node in aaa)
   if useDeltaKernels:
     for node in drg - aaa:
-      if not isinstance(node,OutputNode): continue
+      if not isOutputNode(node): continue
       if node.operatorNode in drg: continue
+      # If you're wondering about this fallback clause, the rationale
+      # is in the "joint-delta-kernels" footnote of doc/on-latents.md
       for o in node.operandNodes:
         if o in drg: continue
       if trace.pspAt(node).hasDeltaKernel(): lkernels[node] = trace.pspAt(node).getDeltaKernel(deltaKernelArgs)

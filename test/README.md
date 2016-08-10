@@ -61,7 +61,7 @@ manifest only sporadically and are difficult to diagnose.
 
 Therefore, axch for one tends not to run the inference quality test
 suite much locally, relying instead on the [continuous integration
-server](http://probcomp3.csail.mit.edu:8080/) to
+server](https://probcomp-3.csail.mit.edu/) to
 notice problems.  If you are working on something related, however,
 `nosetests -c inference-quality.cfg` is your friend.
 
@@ -101,7 +101,9 @@ procedures for testing more effectively in these circumstances.
 
 The general pattern: annotate such a test `@statisticalTest`, and have
 it `return reportKnownSomething(...)` as appropriate from the helpers
-in the `stats` module.
+in the `stats` module.  The test function must accept a `seed`
+argument, which can be used to seed PRNGs, and should be deterministic
+given the seed.
 
 Randomized Tests
 ----------------
@@ -129,7 +131,7 @@ claims to be".
 Jenkins Continuous Build
 ------------------------
 
-The continuous build server lives at http://probcomp3.csail.mit.edu:8080/
+The continuous build server lives at https://probcomp-3.csail.mit.edu/
 
 The build structure is as follows:
 
@@ -147,6 +149,9 @@ The build structure is as follows:
 
     - `puma-{meanfield,rejection}-inference-quality` are disabled
       because Puma does not implement those two methods (yet).
+
+    - `lite-{meanfield,func-pgibbs}-inference-quality` are disabled
+      because they have never passed.
 
     - `<backend>-misc-inference-quality` test methods we do not have
       many tests for, as well as combinations of methods.

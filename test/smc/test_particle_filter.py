@@ -16,17 +16,22 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, default_num_samples, on_inf_prim
 import sys
+
 from nose.plugins.attrib import attr
+
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 sys.setrecursionlimit(10000)
 
 @on_inf_prim("resample")
 def testIncorporateDoesNotCrash():
-  """A sanity test for stack handling of incorporate"""
+  # A sanity test for stack handling of incorporate
 
   ripl = get_ripl()
   P = 60
@@ -50,12 +55,48 @@ def testIncorporateDoesNotCrash():
   ripl.observe("(g 1)",False)
   ripl.infer("(incorporate)")
 
-def initBasicPFripl1():
-  ripl = get_ripl()
+@on_inf_prim("resample")
+@statisticalTest
+def testResampling1(seed):
+  P = 10
+  ripl = get_ripl(seed=seed)
+  def a_sample():
+    ripl.clear()
+    ripl.infer("(resample %d)" % P)
+    ripl.assume("x", "(normal 0 1)")
+    ripl.observe("(normal x 1)", 2)
+    ripl.infer("(resample 1)")
+    return ripl.sample("x")
+  predictions = [a_sample() for _ in range(default_num_samples())]
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
+
+@on_inf_prim("resample")
+@statisticalTest
+@attr("slow")
+def testResampling2(seed):
+  # This differs from testResampling1 by an extra resample step, which
+  # is supposed to be harmless
+  P = 20
+  ripl = get_ripl(seed=seed)
+  def a_sample():
+    ripl.clear()
+    ripl.infer("(resample %d)" % P)
+    ripl.assume("x", "(normal 0 1)")
+    ripl.observe("(normal x 1)", 2)
+    ripl.infer("(incorporate)")
+    ripl.infer("(resample %d)" % P)
+    ripl.infer("(incorporate)")
+    ripl.infer("(resample 1)")
+    return ripl.sample("x")
+  predictions = [a_sample() for _ in range(4*default_num_samples())]
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)
+
+def initBasicPFripl1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (mem (lambda (i)
-  (tag 0 i 
-    (bernoulli (if (eq i 0) 0.5 
+  (tag 0 i
+    (bernoulli (if (eq i 0) 0.5
                    (if (f (- i 1)) 0.7 0.3))))))
 """)
 
@@ -69,16 +110,16 @@ def initBasicPFripl1():
 @on_inf_prim("all") # Really resample and mh
 @statisticalTest
 @attr("slow")
-def testBasicParticleFilter1(P = 10):
-  """A sanity test for particle filtering (discrete)"""
-
+def testBasicParticleFilter1(seed):
+  # A sanity test for particle filtering (discrete)
+  P = 10
   N = default_num_samples()
   predictions = []
 
   os = zip(range(1,6),[False,False,True,False,False])
 
   for _ in range(N):
-    ripl = initBasicPFripl1()
+    ripl = initBasicPFripl1(seed)
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)
@@ -94,11 +135,11 @@ def testBasicParticleFilter1(P = 10):
 
 ##################
 
-def initBasicPFripl2():
-  ripl = get_ripl()
+def initBasicPFripl2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (mem (lambda (i)
-  (tag 0 i 
+  (tag 0 i
     (normal (if (eq i 0) 0 (f (- i 1))) 1))))
 """)
 
@@ -112,16 +153,16 @@ def initBasicPFripl2():
 @on_inf_prim("all") # Really resample and mh
 @statisticalTest
 @attr("slow")
-def testBasicParticleFilter2(P = 10):
-  """A sanity test for particle filtering (continuous)"""
-
+def testBasicParticleFilter2(seed):
+  # A sanity test for particle filtering (continuous)
+  P = 10
   N = default_num_samples()
   predictions = []
 
   os = zip(range(0,5),[1,2,3,4,5])
 
   for _ in range(N):
-    ripl = initBasicPFripl2()
+    ripl = initBasicPFripl2(seed)
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)
@@ -132,5 +173,4 @@ def testBasicParticleFilter2(P = 10):
     ripl.predict("(f 4)",label="pid")
     predictions.append(ripl.report("pid"))
 
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390/89.0, math.sqrt(55/89.0), predictions)

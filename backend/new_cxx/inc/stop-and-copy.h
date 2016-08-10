@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -23,7 +23,10 @@ struct ForwardingMap
   map<const void*, void*> pointers;
   map<const void*, shared_ptr<void> > shared_ptrs;
   size_t count(const void* k) const;
-  void*& operator[] (const void* k);
+  void*& operator[] (const void* const k);
 };
+
+template <typename T>
+boost::shared_ptr<T> copy_shared(const boost::shared_ptr<T>& v, ForwardingMap* forward);
 
 #endif

@@ -36,50 +36,66 @@ struct PyTrace
 {
   PyTrace();
   ~PyTrace();
-  
-  void evalExpression(DirectiveID did, boost::python::object object);
+
+  void evalExpression(DirectiveID did, const boost::python::object & object);
   void unevalDirectiveID(DirectiveID did);
 
-  void observe(DirectiveID did,boost::python::object valueExp);
-  void unobserve(DirectiveID did);
+  void observe(DirectiveID did, const boost::python::object & valueExp);
+  double unobserve(DirectiveID did);
 
   void bindInGlobalEnv(const string& sym, DirectiveID did);
   void unbindInGlobalEnv(const string& sym);
+  bool boundInGlobalEnv(const string& sym);
 
   boost::python::object extractPythonValue(DirectiveID did);
 
-  void bindPrimitiveSP(const string& sym, boost::python::object sp);
+  void bindPythonSP(const string& sym, const boost::python::object & sp);
+  void bindPumaSP(const string& sym, SP* sp);
 
   void setSeed(size_t seed);
   size_t getSeed();
 
-  double getGlobalLogScore();
   uint32_t numUnconstrainedChoices();
 
   double makeConsistent();
+  void registerConstraints();
 
-  double likelihoodAt(boost::python::object pyscope, boost::python::object pyblock);
-  double posteriorAt(boost::python::object pyscope, boost::python::object pyblock);
+  double logLikelihoodAt(
+      const boost::python::object & pyscope,
+      const boost::python::object & pyblock);
+  double logJointAt(
+      const boost::python::object & pyscope,
+      const boost::python::object & pyblock);
   double likelihoodWeight();
 
   boost::python::list dotTrace(bool colorIgnored);
 
   // for testing
-  int numNodesInBlock(boost::python::object scope, boost::python::object block);
+  int numNodesInBlock(
+      const boost::python::object & scope,
+      const boost::python::object & block);
+  int numBlocksInScope(const boost::python::object & scope);
   boost::python::list numFamilies();
 
-  void primitive_infer(boost::python::dict params);
-  
+  double primitive_infer(const boost::python::dict & params);
+
   void freeze(DirectiveID did);
 
   PyTrace* stop_and_copy() const;
 
   shared_ptr<OrderedDB> makeEmptySerializationDB();
-  shared_ptr<OrderedDB> makeSerializationDB(boost::python::list stackDicts, bool skipStackDictConversion);
-  boost::python::list dumpSerializationDB(shared_ptr<OrderedDB> db, bool skipStackDictConversion);
-  void unevalAndExtract(DirectiveID did, shared_ptr<OrderedDB> db);
-  void restoreDirectiveID(DirectiveID did, shared_ptr<OrderedDB> db);
-  void evalAndRestore(DirectiveID did, boost::python::object object, shared_ptr<OrderedDB> db);
+  shared_ptr<OrderedDB> makeSerializationDB(
+      const boost::python::list & stackDicts,
+      bool skipStackDictConversion);
+  boost::python::list dumpSerializationDB(
+      const shared_ptr<OrderedDB> & db,
+      bool skipStackDictConversion);
+  void unevalAndExtract(DirectiveID did, const shared_ptr<OrderedDB> & db);
+  void restoreDirectiveID(DirectiveID did, const shared_ptr<OrderedDB> & db);
+  void evalAndRestore(
+      DirectiveID did,
+      const boost::python::object & object,
+      const shared_ptr<OrderedDB> & db);
 
   boost::python::list scope_keys();
 

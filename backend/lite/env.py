@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,16 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, standard_venture_type
-from exception import VentureError
+from collections import OrderedDict
+
+from venture.lite.exception import VentureError
+from venture.lite.value import VentureValue
+from venture.lite.value import registerVentureType
+# Used by the exec pylint: disable=unused-import
+from venture.lite.types import VentureType
+from venture.lite.types import standard_venture_type
 
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
 # should be consistent.
+# Binding a symbol to the Python value None has the effect of making
+# the symbol behave as if unbound, shadowing existing bindings; this
+# behavior is used in the implementation of letrec.
 class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
-    self.frame = {}
+    self.frame = OrderedDict()
     if ids:
       for sym in ids:
         assert isinstance(sym, str)
@@ -43,13 +52,23 @@ class VentureEnvironment(VentureValue):
     elif not self.outerEnv: raise VentureError("Cannot unbind unbound symbol '%s'" % sym)
     else: self.outerEnv.removeBinding(sym)
 
+  def fillBinding(self,sym,val):
+    # Used in the implementation of letrec
+    assert isinstance(sym, str)
+    assert sym in self.frame
+    assert self.frame[sym] is None
+    self.frame[sym] = val
+
   def findSymbol(self,sym):
-    if sym in self.frame: return self.frame[sym]
-    elif not self.outerEnv: raise VentureError("Cannot find symbol '%s'" % sym)
-    else: return self.outerEnv.findSymbol(sym)
+    if sym in self.frame: ret = self.frame[sym]
+    elif not self.outerEnv: ret = None
+    else: ret = self.outerEnv.findSymbol(sym)
+    if ret is None:
+      raise VentureError("Cannot find symbol '%s'" % sym)
+    return ret
 
   def symbolBound(self, sym):
-    if sym in self.frame: return True
+    if sym in self.frame: return self.frame[sym] is not None
     elif not self.outerEnv: return False
     else: return self.outerEnv.symbolBound(sym)
 
@@ -60,7 +79,7 @@ class VentureEnvironment(VentureValue):
 
   def asStackDict(self, _trace=None):
     # Methinks environments can be pretty opaque things for now.
-    return {"type":"environment", "value":self}
+    return OrderedDict([("type", "environment"), ("value", self)])
   @staticmethod
   def fromStackDict(thing): return thing["value"]
 
@@ -82,5 +101,4 @@ class VentureEnvironment(VentureValue):
 
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming
-from value import VentureType # Used by the exec pylint: disable=unused-import
-exec(standard_venture_type("Environment")) # pylint: disable=exec-used
+exec(standard_venture_type("Environment", value_classname="VentureEnvironment")) # pylint: disable=exec-used

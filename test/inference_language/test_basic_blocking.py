@@ -19,15 +19,25 @@ import math
 import scipy.stats as stats
 from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples, default_num_transitions_per_sample, broken_in, on_inf_prim
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import collect_iid_samples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import stochasticTest
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 @on_inf_prim("mh")
-def testBlockingExample0():
-  ripl = get_ripl()
-  if not collect_iid_samples(): raise SkipTest("This test should not pass without reset.")
-  
+def testBlockingExample0(seed):
+  ripl = get_ripl(seed=seed)
+  if not collect_iid_samples():
+    raise SkipTest("This test should not pass without reset.")
+
   ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
   ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
@@ -35,12 +45,12 @@ def testBlockingExample0():
   # If inference only frobnicates b, then the distribution on a
   # remains the prior.
   predictions = collectSamples(ripl,"pid",infer="(mh 1 1 10)")
-  cdf = stats.norm(loc=10.0, scale=1.0).cdf
-  return reportKnownContinuous(cdf, predictions, "N(10.0,1.0)")
+  return reportKnownGaussian(10, 1.0, predictions)
 
+@stochasticTest
 @on_inf_prim("mh")
-def testBlockingExample1():
-  ripl = get_ripl()
+def testBlockingExample1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))",label="a")
   ripl.assume("b", "(tag 0 0 (normal 1.0 1.0))",label="b")
   olda = ripl.report("a")
@@ -49,12 +59,13 @@ def testBlockingExample1():
   ripl.infer("(mh 0 0 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
 
+@stochasticTest
 @on_inf_prim("mh")
-def testBlockingExample2():
-  ripl = get_ripl()
+def testBlockingExample2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
   ripl.assume("b", "(tag 0 0 (normal 1.0 1.0))", label="b")
   ripl.assume("c", "(tag 0 1 (normal 2.0 1.0))", label="c")
@@ -71,16 +82,17 @@ def testBlockingExample2():
   newd = ripl.report("d")
   if olda == newa:
     assert oldb == newb
-    assert not oldc == newc
-    assert not oldd == newd
+    assert oldc != newc
+    assert oldd != newd
   else:
-    assert not oldb == newb
+    assert oldb != newb
     assert oldc == newc
     assert oldd == newd
 
+@stochasticTest
 @on_inf_prim("mh")
-def testBlockingExample3():
-  ripl = get_ripl()
+def testBlockingExample3(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
   ripl.assume("b", "(tag 0 1 (normal 1.0 1.0))", label="b")
   olda = ripl.report("a")
@@ -89,15 +101,32 @@ def testBlockingExample3():
   ripl.infer("(mh 0 all 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
-  assert not olda == newa
-  assert not oldb == newb
+  assert olda != newa
+  assert oldb != newb
+
+@stochasticTest
+@broken_in("puma", "Puma does not support the 'each' block keyword (yet).")
+@on_inf_prim("mh")
+def testBlockingExample4(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
+  ripl.assume("b", "(tag 0 1 (normal 1.0 1.0))", label="b")
+  for _ in range(10):
+    olda = ripl.report("a")
+    oldb = ripl.report("b")
+    # A deterministic sweep should touch each relevant block.
+    ripl.infer("(mh 0 each 1)")
+    newa = ripl.report("a")
+    newb = ripl.report("b")
+    assert olda != newa
+    assert oldb != newb
 
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
 @on_inf_prim("rejection")
-def testBasicRejection1():
-  ripl = get_ripl()
-  ripl.assume("x", "(bernoulli 0.5)",label="pid")
+def testBasicRejection1(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume("x", "(flip 0.5)",label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
@@ -105,10 +134,10 @@ def testBasicRejection1():
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
 @on_inf_prim("rejection")
-def testBasicRejection2():
-  ripl = get_ripl()
+def testBasicRejection2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("p", "(uniform_continuous 0 1)")
-  ripl.assume("x", "(bernoulli p)", label="pid")
+  ripl.assume("x", "(flip p)", label="pid")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
@@ -116,26 +145,42 @@ def testBasicRejection2():
 @statisticalTest
 @broken_in('puma', "rejection is not implemented in Puma")
 @on_inf_prim("rejection")
-def testBasicRejection3():
-  ripl = get_ripl()
+def testBasicRejection3(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("p", "(uniform_continuous 0 1)", label="pid")
-  ripl.observe("(bernoulli p)", "true")
+  ripl.observe("(flip p)", "true")
   predictions = collectSamples(ripl, "pid", infer="(rejection default all 1)")
   cdf = stats.beta(2,1).cdf
   return reportKnownContinuous(cdf, predictions, "beta(2,1)")
 
 @statisticalTest
 @on_inf_prim("mh")
-def testCycleKernel():
-  """Same example as testBlockingExample0, but a cycle kernel that covers everything should solve it"""
-  ripl = get_ripl()
+def testCycleKernel(seed):
+  # Same example as testBlockingExample0, but a cycle kernel that
+  # covers everything should solve it
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(tag 0 0 (normal 10.0 1.0))", label="pid")
   ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
-  infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % default_num_transitions_per_sample()
+  infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % \
+          default_num_transitions_per_sample()
 
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=34.0/3.0, scale=math.sqrt(2.0/3.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(34/3,sqrt(2/3))")
+  return reportKnownGaussian(34.0/3.0, math.sqrt(2.0/3.0), predictions)
+
+@stochasticTest
+@on_inf_prim("mh")
+def testStringScopes(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume("a", '(tag "foo" "bar" (normal 0.0 1.0))', label="a")
+  ripl.assume("b", '(tag "foo" "bar" (normal 1.0 1.0))', label="b")
+  olda = ripl.report("a")
+  oldb = ripl.report("b")
+  # The point of block proposals is that both things change at once.
+  ripl.infer('(mh "foo" "bar" 1)')
+  newa = ripl.report("a")
+  newb = ripl.report("b")
+  assert olda != newa
+  assert oldb != newb

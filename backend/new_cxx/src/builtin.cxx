@@ -29,22 +29,23 @@
 #include "sps/eval.h"
 #include "sps/hmm.h"
 #include "sps/matrix.h"
+#include "sps/misc.h"
 #include "sps/msp.h"
 #include "sps/mvn.h"
 #include "sps/scope.h"
 
-map<string,VentureValuePtr> initBuiltInValues()
+map<string, VentureValuePtr> initBuiltInValues()
 {
-  map<string,VentureValuePtr> m;
-  m["true"] = shared_ptr<VentureBool>(new VentureBool(true));
-  m["false"] = shared_ptr<VentureBool>(new VentureBool(false));
-  m["nil"] = shared_ptr<VentureNil>(new VentureNil());
+  map<string, VentureValuePtr> m;
+  m["true"] = boost::shared_ptr<VentureBool>(new VentureBool(true));
+  m["false"] = boost::shared_ptr<VentureBool>(new VentureBool(false));
+  m["nil"] = boost::shared_ptr<VentureNil>(new VentureNil());
   return m;
 }
 
-map<string,SP*> initBuiltInSPs()
+map<string, SP*> initBuiltInSPs()
 {
-  map<string,SP*> m;
+  map<string, SP*> m;
 
   /* Deterministic SPs */
   m["add"] = new SP(new NullRequestPSP(), new AddOutputPSP());
@@ -68,13 +69,19 @@ map<string,SP*> initBuiltInSPs()
   m["pow"] = new SP(new NullRequestPSP(), new PowOutputPSP());
   m["sqrt"] = new SP(new NullRequestPSP(), new SqrtOutputPSP());
   m["not"] = new SP(new NullRequestPSP(), new NotOutputPSP());
+
+  m["real"] = new SP(new NullRequestPSP(), new RealOutputPSP());
   m["is_number"] = new SP(new NullRequestPSP(), new IsNumberOutputPSP());
-  m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
+
   m["is_boolean"] = new SP(new NullRequestPSP(), new IsBoolOutputPSP());
   m["is_symbol"] = new SP(new NullRequestPSP(), new IsSymbolOutputPSP());
 
-  m["to_atom"] = new SP(new NullRequestPSP(), new ToAtomOutputPSP());
+  m["atom"] = new SP(new NullRequestPSP(), new AtomOutputPSP());
+  m["atom_index"] = new SP(new NullRequestPSP(), new AtomIndexOutputPSP());
   m["is_atom"] = new SP(new NullRequestPSP(), new IsAtomOutputPSP());
+
+  m["integer"] = new SP(new NullRequestPSP(), new IntegerOutputPSP());
+  m["is_integer"] = new SP(new NullRequestPSP(), new IsIntegerOutputPSP());
 
   m["probability"] = new SP(new NullRequestPSP(), new ProbabilityOutputPSP());
   m["is_probability"] = new SP(new NullRequestPSP(), new IsProbabilityOutputPSP());
@@ -105,7 +112,6 @@ map<string,SP*> initBuiltInSPs()
   m["poisson"] = new SP(new NullRequestPSP(), new PoissonOutputPSP());
 
   /* Conditionals */
-  m["branch"] = new SP(new BranchRequestPSP(), new ESRRefOutputPSP());
   m["biplex"] = new SP(new NullRequestPSP(), new BiplexOutputPSP());
 
   /* Eval and envs */
@@ -122,10 +128,18 @@ map<string,SP*> initBuiltInSPs()
   m["matrix"] = new SP(new NullRequestPSP(), new MatrixOutputPSP());
   m["is_matrix"] = new SP(new NullRequestPSP(), new IsMatrixOutputPSP());
   m["id_matrix"] = new SP(new NullRequestPSP(), new IdentityMatrixOutputPSP());
+  m["transpose"] = new SP(new NullRequestPSP(), new TransposeOutputPSP());
   m["vector"] = new SP(new NullRequestPSP(), new VectorOutputPSP());
   m["is_vector"] = new SP(new NullRequestPSP(), new IsVectorOutputPSP());
   m["to_vector"] = new SP(new NullRequestPSP(), new ToVectorOutputPSP());
+  m["vector_add"] = new SP(new NullRequestPSP(), new VectorAddOutputPSP());
+  m["matrix_add"] = new SP(new NullRequestPSP(), new MatrixAddOutputPSP());
+  m["scale_vector"] = new SP(new NullRequestPSP(), new ScaleVectorOutputPSP());
+  m["scale_matrix"] = new SP(new NullRequestPSP(), new ScaleMatrixOutputPSP());
   m["vector_dot"] = new SP(new NullRequestPSP(), new VectorDotOutputPSP());
+  m["matrix_mul"] = new SP(new NullRequestPSP(), new MatrixMulOutputPSP());
+  m["matrix_times_vector"] = new SP(new NullRequestPSP(), new MatrixTimesVectorOutputPSP());
+  m["vector_times_matrix"] = new SP(new NullRequestPSP(), new VectorTimesMatrixOutputPSP());
 
   /* Scoping */
   m["tag"] = new SP(new NullRequestPSP(), new TagOutputPSP());
@@ -153,9 +167,12 @@ map<string,SP*> initBuiltInSPs()
   m["first"] = new SP(new NullRequestPSP(), new FirstOutputPSP());
   m["second"] = new SP(new NullRequestPSP(), new SecondOutputPSP());
   m["rest"] = new SP(new NullRequestPSP(), new RestOutputPSP());
+  m["apply"] = new SP(new ApplyRequestPSP(), new ESRRefOutputPSP());
+  m["fix"] = new SP(new FixRequestPSP(), new FixOutputPSP());
   m["mapv"] = new SP(new ArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["imapv"] = new SP(new IndexedArrayMapRequestPSP(), new ESRArrayOutputPSP());
   m["arange"] = new SP(new NullRequestPSP(), new ArangeOutputPSP());
+  m["fill"] = new SP(new NullRequestPSP(), new RepeatOutputPSP());
 
   m["make_csp"] = new SP(new NullRequestPSP(), new MakeCSPOutputPSP());
   m["mem"] = new SP(new NullRequestPSP(), new MakeMSPOutputPSP());
@@ -164,14 +181,17 @@ map<string,SP*> initBuiltInSPs()
   m["make_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeBetaBernoulliOutputPSP());
   m["make_uc_beta_bernoulli"] = new SP(new NullRequestPSP(), new MakeUBetaBernoulliOutputPSP());
 
-  /* Dir mults */
-  m["make_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeSymDirMultOutputPSP());
-  m["make_dir_mult"] = new SP(new NullRequestPSP(), new MakeDirMultOutputPSP());
-  m["make_uc_sym_dir_mult"] = new SP(new NullRequestPSP(), new MakeUCSymDirMultOutputPSP());
-  m["make_uc_dir_mult"] = new SP(new NullRequestPSP(), new MakeUCDirMultOutputPSP());
+  /* Dirichlet categoricals */
+  m["make_sym_dir_cat"] = new SP(new NullRequestPSP(), new MakeSymDirCatOutputPSP());
+  m["make_dir_cat"] = new SP(new NullRequestPSP(), new MakeDirCatOutputPSP());
+  m["make_uc_sym_dir_cat"] = new SP(new NullRequestPSP(), new MakeUCSymDirCatOutputPSP());
+  m["make_uc_dir_cat"] = new SP(new NullRequestPSP(), new MakeUCDirCatOutputPSP());
 
   /* Non parametrics */
   m["make_crp"] = new SP(new NullRequestPSP(), new MakeCRPOutputPSP());
+
+  /* Misc */
+  m["exactly"] = new SP(new NullRequestPSP(), new ExactlyOutputPSP());
 
   return m;
 }

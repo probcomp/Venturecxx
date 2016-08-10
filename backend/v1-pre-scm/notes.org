@@ -1,0 +1,467 @@
+#+STARTUP: odd
+#+STARTUP: hidestars
+
+Motto: "We are building a Lisp, not a Scheme"
+- v1 wants to be a total system, not just an interpreter in which a
+  total system can be written
+- the layers don't need to be very good, just good enough
+- the interpreter is the hardest thing to change safely, so that
+  justifies more care
+
+*** Feature list
+vkm's spec/notes:
+  https://www.evernote.com/shard/s434/sh/fa8cb87b-3426-4bb4-bb75-57ae2abb3120/12958d54256b63787ddbe15d1b02c3ac
+
++ Interpreter
+  + with pluggable, nestable traces
+    + the initial trace is a "void" trace with no cost and no
+      interesting operations
+  + with higher-order foreign procedures
+    + Subtlety: preserving the evaluation context enough to call back.
+      Solution: trampoline analogous to requests in v0.2
+  + with a generic metadata facility that the interpreter ignores
+    (useful for passing information to traces' metaprograms)
++ RandomDB style trace: space cost O(runtime), could be O(# random choices)
+  + Support observations
+  + Supports single-site resimulation MH and global rejection
++ Compound procedures can be annotated with assessors, which make them
+  look like (absorbable) random choices to RandomDB MH.
+  + The assessor tag used for the annotation is lexically scoped, and
+    "exported from the RandomDB module".
++ Argument minilanguage with assume, observe, infer, predict
+  + Modeling by inference tested mildly
+  - Want to add "display-all", "display", "estimate" to the argument language
++ Resimulation-MH and rejection sampling should work despite
+  (exchangeable) coupling between applications of the same procedure
+  - Examples: collapsed coin, mem, maybe noisy counter
+- Particle methods, to wit SMC with rejuvenation, should be workable somehow
+  - Forking traces?  Join for the sync required to resample?
+- A code tagging facility that permits block MH, block rejection, etc
+- It should be clear how to implement fancy transition operators, like
+  HMC, slice sampling, (egibbs?)
+  - Is this to be achieved by factoring into detach and regen?
+    - can hack the catastrophic cancelation by representing the weight
+      returned by regen as a list to be summed
+- [Maybe] Capture the idea of (cached?) i/o as a "trace type"
+  - This is interesting because random values have a symmetry with
+    inputs, namely that they are not predictable a priori.
+- [Maybe] Implement actual PETs (without solving the problem of
+  extending them)
+- [Maybe] "The trace should be the source of randomness"
+  - Can I grab the RNG state in MIT Scheme?
+- [Maybe] All code TODOs have been accounted for
+*** Accumulated notes
+- How the heck did I miss a basic type error like putting a trace
+  where an address was expected?  Do I need to add type checks all
+  over the place?
+  - I only noticed because the answers got worse :(
+
+- Thought: could add a trace type to v1 that would build a tape for
+  reverse mode, e.g. for testing sensitivity to the prior.
+
+- Thought: Replay trace + some notion of weighting based on
+  observations (and some notion of cloning/resampling?) begins to
+  enable particle methods (though rejuvenation requires more tracing).
+  - This re-introduces the question of what is needed to be able to
+    observe a procedure.  Is there a broader interface than what
+    RandomDB demands?
+
+- Thought: Replay trace + RNG state also costs space O(source code),
+  permits repeatability
+  - Does not permit resimulation MH, because there is no initial RNG
+    state corresponding to "now this Gaussian returned 2 instead of 1"
+
+- Thought: Bogo-trace = Replay trace + as many RNG states as needed.
+  - Really can recover the resimualtion-MH markov chain, at a space
+    cost proportional to source code size + min(# random choices, # MH
+    steps taken)
+    - Taking fewer MH steps than there are random choices may be a way
+      to do particle filters with rejuvenation on the cheap
+
+- Read through rdb-constraint-propagation.scm and
+  - Carefully re-understand the behavior of that constraint
+    propagation algorithm
+  - Change it to always be safe and describe situations where it will
+    fail to work (perhaps non-intuitively), OR
+  - Very carefully characterize situations where it will give wrong
+    answers
+
+- Read through and resolve the conjectures and TODOs in the v1 design
+  documents.
+  - Is there an interface that handles mutually coupled sets of
+    simulators, whether for RandomDB or PETs?
+
+- Introducing mutation breaks the constancy of values that are read
+  from enclosing traces.  I think I will leave this to the land of "if
+  it hurts when you go like that, don't go like that".
+
+- Random thought: Could choose to make set! return the new value and
+  be random iff the subexpression is; then it may be observable.
+
+- Interesting bug: Inference reruns the model, which seems to rerun
+  definition statements, in the enclosing environment.  That
+  accumulates symbols.  It might be better to drop an extra frame in
+  model-in, and reset that frame on rebuild-rdb.
+
+Note for the FFI:
+- There are several notions that are worth keeping distinct.
+  - A procedure may be "primitive" or "compound" in the sense that it
+    may either have or not have substructure.  For "primitive"
+    procedures, it may be reasonable to assume that they are all
+    either assessable or not, and perhaps either exchangeable or not,
+    but not so much for "compounds".
+  - A procedure may be "in language" or "foreign" in the sense that it
+    is written in Venture or it is not.  "Primitive" procedures are
+    perhaps perforce also "foreign", but it is important for the FFI
+    that "foreign" procedures can have substructure.
+  - A procedure's substructure may be analyzable or not.  "Primitive"
+    procedures are perforce not analyzable, since they have no
+    substructure.  "Foreign" procedures are not analyzable (aside:
+    though they may come with analyzable models) since their
+    substructure is not encoded in Venture.  But not all the
+    substructure of "in-language compound" procedures is necessarily
+    analyzable, because of extending traces (that is, we may wish to
+    declare that the content of trace-in forms is not amenable to
+    analysis; and that things that come in from outside the current
+    trace are amenable to only limited analysis as well).
+- Metadata is good for properties of procedures that cannot be
+  determined statically -- either because the static analysis is too
+  hard, or because the subtructure is not accessible to the
+  analysis.
+- It seems worthwhile to allow foreign procedures to expose
+  substructure so as to emulate the behaviors of compound procedures
+  (e.g., for incremental migration out of Venture (though incremental
+  migration can also proceed by first changing the target compound to
+  conceal its substructure with annotations, if such are available)).
+  - For example, the a constraint backpropagation algorithm such as
+    rdb-backpropagate-constraints!, causes compound procedures to
+    effectively exhibit the method "do whatever you need to do,
+    possibly with randomness and/or side effects, but make sure your
+    answer turns out to be X."  This is somewhat like incorporate, but
+    actually somewhat broader because it admits sampling and retaining
+    latent randomness.
+
+- Idea: Maybe the inference program should request assessors and things,
+  rather than running them in new store-traces.  That makes inference
+  itself substantially more traceable.
+  - Related: Perhaps I could make a trace that enables exact computation
+    of the posterior by global enumeration -- that's essentially what I
+    did by hand in the model of the system that I wrote for
+    assessable-coupled-beta-bernoulli-xx2
+
+Runtime view of observability:
+- Add the continuation of a computation to the stuff the trace hook
+  can access (and modify?)
+- A trace like RandomDB that wants to allow observations would need
+  to use this hook
+- "observe" or "register-constraint" or something attaches a piece of
+  stuff to its subexpression's continuation saying "I wish to control
+  your output" (maybe immediately, maybe only after
+  enforce-constraints is invoked, presumably at the option of the
+  trace object).
+- Now it bifurcates: when running things forward and computing
+  weights, you just assess or partially assess the operator, and
+  possibly propagate identity consequences every which way.
+- When evaluating acceptance ratios, it becomes necessary to check
+  that base measures remain the same and normalizing constants cancel;
+  perhaps that can only be done by maintaining explicit base measures
+  and normalizing constants for primitives, and defining
+  "auto-base-measure" for compounds to be the full closure object.
+  - May want to broaden this with some static analysis on the body;
+    can always fall back to allowing overrides by manual tags
+- The behavior of an unannotated compound is something like
+  "auto-partially-assessable": applying it with a constrained
+  continuation results in it invoking its body with a constrained
+  continuation [*], which may sample some randomness, have some
+  side-effects, and possibly invoke another procedure with a 
+  constrained continuation.
+  - Do I want to use part of the static analysis of constancy to
+    propagate a continuation constraint backward through variable
+    references inside the definition of a compound procedure?
+  - What if static analysis of a compound determines that its
+    constraint needs to propagate to some argument, as in the
+    implicit lambda in
+      (let ((foo (<some random choice>)))
+        (some-side-effect! foo)
+        foo)
+    ? One thing I could do here is delay the evaluation of the
+    arguments until after I've had a chance to analyze the operation,
+    to see whether they need to be evaluated with a constrained
+    continuation.
+  [*] Conditionally constrained, mind -- conditional on that compound
+  remaining the operator of that combination.
+- Do we want to provide a static analysis that proves that the MH
+  markov chain is ergodic?  It might not be, for
+    (assume prog (if (flip) a-prog b-prog))
+    (observe (prog ...) ...)
+    (infer ...)
+    (predict (prog ...))
+  if a-prog and b-prog are annotated assessable but with incompatible
+  base measures (could be fixed by making a compound procedure and
+  explicitly assessing it with an explicit union of base measures)
+- What are the semantics for "partially assessable", whether automatic
+  or not?
+  - Option: for f : Args -> Out, samples x ~ p(x|args) and reports
+    p(out|x,args)
+  - Option: for f : Args -> Out, samples x ~ q(x|args,out) and reports
+    importance weight for p(out|x,args) =? p(out|x,args)/q(x|args,out)
+  - Should also be able to maintain suff stats for p(out|x,args)
+  - But there is no point in generatively sampling anything that
+    depends on out, so suff stats are the only use case for reading
+    out "after" sampling x.
+  - So one possible thing to do is to just permit procedures to be
+    annotated with "the thing to do if I am called in a constrained
+    context", which is allowed to do stuff and return a weight or
+    an assessment or something.
+  - See also doc/v1/on-assessment-and-absorbing.md
+
+Idea re: base measures: define an "assessment" to be a number, and a
+symbolic base measure, and a symbolic or numeric normalizing constant.
+Then comparing assessments consists of checking that the base measures
+match (or that a correction is known!), and that the normalizing
+constants match (or that their difference is known!), and then
+subtracting the numbers.  In the common case, all the hair is
+compile-time constant, and one should end up with just floating point.
+
+Worry: What is the story with base measures and rejection sampling?
+Is it that the upper bound needs to be computed with respect to a base
+measure that remains fixed?  How do we hack the brush in this case?
+
+Notes on AAA:
+- Current AAA in v0.2 actually comes in three forms:
+    - efficiently absorbing changes to a broadly used parameter
+      (uncollapsed and not actually used anywhere; interface would be
+      (make_coin weight) :: SP () -> Bool which absorbs changes to the
+      weight at make_coin)
+    - also Gibbs sampling that parameter if the prior is conjugate
+      (this is make_uc_beta_bernoulli)
+    - or collapsing the parameter out entirely if the prior is
+      conjugate, and efficiently absorbing changes to the
+      hyperparameters (this is make_beta_bernoulli)
+- It seems, in general, that AAA is the phenomenon that, when it
+  comes to evaluating densities, a procedural value is exactly as
+  good as the list of its applications (with outputs).
+- AAA may not be good enough: Issue #413.
+
+Read through the code carefully with nesting in mind, and think about
+situations where to trace-search, where to trace-search-one, and where
+to search the whole list of accessible traces.  Is there a policy that
+can be articulated?
+
+Could add support for rejection sampling where assessment and bounding
+are not possible separately but where the ratio can nonetheless be
+computed (does that ever happen?).  Implementation strategy: another
+tag, intended for annotating the simulator, and another clause in
+bound-for-at.
+
+- [duplicated vs Core Venture abstract] Bug with the v1 Marsaglia
+  gamma program: the second rejection reruns the whole program, and
+  does not reject even when the exactly fails in the first
+  observation.
+
+Two potentially interesting constructs:
+- A version of lambda that makes Random (Closure a) rather than
+  Closure (Random a), so that the randomness that comes from the
+  environment is resolved when the procedure experiences the bind of
+  the randomness monad.
+  - Perhaps let the user specify the set of environment variables for
+    which this is done?  (This is starting to look like an object
+    constructor).
+  - That list can be a locus of dependency tracking, even for
+    procedures that consume the values and make foreign callables
+    (e.g., foreign make_beta_bernoulli)
+- A version of trace-in that explicitly lists the variables from the
+  environment that the traced object might access, giving thereby a
+  coarse approximation of its dependencies.  If the construct promises
+  no other access (easy enough to enforce by munging environments),
+  dependency tracing schemes (like min/min scaffolds) can rely on it.
+  - Then the only thing lost is deep integration if the enclosing and
+    the extending trace both happen to do some form of dependency
+    tracing.
+*** Design and implement "tags" or something for scoping generic inference
+- Where are vkm's notes?
+*** Implement "display" in the argument language
+(display-all <exp> <n> (lambda (samples) ...)) runs the thing n times
+  and passes all the samples to the procedure
+
+display is display-all map
+
+estimate is display-all +
+- But the name leaves room for more sophisticated things
+
+Design plan: offer a version of model-in that uses two traces.
+assume, observe, predict are nested in both, infer is nested in one
+but not the other, and display-all is external.
+- The outer trace is used for replay only, so could be specialized
+  - Replay traces should be distinguishable from RandomDB traces by
+    memory usage being proportional to the source code size of the
+    program, not to its runtime (or at least runtime random choice
+    count).
+- In what trace to evaluate the expression?  Is it OK if mutations
+  in the expression are not suppressed properly?
+*** Implement PETs, in order to hammer out the interface to them
+Possible hack: Implement "PETs" by doing RandomDB against the PET
+interface; hack measuring asymptotics by custom timers.
+
+Notes on wrinkles PETs add over RandomDB:
+- The "early stopping" effect of AAA becomes relevant (as an optimization)
+  - Can probably be obtained for the uncollapsed case with a
+    "post-assessor" tag, which is treated like "assessor" except that
+    the value is allowed to change first.
+- Choices can be (unrolled and) rerolled in any order.  Mere
+  history-tracked mutation does not, in fact, cut it for this -- I
+  actually need exchangeability (i.e., being an Abelian group).
+  - Possible interface: disallow set! in PET-traced code, but define
+    (accumulate! var increment-expr) that adds an Abelian group
+    element; the Abelian group is in charge of inverses.
+    - Foreign SPs can go through incorporate and unincorporate as
+      before, or emit a group element to be accumulated on their
+      behalf
+- Can define a user-space abstraction like this:
+    (auto-accumulating <abelian group G>
+     <homomorphism from arg-result set to G>
+     (lambda (accumulator-name)
+       <object (presumably a procedure)>))
+  which constructs the obvious incorporator and unincorporator and
+  adds them as annotations to the object which is the result of
+  calling the lambda on an mutable box holding the identity element of G
+- Vlad says: Auxes are separate in PETs because one wants to be able
+  to resample the SP itself, but then absorb using the old aux
+- Will there be a discrepancy between how PETs and RandomDB handle
+  the following program?
+    (assume c (make_beta_bernoulli 1 1))
+    (observe (c) #t)
+    (assume x (c))
+    (infer incorporate) ;; After the assume but before the predict
+    (predict x)
+  v0.2 should give 50/50 here, whereas the thing I am envisioning
+  for RandomDB will give 66/33 because the effect of the observation
+  will get propagated to the x.  Is that OK?
+  - Actually, if enforce-constraints is written with
+    propose-minimal-resimulation-with-deterministic-overrides, then
+    RandomDB should also give 50/50; but if one wrote it with
+    propose-maximal-resimulation-with-deterministic-overrides it
+    should give 66/33 (which may actually be better)
+*** Particle methods, to wit SMC with rejuvenation, should be workable somehow
+Forking traces?  Join for the sync required to resample?
+*** Possible bugs in v1, to be hunted and fixed on demand
+The overincorporation bug (test in overincorporation.scm)
+- This bug applies as far as I know only to min/max scaffolds
+- Approach 1: Make RandomDB remember the states of all coupled-assessable procedures and reassess correctly
+- Approach 2: Make RandomDB remember the assessments of all (coupled-?)assessable procedures and reuse them
+
+Potential min/min scaffold construction bug:
+  Consider: an unannotated compound procedure is effectively unrolled
+  by everything; so the proper action at a lambda expression is to
+  treat the output as unchanged, because the body stays fixed (and any
+  changes due to the variables will be noticed elsewhere).  However,
+  an annotated compound procedure is effectively treated as primitive
+  by everything; and if the closure had closed over a changed value,
+  that "primitive" will now behave differently than before.  (Though I
+  expect it will (usually?) retain its base measure (and normalizing
+  constant??)).  In particular, I can't claim that a call to an
+  uncollapsed annotated coin is unchanged, because it needs to absorb
+  the weight.
+
+There is some bug with min/min scaffolds that triggers
+  (resimulation-should-always-accept-unconstrained-proposals-even-with-spurious-observations)
+  (but oddly not the one without observations).
+
+There is clearly some bug (same one?) with min/min scaffolds that
+  messes up coupled-assessable-beta-bernoulli in all its forms.
+
+There seems to be a bug in the definition of observe in v1: I think it
+  evaluates the datum in the model trace, too.
+***** Hunt bugs in min/min scaffolds
+Process:
+- Check that min/min scaffolds do not break anything
+- Check that min/min scaffolds exhibit different behavior on the
+  overincorporation transition operator (if detach does its job right?)
+*** Possible useful but inessential features to v1, to be added on demand
+- Do I want to test mixing in the presence of non-observation
+  absorbing in collapsed models?
+- Try testing non-exchangeable coupling with noisy counter?
+- Since I have a pre-apply hook, the choice to treat annotated
+  simulators as atomic can be moved to the trace.
+- Use Scheme RPC to compute independent samples in parallel, if we
+  need this for experiments.
+- A process that tries to get a test to pass by increasing some
+  parameter until a threshhold (of time?)
+  - Both in the MIT Scheme prototype and in v0.2
+- Add frobs for q-q or p-p plots (2-sample, or 1-sample vs analytical)
+  - A p-p plot is a parametric plot of two CDFs against each other
+    (domain (-inf, +inf), range [0,1]x[0,1])
+  - A q-q plot is a parametric plot of inverse CDFs (otherwise known
+    as quantile functions) against each other (domain [0,1], range
+    [-inf,+inf]x[-inf,+inf])
+    - GSL doubtless implements the Gaussian quantile function
+- Add generic plotting frobs: "compare in pdf space, cdf space, p-p
+  space, q-q space" where the expected and observed things are
+  generically either empirical or analytic and it does the right
+  thing.
+- Variadic procedures
+- "sample" in the argument language
+- suff-stat-driven Gibbs steps for uncollapsed conjugate models
+- Could define macros such that pre-macro-expansion expressions
+  are not recorded in traces.
+  - If nothing else, that would simplify rdb-backpropagate-constraint
+    slightly.
+- Rewrite observe to compute the value of the constraint in the
+  enclosing trace?
+  - Then fix the comment in gaussian-by-inference-defn
+- See whether the code would be satisfied with the conjectured
+  mutation-hiding interface, and whether the coupled-assessor-tag
+  interface implies it (that is, whether there exists a
+  coupled-assessor->x combinator).  Probably don't implement it that
+  way, but note it down as a possibility.
+  - Don't forget to account for the bounds needed for rejection
+
+Notes on variadic compound procedures in v1:
+- Consider (lambda args (some body))
+- When evaluating (some body), to what should args be bound?  In
+  Scheme it's a list of the arguments.  In Venture, it would naturally
+  be an address, but then it's an address that does not correspond to
+  any evaluation.  Also, what's in the list?  Values or addresses?
+  Or objects semantically equivalent to memmed thunks?
+  - Do I want a facility where environments just store values
+    sometimes, for e.g. system-generated constants like that list?
+  - How to deal with referring to items from that list?
+
+Notes on parallel sampling:
+- The Internet seems to think that multicore just can't be done in MIT
+  Scheme :( without resorting to some disaster like multiprocessing.
+  - Taylor concurs
+  - I have Micah's Scheme Light-weight RPC
+    - from /afs/csail.mit.edu/group/mac/projects/scmutils/src/server
+    - in work/scheme-rpc
+- Racket has parallelism sort of
+  - futures seem to be fairly brittle: e.g., memory allocation is
+    blocking and generic arithmetic stalls the future completely
+    - not feasible for sampling v1 in parallel
+  - places require serialization to communicate; effectively RPC but may
+    be smoother and better integrated; probably not worth porting for
+  - Is Racket fast enough serially for the port to be a net gain?
+    - Quite possibly so.  The documentation said enough of the right
+      things to be worth either benchmarking or trying out.
+  - Co-benefit of porting to Racket is that I get to play with the
+    contract system
+- Could do Julia, too
+
+Notes on "sample"
+- I could try to add a "sample" directive that evaluates its
+  expression in a sub-trace of the model trace (and does not store the
+  call to "sample" in the model).  This would work great for pure
+  simulators, but mutating ones would be trouble because the mutations
+  would not be unrolled.
+  - Could try to add a variant of void-trace that tries to unroll the
+    damage it does, either by intercepting mutations (?) or by
+    interpreting the assessment interface (and therefore supporting only
+    those procedures that could be and were described by that metadata).
+  - PETs should be able to support "sample" natively, like they do in v0.2.
+***** Deploy Micah's slrpc to compute v1 samples in parallel
+***** Implement "mem" in v1
+- Is mem easy?
+  - Should memming preseve assessability?
+    - Clearly it does not preserve the actual assessor
+- Hack: could introduce a single silly < on all data and use wt-tree
+- Or could take a user-specified <

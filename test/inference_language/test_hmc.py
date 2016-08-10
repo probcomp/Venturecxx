@@ -16,27 +16,36 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportSameContinuous
-from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
+from nose import SkipTest
+import scipy.stats as stats
+
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import gen_broken_in
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import reportSameContinuous
+from venture.test.stats import statisticalTest
 import venture.value.dicts as val
 
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 @on_inf_prim("hmc")
-def testNormalWithObserve1():
-  "Checks the posterior distribution on a Gaussian given an unlikely observation"
-  ripl = get_ripl()
+def testNormalWithObserve1(seed):
+  # Checks the posterior distribution on a Gaussian given an unlikely
+  # observation
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
 #  ripl.predict("(normal a 1.0)")
 
   predictions = collectSamples(ripl,"pid",infer="(hmc default one 0.05 20 10)")
-  cdf = stats.norm(loc=12, scale=math.sqrt(0.5)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @gen_on_inf_prim("mh")
 def testMVGaussSmokeMH():
@@ -48,15 +57,14 @@ def testMVGaussSmokeHMC():
   yield checkMVGaussSmoke, "(hmc default one 0.05 20 10)"
 
 @statisticalTest
-def checkMVGaussSmoke(infer):
-  """Confirm that projecting a multivariate Gaussian to one dimension
-  results in a univariate Gaussian."""
-  ripl = get_ripl()
+def checkMVGaussSmoke(infer, seed):
+  # Confirm that projecting a multivariate Gaussian to one dimension
+  # results in a univariate Gaussian.
+  ripl = get_ripl(seed=seed)
   ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (list (list 1 0.5) (list 0.5 1))))")
   ripl.assume("x", "(lookup vec 0)", label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=1, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,1)")
+  return reportKnownGaussian(1, 1, predictions)
 
 @gen_on_inf_prim("mh")
 def testForceBrush1MH():
@@ -68,13 +76,12 @@ def testForceBrush1HMC():
   yield checkForceBrush1, "(hmc default one 0.05 20 10)"
 
 @statisticalTest
-def checkForceBrush1(infer):
-  ripl = get_ripl()
+def checkForceBrush1(infer, seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.predict("(if (< x 100) (normal x 1) (normal 100 1))", label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
-  cdf = stats.norm(loc=0, scale=math.sqrt(2)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(0,sqrt(2))")
+  return reportKnownGaussian(0, math.sqrt(2), predictions)
 
 @gen_on_inf_prim("mh")
 def testForceBrush2MH():
@@ -86,8 +93,8 @@ def testForceBrush2HMC():
   yield checkForceBrush2, "(hmc default one 0.05 20 10)"
 
 @statisticalTest
-def checkForceBrush2(infer):
-  ripl = get_ripl()
+def checkForceBrush2(infer, seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.predict("(if (< x 0) (normal 0 1) (normal 100 1))", label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
@@ -97,8 +104,8 @@ def checkForceBrush2(infer):
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 @on_inf_prim("hmc") # Really comparing MH and HMC
-def testForceBrush3():
-  ripl = get_ripl()
+def testForceBrush3(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))", label="pid")
   preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
@@ -109,8 +116,8 @@ def testForceBrush3():
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 @on_inf_prim("hmc") # Really comparing MH and HMC
-def testForceBrush4():
-  ripl = get_ripl()
+def testForceBrush4(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   ripl.predict("(normal y 1)", label="pid")
@@ -122,8 +129,8 @@ def testForceBrush4():
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 @on_inf_prim("hmc") # Really comparing MH and HMC
-def testForceBrush5():
-  ripl = get_ripl()
+def testForceBrush5(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)", label="pid")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   ripl.observe("y", 8)
@@ -135,11 +142,11 @@ def testForceBrush5():
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @statisticalTest
 @on_inf_prim("hmc") # Really comparing MH and HMC
-def testMoreElaborate():
-  """Confirm that HMC still works in the presence of brush.  Do not,
-  however, mess with the possibility that the principal nodes that HMC
-  operates over may themselves be in the brush."""
-  ripl = get_ripl()
+def testMoreElaborate(seed):
+  # Confirm that HMC still works in the presence of brush.  Do not,
+  # however, mess with the possibility that the principal nodes that
+  # HMC operates over may themselves be in the brush.
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(tag (quote param) 0 (uniform_continuous -10 10))")
   ripl.assume("y", "(tag (quote param) 1 (uniform_continuous -10 10))",
               label="pid")
@@ -159,7 +166,7 @@ def testMoreElaborate():
 
   preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
-  preds_hmc = collectSamples(ripl, "pid", infer="(hmc param all 0.1 20 10)")
+  preds_hmc = collectSamples(ripl, "pid", infer="(hmc 'param all 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
 
 @broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")

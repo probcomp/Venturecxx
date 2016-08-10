@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -18,22 +18,24 @@
 #include "sps/scope.h"
 #include "node.h"
 
-VentureValuePtr TagOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr TagOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   return args->operandValues[2];
 }
- 
-bool TagOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const
+
+bool TagOutputPSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
 {
   return parentNode != appNode->operandNodes[2];
 }
 
-VentureValuePtr TagExcludeOutputPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr TagExcludeOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   return args->operandValues[1];
 }
- 
-bool TagExcludeOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const
+
+bool TagExcludeOutputPSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
 {
   return parentNode != appNode->operandNodes[1];
 }

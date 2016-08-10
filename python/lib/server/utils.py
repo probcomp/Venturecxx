@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,16 +14,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import new
-from flask import Flask, request
-import requests
 import json
 
+from flask import Flask
+from flask import request
+import requests
+
 from venture.exception import VentureException
-from crossdomain import crossdomain
+from venture.server.crossdomain import crossdomain
 
 class RestClient(object):
     def __init__(self, base_url, function_list):
@@ -48,14 +51,14 @@ class RestClient(object):
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        
+
         import numpy
         if isinstance(obj, numpy.ndarray):
             return obj.tolist()
-        
+
         if hasattr(obj, 'toJSON'):
             return obj.toJSON()
-        
+
         return json.JSONEncoder.default(self, obj)
 
 class RestServer(Flask):

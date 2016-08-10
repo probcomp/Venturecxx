@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
@@ -32,25 +32,25 @@ def makeDensityFunction(trace,scaffold,psp,pnode,fixed_randomness):
       scaffold.lkernels[pnode] = DeterministicLKernel(psp,VentureNumber(x))
       # The particle is a way to regen without clobbering the underlying trace
       # TODO Do repeated regens along the same scaffold actually work?
-      return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),{})
+      return regenAndAttach(Particle(trace),scaffold,False,OmegaDB(),OrderedDict())
   return f
 
 class SliceOperator(object):
   __metaclass__ = ABCMeta
 
   @abstractmethod
-  def findInterval(self,f,x0,logy): pass
+  def findInterval(self,f,x0,logy,py_rng): pass
 
   @abstractmethod
   def legalProposal(self,f,x0,x1,logy,L,R): pass
 
-  def sampleInterval(self,f,x0,logy,L,R):
+  def sampleInterval(self,f,x0,logy,L,R,py_rng):
     maxIters = 10000
     it = 0
     while True:
       it += 1
       if it == maxIters: raise Exception("Cannot sample interval for slice")
-      U = random.random()
+      U = py_rng.random()
       x1 = L + U * (R - L)
       fx1 = f(x1)
       # print "Slicing at x1", x1, "f(x1)", fx1, "logy", logy, "L", L, "R", R
@@ -70,21 +70,32 @@ class SliceOperator(object):
 
     rhoWeight,self.rhoDB = detachAndExtract(trace,scaffold)
 
-    f = makeDensityFunction(trace,scaffold,psp,pnode,FixedRandomness())
-    logy = f(currentValue) + math.log(random.uniform(0,1))
+    f = makeDensityFunction(trace,scaffold,psp,pnode,
+                            FixedRandomness(trace.py_rng, trace.np_rng))
+    rhoLD = f(currentValue)
+    logy = rhoLD + math.log(trace.py_rng.uniform(0,1))
     # print "Slicing with x0", currentValue, "w", w, "m", m
-    L,R = self.findInterval(f,currentValue,logy)
-    proposedValue = self.sampleInterval(f,currentValue,logy,L,R)
+    L,R = self.findInterval(f,currentValue,logy,trace.py_rng)
+    proposedValue = self.sampleInterval(f,currentValue,logy,L,R,trace.py_rng)
+    xiLD = f(proposedValue)
     proposedVValue = VentureNumber(proposedValue)
     scaffold.lkernels[pnode] = DeterministicLKernel(psp,proposedVValue)
+    xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,OrderedDict())
 
-    xiWeight = regenAndAttach(trace,scaffold,False,self.rhoDB,{})
-    return trace,xiWeight - rhoWeight
+    # Cancel out weight compensation.  From Puma's "slice.cxx":
+    #  "This is subtle. We cancel out the weight compensation that we got
+    #   by "forcing" x1, so that the weight is as if it had been sampled.
+    #   This is because this weight is cancelled elsewhere (in the mixing
+    #   over the slice)."
+    return trace, (xiWeight - xiLD) - (rhoWeight - rhoLD)
 
-  def accept(self): pass
+  def accept(self):
+    return self.scaffold.numAffectedNodes()
+
   def reject(self):
     detachAndExtract(self.trace,self.scaffold)
-    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,OrderedDict())
+    return self.scaffold.numAffectedNodes()
 
 
 class StepOutSliceOperator(SliceOperator):
@@ -96,12 +107,12 @@ class StepOutSliceOperator(SliceOperator):
 
   # "stepping out" procedure
   # See "Slice Sampling" (Neal 2000) p11 for details
-  def findInterval(self,f,x0,logy):
-    U = random.random()
+  def findInterval(self,f,x0,logy,py_rng):
+    U = py_rng.random()
     L = x0 - self.w * U
     R = L + self.w
 
-    V = random.random()
+    V = py_rng.random()
     J = math.floor(self.m * V)
     K = (self.m - 1) - J
 
@@ -142,8 +153,8 @@ class DoublingSliceOperator(SliceOperator):
   def name(self): return "slice sampling with doubling"
 
   # "doubling" procedure; p11 of Neal
-  def findInterval(self,f,x0,logy):
-    U = random.random()
+  def findInterval(self,f,x0,logy,py_rng):
+    U = py_rng.random()
     L = x0 - self.w * U
     R = L + self.w
     K = self.p
@@ -157,7 +168,7 @@ class DoublingSliceOperator(SliceOperator):
       if (logy >= fl) and (logy >= fr): break
       if math.isnan(fl) or math.isnan(fr): break
       dist = R - L
-      if random.random() < 0.5:
+      if py_rng.random() < 0.5:
         L = L - dist
         fl = f(L)
       else:
@@ -184,7 +195,3 @@ class DoublingSliceOperator(SliceOperator):
       if D and (logy >= fl) and (logy >= fr):
         return False
     return True
-
-
-
-

@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,15 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy.random as npr
-import scipy.stats
+from collections import OrderedDict
+
 from ..omegadb import OmegaDB
+from ..orderedset import OrderedSet
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
 from ..utils import FixedRandomness
 from ..value import vv_dot_product
-from mh import InPlaceOperator, getCurrentValues, registerDeterministicLKernels
+from venture.lite.infer.mh import InPlaceOperator
+from venture.lite.infer.mh import getCurrentValues
+from venture.lite.infer.mh import registerDeterministicLKernels
 
 class GradientOfRegen(object):
   """An applicable object, calling which computes the gradient
@@ -48,7 +51,7 @@ class GradientOfRegen(object):
     # Pass and store the pnodes because their order matters, and the
     # scaffold has them as a set
     self.pnodes = pnodes
-    self.fixed_randomness = FixedRandomness()
+    self.fixed_randomness = FixedRandomness(trace.py_rng, trace.np_rng)
 
   def __call__(self, values):
     """Returns the gradient of the weight of regenerating along
@@ -57,7 +60,7 @@ class GradientOfRegen(object):
     kernels around."""
     # TODO Assert that no delta kernels are requested?
     self.fixed_regen(values)
-    new_scaffold = constructScaffold(self.trace, [set(self.pnodes)])
+    new_scaffold = constructScaffold(self.trace, [OrderedSet(self.pnodes)])
     registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold, True)
     self.scaffold = new_scaffold
@@ -70,7 +73,7 @@ class GradientOfRegen(object):
 
   def regen(self, values):
     registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-    return regenAndAttach(self.trace, self.scaffold, False, OmegaDB(), {})
+    return regenAndAttach(self.trace, self.scaffold, False, OmegaDB(), OrderedDict())
 
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
@@ -83,7 +86,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   # given by this function:
   #   def potential(values):
   #     registerDeterministicLKernels(trace,scaffold,pnodes,values)
-  #     return -regenAndAttach(trace, scaffold, False, OmegaDB(), {})
+  #     return -regenAndAttach(trace, scaffold, False, OmegaDB(), OrderedDict())
   #
   # The trouble, of course, is that I need the gradient of this to
   # actually do HMC.
@@ -105,7 +108,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    momenta = self.sampleMomenta(currentValues)
+    momenta = self.sampleMomenta(currentValues, trace.np_rng)
     start_K = self.kinetic(momenta)
 
     grad = GradientOfRegen(trace, scaffold, pnodes)
@@ -118,16 +121,17 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     start_grad_pot = [-self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
     # Smashes the trace but leaves it a torus
-    (proposed_values, end_K) = self.evolve(grad_potential, currentValues, start_grad_pot, momenta)
+    (proposed_values, end_K) = self.evolve(grad_potential, currentValues,
+                                           start_grad_pot, momenta)
 
     xiWeight = grad.regen(proposed_values) # Mutates the trace
     # The weight arithmetic is given by the Hamiltonian being
     # -weight + kinetic(momenta)
     return (trace, xiWeight - rhoWeight + start_K - end_K)
 
-  def sampleMomenta(self, currentValues):
+  def sampleMomenta(self, currentValues, np_rng):
     def sample_normal(_):
-      return scipy.stats.norm.rvs(loc=0, scale=1)
+      return np_rng.standard_normal()
     return [v.map_real(sample_normal) for v in currentValues]
   def kinetic(self, momenta):
     # This is the log density of sampling these momenta, up to an
@@ -136,7 +140,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
 
   def evolve(self, grad_U, start_q, start_grad_q, start_p):
     epsilon = self.epsilon
-    num_steps = npr.randint(int(self.num_steps))+1
+    num_steps = self.trace.np_rng.randint(int(self.num_steps))+1
     q = start_q
     # The initial momentum half-step
     dpdt = start_grad_q

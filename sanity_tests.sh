@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -18,9 +18,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 # Reset the working directory to the script's path
-my_abs_path=$(readlink -f "$0")
-my_dirname=$(dirname $my_abs_path)
-cd "$my_dirname"
+cd $(dirname "$0")
 
 function abort_on_error () {
     if [[ $? -ne "0" ]]; then

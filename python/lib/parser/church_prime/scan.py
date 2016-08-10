@@ -21,6 +21,7 @@ import StringIO
 
 import venture.plex as Plex
 
+from venture.parser import ast
 from venture.parser.church_prime import grammar
 
 # XXX Automatically confirm we at least mention all tokens mentioned
@@ -42,31 +43,13 @@ END {
 '''
 keywords = {                    # XXX Use a perfect hash.
     'assume': grammar.K_ASSUME,
+    'assume_values': grammar.K_ASSUME_VALUES,
     'choices': grammar.K_CHOICES,
-    'clear': grammar.K_CLEAR,
-    'configure': grammar.K_CONFIGURE,
-    'continuous_inference_status': grammar.K_CONTINUOUS_INFERENCE_STATUS,
     'define': grammar.K_DEFINE,
-    'force': grammar.K_FORCE,
-    'forget': grammar.K_FORGET,
-    'freeze': grammar.K_FREEZE,
-    'get_current_exception': grammar.K_GET_CURRENT_EXCEPTION,
-    'get_directive': grammar.K_GET_DIRECTIVE,
-    'get_global_logscore': grammar.K_GET_GLOBAL_LOGSCORE,
-    'get_state': grammar.K_GET_STATE,
     'infer': grammar.K_INFER,
-    'list_directives': grammar.K_LIST_DIRECTIVES,
     'load': grammar.K_LOAD,
     'observe': grammar.K_OBSERVE,
     'predict': grammar.K_PREDICT,
-    'profiler_clear': grammar.K_PROFILER_CLEAR,
-    'profiler_configure': grammar.K_PROFILER_CONFIGURE,
-    'profiler_list_random': grammar.K_PROFILER_LIST_RANDOM,
-    'report': grammar.K_REPORT,
-    'rollback': grammar.K_ROLLBACK,
-    'sample': grammar.K_SAMPLE,
-    'start_continuous_inference': grammar.K_START_CONTINUOUS_INFERENCE,
-    'stop_continuous_inference': grammar.K_STOP_CONTINUOUS_INFERENCE,
     'true': grammar.T_TRUE,
     'false': grammar.T_FALSE,
 }
@@ -209,4 +192,4 @@ class Scanner(Plex.Scanner):
             length = len(self.text)
         end = self.cur_pos
         start = end - length
-        Plex.Scanner.produce(self, token, (value, start, end - 1))
+        Plex.Scanner.produce(self, token, ast.Located([start, end-1], value))

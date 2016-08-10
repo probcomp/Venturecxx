@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -27,22 +27,24 @@
 using std::cout;
 using std::endl;
 
-shared_ptr<LKernel> const PSP::getAAALKernel() { return shared_ptr<LKernel>(new DefaultAAALKernel(this)); }
+boost::shared_ptr<LKernel> const PSP::getAAALKernel() { return boost::shared_ptr<LKernel>(new DeterministicMakerAAALKernel(this)); }
 
-VentureValuePtr NullRequestPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr NullRequestPSP::simulate(
+    const boost::shared_ptr<Args> & args, gsl_rng * rng) const
 {
-  return shared_ptr<VentureRequest>(new VentureRequest(vector<ESR>(),vector<shared_ptr<LSR> >()));
+  return boost::shared_ptr<VentureRequest>(new VentureRequest(vector<ESR>(), vector<boost::shared_ptr<LSR> >()));
 }
 
 
-VentureValuePtr ESRRefOutputPSP::simulate(shared_ptr<Args> args,gsl_rng * rng) const
+VentureValuePtr ESRRefOutputPSP::simulate(
+    const boost::shared_ptr<Args> & args, gsl_rng * rng) const
 {
 //  cout << "ESRRefOutputPSP::simulate(" << args->node << ")" << endl;
   assert(args->esrParentNodes.size() == 1);
   return args->esrParentValues[0];
 }
 
-bool ESRRefOutputPSP::canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const
+bool ESRRefOutputPSP::canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const
 {
   vector<RootOfFamily> esrParents = trace->getESRParents(appNode);
   assert(esrParents.size() == 1);

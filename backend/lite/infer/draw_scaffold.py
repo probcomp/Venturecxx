@@ -16,7 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import warnings
-from ..node import Node, OutputNode, RequestNode, LookupNode, ConstantNode
+from collections import OrderedDict
+from ..node import Node
+from ..node import isConstantNode
+from ..node import isLookupNode
+from ..node import isRequestNode
+from ..node import isOutputNode
+from ..orderedset import OrderedSet
 
 try:
   import networkx as nx
@@ -36,11 +42,12 @@ def drawScaffold(trace, indexer):
     drawScaffoldGraph(trace, G)
     import matplotlib.pyplot as plt
     plt.show()
+    return index.numAffectedNodes()
 
 def traverseScaffold(trace, scaffold):
   G = nx.DiGraph()
   pnodes = scaffold.getPrincipalNodes()
-  border_nodes = set([node for node_list in scaffold.border for node in node_list])
+  border_nodes = OrderedSet([node for node_list in scaffold.border for node in node_list])
   border_nodes = border_nodes.union(scaffold.absorbing)
 
   # Depth first search.
@@ -89,12 +96,14 @@ def processScaffoldNode(node, scaffold, pnodes, border_nodes,
     q.append(node)
 
 def drawScaffoldGraph(trace, G, labels=None):
-  color_map = {'principal': 'red',
-               'drg':       'yellow',
-               'border':    'blue',
-               'brush':     'green',
-               'aaa':       'magenta',
-               'other':     'gray'}
+  color_map = OrderedDict([
+    ('principal', 'red'),
+    ('drg',       'yellow'),
+    ('border',    'blue'),
+    ('brush',     'green'),
+    ('aaa',       'magenta'),
+    ('other',     'gray'),
+  ])
 
   if labels is None:
     labels = nodeLabelDict(G.nodes(), trace)
@@ -112,23 +121,23 @@ def drawScaffoldGraph(trace, G, labels=None):
 
 def nodeLabelDict(nodes, trace):
   # Inverse look up dict for node -> symbol from trace.globalEnv
-  inv_env_dict = {}
+  inv_env_dict = OrderedDict()
   for (sym, env_node) in trace.globalEnv.frame.iteritems():
     assert isinstance(env_node, Node)
     assert not inv_env_dict.has_key(env_node)
     inv_env_dict[env_node] = sym
 
-  label_dict = {}
+  label_dict = OrderedDict()
   for node in nodes:
     if inv_env_dict.has_key(node):
       label = inv_env_dict[node]
-    elif isinstance(node, OutputNode):
+    elif isOutputNode(node):
       label = 'O' # 'Output' #: ' + str(node.value)
-    elif isinstance(node, RequestNode):
+    elif isRequestNode(node):
       label = 'R' # 'Request' #: ' + str(node.value)
-    elif isinstance(node, LookupNode):
+    elif isLookupNode(node):
       label = 'L' # 'Lookup'
-    elif isinstance(node, ConstantNode):
+    elif isConstantNode(node):
       label = 'C' # 'Constant'
     else:
       label = '' # str(node.value)

@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("mh")
 def testTrig1():
-  "Simple test that verifies sin^2 + cos^2 = 1 as x varies"
+  # Simple test that verifies sin^2 + cos^2 = 1 as x varies
   ripl = get_ripl()
   ripl.assume("sq","(lambda (x) (* x x))")
   ripl.assume("x","(normal 0.0 1.0)")

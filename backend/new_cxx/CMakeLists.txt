@@ -79,6 +79,7 @@ ADD_LIBRARY(trace SHARED
     src/sps/hmm.cxx
     src/sps/eval.cxx
     src/sps/matrix.cxx
+    src/sps/misc.cxx
     src/sps/msp.cxx
     src/sps/numerical_helpers.cxx
     src/sps/scope.cxx
@@ -87,9 +88,9 @@ ADD_LIBRARY(trace SHARED
     src/gkernels/mh.cxx
     src/gkernels/pgibbs.cxx
     src/gkernels/slice.cxx
-	src/gkernels/hmc.cxx
+    src/gkernels/hmc.cxx
     src/expressions.cxx
-	src/gkernel.cxx
+    src/gkernel.cxx
     src/indexer.cxx
     src/mixmh.cxx
     src/particle.cxx

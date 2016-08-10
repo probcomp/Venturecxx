@@ -16,13 +16,17 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats
-from venture.test.stats import statisticalTest, reportKnownMean, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownMean
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testPoisson1():
-  "Check that Poisson simulates and absorbs without crashing."
-  ripl = get_ripl()
+def testPoisson1(seed):
+  # Check that Poisson simulates and absorbs without crashing.
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("lambda","(gamma 1 1)",label="pid")
   #ripl.predict("(poisson lambda)")
@@ -31,9 +35,9 @@ def testPoisson1():
   return reportKnownContinuous(scipy.stats.gamma(1, scale=1/1.0).cdf,predictions,"(gamma 1 1)")
 
 @statisticalTest
-def testPoisson2():
-  "Check that Poisson simulates correctly."
-  ripl = get_ripl()
+def testPoisson2(seed):
+  # Check that Poisson simulates correctly.
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("lambda","5")
   ripl.predict("(poisson lambda)",label="pid")

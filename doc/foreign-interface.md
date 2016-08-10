@@ -7,7 +7,7 @@ Interface
 Foreign SPs can be registered in Venture via the bind_foreign_sp call:
 
     from venture.shortcuts import make_church_prime_ripl
-    from venture.lite.builtin import binaryNum
+    from venture.lite.sp_help import binaryNum
     v = make_church_prime_ripl()
     v.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
     v.sample('(f 2 5)')

@@ -20,25 +20,26 @@
 from venture.test.config import in_backend
 from venture.test.randomized import checkTypedProperty
 import venture.lite.value as vv
+import venture.lite.types as t
 from venture.parser.church_prime import ChurchPrimeParser
 
 @in_backend("none")
 def testEquality():
-  checkTypedProperty(propEquality, vv.AnyType())
+  checkTypedProperty(propEquality, t.AnyType())
 
 def propEquality(value):
   assert value.equal(value)
 
 @in_backend("none")
 def testLiteToStack():
-  checkTypedProperty(propLiteToStack, vv.AnyType())
+  checkTypedProperty(propLiteToStack, t.AnyType())
 
 def propLiteToStack(val):
   assert val.equal(vv.VentureValue.fromStackDict(val.asStackDict()))
 
 @in_backend("none")
 def testLiteToString():
-  checkTypedProperty(propLiteToStack, vv.AnyType())
+  checkTypedProperty(propLiteToStack, t.AnyType())
 
 def propLiteToString(val):
   p = ChurchPrimeParser.instance()

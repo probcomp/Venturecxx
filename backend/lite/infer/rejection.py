@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
+from collections import OrderedDict
+
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..exception import VentureError
-from mh import InPlaceOperator
+from venture.lite.infer.mh import InPlaceOperator
 
 class MissingEsrParentError(VentureError): pass
 class NoSPRefError(VentureError): pass
@@ -32,7 +33,7 @@ def computeRejectionBound(trace, scaffold, border):
       # TODO Is it right that the value here is the old value and the
       # new value?  Or do I need to fetch the old value from the
       # OmegaDB?
-      return scaffold.getLKernel(node).weightBound(trace, value, value, args)
+      return scaffold.getLKernel(node).weightBound(trace, value, args)
     else:
       # Resimulation kernel
       return psp.logDensityBound(value, args)
@@ -54,9 +55,9 @@ def computeRejectionBound(trace, scaffold, border):
         appNode = trace.getConstrainableNode(node)
         logBound += logBoundAt(appNode)
       except MissingEsrParentError:
-        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+        raise Exception("Can't automatically compute rejection density bound when observing resimulation of unknown code")
       except NoSPRefError:
-        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+        raise Exception("Can't automatically compute rejection density bound when observing resimulation of unknown code")
   return logBound
 
 class RejectionOperator(InPlaceOperator):
@@ -66,25 +67,34 @@ class RejectionOperator(InPlaceOperator):
   Bayesian Statistics Without Tears: A Sampling-Resampling Perspective
   A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
   http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
-  def __init__(self, trials):
+  def __init__(self, logBound, trials):
     super(RejectionOperator, self).__init__()
+    self.logBound = logBound
     self.trials = trials
 
   def propose(self, trace, scaffold):
     self.prepare(trace, scaffold)
-    logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    if self.logBound is None:
+      logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    else:
+      logBound = self.logBound
     accept = False
     attempt = 0
     while not accept and (self.trials is None or self.trials > attempt):
-      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
-      accept = random.random() < math.exp(xiWeight - logBound)
+      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
+      assert xiWeight <= logBound, \
+        "Detected regen weight %s not at most weight bound %s" % (xiWeight, logBound)
+      # print xiWeight, logBound
+      accept = trace.py_rng.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold)
         attempt += 1
+      # else:
+      #   print "Accepted!"
     if not accept:
       # Ran out of attempts
       print "Warning: rejection hit attempt bound of %s" % self.trials
-      regenAndAttach(trace, scaffold, True, self.rhoDB, {})
+      regenAndAttach(trace, scaffold, True, self.rhoDB, OrderedDict())
     return trace, 0
 
   def name(self): return "rejection"
@@ -97,8 +107,7 @@ If the start state is already possible, don't move."""
   def propose(self, trace, scaffold):
     while True:
       rhoWeight = self.prepare(trace, scaffold)
-      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
-      print rhoWeight, xiWeight
+      xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
       if rhoWeight > float("-inf"):
         # The original state was possible; force rejecting the
         # transition

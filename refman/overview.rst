@@ -34,5 +34,6 @@ VentureScript programs have multiple meanings:
   inference, e.g. global joint density optimization semantics.
 
 For a more extensive conceptual introduction to Venture, see the
-`draft Venture paper <http://arxiv.org/abs/1404.0099>`_.
+`draft Venture paper <http://arxiv.org/abs/1404.0099>`_ or the
+`VentureScript tutorial <../tutorial/index.html>`_.
 

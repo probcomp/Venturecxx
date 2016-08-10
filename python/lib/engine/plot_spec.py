@@ -20,6 +20,7 @@ from itertools import chain
 from time import strftime
 
 from venture.lite.utils import logWeightsToNormalizedDirect
+from venture.lite.value import VentureString
 
 stream_rx = r"([rcts%]|[0-9]+)"
 scale_rx = r"([dl])"
@@ -36,17 +37,19 @@ class PlotSpec(object):
   def __init__(self, spec):
     if isinstance(spec, basestring):
       self.frames = [FrameSpec(spec)]
+    elif isinstance(spec, VentureString):
+      self.frames = [FrameSpec(spec.getString())]
     else:
       self.frames = [FrameSpec(s) for s in spec]
 
   def draw(self, dataset, names):
-    import ggplot as g
+    import venture.ggplot as g
     index = 0
     figs = []
     for spec in self.frames:
       spec.initialize()
       if spec.weighted:
-        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['particle log weight'])
+        dataset['particle weight'] = logWeightsToNormalizedDirect(dataset['prt. log wgt.'])
       (aes, index) = spec.aes_dict_at(index, names, spec.get_geoms())
       plot = g.ggplot(dataset, g.aes(**aes))
       for geom in spec.get_geoms():
@@ -54,7 +57,7 @@ class PlotSpec(object):
       # add the wall time
       title = self._format_title(dataset)
       plot += g.ggtitle(title)
-      for (dim, scale) in zip(["x", "y", "color"], spec.scales):
+      for (dim, scale) in zip(spec.dimensions(), spec.scales):
         obj = self._interp_scale(dim, scale)
         if obj: plot += obj
       figs.append(self._add_date(plot.draw()))
@@ -78,12 +81,15 @@ class PlotSpec(object):
 
   @staticmethod
   def _format_title(dataset):
-    walltime = dataset['time (s)'].max()
-    nsweeps = dataset['sweep count'].max()
-    nparticles = dataset['particle id'].max() + 1
-    title = 'Wall time: {0}m, {1:0.2f}s. Sweeps: {2}. Particles: {3}'
-    title = title.format(int(walltime // 60), walltime % 60, nsweeps, nparticles)
-    return title
+    if 'time (s)' in dataset and 'iter' in dataset and 'prt. id' in dataset:
+      walltime = dataset['time (s)'].max()
+      niterations = dataset['iter'].max()
+      nparticles = dataset['prt. id'].max() + 1
+      title = 'Wall time: {0}m, {1:0.2f}s. Iterations: {2}. Particles: {3}'
+      title = title.format(int(walltime // 60), walltime % 60, niterations, nparticles)
+      return title
+    else:
+      return ""
 
   @staticmethod
   def _add_date(fig):
@@ -93,7 +99,7 @@ class PlotSpec(object):
     return fig
 
   def _interp_scale(self, dim, scale):
-    import ggplot as g
+    import venture.ggplot as g
     if scale == "d" or scale == "":
       if dim == "x":
         return g.scale_x_continuous()
@@ -139,35 +145,39 @@ class FrameSpec(object):
         self.streams.append(stream)
         self.scales.append(scale)
     if len(self.streams) == 1 and self.two_d_only:
-      # Two-dimensional plots default to plotting against sweep count (in direct space)
+      # Two-dimensional plots default to plotting against iteration count (in direct space)
       self.streams = ["c"] + self.streams
       self.scales = ["d"] + self.scales
 
   def _interp_geoms(self, gs):
-    import ggplot as g
+    import venture.ggplot as g
     if len(gs) == 0:
       return [g.geom_point()]
     else:
       return [self._interp_geom(ge) for ge in gs]
 
   def _interp_geom(self, ge):
-    import ggplot as g
+    import venture.ggplot as g
     if ge in ["b", "h"]:
       self.two_d_only = False
     return {"p":g.geom_point, "l":g.geom_line, "b":g.geom_bar, "h":g.geom_histogram}[ge]()
 
+  def dimensions(self):
+    if self.two_d_only:
+      return ["x", "y", "color"]
+    else:
+      return ["x", "color"]
+
   def aes_dict_at(self, next_index, names, geoms):
     next_index = next_index
     ans = {}
-    for (key, stream) in zip(["x", "y", "color"], self.streams):
+    for (key, stream) in zip(self.dimensions(), self.streams):
       if stream == "c":
-        ans[key] = "sweep count"
+        ans[key] = "iter"
       elif stream == "r":
-        ans[key] = "particle id"
+        ans[key] = "prt. id"
       elif stream == "t":
         ans[key] = "time (s)"
-      elif stream == "s":
-        ans[key] = "log score"
       elif stream == "" or stream == "%":
         ans[key] = names[next_index]
         next_index += 1
@@ -175,7 +185,7 @@ class FrameSpec(object):
         ans[key] = names[int(stream)]
         next_index = int(stream) + 1
     if self.weighted:
-      from ggplot import geoms as g
+      from venture.ggplot import geoms as g
       for geom in geoms:
         if isinstance(geom, g.geom_line) or isinstance(geom, g.geom_point):
           ans['alpha'] = 'particle weight'

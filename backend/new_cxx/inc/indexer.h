@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -26,10 +26,15 @@ struct Trace;
 
 struct ScaffoldIndexer
 {
-  ScaffoldIndexer(ScopeID scope,BlockID block);
-  ScaffoldIndexer(ScopeID scope,BlockID block,BlockID minBlock,BlockID maxBlock);
-  shared_ptr<Scaffold> sampleIndex(ConcreteTrace * trace) const;
-  double logDensityOfIndex(Trace * trace, shared_ptr<Scaffold> scaffold) const;
+  ScaffoldIndexer(const ScopeID & scope, const BlockID & block);
+  ScaffoldIndexer(
+      const ScopeID & scope,
+      const BlockID & block,
+      const BlockID & minBlock,
+      const BlockID & maxBlock);
+  boost::shared_ptr<Scaffold> sampleIndex(ConcreteTrace * trace) const;
+  double logDensityOfIndex(
+      Trace * trace, const boost::shared_ptr<Scaffold> & scaffold) const;
 
   ScopeID scope;
   BlockID block;

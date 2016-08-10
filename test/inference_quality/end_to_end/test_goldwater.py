@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,23 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose import SkipTest
 import itertools
+
+from nose import SkipTest
 from nose.plugins.attrib import attr
 
-from venture.test.config import get_ripl, default_num_transitions_per_sample, on_inf_prim
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @attr("slow")
 @on_inf_prim("mh")
 def testGoldwater1():
-  """Fairly complicated program. Just checks to make sure it runs without crashing."""
+  # Fairly complicated program. Just checks to make sure it runs
+  # without crashing.
   raise SkipTest("This test blocked the inference quality suite for 9 hours once.  Issue: https://app.asana.com/0/11127829865276/12392223521813")
   ripl = get_ripl()
 
   brent = ["catanddog", "dogandcat", "birdandcat","dogandbird","birdcatdog"]
 
   N = default_num_transitions_per_sample()
-  
+
   alphabet = "".join(set("".join(list(itertools.chain.from_iterable(brent)))))
   d = {}
   for i in xrange(len(alphabet)): d[alphabet[i]] = i
@@ -39,7 +43,7 @@ def testGoldwater1():
   ripl.assume("parameter_for_dirichlet","(if (flip) (normal 10 1) (gamma 1 1))")
   ripl.assume("alphabet_length", str(len(alphabet)))
 
-  ripl.assume("sample_phone", "((if (flip) make_sym_dir_mult make_uc_sym_dir_mult) parameter_for_dirichlet alphabet_length)")
+  ripl.assume("sample_phone", "((if (flip) make_sym_dir_cat make_uc_sym_dir_cat) parameter_for_dirichlet alphabet_length)")
   # TODO What is the second parameter to make_crp supposed to be?
   # This line used to say "((if (flip) make_crp make_crp) (gamma 1.0 1.0) (uniform_continuous 0.001 0.01))"
   ripl.assume("sample_word_id", "((if (flip) make_crp make_crp) (gamma 1.0 1.0))")

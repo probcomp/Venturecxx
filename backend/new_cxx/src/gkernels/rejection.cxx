@@ -23,20 +23,21 @@
 #include "detach.h"
 #include "consistency.h"
 
-pair<Trace*,double> BogoPossibilizeGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> BogoPossibilizeGKernel::propose(
+    ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
-  
+
   assert(scaffold->border.size() == 1);
   while (true) {
-    pair<double,shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
+    pair<double, boost::shared_ptr<DB> > p = detachAndExtract(trace, scaffold->border[0], scaffold);
     double rhoWeight = p.first;
     rhoDB = p.second;
 
     assertTorus(scaffold);
 
-    double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,shared_ptr<map<Node*,Gradient> >());
+    double xiWeight = regenAndAttach(trace, scaffold->border[0], scaffold, false, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
     cout << rhoWeight << ", " << xiWeight << endl;
     if (rhoWeight > -INFINITY) {
       // The original state was possible; force rejecting the transition
@@ -51,12 +52,12 @@ pair<Trace*,double> BogoPossibilizeGKernel::propose(ConcreteTrace * trace,shared
   }
 }
 
-void BogoPossibilizeGKernel::accept() { }
+int BogoPossibilizeGKernel::accept() { return this->scaffold->numAffectedNodes(); }
 
-
-void BogoPossibilizeGKernel::reject()
+int BogoPossibilizeGKernel::reject()
 {
-  detachAndExtract(trace,scaffold->border[0],scaffold);
+  detachAndExtract(trace, scaffold->border[0], scaffold);
   assertTorus(scaffold);
-  regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
+  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
+  return this->scaffold->numAffectedNodes();
 }

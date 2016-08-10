@@ -17,15 +17,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
+
 def strip_types(value):
     if isinstance(value, dict) and "type" in value and "value" in value:
         return strip_types(value['value'])
-    if isinstance(value,list):
+    if isinstance(value, list):
         return [strip_types(v) for v in value]
+    if isinstance(value, tuple):
+        return tuple([strip_types(v) for v in value])
     return value
 
 def strip_types_from_dict_values(value):
-    return dict([(k, strip_types(v)) for (k,v) in value.iteritems()])
+    return OrderedDict([(k, strip_types(v)) for (k,v) in value.iteritems()])
 
 # This list of functions defines the public REST API
 # of the Ripl server and client
@@ -34,14 +38,13 @@ def strip_types_from_dict_values(value):
 # of functions, but being explicit is better/more secure
 _RIPL_FUNCTIONS = [
         'get_mode','list_available_modes','set_mode',
-        'execute_instruction','execute_program','substitute_params',
-        'split_program','get_text','character_index_to_expression_index',
+        'execute_instruction','execute_program',
+        'get_text',
         'expression_index_to_text_index','assume','predict',
-        'observe','configure','forget','report','infer',
-        'clear','rollback','list_directives','get_directive',
+        'observe','forget','report','infer',
+        'clear','list_directives','get_directive',
         'force','sample','continuous_inference_status',
         'start_continuous_inference','stop_continuous_inference',
-        'get_current_exception','get_state',
         'get_global_logscore'
         ]
 

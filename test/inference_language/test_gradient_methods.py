@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,15 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import assert_almost_equal
 from nose import SkipTest
+from nose.tools import assert_almost_equal
 
-from venture.test.config import get_ripl, collectSamples, broken_in, gen_broken_in, on_inf_prim, gen_on_inf_prim
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import gen_broken_in
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
-@gen_on_inf_prim("map")
+@gen_on_inf_prim("grad_ascent")
 def testGradientMethodsBasicMap():
-  yield checkGradientMethodsBasic, "map"
+  yield checkGradientMethodsBasic, "grad_ascent"
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
 @gen_on_inf_prim("nesterov")
@@ -31,7 +36,7 @@ def testGradientMethodsBasicNesterov():
   yield checkGradientMethodsBasic, "nesterov"
 
 def checkGradientMethodsBasic(inference_method):
-  "Make sure that map methods find the maximum"
+  # Make sure that map methods find the maximum
   ripl = get_ripl()
   ripl.assume("a", "(normal 1 1)", label = "pid")
   ripl.force("a", 0.0)
@@ -43,9 +48,30 @@ def checkGradientMethodsBasic(inference_method):
 @broken_in('puma', "Gradient climbers only implemented in Lite.")
 @on_inf_prim("nesterov")
 def testNesterovWithInt():
-  "Without fixing VentureInteger to play nicely with Python numbers, this errors"
+  # Without fixing VentureInteger to play nicely with Python numbers,
+  # this errors
   raise SkipTest("Observes that change the type of a variable may break gradient methods. Issue: https://app.asana.com/0/11127829865276/15085515046349")
   ripl = get_ripl()
   ripl.assume('x', '(normal 1 1)')
   ripl.force('x', 0)
   ripl.infer('(nesterov default one 0.1 10 20)')
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("grad_ascent")
+def testGradientThroughAAA():
+  ripl = get_ripl()
+  ripl.assume("weight", "(beta 1 1)")
+  ripl.force("weight", 0.5)
+  ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
+  ripl.observe("(coin)", True)
+  ripl.observe("(coin)", True)
+  ripl.infer("(grad_ascent default all 0.03 1 1)")
+  assert_almost_equal(ripl.sample("weight"), 0.62)
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("grad_ascent")
+def testNullaryFlipRegression():
+  r = get_ripl()
+  r.assume("x", "(flip)")
+  # Should not crash
+  r.infer("(grad_ascent default all 0.01 1 1)")

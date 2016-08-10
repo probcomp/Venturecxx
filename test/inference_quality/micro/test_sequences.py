@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -16,13 +16,18 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, skipWhenSubSampling
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.config import skipWhenSubSampling
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testVentureNormalHMM1():
-  ripl = get_ripl()
+def testVentureNormalHMM1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("f","""
 (mem (lambda (i)
@@ -58,14 +63,13 @@ def testVentureNormalHMM1():
   ripl.predict("(f 4)", label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  cdf = stats.norm(loc=390/89.0, scale=math.sqrt(55/89.0)).cdf
-  return reportKnownContinuous(cdf, predictions, "N(4.382, 0.786)")
+  return reportKnownGaussian(390/89.0, math.sqrt(55/89.0), predictions)
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
-def testVentureBinaryHMM1():
-  ripl = get_ripl()
+def testVentureBinaryHMM1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("f","""
 (mem (lambda (i)

@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -35,8 +35,8 @@ that most models are runnable in any backend.
 
 To write a new test:
 
-- If your test should be generic across backends, use get_ripl or
-  get_mripl from this module instead of venture.shortcuts
+- If your test should be generic across backends, use get_ripl
+  from this module instead of venture.shortcuts
 
 - If not, please decorate it with @in_backend (or @gen_in_backend)
   to keep Jenkins from running it redundantly
@@ -66,15 +66,17 @@ To write a new test:
 
 """
 
-import nose.tools as nose
-from nose import SkipTest
-from testconfig import config
-from inspect import isgeneratorfunction
-import sys
 from StringIO import StringIO
+from inspect import isgeneratorfunction
+import random
+import sys
+
+from nose import SkipTest
+import nose.tools as nose
+from testconfig import config
 
 import venture.shortcuts as s
-import venture.venturemagics.ip_parallel as ip_parallel
+import venture.value.dicts as v
 
 def yes_like(thing):
   if isinstance(thing, str):
@@ -105,9 +107,9 @@ def collect_iid_samples():
 # These sorts of contortions are necessary because nose's parser of
 # configuration files doesn't seem to deal with supplying the same
 # option repeatedly, as the nose-testconfig plugin calls for.
-def default_num_samples():
+def default_num_samples(factor=1):
   if not ignore_inference_quality():
-    return int(config["num_samples"])
+    return int(config["num_samples"]) * factor
   else:
     return 2
 
@@ -117,21 +119,22 @@ def default_num_transitions_per_sample():
   else:
     return 3
 
+def default_num_data(desired=None):
+  if not ignore_inference_quality():
+    return desired or int(config["num_data"])
+  else:
+    return 2
+
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
-def get_ripl(persistent_inference_trace=False):
+def get_ripl(init_mode="church_prime", **kwargs):
   assert not disable_get_ripl, "Trying to get the configured ripl in a test marked as not ripl-agnostic."
   global ct_get_ripl_called
   ct_get_ripl_called += 1
-  return s.backend(config["get_ripl"]).make_combined_ripl(persistent_inference_trace=persistent_inference_trace)
-
-def get_mripl(no_ripls=2,local_mode=None,**kwargs):
-   # NB: there is also global "get_mripl_backend" for having special-case backend
-   # for mripl
-  backend = config["get_ripl"]
-  local_mode = config["get_mripl_local_mode"] if local_mode is None else local_mode
-  return ip_parallel.MRipl(no_ripls,backend=backend,local_mode=local_mode,**kwargs)
+  r = s.backend(config["get_ripl"]).make_combined_ripl(**kwargs)
+  r.set_mode(init_mode)
+  return r
 
 
 def get_core_sivm():
@@ -193,7 +196,9 @@ def _collectData(iid,ripl,address,num_samples=None,infer=None):
     # TODO Consider going direct here to avoid the parser
     ripl.infer(infer)
     predictions.append(ripl.report(address))
-    if iid: ripl.sivm.core_sivm.engine.reinit_inference_problem()
+    if iid:
+      ripl.sivm.core_sivm.engine.reinit_inference_problem()
+      ripl.infer(v.app(v.sym("incorporate")))
   return predictions
 
 disable_default_infer = False
@@ -231,7 +236,7 @@ def testSomethingAboutPuma():
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_in_backend for test generator %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       name = config["get_ripl"]
       if backend in ["lite", "puma"] and not name == backend:
         raise SkipTest(f.__name__ + " doesn't test " + name)
@@ -239,7 +244,7 @@ def testSomethingAboutPuma():
       old = disable_get_ripl
       disable_get_ripl = False if backend is "any" else True
       try:
-        return f(*args)
+        return f(*args, **kwargs)
       finally:
         disable_get_ripl = old
     wrapped.backend = backend
@@ -270,7 +275,7 @@ def testSomeThingsAboutPuma():
   def wrap(f):
     assert isgeneratorfunction(f), "Use in_backend for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       name = config["get_ripl"]
       if backend in ["lite", "puma"] and name is not backend:
         raise SkipTest(f.__name__ + " doesn't test " + name)
@@ -278,10 +283,41 @@ def testSomeThingsAboutPuma():
       old = disable_get_ripl
       disable_get_ripl = False if backend is "any" else True
       try:
-        for t in f(*args): yield t
+        for t in f(*args, **kwargs): yield t
       finally:
         disable_get_ripl = old
     wrapped.backend = backend
+    return wrapped
+  return wrap
+
+def needs_backend(backend):
+  """Marks this test as needing the given backend."""
+  def wrap(f):
+    assert not isgeneratorfunction(f), \
+      "Use gen_needs_backend for test generator %s" % (f.__name__,)
+    @nose.make_decorator(f)
+    def wrapped(*args, **kwargs):
+      try:
+        s.backend(backend).make_combined_ripl()
+      except Exception as e:
+        raise SkipTest(f.__name__ + " needs " + backend)
+      return f(*args, **kwargs)
+    return wrapped
+  return wrap
+
+def gen_needs_backend(backend):
+  """Marks this test generator as needing the given backend."""
+  def wrap(f):
+    assert isgeneratorfunction(f), \
+      "Use needs_backend for non-generator test %s" % (f.__name__,)
+    @nose.make_decorator(f)
+    def wrapped(*args, **kwargs):
+      try:
+        s.backend(backend).make_combined_ripl()
+      except Exception as e:
+        raise SkipTest(f.__name__ + " needs " + backend)
+      for t in f(*args, **kwargs):
+        yield t
     return wrapped
   return wrap
 
@@ -290,12 +326,12 @@ def broken_in(backend, reason = None):
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_broken_in for test generator %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       ripl = config["get_ripl"]
       if ripl == backend:
         msg = " because " + reason if reason is not None else ""
         raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
-      return f(*args)
+      return f(*args, **kwargs)
     return wrapped
   return wrap
 
@@ -304,12 +340,12 @@ def gen_broken_in(backend, reason = None):
   def wrap(f):
     assert isgeneratorfunction(f), "Use broken_in for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       ripl = config["get_ripl"]
       if ripl == backend:
         msg = " because " + reason if reason is not None else ""
         raise SkipTest(f.__name__ + " doesn't support " + ripl + msg)
-      for t in f(*args): yield t
+      for t in f(*args, **kwargs): yield t
     return wrapped
   return wrap
 
@@ -322,7 +358,7 @@ non-generator tests---use gen_on_inf_prim for generators.  Possible
 values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
@@ -351,12 +387,12 @@ this into account.
   def wrap(f):
     assert not isgeneratorfunction(f), "Use gen_on_inf_prim for test generator %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       global disable_default_infer
       old = disable_default_infer
       disable_default_infer = False if primitive is "any" else True
       try:
-        return f(*args)
+        return f(*args, **kwargs)
       finally:
         disable_default_infer = old
     wrapped.inf_prim = primitive
@@ -372,7 +408,7 @@ works for generator tests---use on_inf_prim for non-generators.
 Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "map", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)
@@ -401,12 +437,12 @@ takes this into account.
   def wrap(f):
     assert isgeneratorfunction(f), "Use on_inf_prim for non-generator test %s" % f.__name__
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       global disable_default_infer
       old = disable_default_infer
       disable_default_infer = False if primitive is "any" else True
       try:
-        for t in f(*args): yield t
+        for t in f(*args, **kwargs): yield t
       finally:
         disable_default_infer = old
     wrapped.inf_prim = primitive
@@ -420,9 +456,9 @@ general-purpose inference programs except rejection sampling.
   """
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not rejectionSampling():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_rejection_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -440,9 +476,9 @@ general-purpose inference programs except sub-sampled MH.
   """
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not subSampling():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_sub_sampling = True # TODO Skip by these tags in all-crashes & co
@@ -452,12 +488,32 @@ general-purpose inference programs except sub-sampled MH.
 def subSampling():
   return config["infer"].startswith("(subsampled_mh")
 
+# TODO Abstract commonalities with the rejection skipper
+def skipWhenDoingParticleGibbs(reason):
+  """Annotate a test function as being suitable for testing all
+general-purpose inference programs except particle Gibbs.
+
+  """
+  def wrap(f):
+    @nose.make_decorator(f)
+    def wrapped(*args, **kwargs):
+      if not doingParticleGibbs():
+        return f(*args, **kwargs)
+      else:
+        raise SkipTest(reason)
+    wrapped.skip_when_doing_particle_gibbs = True # TODO Skip by these tags in all-crashes & co
+    return wrapped
+  return wrap
+
+def doingParticleGibbs():
+  return config["infer"].startswith("(pgibbs") or config["infer"].startswith("(func_pgibbs")
+
 def skipWhenInParallel(reason):
   def wrap(f):
     @nose.make_decorator(f)
-    def wrapped(*args):
+    def wrapped(*args, **kwargs):
       if not inParallel():
-        return f(*args)
+        return f(*args, **kwargs)
       else:
         raise SkipTest(reason)
     wrapped.skip_when_in_parallel = True # TODO Skip by these tags in all-crashes & co
@@ -473,10 +529,10 @@ def inParallel():
 def needs_ggplot(f):
   assert not isgeneratorfunction(f), "Use gen_needs_ggplot for generator test %s" % f.__name__
   @nose.make_decorator(f)
-  def wrapped(*args):
+  def wrapped(*args, **kwargs):
     try:
-      import ggplot             # pylint: disable=unused-variable
-      return f(*args)
+      import venture.ggplot             # pylint: disable=unused-variable
+      return f(*args, **kwargs)
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
   return wrapped
@@ -484,12 +540,22 @@ def needs_ggplot(f):
 def gen_needs_ggplot(f):
   assert isgeneratorfunction(f), "Use needs_ggplot for non-generator test %s" % f.__name__
   @nose.make_decorator(f)
-  def wrapped(*args):
+  def wrapped(*args, **kwargs):
     try:
-      import ggplot
-      for t in f(*args): yield t
+      import venture.ggplot
+      for t in f(*args, **kwargs): yield t
     except ImportError:
       raise SkipTest("ggplot not installed on this machine")
+  return wrapped
+
+def needs_pystan(f):
+  @nose.make_decorator(f)
+  def wrapped(*args, **kwargs):
+    try:
+      import pystan
+      return f(*args, **kwargs)
+    except ImportError:
+      raise SkipTest("pystan not installed on this machine")
   return wrapped
 
 def capture_output(ripl, program):
@@ -500,3 +566,29 @@ def capture_output(ripl, program):
   res = ripl.execute_program(program)
   sys.stdout = old_stdout
   return res, captured.getvalue()
+
+def stochasticTest(f):
+  """Make a random test reproducible.
+
+The decorated test function must accept an argument named 'seed'.  It
+is expected to be deterministic for fixed seed.  During successive
+test runs, it will be given different values for the 'seed' argument;
+if it should ever fail or give an error, the seed will be reported in
+the test output.
+
+The seed given to a test can be controlled by passing --tc=seed:foo at
+the command line.  Thus, reproducibility of potentially rare errors.
+"""
+  @nose.make_decorator(f)
+  def wrapped(*args, **kwargs):
+    if config['seed'] is None:
+      seed = random.randint(1, 2**31 - 1)
+    else:
+      seed = int(config['seed'])
+    try:
+      return f(seed, *args, **kwargs)
+    except Exception as e:
+      info = sys.exc_info()
+      print "To reproduce, use --tc=seed:%d" % (seed,)
+      raise e, None, info[2]
+  return wrapped

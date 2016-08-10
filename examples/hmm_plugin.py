@@ -17,7 +17,6 @@
 
 import time
 
-import venture.lite.value as v
 import venture.ripl.utils as u
 
 def __venture_start__(ripl):
@@ -59,7 +58,7 @@ def hmm_map(inferrer, states):
     hmm_pause()
     import sys
     print >>sys.stderr, 'MAP sequence: %s' % (sequence,)
-    print >>sys.stderr, 'Score: %s' % inferrer.engine.logscore()
+    print >>sys.stderr, 'Score: %s' % inferrer.engine.ripl.infer('global_log_joint')[0]
     print '%s,%s' % (time, metric1(sequence))
     hmm_resume()
 

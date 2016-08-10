@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 import time
 import threading
 
-from venture.test.config import get_ripl, on_inf_prim
+from nose.tools import eq_
+from flaky import flaky
+
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 def testStopSmoke():
@@ -52,7 +55,8 @@ def testInferLoopSmoke():
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
-@on_inf_prim("mh") # Really loop, but that's very special
+@on_inf_prim("loop")
+@flaky # Because sometimes it doesn't wait long enough for the other thread to go
 def testStartStopInferLoop():
   numthreads = threading.active_count()
   ripl = get_ripl()
@@ -60,40 +64,59 @@ def testStartStopInferLoop():
   ripl.assume("x", "(normal 0 1)")
   assertNotInferring(ripl)
   eq_(numthreads, threading.active_count())
+  eq_(False, ripl.continuous_inference_status()['running'])
   try:
     ripl.infer("(loop (mh default one 1))")
     assertInferring(ripl)
     eq_(numthreads+1, threading.active_count())
+    eq_(True, ripl.continuous_inference_status()['running'])
     with ripl.sivm._pause_continuous_inference():
       assertNotInferring(ripl)
       eq_(numthreads, threading.active_count())
+      eq_(False, ripl.continuous_inference_status()['running'])
     assertInferring(ripl)
     eq_(numthreads+1, threading.active_count())
+    eq_(True, ripl.continuous_inference_status()['running'])
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
-@on_inf_prim("mh") # Really loop, but that's very special
+@on_inf_prim("loop")
 def testStartCISmoke():
   ripl = get_ripl()
   ripl.assume("x", "(normal 0 1)")
 
   assertNotInferring(ripl)
+  ripl.infer("(endloop)")
+  assertNotInferring(ripl)
 
   try:
     ripl.start_continuous_inference("(mh default one 1)")
     assertInferring(ripl)
+    ripl.infer("(endloop)")
+    assertNotInferring(ripl)
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
 
-@on_inf_prim("mh") # Really loop, but that's very special
-def testStartCIInstructionSmoke():
+@on_inf_prim("loop")
+def testRiplCommandInLoop():
   ripl = get_ripl()
-  ripl.assume("x", "(normal 0 1)")
-
+  ripl.assume("x", "(normal 0 1)", label="foo")
   assertNotInferring(ripl)
-
   try:
-    ripl.execute_instruction("[start_continuous_inference (mh default one 1)]")
+    ripl.infer("(loop (do (forget 'foo) (assume x (normal 0 1) foo)))")
     assertInferring(ripl)
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
+
+@on_inf_prim("loop")
+def testCrashStopsInferLoop():
+  ripl = get_ripl()
+  ripl.infer('(pyexec "import venture.lite.value as v")')
+  ripl.infer('(pyexec "loop_thread_start_count = 0")')
+  try:
+    ripl.infer('(loop (do (pyexec "loop_thread_start_count += 1") crash))')
+    time.sleep(0.00001) # Yield to give CI a chance to run and crash
+    ripl.sample(1) # This should not restart a crashed CI thread
+  finally:
+    ripl.stop_continuous_inference() # Don't want to leave active threads lying around
+  eq_(1, ripl.infer('(pyeval "v.VentureNumber(loop_thread_start_count)")'))

@@ -16,16 +16,18 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.plugins.attrib import attr
-from nose.tools import assert_less, assert_greater
+from nose.tools import assert_greater
+from nose.tools import assert_less
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 def mean(xs): return sum(xs) / float(len(xs))
 
 @attr("slow")    
 @on_inf_prim("mh")
 def testCRPMixSimple1():
-  """Makes sure basic clustering model behaves reasonably"""
+  # Makes sure basic clustering model behaves reasonably
   ripl = get_ripl()
 
   ripl.assume('get_cluster_mean', "(mem (lambda (cluster) (uniform_continuous -10.0 10.0)))")

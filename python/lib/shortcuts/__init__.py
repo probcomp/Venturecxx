@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,16 +14,25 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import sys
+import random
+import resource
+
+from venture import parser
+from venture import ripl
+from venture import sivm
+from venture import server
 
 # Raise Python's recursion limit, per
 # http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
 # The reason to do this is that Venture is not tail recursive, and the
-# cycle and mixture inference programs are written as recursive
-# functions in Venture.
-import sys
-import resource
+# repeat inference function are written as recursive functions in
+# Venture.
+
 # Try to increase max stack size from 8MB to 512MB
 (soft, hard) = resource.getrlimit(resource.RLIMIT_STACK)
 if hard > -1:
@@ -34,81 +43,107 @@ resource.setrlimit(resource.RLIMIT_STACK, (new_soft, hard))
 # Set a large recursion depth limit
 sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
 
-from venture import parser, ripl, sivm, server
+def make_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object.
+
+Traces models in the default backend.  See `venture.ripl.ripl.Ripl` for what
+you can do with it."""
+    return backend().make_ripl(*args, **kwargs)
+
+def make_lite_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that traces models in the Lite backend."""
+    return Lite().make_ripl(*args, **kwargs)
+
+def make_puma_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that traces models in the Puma backend."""
+    return Puma().make_ripl(*args, **kwargs)
+
+def make_church_prime_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that parses input in the abstract syntax."""
+    return backend().make_church_prime_ripl(*args, **kwargs)
+
+def make_lite_church_prime_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that parses input in the abstract syntax and traces models in the Lite backend."""
+    return Lite().make_church_prime_ripl(*args, **kwargs)
+
+def make_puma_church_prime_ripl(*args, **kwargs):
+    """Construct and return a VentureScript RIPL object that parses input in the abstract syntax and traces models in the Puma backend."""
+    return Puma().make_church_prime_ripl(*args, **kwargs)
+
+def make_ripl_rest_server():
+    """Return a VentureScript REST server object backed by a default RIPL."""
+    r = backend().make_combined_ripl()
+    return server.RiplRestServer(r)
+
+def make_ripl_rest_client(base_url):
+    """Return a VentureScript REST client object pointed at the given URL."""
+    return ripl.RiplRestClient(base_url)
+
+def _seed(seed):
+    return random.randint(1, 2**31 - 1) if seed is None else seed
+def _kwseed(kwargs):
+    if 'seed' in kwargs:
+        return kwargs.pop('seed')
+    else:
+        return random.randint(1, 2**31 - 1)
 
 class Backend(object):
+    """Base class representing a model backend.
+
+See `Lite` and `Puma`."""
     def trace_constructor(self): pass
-    def make_engine(self, persistent_inference_trace=False):
+    def make_engine(self, persistent_inference_trace=True, seed=None):
         from venture.engine import engine
-        return engine.Engine(self.name(), self.trace_constructor(), persistent_inference_trace)
-    def make_core_sivm(self, persistent_inference_trace=False):
-        return sivm.CoreSivm(self.make_engine(persistent_inference_trace))
-    def make_venture_sivm(self, persistent_inference_trace=False):
-        return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace))
-    def make_church_prime_ripl(self, persistent_inference_trace=False):
-        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
-                      {"church_prime":parser.ChurchPrimeParser.instance()})
-        r.backend_name = self.name()
-        return r
-    def make_venture_script_ripl(self, persistent_inference_trace=False):
-        r = ripl.Ripl(self.make_venture_sivm(persistent_inference_trace),
-                      {"venture_script":parser.VentureScriptParser.instance()})
-        r.backend_name = self.name()
-        return r
-    def make_combined_ripl(self, persistent_inference_trace=False):
-        v = self.make_venture_sivm(persistent_inference_trace)
+        seed = _seed(seed)
+        return engine.Engine(self, seed, persistent_inference_trace)
+    def make_core_sivm(self, persistent_inference_trace=True, seed=None):
+        seed = _seed(seed)
+        return sivm.CoreSivm(self.make_engine(persistent_inference_trace,
+                                              seed))
+    def make_venture_sivm(self, persistent_inference_trace=True, seed=None):
+        seed = _seed(seed)
+        return sivm.VentureSivm(self.make_core_sivm(persistent_inference_trace,
+                                                    seed))
+    def make_church_prime_ripl(self, **kwargs):
+        return self.make_ripl(init_mode="church_prime", **kwargs)
+    def make_venture_script_ripl(self, **kwargs):
+        return self.make_ripl(init_mode="venture_script", **kwargs)
+    def make_combined_ripl(self, persistent_inference_trace=True, seed=None,
+                           **kwargs):
+        seed = _seed(seed)
+        v = self.make_venture_sivm(persistent_inference_trace, seed)
         parser1 = parser.ChurchPrimeParser.instance()
         parser2 = parser.VentureScriptParser.instance()
-        r = ripl.Ripl(v,{"church_prime":parser1, "venture_script":parser2})
+        modes = {"church_prime": parser1, "venture_script": parser2}
+        r = ripl.Ripl(v, modes, **kwargs)
         r.set_mode("church_prime")
         r.backend_name = self.name()
         return r
-    def make_ripl_rest_server(self):
-        return server.RiplRestServer(self.make_combined_ripl())
+    def make_ripl(self, init_mode="venture_script", **kwargs):
+        r = self.make_combined_ripl(**kwargs)
+        r.set_mode(init_mode)
+        return r
+    def make_ripl_rest_server(self, **kwargs):
+        return server.RiplRestServer(self.make_combined_ripl(**kwargs))
 
 class Lite(Backend):
+    """An instance of this class represents the Lite backend."""
     def trace_constructor(self):
         from venture.lite import trace
         return trace.Trace
     def name(self): return "lite"
 
 class Puma(Backend):
+    """An instance of this class represents the Puma backend."""
     def trace_constructor(self):
         from venture.puma import trace
         return trace.Trace
     def name(self): return "puma"
 
 def backend(name = "puma"):
+    """Return a backend by name: 'lite' or 'puma'."""
     if name == "lite":
         return Lite()
     if name == "puma":
         return Puma()
     raise Exception("Unknown backend %s" % name)
-
-for (prefix, suffix) in [("make_core_", "sivm"),
-                         ("make_venture_", "sivm"),
-                         ("make_", "church_prime_ripl"),
-                         ("make_", "venture_script_ripl"),
-                         ("make_", "combined_ripl")]:
-    method = prefix + suffix
-    # Your complaints about metaprogramming do not fall upon deaf ears, pylint: disable=exec-used
-    string2 = """
-def %s():
-  return backend().%s()
-""" % (method, method)
-    exec(string2)
-
-    for backend_name in ["lite", "puma"]:
-        function = prefix + backend_name + "_" + suffix
-        string = """
-def %s():
-  return backend("%s").%s()
-""" % (function, backend_name, method)
-        exec(string)
-
-def make_ripl_rest_server():
-    r = make_combined_ripl() # Metaprogrammed.  pylint: disable=undefined-variable
-    return server.RiplRestServer(r)
-
-def make_ripl_rest_client(base_url):
-    return ripl.RiplRestClient(base_url)

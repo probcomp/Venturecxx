@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, MIT Probabilistic Computing Project.
+ * Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
  *
  * This file is part of Venture.
  *
@@ -33,7 +33,6 @@
 
 venture(empty)		::= .
 venture(i)		::= instructions(insts).
-venture(e)		::= expression(exp).
 
 instructions(one)	::= instruction(inst).
 instructions(many)	::= instructions(insts) instruction(inst).
@@ -42,6 +41,7 @@ instruction(labelled)	::= L_NAME(l) T_COLON
 				T_LSQUARE(open) directive(d) T_RSQUARE(close).
 instruction(unlabelled)	::= T_LSQUARE(open) directive(d) T_RSQUARE(close).
 instruction(command)	::= T_LSQUARE(open) command(c) T_RSQUARE(close).
+instruction(expression)	::= expression(e).
 instruction(laberror)	::= error T_COLON(colon)
 				T_LSQUARE(open) directive(d) T_RSQUARE(close).
 instruction(direrror)	::= L_NAME(l) T_COLON(colon)
@@ -66,34 +66,12 @@ instruction(error)	::= T_LSQUARE(open) error T_RSQUARE(close).
 
 directive(define)	::= K_DEFINE(k) L_NAME(n) expression(e).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) expression(e).
-directive(observe)	::= K_OBSERVE(k) expression(e) literal(v).
+directive(assume_values) ::= K_ASSUME_VALUES(k) namelist(nl) expression(e).
+directive(observe)	::= K_OBSERVE(k) expression(e) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
-command(configure)	::= K_CONFIGURE(k) json(options).
-command(forget)		::= K_FORGET(k) directive_ref(dr).
-command(freeze)		::= K_FREEZE(k) directive_ref(dr).
-command(report)		::= K_REPORT(k) directive_ref(dr).
 command(infer)		::= K_INFER(k) expression(e).
-command(clear)		::= K_CLEAR(k).
-command(rollback)	::= K_ROLLBACK(k).
-command(list_directives)::= K_LIST_DIRECTIVES(k).
-command(get_directive)	::= K_GET_DIRECTIVE(k) directive_ref(dr).
-command(force)		::= K_FORCE(k) expression(e) literal(v).
-command(sample)		::= K_SAMPLE(k) expression(e).
-command(continuous_inference_status)	::= K_CONTINUOUS_INFERENCE_STATUS(k).
-command(start_continuous_inference)	::= K_START_CONTINUOUS_INFERENCE(k)
-						expression(e).
-command(stop_continuous_inference)	::= K_STOP_CONTINUOUS_INFERENCE(k).
-command(get_current_exception)		::= K_GET_CURRENT_EXCEPTION(k).
-command(get_state)		::= K_GET_STATE(k).
-command(get_global_logscore)	::= K_GET_GLOBAL_LOGSCORE(k).
-command(profiler_configure)	::= K_PROFILER_CONFIGURE(k) json(options).
-command(profiler_clear)		::= K_PROFILER_CLEAR(k).
-command(profiler_list_random)	::= K_PROFILER_LIST_RANDOM(k) K_CHOICES.
 command(load)		::= K_LOAD(k) L_STRING(pathname).
-
-directive_ref(numbered)	::= L_INTEGER(number).
-directive_ref(labelled)	::= L_NAME(label).
 
 expression(symbol)	::= L_NAME(name).
 expression(operator)	::= L_OPERATOR(op).
@@ -101,17 +79,26 @@ expression(literal)	::= literal(value).
 expression(quote)       ::= T_QUOTE(quote) expression(e).
 expression(qquote)      ::= T_BACKTICK(qquote) expression(e).
 expression(unquote)     ::= T_COMMA(unquote) expression(e).
-expression(combination)	::= T_LROUND(open) expressions(es) T_RROUND(close).
-expression(comb_error)	::= T_LROUND(open) expressions(es) error
+expression(comb0)	::= T_LROUND(open) T_RROUND(close).
+expression(comb1)	::= T_LROUND(open) expression(op) arguments(args) T_RROUND(close).
+expression(comb_error)	::= T_LROUND(open) expression(op) arguments(args) error
 				T_RROUND(close).
 
-expressions(none)	::= .
-expressions(some)	::= expressions(es) expression(e).
+arguments(none)		::= .
+arguments(some)		::= arguments(args) expression(e).
+arguments(some_kw)	::= arguments(args) L_NAME(name) T_COLON(colon) expression(e).
+arguments(kw_error)	::= arguments(args) L_NAME(name) T_COLON(colon) error.
+
+namelist(nl)    	::= T_LROUND(open) names(ns) T_RROUND(close).
+
+names(none)		::= .
+names(some)		::= names(ns) L_NAME(n).
 
 literal(true)		::= T_TRUE(t).
 literal(false)		::= T_FALSE(f).
 literal(integer)	::= L_INTEGER(v).
 literal(real)		::= L_REAL(v).
+literal(string)		::= L_STRING(v).
 literal(json)		::= L_NAME(type)
 				T_LANGLE(open) json(value) T_RANGLE(close).
 literal(json_error)	::= L_NAME(type) T_LANGLE(open) error T_RANGLE(close).
@@ -155,28 +142,10 @@ json_dict_entry(error)	::= error T_COLON json(value).
  */
 %fallback L_NAME
 	K_ASSUME
+	K_ASSUME_VALUES
 	K_CHOICES
-	K_CLEAR
-	K_CONFIGURE
-	K_CONTINUOUS_INFERENCE_STATUS
-	K_FORCE
-	K_FORGET
-	K_FREEZE
-	K_GET_CURRENT_EXCEPTION
-	K_GET_DIRECTIVE
-	K_GET_GLOBAL_LOGSCORE
-	K_GET_STATE
 	K_INFER
-	K_LIST_DIRECTIVES
 	K_LOAD
 	K_OBSERVE
 	K_PREDICT
-	K_PROFILER_CLEAR
-	K_PROFILER_CONFIGURE
-	K_PROFILER_LIST_RANDOM
-	K_REPORT
-	K_ROLLBACK
-	K_SAMPLE
-	K_START_CONTINUOUS_INFERENCE
-	K_STOP_CONTINUOUS_INFERENCE
 	.

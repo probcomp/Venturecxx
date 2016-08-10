@@ -9,16 +9,9 @@ Third-party software:
 - Solution for the copyright processing tool itself: Exclude it from
   the release.  Then it doesn't matter that it's third-party.
 - demos/jsripl/vendor
-- jquery and any friends in demos/jsripl/Terminal [see below]
 - backend/new_cxx/cmake/Modules/FindGSL.cmake clearly came from the Internet
 - backend/new_cxx/valgrind-python.supp was seeded from the Internet, but we modified it
 - refman/Makefile is part of a Sphinx distribution, with custom modifications
-
-demos/jsripl/Terminal/ is a self-contained, unused, and probably
-bitrotten hack by Saee Paliwal (who did not contribute anything else?)
-for making a Venture console in a browser (I guess).  It is intermixed
-with various javascript libraries.
-- Resolution: remove it from the release until further notice.
 
 Find all files in the git tree:
 git ls-tree -r --full-tree --name-only HEAD
@@ -55,11 +48,11 @@ time git ls-tree -r --full-tree --name-only HEAD | \
   grep -v "^backend/new_cxx/inc/Eigen/" | \
   grep -v "^external/" | \
   grep -v "^demos/jsripl/vendor/" | \
-  grep -v "^demos/jsripl/Terminal/" | \
   grep -v "\.cmake$" | \
   grep -v "\.supp$" | \
   grep -v "^refman/Makefile$" | \
   grep -v "silva_mvn.h$" | \
   grep -v "silva_mvn.cxx$" | \
   grep -v "match.scm$" | \
+  grep -v "nb_tester.py$" | \
   xargs -l tool/copyrights/venture

@@ -21,39 +21,94 @@
 #include "psp.h"
 #include "args.h"
 
-struct MatrixOutputPSP : PSP
+struct MatrixOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IdentityMatrixOutputPSP : PSP
+struct IdentityMatrixOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsMatrixOutputPSP : PSP
+struct IsMatrixOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct VectorOutputPSP : PSP
+struct TransposeOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsVectorOutputPSP : PSP
+struct VectorOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ToVectorOutputPSP : PSP
+struct IsVectorOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct VectorDotOutputPSP : PSP
+struct ToVectorOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct VectorAddOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct MatrixAddOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct ScaleVectorOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct ScaleMatrixOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct VectorDotOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct MatrixMulOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct MatrixTimesVectorOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct VectorTimesMatrixOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 

@@ -1,23 +1,25 @@
-Modeling Syntax Reference (VenChurch)
-=====================================
+Modeling Syntax Reference
+=========================
 
 Introduction
 ------------
 
-The Venture modeling language is the language in which model
+The VentureScript modeling language is the language in which model
 expressions, namely the arguments to the `assume`, `observe`, and
-`predict` instructions are written.  The Venture inference language is
+`predict` instructions are written.  The VentureScript inference language is
 the same language, but with a few additional predefined procedures and
 special forms.
 
-The VenChurch surface syntax for the Venture modeling language is a
-pure-functional dialect of Scheme, which puts it in the Lisp family of
-programming languages.  The major differences from Scheme are
+The VentureScript modeling language is a pure-functional dialect of
+JavaScript.  The major differences from JavaScript are
 
 - No mutation (only inference can effect mutation, and that only in a
   restricted way)
 
-- A spare set of predefined procedures and special forms
+- A spare set of predefined procedures and syntactic constructs
+
+- Several constructs relating specifically to probabilistic modeling
+  or functional programming
 
 - Predefined procedures for random choices according to various
   distributions.
@@ -25,13 +27,15 @@ programming languages.  The major differences from Scheme are
 Special Forms
 -------------
 
-The special forms in VenChurch are as follows:
+The special forms in VentureScript are as follows:
 
-- `(quote datum)`: Literal data.
+.. function:: quote(<datum>)
 
-  The datum must be a Venture expression.
+  Literal data.
+
+  The datum must be a VentureScript expression.
   As in Scheme, a `quote` form returns a representation of the given
-  expression as Venture data structures.
+  expression as VentureScript data structures.
 
 .. include:: model-macros.gen
 
@@ -40,8 +44,8 @@ are (as of this writing) expanded in expressions of the modeling
 language as well.  The results are generally not useful, so it's
 appropriate to treat those as reserved words when writing models:
 
-- do, begin, call_back, collect, assume, observe, predict,
-  force, sample, sample_all
+- `do`, `begin`, `call_back`, `collect`, `assume`, `observe`, `predict`,
+  `force`, `sample`, `sample_all`
 
 Built-in Procedures
 -------------------

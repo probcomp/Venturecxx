@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import raises, eq_
+from nose.tools import eq_
 
-from venture.test.config import get_ripl, on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.test.errors as err
 
 @on_inf_prim("assert")
@@ -27,46 +28,71 @@ def testAssertSmoke():
 @on_inf_prim("assert")
 def testAssertSmoke2():
   err.assert_error_message_contains("""\
-((assert false) model)
-^^^^^^^^^^^^^^^^^^^^^^
+(run (assert false))
+^^^^^^^^^^^^^^^^^^^^
 """, get_ripl().infer, "(assert false)")
 
 @on_inf_prim("particle_log_weights")
 def testWeightsSmoke():
-  get_ripl().infer("(do (w <- particle_log_weights) (assert (eq 0 (lookup w 0))))")
+  get_ripl().infer("(do (w <- (particle_log_weights)) (assert (eq 0 (lookup w 0))))")
 
 @on_inf_prim("set_particle_log_weights")
 def testWeightsSmoke2():
   get_ripl().infer("""(do
   (set_particle_log_weights (array -1))
-  (w <- particle_log_weights)
+  (w <- (particle_log_weights))
   (assert (eq -1 (lookup w 0))))""")
 
-@on_inf_prim("likelihood_at")
+@on_inf_prim("equalize_particle_log_weights")
+def testWeightsSmoke3():
+  get_ripl().infer("""(do
+  (resample 2)
+  (assume x (normal 0 1))
+  (observe (normal x 1) 2)
+  (equalize_particle_log_weights)
+  (w <- (particle_log_weights))
+  (assert (eq (lookup w 0) (lookup w 1))))""")
+
+@on_inf_prim("log_likelihood_at")
 def testLikelihoodSmoke():
   get_ripl().infer("""(do
   (assume x (normal 0 1))
   (observe (normal x 1) 2)
   (incorporate)
-  (l <- (likelihood_at default all))
+  (l <- (log_likelihood_at default all))
   (assert (< (lookup l 0) 0)))""")
 
-@on_inf_prim("posterior_at")
+@on_inf_prim("log_likelihood_at")
+def testLikelihoodOnNumericBlock():
+  get_ripl().infer("""(do
+  (assume x (tag 'value 0 (normal 0 1)))
+  (observe (normal x 1) 2)
+  (incorporate)
+  (l <- (log_likelihood_at 'value 0))
+  (assert (< (lookup l 0) 0)))""")
+
+@on_inf_prim("log_joint_at")
 def testPosteriorSmoke():
   get_ripl().infer("""(do
   (assume x (normal 0 1))
   (observe (normal x 1) 2)
   (incorporate)
-  (l <- (likelihood_at default all))
-  (p <- (posterior_at default all))
+  (l <- (log_likelihood_at default all))
+  (p <- (log_joint_at default all))
   (assert (< (lookup p 0) (lookup l 0))))""")
 
-# TODO Also want statistical test cases for likelihood_at and posterior_at
+@on_inf_prim("log_likelihood_at")
+def testEmptyScopes():
+  get_ripl().infer("""(do
+  (assert (eq 0 (lookup (run (log_likelihood_at default one)) 0)))
+  (assert (eq 0 (lookup (run (log_joint_at default one)) 0))))""")
+
+# TODO Also want statistical test cases for log_likelihood_at and log_joint_at
 
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation():
-  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup (quasiquote ((unquote (+ 1 2)) 5)) 0) t))"))
+  eq_(3, get_ripl().infer("(inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (+ 1 2)) 5)) 0) t)))"))
 
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation2():
-  eq_(3, get_ripl().infer("(lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t))"))
+  eq_(3, get_ripl().infer("(inference_action (lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t)))"))

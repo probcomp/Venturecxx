@@ -1,0 +1,255 @@
+Aggregated "master" list of projects, compiled over the first two
+weeks of February 2016.
+
+- Capability acquisition projects
+  - iVenture notebooks
+    - Prereq: Solve the problems associated with versioning iPython
+      notebooks (possibly by not relying on iPython)
+    - Ditto testing them
+    - Ditto maintaining them (at least at the level of examples)
+    - Resource: venture-transcript
+    - What are use cases, user stories, etc?  I will have a hard time
+      without dogfooding this.
+  - Tensorflow integration.
+    - I have doubts: Feras gave tensorflow a bad review, and after
+      VenStan I have somewhat soured on integrations.
+  - vkm said: "Help Anthony successfully replace the Venture SP
+    interface with his version of it."
+    - Have been talking to Anthony, he doesn't seem to "be done", but
+      maybe victory should be declared.
+  - vkm said: "After, figure out how to really demo Stan in Venture".
+  - vkm said: "Support Feras/Marco for making a console for Venture+BayesDB"
+  - Implement distributed particle sets.
+    - Could go through the recursive nested particles project, as
+      `resample_distributed`.
+    - #276 (distributed resample algorithm) will be more important for
+      jobs big enough to use more than one machine to hold particles
+      (unless they are all independent).
+    - #396 (parallel execution is lockstep) will also be more important
+      for such jobs, especially if cross-machine communication is
+      involved.
+    - Some notes and candidate user stories of sorts in
+      doc/axch-dev-thrust-menu.org under "Project: Design a good
+      experiment runner" and under "Project: Get cloud infrastructure"
+- Capability completion projects
+  - Inference programming for real.  The plan, in order:
+    - #566 (Recursive per-particle inference programs)
+      - Kills off or much eases all of
+        - #396 (non-lockstep parallel execution)
+        - #228 (parallel custom Markov chains)
+        - #227 (tutorial's custom markov chain failed horribly)
+        - #563 (is a model one estimate or many?)
+        - #564 (replicates of SMC runs)
+        - #271 (confusing stochastic errors in multiparticle programs)
+        - #565 (modeling directives in `for_each_particle`)
+        - Plausible per-particle random choices
+        - #519 (likelihood_weighting in the inference language)
+    - #501 (assessable inference actions) to make `on_subproblem` or any
+      kind of random-site M-H work
+      - Enables writing `mh` and simple custom proposals in the
+        inference language correctly
+    - #199 part 1 (multicallable local posterior function)
+    - #199 part 2 (deterministic local posterior function)
+      - Enables writing slice sampling in the inference language
+    - #199 part 3 (gradient of local posterior function)
+      - Enables writing HMC in the inference language
+    - #376 (export inference compounds to Python)
+      - Enables plugging in to third-party tools for inference or
+        optimization (L-BFGS, any standalone HMC implementations)
+    - There is an unfiled "#199 part 4": If, e.g., L-BFGS deals
+      gracefully with hard edges, those could perhaps be exposed to it
+      in a reasonable way as well.
+  - Smoother Python integration: Venture should be happy to consume and
+    produce Python functions.
+    - Python callables should smoothly work as inference actions (functions?)
+    - Python callables should smoothly work as likelihood-free SPs
+      - With smooth annotations for refinement, e.g. determinism
+    - Inference actions should smoothly work as Python callables
+    - Can I get (untraced) model SPs (or compounds!?) to work as Python
+      callables?
+    - And, some version of the detach/regen cycle should be callable
+      repeatedly!
+    - This would be much helped by a good default value conversion
+      between venture values and Python values.
+      - Can be overridden with explicit type annotations
+      - Hence, need not be 1-1 or invertible; just do the right thing
+        most of the time
+    - #378 (collect and callback flexibility)
+    - Would this subsume `call_back`?
+  - HMC for real: We can do work to actually give Lite robust
+    gradients for ascent, Hamiltonian, etc.  Related tickets:
+    - #389 (test end-to-end gradients), #199 (expose regen)
+    - #386 (consider replacing AD)
+    - #383 (gradients through uncollapsed makers)
+    - #388 (gradient through stochastic requests)
+    - #387 (interface of gradientOfSimulate is wrong)
+    - #385 (finish writing gradients)
+    - #384 (boundary condition problem)
+    - #82 (look into Stan's math library)
+  - Review/redesign visualizations.
+    - plotf hasn't dramatically taken off within the group
+      - clunky to use
+      - is it flexible enough?
+      - can we collect data more smoothly? are there better plot types
+        to be had? do we need a better plotting architecture, e.g. for
+        distribution? do we need to iron bugs out of it (like
+        overlapping histograms)? do we just need better documentation?
+        can we do "probabilistic assertions" that use plots as evidence
+        of success or failure (presumably p-p plots)? are there goodies
+        to be had from interactivity, like a "add more points to this
+        plot" button?
+    - More possible features: compositing as a dimension (for
+      different particles?); animation as a dimension (for the sweep
+      count?); facting as a dimension (for whatever).
+    - Have more notes in doc/axch-dev-thrust-menu.org under
+      "Notes on plotting features"
+  - Revisit the scaffold annotator called `draw_subproblem`.  It
+    seems somewhat useful but less than optimally useful
+    - partly because it doesn't say that it's showing all the nodes of
+      each type that occur under a subexpression
+    - partly because it doesn't obviously give the total scaffold size
+    - partly because there isn't a version that gives only the immediate
+      nodes in each subexpression
+    - partly because it doesn't display the dependencies the way
+      `draw_scaffold` does.
+    - However, `draw_scaffold` is completely useless because it is not
+      tied to the source code.  Can we make a better instance of both?
+  + Reproducibility: Venture programs should be deterministic given a
+    fixed seed, for reproducibility of results. (#138)
+- Performance projects
+  - Asymptotic performance assessment: We should make it easy to
+    evaluate asymptotic behavior of Venture programs, and expand our
+    suite of test programs.
+    - We have some anecdotal indications that asymptotic performance is
+      not actually on par with hand-written samplers (mostly around LDA,
+      but I am currently not sure why).
+    - Specific problem: calling simulate even when the SP will be
+      observed can be poor if simulate is more expensive than logDensity
+      - The dirichlet categoricals are somewhat smart about efficient
+        repeated sampling and assessing with the same weights.
+        - Only in Lite, not Puma.
+    - There may be other lurking problems; our tests are paltry and
+      ill-motivated
+  - Performance measurement: We should make it very easy to time and
+    profile Venture programs, and collect suites of test problems and
+    of microbenchmarks whereby performance improvements can be
+    measured.  (Notes in doc/axch-dev-thrust-menu.org under
+    "Project: Collect a suite of performance test problems" and
+    "Project: Start a suite of micro-benchmarks").
+  - Vectorization: Write vectorized versions of all the built-in
+    stochastic procedures.
+    - Where the fit is good, vectorization drastically improves runtime
+      and memory use.
+    - Can use Stan, numpy, or Matlab for design inspiration.
+  - Just-in-time partial evaluator: Can improve performance by JIT
+    compiling the scaffold into regen, to save on interpreting it when
+    propsals are repeated.
+    - Do I have notes for this somewhere?
+    - Anthony has some experiments on a branch.
+    - May be worth ~2x by itself; big wins possible from this enabling
+      compiler optimization on the result.
+  - Assertion architecture. (2.c in the PRD)
+    - e.g., "if I expect some Gaussian, fit the best one and draw it;
+      also compute goodness-of-fit statistic"
+      - idea courtesy William Cushing at the prob prog workshop
+    - Not unrelated to inspection, collection, and visualization
+  - Profile-driven optimization
+    - Notes in doc/axch-dev-thrust-menu.org under "Activity: More
+      profile-driven optimization"
+- Testing projects
+  - SP integrity: Should test that simulators agree with log
+    densities, as a first step in a broad arc of SP integrity
+    testing. (#155)
+    - Some notes on that in doc/axch-dev-thrust-menu.org under
+      "Activity: More testing", but most of those notes are in the old
+      Asana instance (including useful record of which invariants are
+      already being tested mechanically).
+  - Test suite architecture rethink.
+    - e.g., "assert this is supposed to asymptotically approach that
+      -- do some compute -- did it?"; etc
+    - inference quality testing of e.g. the tutorial is not unrelated
+      to this
+    - Not unrelated to the assertion architecture
+- Demos I could probably write
+  - DPM of logistic a la Yutian (using gradients and applying to UCI
+    Iris dataset was recommended)
+  - Could probably elevate crosscat.vnt, lda.vnt, hmm.vnt to demo
+    status
+  - Taylor drafted a web demo of Ulli's GP structure discovery
+  - Finish cp1/slam-core.vnt in light of untraced inference
+    - Old effort estimate: "1 day?"; but that context has been lost
+    - Some notes in doc/axch-dev-thrust-menu.org under
+      "Project: Resurrect and polish Venture-on-top SLAM"
+- Papers
+  - VentureScript paper, which I take to mean roughly "here is what our
+    system can do".
+    - Can use the "Venture manifesto" email I wrote to Chad
+      Scherrer as a component
+      - Subject was '"release candidate" slides'
+  - HMC paper, which I take to mean roughly "we implemented HMC for
+    general programs thus and so".
+    - Old notes in doc/axch-dev-thrust-menu.org under "Paper:
+      HMC in Venture"
+  - Venture implementation paper: "here's what a trace is and why, here's
+    how that supports standard methods, etc".
+    - Sort of a replacement to "the Venture paper" on the arXiv.
+  - Metaprob paper?  Don't know what this is supposed to be any more.
+    - Old notes in doc/axch-dev-thrust-menu.org under "Paper:
+      Notes (early 2015) on Metaprob"
+  - Publication activity: Make camera-ready versions of the
+    abstracts we presented at NIPS 2014
+    - Still waiting for reviewer feedback from Dan Roy
+    - Notes in doc/axch-dev-thrust-menu.org under "Paper: Notes
+      (late 2014) on camera-readying the probprog NIPS abstracts"
+- "Github milestone" type projects
+  - Language polish for the GP paper (shouldn't be too long)
+  - Language design work
+    - Is there a well-defined project of language design generally, of
+      which #351 (atoms) is an instance?  What category of thing would
+      that be part of?
+    - The non-probability measure project: doc/on-non-probability-measures.md
+      - First steps are easy and non-controversial.
+    - Currently lumped under System polish label
+  - System simplification label
+  - User-reported bugs label
+  - Better testing label
+  - Specific large bugs, like #295 (double macroexpand)
+  - #380 (interactively more samples) was on my old list as a project
+  - Make (sure) our existing parallelism (is) robust.
+    - Success condition: The whole test suite runs with
+      resample-parallel inserted into the default inference program.
+    - Possible underwater stone: SPs that don't serialize properly
+- Documentation / Teaching:
+  - Self-study document: Ship a standalone document we can give
+    interested people to learn Venture
+    - Exchangeable coupling chapter (with discrete models?)
+    - Maybe LDA chapter
+    - Fuller reference manual
+  - Foreign SP authoring documentation: Actually write (finish) the
+    foreign SP author's guide (is this blocked on Anthony's work now?)
+    - Notes in doc/axch-dev-thrust-menu.org under "Project:
+      Finish the Foreign SP Author's guide (notes from 4/20/15)"
+- Project: Get software process more under control
+  - Issue #48 (mechanically test all supported artifacts)
+    (entails #50, #52, #53)
+  - Issue #172 (Gain confidence that our dependency version bounds are
+    correct)
+  - Maybe automatic nightly builds of release
+    tarball+tutorial+reference (maybe even publish them to our CSAIL
+    web space?  The latter would need a Kerberos principal for
+    Jenkins)
+  - Do we want to actually resurrect the challenge problem solutions,
+    either as such or as example Venture programs?
+    - Notes on how we wanted to enhance them at the time are in the
+      ppaml-cps repository.
+  - Clean github repos
+    - can we merge venture-papers-2013 into venture-documents?
+      - it's presumably just the Venture paper, nothing else?
+      - ditto mitpcp-papers, NIPS2013Vision, nips-probprog-2014-abstracts/
+    - can we merge website-venture into probcomp-website?
+    - resuscitate VentureBenchmarksAndTests and merge into Venturecxx?
+      - just study what was being tested and toss it?
+- There is more stuff in doc/axch-dev-thrust-menu.org
+  - 13 of those entries are linked from here; others are
+    additional.
+- There may be more stuff in the old Asana instance

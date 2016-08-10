@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -20,15 +20,21 @@
 
 #include "psp.h"
 
-struct TagOutputPSP : PSP
+struct TagOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
-  
-struct TagExcludeOutputPSP : PSP
+
+struct TagExcludeOutputPSP : virtual PSP
+  , DefaultIncorporatePSP
+  , TriviallyAssessablePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  bool canAbsorb(ConcreteTrace * trace,ApplicationNode * appNode,Node * parentNode) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  bool canAbsorb(ConcreteTrace * trace, ApplicationNode * appNode, Node * parentNode) const;
+  bool isRandom() const { return false; }
 };
 #endif

@@ -17,12 +17,14 @@
 
 from nose.tools import assert_equal
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @broken_in('lite', "numFamilies is only implemented in puma")
 @on_inf_prim("none")
 def testNumFamilies1():
-  """A sanity test for numFamilies"""
+  # A sanity test for numFamilies
   ripl = get_ripl()
   ripl.assume("rain","(bernoulli 0.2)")
   ripl.assume("sprinkler","(if rain (bernoulli 0.01) (bernoulli 0.4))")

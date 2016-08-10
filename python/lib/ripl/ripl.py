@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,6 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -35,10 +36,10 @@ overhead), but strings in concrete syntax are likely to be more
 readable.
 
 Typical usage begins by using one of the factory functions in the
-venture.shortcuts module:
+`venture.shortcuts` module::
 
     import venture.shortcuts as s
-    r = s.Lite().make_church_prime_ripl()
+    r = s.make_ripl()
     # r is a fresh Ripl
     r.assume(...)
     r.observe(...)
@@ -46,30 +47,40 @@ venture.shortcuts module:
 
 '''
 
+from contextlib import contextmanager
+from collections import OrderedDict
+import cStringIO as StringIO
 import numbers
+import os
 import re
-from os import path
+import sys
+
 import numpy as np
 
 from venture.exception import VentureException
+from venture.lite.value import VentureForeignBlob
 from venture.lite.value import VentureValue
+import venture.value.dicts as v
 import plugins
 import utils as u
-import venture.value.dicts as v
 
 PRELUDE_FILE = 'prelude.vnt'
 
 class Ripl():
     '''The Read, Infer, Predict Layer of one running Venture instance.'''
 
-    def __init__(self,sivm,parsers):
+    def __init__(self, sivm, parsers, extra_search_paths=None):
         self.sivm = sivm
         self.parsers = parsers
-        self.directive_id_to_stringable_instruction = {}
-        self.directive_id_to_mode = {}
+        self._compute_search_paths(extra_search_paths or [])
+        self.directive_id_to_stringable_instruction = OrderedDict()
+        self.directive_id_to_mode = OrderedDict()
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
-        # TODO Loading the prelude currently (6/26/14) slows the test suite to a crawl
+        self._do_not_annotate = False
+        self._languages = OrderedDict()
+        # TODO Loading the prelude currently (6/26/14) slows the test
+        # suite to a crawl
         # self.load_prelude()
         r = self.sivm.core_sivm.engine.ripl
         if r is None:
@@ -79,8 +90,14 @@ class Ripl():
             pass
         else:
             print "Wrapping sivm %s in a new ripl but it already has one: %s.  Engine to ripl references may be incorrect." % (self.sivm, r)
+        # A global environment for dropping to Python
+        self.pyglobals = {"ripl": self}
         plugins.__venture_start__(self)
 
+    def _compute_search_paths(self, extra_search_paths):
+        self_dir = os.path.dirname(__file__)
+        system_plugins_dir = os.path.join(os.path.dirname(self_dir), "plugins")
+        self.search_paths = extra_search_paths + [system_plugins_dir, "."]
 
     ############################################
     # Languages
@@ -99,56 +116,185 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
+    def register_language(self, name, language):
+        """Register the parser for an embedded sublanguage.
+
+        Subsequently parsed source code will recognize substrings of the form::
+
+            @{<name> <code-in-the-language>}
+
+        and execute them according to the semantics of the registered language.
+
+        The ``name`` parameter is a string, and serves, together with
+        the ``@{`` token, to mark to Venture the beginning of an
+        utterance in the registered language.
+
+        The ``language`` parameter is a constructor for a Python
+        callable responsible for parsing the language into an
+        appropriate embedding in Venture's abstract syntax.
+
+        Here is the interface to sublanguage parsers in
+        detail:
+
+        - On encountering ``@{<name>``, the VentureScript
+          parser stops interpreting the input stream as VentureScript,
+          and defers to the corresponding registered sublanguage parser.
+          Specifically, the VentureScript parser calls the ``language``
+          object with no arguments to allow it to initialize.
+
+        - Initialization must return a Python callable, ``subscan``.
+
+        - The VentureScript parser proceeds to call ``subscan``
+          repeatedly, with one input character at a time.  Each call to
+          ``subscan`` must return a 2-tuple, ``(done, result)``.
+
+        - If ``done`` is ``False``, the ``result`` is ignored and the
+          VentureScript parser will call ``subscan`` again with the next
+          character.
+
+        - If ``done`` is ``True``, the ``result`` must be a
+          valid VentureScript abstract syntax tree (see below).  The
+          ``result`` will be spliced in at this point in the parse, and
+          the VentureScript parser will resume parsing standard
+          VentureScript.  This ``subscan`` instance will not be called
+          again, but if another invocation in the same sublanguage
+          occurs, the ``language`` object will be invoked again to
+          initialize a new one.
+
+        Note from this interface that the sublanguage is responsible
+        for detecting a complete valid utterance.  The characters come
+        in one at a time because the VentureScript parser cannot
+        predict where the utterance will end without asking the
+        sublanguage (and, due to internal technical limitations,
+        cannot give the sublanguage the entire input stream and
+        continue from the unconsumed portion).  It is responsibility
+        of the sublanguage to consume the ``}`` that closes the ``@{``
+        from the beginning of the invocation.
+
+        The `venture.parser.venture_script.subscanner` module contains an adapter that
+        does a control inversion on the above interface.  The
+        inversion allows one to write a sublanguage with a library
+        like Plex that expects to scan a file-like object itself,
+        rather than exposing a callable that consumes characters.
+        However, the sublanguage must not read the given file-like
+        object beyond the end of the utterance, as there is no way to
+        put unused characters back.
+
+        There are no restrictions on the parse tree that a subparser
+        may emit.  In principle, this permits very deep integration of
+        arbitrary syntaxes, provided their underlying implementation
+        can be expressed as calls to appropriate Venture macros or
+        stochastic procedures.  It is also possible to fall back to
+        very shallow integration---just consume a valid utterance and
+        emit a syntax tree consisting of applying the target
+        interpreter (packaged as a stochastic procedure) to a quoted
+        string.
+
+        The VentureScript abstract syntax tree API comes in two parts.
+
+        - Bare abstract syntax trees may are constructed by methods of
+          the `venture.value.dicts` module.
+
+        - A parser is expected to emit a syntax tree annotated with
+          source code locations, using the `Located` class in the
+          `venture.parser.ast` module.
+
+        Embedded sublanguage syntaxes are only available in the
+        VentureScript surface syntax, not the abstract surface syntax.  The
+        latter parses to abstract syntax trees more directly, so just
+        calling the implementation SP(s) of the desired sublanguage is
+        more natural in that context.
+
+        """
+        if name in self._languages:
+            raise ValueError('Language already registered: %r' % (name,))
+        self._languages[name] = language
+
+    def deregister_language(self, name, language):
+        """Deregister the parser for an embedded sublanguage.
+
+        Subsequently parsed source code will not recognize that language."""
+        assert self._languages[name] is language
+        del self._languages[name]
+
+    @property
+    def languages(self):
+        return self._languages
+
     ############################################
     # Backend
     ############################################
 
     def backend(self):
-        '''Return the name of backend powering this Ripl.  Either "lite" or "puma".'''
-        return self.sivm.core_sivm.engine.name
+        '''Return the name of backend powering this Ripl.  Either ``"lite"`` or ``"puma"``.'''
+        return self.sivm.core_sivm.engine.model.backend.name()
+
+    def convert_backend(self, name):
+        from venture.shortcuts import backend
+        target = backend(name)
+        self.sivm.core_sivm.engine.convert(target)
 
     ############################################
     # Execution
     ############################################
 
-
-
-    def execute_instruction(self, instruction=None, params=None, suppress_pausing_continous_inference=False):
-        # The suppress_pausing_continous_inference flag is used by the
-        # thread doing the continuous inference.
+    def execute_instructions(self, instructions=None):
         p = self._cur_parser()
+        languages = self._languages
+        try:
+            parsed = p.parse_instructions(instructions, languages)
+        except VentureException as e:
+            if self._do_not_annotate:
+                raise
+            self._raise_annotated(e, instructions)
+        ret_value = None
+        for inst in parsed:
+            ret_value = self.execute_instruction(inst)
+        return ret_value
+
+    def execute_instruction(self, instruction=None):
+        p = self._cur_parser()
+        languages = self._languages
         try: # execute instruction, and handle possible exception
-            # perform parameter substitution if necessary
             if isinstance(instruction, basestring):
-                if params != None:
-                    stringable_instruction = self.substitute_params(instruction,params)
-                else:
-                    stringable_instruction = instruction
+                stringable_instruction = instruction
                 # parse instruction
-                parsed_instruction = p.parse_instruction(stringable_instruction)
+                parsed_instruction = \
+                    p.parse_instruction(stringable_instruction, languages)
             else:
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
-            ret_value = self.sivm.execute_instruction(parsed_instruction, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
+            # if directive, then save the text string
+            return self._execute_parsed_instruction(parsed_instruction,
+                stringable_instruction)
         except VentureException as e:
-            import sys
-            info = sys.exc_info()
-            try:
-                annotated = self._annotated_error(e, instruction)
-            except Exception as e2:
-                print "Trying to annotate an exception led to:"
-                import traceback
-                print traceback.format_exc()
-                e.annotated = False
-                raise e, None, info[2]
-            raise annotated, None, info[2]
-        # if directive, then save the text string
-        if parsed_instruction['instruction'] in ['assume','observe',
-                'predict','labeled_assume','labeled_observe','labeled_predict']:
-            did = ret_value['directive_id']
-            self.directive_id_to_stringable_instruction[did] = stringable_instruction
+            if self._do_not_annotate:
+                raise
+            self._raise_annotated(e, instruction)
+
+    def _execute_parsed_instruction(self, parsed_instruction,
+            stringable_instruction):
+        if parsed_instruction['instruction'] in [
+                'assume', 'observe', 'predict', 'define',
+                'labeled_assume','labeled_observe','labeled_predict']:
+            did = self.sivm.core_sivm.engine.predictNextDirectiveId()
+            self.directive_id_to_stringable_instruction[did] = (
+                stringable_instruction)
             self.directive_id_to_mode[did] = self.mode
-        return ret_value
+        ans = self.sivm.execute_instruction(parsed_instruction)
+        return ans
+
+    def _raise_annotated(self, e, instruction):
+        info = sys.exc_info()
+        try:
+            annotated = self._annotated_error(e, instruction)
+        except Exception as e2:
+            print "Trying to annotate an exception led to:"
+            import traceback
+            print traceback.format_exc()
+            e.annotated = False
+            raise e, None, info[2]
+        raise annotated, None, info[2]
 
     def _annotated_error(self, e, instruction):
         if e.exception is 'evaluation':
@@ -161,6 +307,8 @@ class Ripl():
                 }
             e.annotated = True
             return e
+
+        languages = self.languages
 
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
@@ -177,13 +325,9 @@ class Ripl():
         # in the case of a parse exception, the text_index gets narrowed
         # down to the exact expression/atom that caused the error
         if e.exception == 'parse':
-            # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
             try:
-                text_index = self._cur_parser().expression_index_to_text_index(
-                        args['expression'], e.data['expression_index'])
-                offset = arg_ranges['expression'][0]
-                text_index = [x + offset for x in text_index]
+                text_index = p.expression_index_to_text_index_in_instruction(
+                    instruction_string, e.data['expression_index'], languages)
             except VentureException as e2:
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
@@ -193,7 +337,7 @@ class Ripl():
         # results in an exception
         if e.exception == 'text_parse':
             try:
-                p.parse_instruction(instruction_string)
+                p.parse_instruction(instruction_string, languages)
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
@@ -202,10 +346,16 @@ class Ripl():
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
-            args, arg_ranges = p.split_instruction(instruction_string)
+            _, arg_ranges = p.split_instruction(instruction_string, languages)
             arg = e.data['argument']
-            text_index = arg_ranges[arg]
-            e.data['text_index'] = text_index
+            if arg in arg_ranges:
+                # Instruction unparses and reparses to structured
+                # form; can point at the argument.
+                e.data['text_index']  = arg_ranges[arg]
+            else:
+                # Insturction unparses and reparses to evaluation
+                # instruction; can't refine the text index.
+                pass
 
         a = e.data['text_index'][0]
         b = e.data['text_index'][1]+1
@@ -215,26 +365,20 @@ class Ripl():
         e.annotated = True
         return e
 
-    def parse_program(self, program_string, params=None):
+    def parse_program(self, program_string):
         p = self._cur_parser()
-        # perform parameter substitution if necessary
-        if params != None:
-            program_string = self.substitute_params(program_string,params)
-        # TODO the right thing is to make "comment" a valid instruction type.
-        if self.get_mode() == "church_prime":
-            start_comment_regex = ";"
-        elif self.get_mode() == "venture_script":
-            start_comment_regex = "//"
+        languages = self._languages
+        instructions = p.parse_instructions(program_string, languages)
+        return [self._ensure_parsed(i) for i in instructions]
+
+    def execute_program(self, program_string, type=True):
+        res = self.execute_parsed_program(self.parse_program(program_string))
+        if not type:
+            return u.strip_types([r["value"] for r in res])
         else:
-            raise Exception("Do not know comment syntax for mode {}".format(self.get_mode()))
-        no_comments = '\n'.join(re.split(start_comment_regex, x)[0] for x in program_string.split('\n'))
-        instructions, positions = p.split_program(no_comments)
-        return [self._ensure_parsed(i) for i in instructions], positions
+            return res
 
-    def execute_program(self, program_string, params=None):
-        return self.execute_parsed_program(*self.parse_program(program_string, params=params))
-
-    def execute_parsed_program(self, instructions, _positions):
+    def execute_parsed_program(self, instructions):
         vals = []
         for instruction in instructions:
             if instruction['instruction'] == "load":
@@ -244,7 +388,7 @@ class Ripl():
         return vals
 
     def execute_program_from_file(self, filename):
-        _, ext = path.splitext(filename)
+        _, ext = os.path.splitext(filename)
         old_mode = self.get_mode()
         if ext == ".vnts":
             self.set_mode("venture_script")
@@ -260,14 +404,6 @@ class Ripl():
     # Text manipulation
     ############################################
 
-    def substitute_params(self,instruction_string,params):
-        p = self._cur_parser()
-        return p.substitute_params(instruction_string,params)
-
-    def split_program(self,program_string):
-        p = self._cur_parser()
-        return p.split_program(program_string)
-
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
             return [self.directive_id_to_mode[directive_id], self._get_raw_text(directive_id)]
@@ -280,8 +416,10 @@ class Ripl():
         return candidate
 
     def _ensure_parsed(self, partially_parsed_instruction):
+        languages = self._languages
         if isinstance(partially_parsed_instruction, basestring):
-            return self._cur_parser().parse_instruction(partially_parsed_instruction)
+            return self._cur_parser().parse_instruction(
+                partially_parsed_instruction, languages)
         elif isinstance(partially_parsed_instruction, dict):
             return self._ensure_parsed_dict(partially_parsed_instruction)
         else:
@@ -289,19 +427,19 @@ class Ripl():
 
     def _ensure_parsed_dict(self, partial_dict):
         def by_key(key, value):
-            if key == "instruction":
+            if key == 'instruction':
                 return value
-            elif key == "expression":
+            elif key == 'expression':
                 return self._ensure_parsed_expression(value)
-            elif key in ["directive_id", "seed", "inference_timeout"]:
+            elif key in ['directive_id', 'seed']:
                 return self._ensure_parsed_number(value)
-            elif key in ["options", "params"]:
+            elif key in ['options', 'params']:
                 # Do not support partially parsed options or param
                 # hashes, since they have too many possible key types
                 return value
-            elif key in ["symbol", "label"]:
+            elif key in ['symbol', 'label']:
                 return value
-            elif key == "value":
+            elif key == 'value':
                 # I believe values are a subset of expressions
                 return self._ensure_parsed_expression(value)
             else:
@@ -309,15 +447,16 @@ class Ripl():
         return dict([(key, by_key(key, value)) for key, value in partial_dict.iteritems()])
 
     def _ensure_parsed_expression(self, expr):
+        languages = self._languages
         if isinstance(expr, basestring):
-            answer = self._cur_parser().parse_expression(expr)
+            answer = self._cur_parser().parse_expression(expr, languages)
             if isinstance(answer, basestring):
                 # Was a symbol; wrap it in a stack dict to prevent it
                 # from being processed again.
                 return {'type':'symbol', 'value':answer}
             else:
                 return answer
-        elif isinstance(expr, list):
+        elif isinstance(expr, list) or isinstance(expr, tuple):
             return [self._ensure_parsed_expression(e) for e in expr]
         elif isinstance(expr, dict):
             # A literal value as a stack dict.  These are all assumed
@@ -356,16 +495,22 @@ class Ripl():
             # parsed instruction has a large string in it.
             return self._unparse(self._ensure_parsed(instruction))
 
-    def character_index_to_expression_index(self, directive_id, character_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        return p.character_index_to_expression_index(expression, character_index-offset)
-
     def expression_index_to_text_index(self, directive_id, expression_index):
-        p = self._cur_parser()
-        expression, offset = self._extract_expression(directive_id)
-        tmp = p.expression_index_to_text_index(expression, expression_index)
-        return [x+offset for x in tmp]
+        text = self._get_raw_text(directive_id)
+        mode = self.directive_id_to_mode[directive_id]
+        p = self.parsers[mode]
+        try:
+            ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
+        except VentureException:
+            # Perhaps the instruction got round-tripped through the
+            # unparser, which always emits church' syntax
+            from venture.parser.church_prime import ChurchPrimeParser
+            q = ChurchPrimeParser.instance()
+            ans = q.expression_index_to_text_index_in_instruction(text, expression_index)
+        return ans
+
+    def directive_id_for_label(self, label):
+        return self.sivm.core_sivm.engine.get_directive_id(label)
 
     def addr2Source(self, addr):
         """Takes an address and gives the corresponding (unparsed)
@@ -377,12 +522,102 @@ class Ripl():
         """Take a parsed expression and index and turn it into
         unparsed form with text indeces."""
 
-        p = self._cur_parser()
+        from venture.parser import ChurchPrimeParser
+        p = ChurchPrimeParser.instance() # self._cur_parser() fails b/c VS can't unparse
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
-        ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        if hasattr(sys.stdout, "fileno") and os.isatty(sys.stdout.fileno()):
+            ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
+        else:
+            ans = exp
         return ans, (start, end)
 
+    def draw_subproblem(self, scaffold_dict, type=False):
+        # Need to take the "type" argument because
+        # MadeRiplMethodInferOutputPSP passes an argument for the type
+        # keyword.
+        colors = dict(
+            red = ("\x1b[31m", "\x1b[39;49m"),
+            green = ("\x1b[32m", "\x1b[39;49m"),
+            yellow = ("\x1b[33m", "\x1b[39;49m"),
+            blue = ("\x1b[34m", "\x1b[39;49m"),
+            pink = ("\x1b[35m", "\x1b[39;49m"),
+            white = ("\x1b[37m", "\x1b[39;49m"),
+            teal = ("\x1b[36m", "\x1b[39;49m"),
+            )
+        def escape(chunk):
+            return re.sub("[[]", "\\[", chunk)
+        for (color, (start, stop)) in colors.iteritems():
+            pattern = "^" + escape(colors[color][0]) + "([0-9]+)@" + escape(colors[color][1]) + "(.*)$"
+            colors[color] = (start, stop, re.compile(pattern))
+        def color_app(color):
+            def doit(string):
+                def do_color(string):
+                    return colors[color][0] + string + colors[color][1]
+                if string[0] == '(' and string[-1] == ')':
+                    return do_color("1@") + do_color("(") + string[1:-1] + do_color(")")
+                m = re.match(colors[color][2], string)
+                if m is not None:
+                    ct = int(m.group(1))
+                    return do_color(str(ct+1) + "@") + m.group(2)
+                else:
+                    return do_color("1@") + string
+            return doit
+        scaffold = scaffold_dict['value']
+        print ""
+        scaffold.show()
+        print ""
+
+        by_did = OrderedDict()
+        def mark(nodes, base_color, only_bottom=False):
+            for node in nodes:
+                color = color_app(base_color)
+                address = node.address.asList()
+                stack = self.sivm.trace_address_to_stack(address)
+                def add_frame(frame):
+                    if frame['did'] not in by_did:
+                        by_did[frame['did']] = []
+                    by_did[frame['did']].append((frame['index'], color))
+                if only_bottom:
+                    add_frame(stack[-1])
+                else:
+                    de_dup = set()
+                    for frame in stack:
+                        key = (frame['did'], tuple(frame['index']))
+                        if key in de_dup: continue
+                        de_dup.add(key)
+                        add_frame(frame)
+
+        print "Color key:"
+        print color_app('red')(' principal nodes')
+        print color_app('yellow')(' definite regeneration graph')
+        print color_app('blue')(' absorbing nodes')
+        print color_app('pink')(' absorbing at applications')
+        print color_app('green')(' brush')
+
+        print "\n*** Self subproblem nodes ***\n"
+        pnodes = scaffold.getPrincipalNodes()
+        mark(pnodes, 'red', only_bottom=True)
+        mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=True)
+        mark(scaffold.absorbing, 'blue', only_bottom=True)
+        mark(scaffold.aaa, 'pink', only_bottom=True)
+        mark(scaffold.brush, 'green', only_bottom=True)
+        for did in sorted(by_did.keys()):
+            instr = self.directive_id_to_stringable_instruction[did]
+            instr = self._ensure_parsed(instr)
+            print self._cur_parser().unparse_instruction(instr, by_did[did])
+
+        print "\n*** Cumulative subproblem nodes ***\n"
+        by_did = OrderedDict()
+        mark(pnodes, 'red', only_bottom=False)
+        mark(scaffold.drg.difference(pnodes), 'yellow', only_bottom=False)
+        mark(scaffold.absorbing, 'blue', only_bottom=False)
+        mark(scaffold.aaa, 'pink', only_bottom=False)
+        mark(scaffold.brush, 'green', only_bottom=False)
+        for did in sorted(by_did.keys()):
+            instr = self.directive_id_to_stringable_instruction[did]
+            instr = self._ensure_parsed(instr)
+            print self._cur_parser().unparse_instruction(instr, by_did[did])
 
     ############################################
     # Directives
@@ -406,42 +641,40 @@ value to be returned as a dict annotating its Venture type.
 
         '''
         name = _symbolize(name)
-        if self.sivm.core_sivm.engine.swapped_model:
-            # TODO Properly scope directive labels the models those
-            # directives are in.
-            # Failing that, this code just suppresses labeling
-            # directives in any except the main model.
-            if label==None:
-                i = {'instruction': 'assume', 'symbol':name, 'expression':expression}
-            else:
-                raise Exception("TODO Cannot label instructions inside in_model.")
+        if label is None:
+            label = name
         else:
-            if label==None:
-                label = name
-            else:
-                label = _symbolize(label)
-            i = {'instruction':'labeled_assume',
-                 'symbol':name, 'expression':expression, 'label':label}
+            label = _symbolize(label)
+        i = {'instruction':'labeled_assume',
+             'symbol':name, 'expression':expression, 'label':label}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def predict(self, expression, label=None, type=False):
-        if label==None:
+        if label is None:
             i = {'instruction':'predict', 'expression':expression}
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_predict', 'expression':expression, 'label':label}
+            i = {'instruction':'labeled_predict', 'expression':expression,
+                 'label':label}
+        value = self.execute_instruction(i)['value']
+        return value if type else u.strip_types(value)
+
+    def predict_all(self, expression, type=False):
+        i = {'instruction':'predict_all', 'expression':expression}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
     def observe(self, expression, value, label=None, type=False):
-        if label==None:
-            i = {'instruction':'observe', 'expression':expression, 'value':value}
+        if label is None:
+            i = {'instruction':'observe', 'expression':expression,
+                 'value':value}
         else:
             label = _symbolize(label)
-            i = {'instruction':'labeled_observe', 'expression':expression, 'value':value, 'label':label}
-        self.execute_instruction(i)
-        return None
+            i = {'instruction':'labeled_observe', 'expression':expression,
+                 'value':value, 'label':label}
+        weights = self.execute_instruction(i)['value']
+        return v.vector(weights) if type else weights
 
     def bulk_observe(self, exp, items, label=None):
         """Observe many evaluations of an expression.
@@ -450,17 +683,20 @@ Syntax:
 ripl.bulk_observe("<expr>", <iterable>)
 
 Semantics:
-Operationally equivalent to
+Operationally equivalent to::
+
   for x in iterable:
     ripl.observe("<expr>", x)
+
 but appreciably faster.  See also open considerations and details of
-the semantics in ripl.observe_dataset.
+the semantics in `observe_dataset`.
 
 """
         ret_vals = []
         parsed = self._ensure_parsed_expression(exp)
         for i, val in enumerate(items):
-          ret_vals.append(self.observe(parsed,val,label+"_"+str(i) if label is not None else None))
+          lab = label+"_"+str(i) if label is not None else None
+          ret_vals.append(self.observe(parsed, val, lab))
         return ret_vals
 
     def observe_dataset(self, proc_expression, iterable, label=None):
@@ -469,12 +705,12 @@ the semantics in ripl.observe_dataset.
 Syntax:
 ripl.observe_dataset("<expr>", <iterable>)
 
-- The expr must evaluate to a (presumably stochastic) Venture
+- The `<expr>` must evaluate to a (presumably stochastic) Venture
   procedure.  We expect in typical usage expr would just look up a
   recent assume.
 
-- The <iterable> is a Python iterable each of whose elements must be a
-  tuple of a list of valid Venture values and a Venture value: ([a], b)
+- The `<iterable>` is a Python iterable each of whose elements must be a
+  nonempty list of valid Venture values.
 
 - There is no Venture syntax for this; it is accessible only when
   using Venture as a library.
@@ -483,17 +719,17 @@ Semantics:
 
 - As to its effect on the distribution over traces, this is equivalent
   to looping over the contents of the given iterable, calling
-  ripl.observe on each element as ripl.observe("(<expr> $tuple[0])",
-  tuple[1]). In other words, the first component of each element of
-  the iterable gives the arguments to the procedure given by <expr>,
-  and the second component gives the value to observe.
+  ripl.observe on each element as `ripl.observe("(<expr> *item[:-1])", item[-1])`.
+  In other words, the first elements of each item of
+  the iterable give the arguments to the procedure given by `<expr>`,
+  and the last element gives the value to observe.
 
 - The ripl method returns a list of directive ids, which correspond to
   the individual observes thus generated.
 
 Open issues:
 
-- If the <expr> is itself stochastic, it is unspecified whether we
+- If the `<expr>` is itself stochastic, it is unspecified whether we
   notionally evaluate it once per bulk_observe or once per data item.
 
 - This is not the same as directly observing sufficient statistics
@@ -503,7 +739,7 @@ Open issues:
   once.
 
 - Currently, list_directives will not respect the nesting structure of
-  observations implied by bulk_observe.  How can we improve this? Do
+  observations implied by `bulk_observe`.  How can we improve this? Do
   we represent the bulk_observe as one directive? If so, we can hardly
   return a useful representation of the iterable representing the data
   set. If not, we will hardly win anything because list_directives
@@ -513,62 +749,51 @@ Open issues:
         """
         ret_vals = []
         parsed = self._ensure_parsed_expression(proc_expression)
-        for i, (args, val) in enumerate(iterable):
-          expr = [parsed] + [v.quote(a) for a in args]
-          ret_vals.append(self.observe(expr,val,label+"_"+str(i) if label is not None else None))
+        for i, args_val in enumerate(iterable):
+          expr = [parsed] + [v.quote(a) for a in args_val[:-1]]
+          lab = label+"_"+str(i) if label is not None else None
+          ret_vals.append(self.observe(expr, args_val[-1], lab))
         return ret_vals
 
     ############################################
     # Core
     ############################################
 
-    def configure(self, options=None):
-        if options is None: options = {}
-        i = {'instruction':'configure', 'options':options}
-        return self.execute_instruction(i)['options']
-
     def get_seed(self):
-        return self.configure()['seed']
+        return self.sivm.core_sivm.engine.get_seed()
 
     def set_seed(self, seed):
-        self.configure({'seed': seed})
-        return None
-
-    def get_inference_timeout(self):
-        return self.configure()['inference_timeout']
-
-    def set_inference_timeout(self, inference_timeout):
-        self.configure({'inference_timeout': inference_timeout})
+        self.sivm.core_sivm.engine.set_seed(seed)
         return None
 
     def forget(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'forget', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'forget', 'directive_id':val}
             # if asked to forget prelude instruction, decrement _n_prelude
             if label_or_did <= self._n_prelude:
                 self._n_prelude -= 1
         else:
             # assume that prelude instructions don't have labels
-            i = {'instruction':'labeled_forget',
-                 'label':_symbolize(label_or_did)}
-        self.execute_instruction(i)
-        return None
+            i = {'instruction':'labeled_forget', 'label':val}
+        weights = self.execute_instruction(i)['value']
+        return v.vector(weights) if type else weights
 
     def freeze(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'freeze', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'freeze', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_freeze',
-                 'label':_symbolize(label_or_did)}
+            i = {'instruction':'labeled_freeze', 'label':val}
         self.execute_instruction(i)
         return None
 
     def report(self, label_or_did, type=False):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'report', 'directive_id':label_or_did}
+        (tp, val) = _interp_label_or_did(label_or_did)
+        if tp == 'did':
+            i = {'instruction':'report', 'directive_id':val}
         else:
-            i = {'instruction':'labeled_report',
-                 'label':v.symbol(label_or_did)}
+            i = {'instruction':'labeled_report', 'label':val}
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
@@ -589,10 +814,16 @@ Open issues:
         else:
             return program
 
-    def infer(self, params=None, type=False, suppress_pausing_continous_inference=False):
-        # The suppress_pausing_continous_inference flag is used by the
-        # thread doing the continuous inference.
-        o = self.execute_instruction({'instruction':'infer', 'expression': self.defaultInferProgram(params)}, suppress_pausing_continous_inference=suppress_pausing_continous_inference)
+    def evaluate(self, program, type=False):
+        o = self.execute_instruction({'instruction':'evaluate',
+                                      'expression': program})
+        value = o["value"]
+        return value if type else u.strip_types(value)
+
+    def infer(self, params=None, type=False):
+        inst = {'instruction':'infer',
+                'expression': self.defaultInferProgram(params)}
+        o = self.execute_instruction(inst)
         value = o["value"]
         return value if type else u.strip_types(value)
 
@@ -603,21 +834,13 @@ Open issues:
         self._n_prelude = 0
         return None
 
-    def rollback(self):
-        self.execute_instruction({'instruction':'rollback'})
-        return None
-
     def list_directives(self, type=False, include_prelude = False, instructions = []):
         with self.sivm._pause_continuous_inference():
-            directives = self.execute_instruction({'instruction':'list_directives'})['directives']
+            directives = self.sivm.list_directives()
             # modified to add value to each directive
             # FIXME: is this correct behavior?
             for directive in directives:
-                inst = { 'instruction':'report',
-                         'directive_id':directive['directive_id'],
-                         }
-                value = self.execute_instruction(inst)['value']
-                directive['value'] = value if type else u.strip_types(value)
+                self._collect_value_of(directive, type=type)
             # if not requested to include the prelude, exclude those directives
             if hasattr(self, '_n_prelude') and (not include_prelude):
                 directives = directives[self._n_prelude:]
@@ -625,31 +848,41 @@ Open issues:
                 directives = [d for d in directives if d['instruction'] in instructions]
             return directives
 
+    def _collect_value_of(self, directive, type=False):
+        inst = { 'instruction':'report',
+                 'directive_id':directive['directive_id'],
+                 }
+        value = self.execute_instruction(inst)['value']
+        directive['value'] = value if type else u.strip_types(value)
+
     def print_directives(self, *instructions, **kwargs):
         for directive in self.list_directives(instructions = instructions, **kwargs):
-            dir_id = int(directive['directive_id'])
-            dir_val = str(directive['value'])
-            dir_type = directive['instruction']
-            dir_text = self._get_raw_text(dir_id)
+            self.print_one_directive(directive)
 
-            if dir_type == "assume":
-                print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
-            elif dir_type == "observe":
-                print "%d: %s" % (dir_id, dir_text)
-            elif dir_type == "predict":
-                print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
-            else:
-                assert False, "Unknown directive type found: %s" % str(directive)
+    def print_one_directive(self, directive):
+        dir_id = int(directive['directive_id'])
+        dir_val = str(directive['value'])
+        dir_type = directive['instruction']
+        dir_text = self._get_raw_text(dir_id)
 
-    def get_directive(self, label_or_did):
-        if isinstance(label_or_did,int):
-            i = {'instruction':'get_directive', 'directive_id':label_or_did}
+        if dir_type == "assume":
+            print "%d: %s:\t%s" % (dir_id, dir_text, dir_val)
+        elif dir_type == "observe":
+            print "%d: %s" % (dir_id, dir_text)
+        elif dir_type == "predict":
+            print "%d: %s:\t %s" % (dir_id, dir_text, dir_val)
         else:
-            i = {'instruction':'labeled_get_directive',
-                 'label':v.symbol(label_or_did)}
-        return self.execute_instruction(i)['directive']
+            assert False, "Unknown directive type found: %s" % str(directive)
 
-    def force(self, expression, value):
+    def get_directive(self, label_or_did, type=False):
+        if isinstance(label_or_did, int):
+            d = self.sivm.get_directive(label_or_did)
+        else:
+            d = self.sivm.labeled_get_directive(label_or_did)
+        self._collect_value_of(d)
+        return d
+
+    def force(self, expression, value, type=False):
         i = {'instruction':'force', 'expression':expression, 'value':value}
         self.execute_instruction(i)
         return None
@@ -659,22 +892,25 @@ Open issues:
         value = self.execute_instruction(i)['value']
         return value if type else u.strip_types(value)
 
+    def sample_all(self, expression, type=False):
+        i = {'instruction':'sample_all', 'expression':expression}
+        value = self.execute_instruction(i)['value']
+        return value if type else u.strip_types(value)
+
     def continuous_inference_status(self):
         return self.execute_instruction({'instruction':'continuous_inference_status'})
 
     def start_continuous_inference(self, program=None):
-        self.execute_instruction({'instruction':'start_continuous_inference', 'expression': self.defaultInferProgram(program)})
+        inst = {'instruction':'start_continuous_inference',
+                'expression': self.defaultInferProgram(program)}
+        self.execute_instruction(inst)
         return None
 
-    def stop_continuous_inference(self):
+    def stop_continuous_inference(self, type=False):
+        # Inference SPs that call ripl methods currently require a
+        # type argument.
         self.execute_instruction({'instruction':'stop_continuous_inference'})
         return None
-
-    def get_current_exception(self):
-        return self.execute_instruction({'instruction':'get_current_exception'})['exception']
-
-    def get_state(self):
-        return self.execute_instruction({'instruction':'get_state'})['state']
 
     def reinit_inference_problem(self, num_particles=None):
         # TODO Adapt to renumbering of directives by the engine (or
@@ -683,12 +919,16 @@ Open issues:
         self.sivm.core_sivm.engine.reinit_inference_problem(num_particles)
 
     def get_global_logscore(self):
-        return self.execute_instruction({'instruction':'get_global_logscore'})['logscore']
+        return self.infer('global_log_likelihood')
 
-    def bind_foreign_sp(self, name, sp):
+    def register_foreign_sp(self, name, sp):
         # TODO Remember this somehow?  Is it storable for copies and
         # rebuilds of the ripl, etc?
-        self.sivm.core_sivm.engine.bind_foreign_sp(name, sp)
+        self.sivm.core_sivm.engine.register_foreign_sp(name, sp)
+
+    def bind_foreign_sp(self, name, sp):
+        self.register_foreign_sp(name, sp)
+        self.sivm.core_sivm.engine.import_foreign(name)
 
     def bind_foreign_inference_sp(self, name, sp):
         self.sivm.core_sivm.engine.bind_foreign_inference_sp(name, sp)
@@ -701,73 +941,92 @@ Open issues:
         for name in (name for name in dir(obj) if not name.startswith("_")):
             self.bind_callback(prefix + name, getattr(obj, name))
 
+    def pyexec(self, code):
+        # Because that's the point pylint:disable=exec-used
+        exec code in self.pyglobals
+
+    def pyeval(self, code):
+        result = eval(code, self.pyglobals)
+        if not isinstance(result, VentureValue):
+            result = VentureForeignBlob(result)
+        return result
+
     ############################################
     # Serialization
     ############################################
 
-    def save(self, fname):
-        extra = {}
-        extra['directive_id_to_stringable_instruction'] = self.directive_id_to_stringable_instruction
+    def save_io(self, stream, extra=None):
+        if extra is None:
+            extra = {}
+        extra['directive_id_to_stringable_instruction'] = \
+            self.directive_id_to_stringable_instruction
         extra['directive_id_to_mode'] = self.directive_id_to_mode
-        return self.sivm.save(fname, extra)
+        return self.sivm.save_io(stream, extra)
+
+    def load_io(self, stream):
+        extra = self.sivm.load_io(stream)
+        self.directive_id_to_stringable_instruction = \
+            extra['directive_id_to_stringable_instruction']
+        self.directive_id_to_mode = extra['directive_id_to_mode']
+        return extra
+
+    def save(self, fname, extra=None):
+        with open(fname, 'w') as fp:
+            self.save_io(fp, extra=extra)
+
+    def saves(self, extra=None):
+        ans = StringIO.StringIO()
+        self.save_io(ans, extra=extra)
+        return ans.getvalue()
 
     def load(self, fname):
-        extra = self.sivm.load(fname)
-        self.directive_id_to_stringable_instruction = extra['directive_id_to_stringable_instruction']
-        self.directive_id_to_mode = extra['directive_id_to_mode']
+        with open(fname) as fp:
+            return self.load_io(fp)
+
+    def loads(self, string):
+        return self.load_io(StringIO.StringIO(string))
 
     ############################################
-    # Profiler methods (stubs)
+    # Error reporting control
     ############################################
 
-    def profiler_configure(self, options=None):
-        if options is None: options = {}
-        i = {'instruction': 'profiler_configure', 'options': options}
-        return self.execute_instruction(i)['options']
+    def disable_error_annotation(self):
+        # Sadly, this is necessary, because the error annotation
+        # facility is too brittle to be relied upon, and all to often
+        # hides underlying errors.
+        self._do_not_annotate = True
+        self.sivm._do_not_annotate = True
+
+    def enable_error_annotation(self):
+        self._do_not_annotate = False
+        self.sivm._do_not_annotate = False
+
+    @contextmanager
+    def no_error_annotation(self):
+        annotating = self._do_not_annotate
+        sivm_annotating = self.sivm._do_not_annotate
+        try:
+            self._do_not_annotate = True
+            self.sivm._do_not_annotate = True
+            yield
+        finally:
+            self._do_not_annotate = annotating
+            self.sivm._do_not_annotate = sivm_annotating
+
+    ############################################
+    # Profiler methods
+    ############################################
+
+    def profiler_running(self, enable=None):
+        return self.sivm.core_sivm.profiler_running(enable)
 
     def profiler_enable(self):
-        self.profiler_configure({'profiler_enabled': True})
+        self.profiler_running(True)
         return None
 
     def profiler_disable(self):
-        self.profiler_configure({'profiler_enabled': False})
+        self.profiler_running(False)
         return None
-
-    def profiler_clear(self):
-        self.random_choices = []
-        self.address_to_acceptance_rate = {}
-        self.address_to_proposal_time = {}
-        return None
-
-    # insert a random choice into the profiler
-    def profiler_make_random_choice(self):
-        import random
-        address = random.randrange(1 << 16)
-        trials = random.randrange(1, 1000)
-        successes = random.randint(0, trials)
-        proposal_time = trials * random.random()
-
-        self.random_choices.append(address)
-        self.address_to_acceptance_rate[address] = (trials, successes)
-        self.address_to_proposal_time[address] = proposal_time
-
-        return address
-
-    def profiler_list_random_choices(self):
-        return self.random_choices
-
-    def profiler_address_to_source_code_location(self,address):
-        return address
-
-    def profiler_get_acceptance_rate(self,address):
-        return self.address_to_acceptance_rate[address]
-
-    def profiler_get_proposal_time(self,address):
-        return self.address_to_proposal_time[address]
-
-    ############################################
-    # Hacky profiling support since the above is ill understood
-    ############################################
 
     def profile_data(self):
         rows = self.sivm.core_sivm.engine.profile_data()
@@ -814,20 +1073,20 @@ Open issues:
         Load the library of Venture helper functions
         '''
         if Ripl._parsed_prelude is not None:
-            self.execute_parsed_program(*Ripl._parsed_prelude)
+            self.execute_parsed_program(Ripl._parsed_prelude)
             # Keep track of the number of directives in the prelude. Only
             # works if the ripl is cleared immediately before loading the
             # prelude, but that's the implicit assumption in the
             # _n_prelude concept anyway.
             self._n_prelude += len(self.list_directives(include_prelude = True))
         elif self.mode == 'church_prime':
-            prelude_path = path.join(path.dirname(__file__), PRELUDE_FILE)
+            prelude_path = os.path.join(os.path.dirname(__file__), PRELUDE_FILE)
             with open(prelude_path) as f:
                 Ripl._parsed_prelude = self.parse_program(f.read())
             self.load_prelude()
 
     def load_plugin(self, name, *args, **kwargs):
-        m = load_library(name)
+        m = load_library(name, self.search_paths)
         if hasattr(m, "__venture_start__"):
             return m.__venture_start__(self, *args, **kwargs)
 
@@ -838,16 +1097,9 @@ Open issues:
     def _cur_parser(self):
         return self.parsers[self.mode]
 
-    def _extract_expression(self,directive_id):
-        text = self._get_raw_text(directive_id)
-        mode = self.directive_id_to_mode[directive_id]
-        p = self.parsers[mode]
-        args, arg_ranges = p.split_instruction(text)
-        return args['expression'], arg_ranges['expression'][0]
-
-def load_library(name):
+def load_library(name, search_paths):
     import imp
-    pathname = name
+    pathname = _search_for_path(name, search_paths)
     if name.endswith('.py'):
         name = name[0 : len(name) - len('.py')]
     with open(pathname, 'rb') as f:
@@ -875,8 +1127,28 @@ def load_library(name):
     # print (file, pathname, description)
     # return imp.load_module(name, file, pathname, description)
 
+def _search_for_path(name, search_paths):
+    for place in search_paths:
+        candidate = os.path.join(place, name)
+        if os.path.exists(candidate):
+            return candidate
+    raise Exception("Plugin %s not found in any of %s" % (name, search_paths))
+
 def _symbolize(thing):
     if isinstance(thing, basestring):
         return v.symbol(thing)
     else:
         return thing # Assume it's already the proper stack dict
+
+def _interp_label_or_did(label_or_did):
+    if isinstance(label_or_did, int) or \
+        (isinstance(label_or_did, dict) and
+         'type' in label_or_did and
+         label_or_did['type'] == 'number'):
+        if isinstance(label_or_did, int):
+            did = label_or_did
+        else:
+            did = label_or_did['value']
+        return ('did', did)
+    else:
+        return ('label', _symbolize(label_or_did))

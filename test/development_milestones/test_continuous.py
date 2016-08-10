@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -16,38 +16,40 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import scipy.stats as stats
-from nose import SkipTest
 
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples
-
-@statisticalTest
-def testNormal1():
-  ripl = get_ripl()
-  ripl.predict("(normal 0 1)")
-  predictions = collectSamples(ripl,1)
-  cdf = lambda x: stats.norm.cdf(x,loc=0,scale=1)
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testNormal2():
-  ripl = get_ripl()
+def testNormal1(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.predict("(normal 0 1)", label="pid")
+  predictions = collectSamples(ripl,"pid")
+  return reportKnownGaussian(0, 1, predictions)
+
+@statisticalTest
+def testNormal2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x","(normal 0 1)")
   ripl.predict("(normal x 1)")
-  predictions = collectSamples(ripl,1)
-  cdf = lambda x: stats.norm.cdf(x,loc=0,scale=1)
-  return reportKnownContinuous(cdf, predictions, "N(0,1)")
+  predictions = collectSamples(ripl,"x")
+  return reportKnownGaussian(0, 1, predictions)
 
-def testNormal3():
-  ripl = get_ripl()
+@statisticalTest
+def testNormal3(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(lambda (mu) (normal mu 1))")
-  ripl.predict("(f (normal 0 1))")
-  predictions = collectSamples(ripl,1)
+  ripl.predict("(f (normal 0 1))", label="pid")
+  predictions = collectSamples(ripl,"pid")
+  return reportKnownGaussian(0, math.sqrt(2), predictions)
 
-def testNormal4():
-  ripl = get_ripl()
+@statisticalTest
+def testNormal4(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(lambda (mu) (normal mu 1))")
   ripl.assume("g","(lambda (x y z) ((lambda () f)))")
-  ripl.predict("((g (f (normal 0 1)) (f 5) (f (f 1))) 5)")
-  predictions = collectSamples(ripl,1)
+  ripl.predict("((g (f (normal 0 1)) (f 5) (f (f 1))) 5)", label="pid")
+  predictions = collectSamples(ripl,"pid")
+  return reportKnownGaussian(5, 1, predictions)

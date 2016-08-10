@@ -21,7 +21,6 @@ import re
 
 from venture.exception import VentureException
 from venture.lite.value import VentureValue
-import venture.value.dicts as v
 
 def is_valid_symbol(s):
     if isinstance(s, basestring):
@@ -48,12 +47,6 @@ def validate_instruction(instruction,implemented_instructions):
         raise VentureException('unrecognized_instruction',
                 'The "{}" instruction is not supported.'.format(instruction_type))
     return instruction
-
-def require_state(cur_state,*args):
-    if cur_state not in args:
-        raise VentureException('invalid_state',
-                'Instruction cannot be executed in the current state, "{}".'.format(cur_state),
-                state=cur_state)
 
 def validate_expression(expression):
     if isinstance(expression, basestring):
@@ -139,7 +132,7 @@ def validate_arg(instruction,arg,validator,modifier=lambda x: x,required=True,wr
     except VentureException as e:
         if e.exception == 'parse' and wrap_exception:
             raise VentureException('invalid_argument',
-                    'Invalid argument {}. {}'.format(arg, str(e)),
+                    'Invalid argument {} = {}. {}'.format(arg, val, str(e)),
                     argument=arg)
         raise
     return modifier(val)

@@ -21,16 +21,18 @@
 #include "psp.h"
 #include "args.h"
 
-struct MakeMSPOutputPSP : PSP
+struct MakeMSPOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct MSPRequestPSP : PSP
+struct MSPRequestPSP : virtual PSP
+  , DeterministicPSP
 {
   MSPRequestPSP(Node * sharedOperatorNode);
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   MSPRequestPSP* copy_help(ForwardingMap* m) const;
 
 private:

@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -25,9 +25,9 @@
 
 #include "types.h"
 
-VentureValuePtr fromPython(boost::python::object o);
-VentureValuePtr parseValue(boost::python::dict d);
-VentureValuePtr parseExpression(boost::python::object o);
+VentureValuePtr parseValueO(const boost::python::object & o); // Requires it to be a dict
+VentureValuePtr parseValue(const boost::python::dict & d);
+VentureValuePtr parseExpression(const boost::python::object & o);
 
 
 #endif

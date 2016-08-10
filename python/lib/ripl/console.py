@@ -17,18 +17,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import copy
-import traceback
 from cmd import Cmd
 from functools import wraps
+import copy
 import os
+import traceback
 
 from venture.exception import VentureException
-from utils import strip_types
+from venture.ripl.utils import strip_types
 
-def getValue(directive):
+def printValue(directive):
   '''Gets the actual value returned by an assume, predict, report, or sample directive.'''
-  return strip_types(directive['value'])
+  if directive is None or 'value' not in directive:
+    pass
+  else:
+    print strip_types(directive['value'])
 
 def catchesVentureException(f):
   @wraps(f)
@@ -40,19 +43,27 @@ def catchesVentureException(f):
     except Exception:
       print "Your query has generated an error:"
       traceback.print_exc()
+    except KeyboardInterrupt:
+      pass
 
   return try_f
 
 class RiplCmd(Cmd, object):
-  def __init__(self, ripl, rebuild):
+  def __init__(self, ripl, rebuild, files=None, plugins=None):
     super(RiplCmd, self).__init__()
     self.ripl = ripl
-    self.prompt = '>>> '
+    self.prompt = 'venture[script] > '
     self.rebuild = rebuild
-    self.files = []
+    self.files = [] if files is None else files
+    self.plugins = [] if plugins is None else plugins
+    self.pending_instruction_string = None
+    self._update_prompt()
 
+  @catchesVentureException
   def emptyline(self):
-    pass
+    if self.pending_instruction_string is not None:
+      # force evaluation of pending instruction
+      self._do_continue_instruction("", force_complete=True)
 
   def do_quit(self, _s):
     '''Exit the Venture console.'''
@@ -63,114 +74,75 @@ class RiplCmd(Cmd, object):
 
   do_EOF = do_quit
 
-  def _do_instruction(self, instruction, s):
+  def _do_instruction(self, s, force_complete=False):
     if self.ripl.get_mode() == "church_prime":
-      r_inst = '[%s %s]' % (instruction, s)
+      from venture.parser.church_prime.parse import string_complete_p
     else:
-      r_inst = '%s %s' % (instruction, s)
-    return self.ripl.execute_instruction(r_inst)
-
-  def precmd(self, line):
-    line = line.strip()
-    if len(line) > 0 and (line[0] == "[" or line[0] == "("):
-      if line[-1] == "]" or line[-1] == ")":
-        return line[1:-1]
-    return line
+      from venture.parser.venture_script.parse import string_complete_p
+    if force_complete or string_complete_p(s, self.ripl.languages):
+      return self.ripl.execute_instructions(s)
+    else:
+      self.pending_instruction_string = s
+      self._update_prompt()
 
   @catchesVentureException
-  def do_define(self, s):
-    '''Define a variable in the inference program.'''
-    print getValue(self._do_instruction('define', s))
+  def postcmd(self, stop, line):
+    callbacks = self.ripl.sivm.core_sivm.engine.callbacks
+    if '__postcmd__' in callbacks:
+      inferrer = self.ripl.evaluate('__the_inferrer__')
+      callbacks['__postcmd__'](inferrer)
+    return stop
 
   @catchesVentureException
-  def do_assume(self, s):
-    '''Add a named variable to the model.'''
-    print getValue(self._do_instruction('assume', s))
+  def default(self, line):
+    '''Continue a pending instruction or evaluate an expression in the inference program.'''
+    if self.pending_instruction_string is None:
+      self._do_eval(line)
+    else:
+      self._do_continue_instruction(line)
 
-  @catchesVentureException
-  def do_observe(self, s):
-    '''Condition on an expression being the value.'''
-    self._do_instruction('observe', s)
+  def _do_continue_instruction(self, line, force_complete=False):
+    string = self.pending_instruction_string + "\n" + line
+    self.pending_instruction_string = None
+    self._update_prompt()
+    printValue(self._do_instruction(string, force_complete))
 
-  @catchesVentureException
-  def do_predict(self, s):
-    '''Register an expression as a model prediction.'''
-    print getValue(self._do_instruction('predict', s))
-
-  @catchesVentureException
-  def do_forget(self, s):
-    '''Forget a given prediction or observation.'''
-    self._do_instruction('forget', s)
-
-  @catchesVentureException
-  def do_report(self, s):
-    '''Report the current value of a given directive.'''
-    print getValue(self._do_instruction('report', s))
-
-  @catchesVentureException
-  def do_sample(self, s):
-    '''Sample the given expression immediately,
-    without registering it as a prediction.'''
-    print getValue(self._do_instruction('sample', s))
-
-  @catchesVentureException
-  def do_force(self, s):
-    '''Set the given expression to the given value,
-    without conditioning on it.'''
-    self._do_instruction('force', s)
+  def _do_eval(self, line):
+    '''Evaluate an expression in the inference program.'''
+    printValue(self._do_instruction(line))
 
   @catchesVentureException
   def do_list_directives(self, _s):
     '''List active directives and their current values.'''
     self.ripl.print_directives()
-  
+
+  def do_get_directive(self, s):
+    '''List active directives and their current values.'''
+    # See whether we got a string representing an integer directive id
+    try:
+      s = int(s)
+    except: pass
+    self.ripl.print_one_directive(self.ripl.get_directive(s))
+
   @catchesVentureException
   def do_clear(self, _):
     '''Clear the console state.  (Replay the effects of command line arguments.)'''
     self.ripl.stop_continuous_inference()
-    (_, self.ripl) = self.rebuild()
-    self.files = []
+    (_, self.ripl, files, plugins) = self.rebuild()
+    self.files = files
+    self.plugins = plugins
     self._update_prompt()
-  
-  @catchesVentureException
-  def do_infer(self, s):
-    '''Run inference synchronously.'''
-    out = self.ripl.infer(s if s else None)
-    if isinstance(out, dict):
-      if len(out) > 0: print out
-    else:
-      print out
 
   @catchesVentureException
-  def do_continuous_inference_status(self, s):
+  def do_ci_status(self, _s):
     '''Report status of continuous inference.'''
-    print self._do_instruction('continuous_inference_status', s)
-
-  @catchesVentureException
-  def do_start_continuous_inference(self, s):
-    '''Start continuous inference.'''
-    self.ripl.start_continuous_inference(s if s else None)
-
-  @catchesVentureException
-  def do_stop_continuous_inference(self, s):
-    '''Stop continuous inference.'''
-    self._do_instruction('stop_continuous_inference', s)
-
-  @catchesVentureException
-  def do_get_global_logscore(self, s):
-    '''Report the global logscore.'''
-    print self._do_instruction('get_global_logscore', s)
+    print self.ripl.continuous_inference_status()
 
   @catchesVentureException
   def do_dump_profile_data(self, s):
     '''Save the current profile data to the given file.'''
     self.ripl.profile_data().to_csv(s)
     print "Profile data saved to %s" % s
-
-  @catchesVentureException
-  def do_eval(self, s):
-    '''Escape into Python (evaluate the given string as Python source)'''
-    exec(s)
 
   @catchesVentureException
   def do_shell(self, s):
@@ -187,19 +159,35 @@ class RiplCmd(Cmd, object):
   @catchesVentureException
   def do_reload(self, _):
     '''Reload all previously loaded Venture files.'''
+    plugins = copy.copy(self.plugins)
     files = copy.copy(self.files)
     self.do_clear(None)
+    for p in plugins:
+      if p not in self.plugins:
+        self.do_load_plugin(p)
     for f in files:
-      self.do_load(f)
+      if f not in self.files:
+        self.do_load(f)
+
+  @catchesVentureException
+  def do_load_plugin(self, s):
+    '''Load the given plugin.'''
+    # TODO Make a way to pass arguments to the plugin
+    self.ripl.load_plugin(s)
+    self.plugins.append(s)
+    self._update_prompt()
 
   def _update_prompt(self):
-    if len(self.files) == 0:
-      self.prompt = ">>> "
+    if self.pending_instruction_string is None:
+      if len(self.files) == 0 and len(self.plugins) == 0:
+        self.prompt = "venture[script] > "
+      else:
+        self.prompt = "venture[script] " + " ".join(self.plugins + self.files) + " > "
     else:
-      self.prompt = " ".join(self.files) + " > "
+      self.prompt =   "            ... > "
 
-def run_venture_console(ripl, rebuild):
-  RiplCmd(ripl, rebuild).cmdloop()
+def run_venture_console(ripl, rebuild, files=None, plugins=None):
+  RiplCmd(ripl, rebuild, files=files, plugins=plugins).cmdloop()
 
 def main():
   import venture.shortcuts as s

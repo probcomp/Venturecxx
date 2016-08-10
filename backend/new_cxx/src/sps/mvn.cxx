@@ -34,52 +34,55 @@ using std::isfinite;
    We have two options: change the code to sample directly to use Eigen instead of GSL,
    or change Eigen to GSL everywhere. */
 
-VentureValuePtr MVNormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr MVNormalPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("normal", args, 2);
 
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong
-  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
-  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
+  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n));
+  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(), i, mu(i)); }
 
   MatrixXd sigma = args->operandValues[1]->getSymmetricMatrix();
-  shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
+  shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n, n));
   for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) { 
-      gsl_matrix_set(gsl_sigma.get(),i,j,sigma(i,j));
+    for (int j = 0; j < n; ++j) {
+      gsl_matrix_set(gsl_sigma.get(), i, j, sigma(i, j));
     }
   }
 
   shared_ptr<gsl_vector> gsl_x(gsl_vector_alloc(n)); // output
-  
+
   rmvnorm(rng, n, gsl_mu.get(), gsl_sigma.get(), gsl_x.get());
 
   VectorXd x(n);
-  for (int i = 0; i < n; ++i) { x(i) = gsl_vector_get(gsl_x.get(),i); }
+  for (int i = 0; i < n; ++i) { x(i) = gsl_vector_get(gsl_x.get(), i); }
 
   return VentureValuePtr(new VentureVector(x));
 }
 
 
-double MVNormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double MVNormalPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   VectorXd mu = args->operandValues[0]->getVector();
   int n = mu.size(); // size may be wrong
-  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n)); 
-  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(),i,mu(i)); }
+  shared_ptr<gsl_vector> gsl_mu(gsl_vector_alloc(n));
+  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_mu.get(), i, mu(i)); }
 
   MatrixXd sigma = args->operandValues[1]->getMatrix();
-  shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n,n));
+  shared_ptr<gsl_matrix> gsl_sigma(gsl_matrix_alloc(n, n));
   for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) { 
-      gsl_matrix_set(gsl_sigma.get(),i,j,sigma(i,j));
+    for (int j = 0; j < n; ++j) {
+      gsl_matrix_set(gsl_sigma.get(), i, j, sigma(i, j));
     }
   }
 
   shared_ptr<gsl_vector> gsl_x(gsl_vector_alloc(n)); // output
   VectorXd x = value->getVector();
-  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_x.get(),i,x[i]); }
+  for (int i = 0; i < n; ++i) { gsl_vector_set(gsl_x.get(), i, x[i]); }
 
   return dmvnorm(n, gsl_x.get(), gsl_mu.get(), gsl_sigma.get());
 }

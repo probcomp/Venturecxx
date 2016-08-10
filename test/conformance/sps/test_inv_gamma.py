@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
 from scipy.stats import invgamma
 
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
+
 @statisticalTest
-def testInvGamma1():
-  "Check that Gamma is parameterized correctly"
-  ripl = get_ripl()
+def testInvGamma1(seed):
+  # Check that Gamma is parameterized correctly
+  ripl = get_ripl(seed=seed)
   # samples
   ripl.assume("a","(inv_gamma 10.0 10.0)", label="pid")
   observed = collectSamples(ripl,"pid")

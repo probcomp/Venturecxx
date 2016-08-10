@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2016 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -26,18 +26,19 @@
 struct CRPSPAux : SPAux
 {
   CRPSPAux(): nextIndex(1), numCustomers(0), numTables(0) {}
-  SPAux* copy_help(ForwardingMap* m) const { return new CRPSPAux(*this); }
+  CRPSPAux* copy_help(ForwardingMap* m) const;
   boost::python::object toPython(Trace * trace) const;
-  
+
   uint32_t nextIndex;
   uint32_t numCustomers;
   uint32_t numTables;
-  map<uint32_t,uint32_t> tableCounts;
+  map<uint32_t, uint32_t> tableCounts;
 };
 
-struct MakeCRPOutputPSP : PSP
+struct MakeCRPOutputPSP : virtual PSP
+  , DeterministicMakerAAAPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
@@ -45,22 +46,28 @@ struct CRPSP : SP
 {
   CRPSP(double alpha, double d);
   boost::python::dict toPython(Trace * trace, shared_ptr<SPAux> spAux) const;
-  
+
   // for toPython
   const double alpha, d;
 };
 
 struct CRPOutputPSP : RandomPSP
 {
-  CRPOutputPSP(double alpha,double d) : alpha(alpha), d(d) {}
+  CRPOutputPSP(double alpha, double d) : alpha(alpha), d(d) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value,shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value,shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value,shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
-  double logDensityOfCounts(shared_ptr<SPAux> spAux) const;
-  
+  double logDensityOfData(shared_ptr<SPAux> spAux) const;
+
   bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 

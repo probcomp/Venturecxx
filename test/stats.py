@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -35,6 +35,10 @@ This module supplies facilities for testing in that style.  Of note:
   TestResult object, which represents the p-value.
 - The reportKnownFoo functions encapsulate standard statistical
   tests and return TestResult objects.
+- Every test annotated as a statisticalTest must accept a `seed`
+  argument which may be used to initialize PRNGs.  Every such test
+  should be deterministic given fixed seed, if possible, for better
+  reproducibility of failures.
 - This module respects the ignore_inference_quality configuration
   (which is on for the crash test suite and off for the inference
   quality test suite).
@@ -55,12 +59,20 @@ test function as @statisticalTest, not the generator.
 """
 
 import math
-import scipy.stats as stats
-import numpy as np
+import random
+import sys
+
 import nose.tools as nose
+import numpy as np
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
+import scipy.stats as stats
+from scipy.stats.mstats import rankdata
+
 from testconfig import config
 from venture.test.config import ignore_inference_quality
-import sys
+from venture.test.config import stochasticTest
+import venture.test.plots as plots
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -82,7 +94,8 @@ def tabulatelst(fmt, lst, width=10, prefix=""):
   return prefix + "[" + bulk + "]"
 
 class TestResult(object):
-  """A container for a p-value and a report to print to the user if the test is deemed to have failed."""
+  """A container for a p-value and a report to print to the user if the test
+  is deemed to have failed."""
   def __init__(self, pval, report):
     self.pval = pval
     self.report = report
@@ -96,9 +109,10 @@ def fisherMethod(pvals):
     chisq = -2 * sum([math.log(p) for p in pvals])
     return stats.chi2.sf(chisq, 2*len(pvals))
 
-def repeatTest(func, *args):
+def repeatTest(func, seed, *args, **kwargs):
+  rng = random.Random(seed)
   globalReportingThreshold = float(config["global_reporting_threshold"])
-  result = func(*args)
+  result = func(*args, seed=rng.randint(1, 2**31 - 1), **kwargs)
   assert isinstance(result, TestResult)
   if ignore_inference_quality():
     return result
@@ -110,7 +124,7 @@ def repeatTest(func, *args):
   else:
     print "Retrying suspicious test"
     def trial():
-      answer = func(*args)
+      answer = func(*args, seed=rng.randint(1, 2**31 - 1), **kwargs)
       sys.stdout.write(".")
       return answer
     results = [result] + [trial() for _ in range(1,5)]
@@ -133,9 +147,10 @@ def statisticalTest(f):
   repeatedly.
 
   """
+  @stochasticTest
   @nose.make_decorator(f)
-  def wrapped(*args):
-    reportTest(repeatTest(f, *args))
+  def wrapped(seed, *args, **kwargs):
+    reportTest(repeatTest(f, seed, *args, **kwargs))
   return wrapped
 
 
@@ -147,7 +162,8 @@ def reportKnownDiscrete(expectedRates, observed):
   The input format for the expected distribution is a list of
   item-rate pairs.  The probability of items that do not appear on the
   list is taken to be zero.  If a rate is given as None, that item is
-  assumed possible but with unknown frequency.
+  assumed possible but with unknown frequency.  The rates will be
+  normalized automatically by reportKnownDiscrete.
 
   Try to have enough samples that every item is expected to appear at
   least five times for the Chi^2 statistic to be reasonable.
@@ -162,7 +178,8 @@ def reportKnownDiscrete(expectedRates, observed):
   # is incomplete.
   counts = [observed.count(x) for x in items if itemsDict[x] is not None]
   total = sum(counts)
-  expRates = normalizeList([pair[1] for pair in expectedRates if pair[1] is not None])
+  expRates = normalizeList([pair[1] for pair in expectedRates
+    if pair[1] is not None])
   expCounts = [total * r for r in expRates]
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   return TestResult(pval, "\n".join([
@@ -186,7 +203,8 @@ def chi2_contingency(cts1, cts2):
     expected2 = [ratio2 * (cts1[i] + cts2[i]) for i in range(len(cts2))]
     assert len(expected1) == len(expected2)
     dof = len(expected1) -1
-    return stats.chisquare(cts1 + cts2, f_exp = np.array(expected1 + expected2), ddof = len(cts1 + cts2) - 1 - dof)
+    return stats.chisquare(cts1 + cts2, f_exp=np.array(expected1 + expected2),
+      ddof=len(cts1 + cts2) - 1 - dof)
 
 def reportSameDiscrete(observed1, observed2):
   """Chi^2 test for sameness of two empirical discrete distributions.
@@ -210,7 +228,8 @@ def explainOneDSample(observed):
   count = len(observed)
   mean = np.mean(observed)
   stddev = np.std(observed)
-  ans = "Observed: % 4d samples with mean %4.3f, stddev %4.3f" % (count, mean, stddev)
+  ans = "Observed: % 4d samples with mean %4.3f, stddev %4.3f" \
+    % (count, mean, stddev)
   if count < 101:
     ans += ", data\n"
     ans += tabulatelst("%.2f", sorted(observed), width=10, prefix="  ")
@@ -220,20 +239,24 @@ def explainOneDSample(observed):
     ans += tabulatelst("%.2f", percentiles, width=10, prefix="  ")
   return ans
 
-def reportKnownContinuous(expectedCDF, observed, descr=None):
-  """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density function.
-
-  The CDF argument should be a Python callable that computes the cumulative density. """
+def reportKnownContinuous(expectedCDF, observed, descr=None, show_plot=False):
+  """Kolmogorov-Smirnov test for agreement with known 1-D cumulative density
+  function. The CDF argument should be a Python callable that computes the
+  cumulative density."""
   (K, pval) = stats.kstest(observed, expectedCDF)
+  if show_plot:
+    plots.p_p_plot(expectedCDF, observed, show=True)
   return TestResult(pval, "\n".join([
     "Expected: %4d samples from %s" % (len(observed), descr),
     explainOneDSample(observed),
     "K stat  : " + str(K),
     "P value : " + str(pval)]))
 
-def reportSameContinuous(observed1, observed2):
+def reportSameContinuous(observed1, observed2, show_plot=False):
   """Kolmogorov-Smirnov test for sameness of two empirical 1-D continuous distributions."""
   (D, pval) = stats.ks_2samp(observed1, observed2)
+  if show_plot:
+    plots.p_p_plot_2samp(observed1, observed2, show=True)
   return TestResult(pval, "\n".join([
     "Expected samples from the same distribution",
     explainOneDSample(observed1),
@@ -241,46 +264,36 @@ def reportSameContinuous(observed1, observed2):
     "D stat  : " + str(D),
     "P value : " + str(pval)]))
 
-# TODO Also sensibly compare the variance of the sample to the
-# expected variance (what's the right test statistic when the
-# "population distribution" is not known?  How many samples do I need
-# for it to become effectively normal, if it does?)
-# TODO Can I use the Barry-Esseen theorem to use skewness information
-# for a more precise computation of test validity?  How about
-# comparing sample skewness to expected skewness?
-def reportKnownMeanVariance(expMean, expVar, observed):
-  """Z-score test for data having a known mean and variance.
+def reportKnownGaussian(expMean, expStdDev, observed, show_plot=False):
+  """Kolmogorov-Smirnov test for agreement with a known Gaussian.
 
-  Doesn't work for distributions that are fat-tailed enough not to
-  have a mean.
-
-  The K-S test done by reportKnownContinuous is much tighter, so try
-  to use that if possible.
-
+  TODO Are there more sensitive tests for being a known Gaussian than
+  K-S?
   """
-  count = len(observed)
-  mean = np.mean(observed)
-  zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
-  pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
-  return TestResult(pval, "\n".join([
-    "Expected: % 4d samples with mean %4.3f, stddev %4.3f" % (count, expMean, math.sqrt(expVar)),
-    explainOneDSample(observed),
-    "Z score : " + str(zscore),
-    "P value : " + str(pval)]))
+  cdf = stats.norm(loc=expMean, scale=expStdDev).cdf
+  label = "N(%s,%s)" % (expMean, expStdDev)
+  return reportKnownContinuous(cdf, observed, label, show_plot=show_plot)
 
 # TODO Warn if not enough observations?
-def reportKnownMean(expMean, observed):
-  """T-test for known mean, without knowing the variance.
+def reportKnownMean(expMean, observed, variance=None):
+  """Test for data having an expected mean.
+
+  If the variance is not given, use a T-test.
+  If the variance is given, use a (stricter) Z-score test.
+  *Does not* test agreement of the observed variance.
 
   Doesn't work for distributions that are fat-tailed enough not to
   have a mean.
 
-  The T-statistic is only valid if there are enough observations; 30
-  are recommended.
+  The T-statistic is only a good approximation if there are enough
+  observations; 30 are recommended.
 
-  The K-S test done by reportKnownContinuous is much tighter, so try
-  to use that if possible.
+  The K-S test done by reportKnownGaussian or reportKnownContinuous
+  accounts for the entire shape of the distribution, so try to use
+  that if possible.
   """
+  if variance is not None:
+    return reportKnownMeanZScore(expMean, variance, observed)
   count = len(observed)
   (tstat, pval) = stats.ttest_1samp(observed, expMean)
   return TestResult(pval, "\n".join([
@@ -289,8 +302,145 @@ def reportKnownMean(expMean, observed):
     "T stat  : " + str(tstat),
     "P value : " + str(pval)]))
 
+def reportKnownMeanZScore(expMean, expVar, observed):
+  """Z-score test for data having a known mean.
+
+  Assumes the true variance is known and uses it to calibrate the mean
+  test; *does not* test agreement with the observed variance.
+
+  Doesn't work for distributions that are fat-tailed enough not to
+  have a mean.
+
+  The K-S test done by reportKnownContinuous accounts for the entire
+  shape of the distribution, so try to use that if possible.
+
+  If you know the distribution should be Gaussian, use
+  reportKnownGaussian.
+  """
+  count = len(observed)
+  mean = np.mean(observed)
+  zscore = (mean - expMean) * math.sqrt(count) / math.sqrt(expVar)
+  pval = 2*stats.norm.sf(abs(zscore)) # Two-tailed
+  return TestResult(pval, "\n".join([
+    "Expected: % 4d samples with mean %4.3f, stddev %4.3f" \
+      % (count, expMean, math.sqrt(expVar)),
+    explainOneDSample(observed),
+    "Z score : " + str(zscore),
+    "P value : " + str(pval)]))
+
+# TODO Provide a test for distributions of unknown shape but known
+# mean and variance that sensibly compares the variance of the sample
+# to the expected variance.
+# - What's the right test statistic when the "population distribution"
+#   is not known?
+# - How many samples do I need for the test statistic to become
+#   effectively normal, if it does?
+# - Can I use the Barry-Esseen theorem to use skewness information for
+#   a more precise computation of test validity?  How about comparing
+#   sample skewness to expected skewness?
+
+def reportKernelTwoSampleTest(X, Y, permutations=None):
+  '''
+  Tests the null hypothesis that X and Y are samples drawn
+  from the same population of arbitrary dimension D. The non-parametric
+  permutation method is used and the test is exact. We use the statistic:
+  E[k(X,X')] + E[k(Y,Y')] - 2E[k(X,Y)].
+
+  A Gaussian kernel k(.,.) is used with width equal to the median distance
+  between vectors in the aggregate sample. While the size of any permutation
+  test is trivially exact, a permutation test with an arbitrary kernel is not
+  guaranteed to have high power. However the Gaussian kernel has several
+  optimal properties. For more information, see:
+
+    http://www.stat.berkeley.edu/~sbalakri/Papers/MMD12.pdf
+
+  :param X: List of N samples from the first population.
+      Each entry in the list X must itself a D-dimensional (D>=1) list.
+  :param Y: List of N samples from the second population.
+      Each entry in the list Y must itself a D-dimensional (D>=1) list.
+  :param permutations: (optional) number of times to resample, default 2500.
+
+  :returns: p-value of the statistical test
+  '''
+  if permutations is None:
+    permutations = 2500
+  # Validate the inputs
+  D = len(X[0])
+  for x in X:
+    assert len(x) == D
+  for y in Y:
+    assert len(y) == D
+  X = np.asarray(X)
+  Y = np.asarray(Y)
+  assert isinstance(X, np.ndarray)
+  assert isinstance(Y, np.ndarray)
+  assert X.shape[1] == Y.shape[1]
+  N = X.shape[0]
+
+  # Compute the observed statistic.
+  t_star = computeGaussianKernelStatistic(X, Y)
+  T = [t_star]
+
+  # Pool the samples.
+  S = np.vstack((X, Y))
+
+  # Compute resampled test statistics.
+  for _ in xrange(permutations-1):
+      np.random.shuffle(S)
+      Xp, Yp = S[:N], S[N:]
+      tb = computeGaussianKernelStatistic(Xp, Yp)
+      T.append(tb)
+
+  # Fraction of samples larger than observed t_star.
+  t_star_rank = rankdata(T)[0]
+  f = len(T) - t_star_rank
+  pval = 1. * f / (len(T))
+
+  return TestResult(pval, "\n".join([
+    "Permutations        : %i" % permutations,
+    "Observed Stat Rank  : %i" % t_star_rank,
+    "P value             : %s" % str(pval)]))
+
+def computeGaussianKernelStatistic(X, Y):
+  """Compute a single two-sample test statistic using Gaussian kernel."""
+  assert isinstance(X, np.ndarray)
+  assert isinstance(Y, np.ndarray)
+  assert X.shape[1] == Y.shape[1]
+
+  N = X.shape[0]
+
+  # Determine width of Gaussian kernel.
+  Pxyxy = pdist(np.vstack((X, Y)), 'euclidean')
+  s = np.median(Pxyxy)
+  if s == 0:
+      s = 1
+
+  Kxy = squareform(Pxyxy)[:N, N:]
+  Exy = np.exp(- Kxy ** 2 / s ** 2)
+  Exy = np.mean(Exy)
+
+  Kxx = squareform(pdist(X), 'euclidean')
+  Exx = np.exp(- Kxx ** 2 / s ** 2)
+  Exx = np.mean(Exx)
+
+  Kyy = squareform(pdist(Y), 'euclidean')
+  Eyy = np.exp(- Kyy ** 2 / s ** 2)
+  Eyy = np.mean(Eyy)
+
+  return Exx + Eyy - 2*Exy
+
 def reportPassage():
   """Pass a deterministic test that is nevertheless labeled statistical.
 
   Just returns a TestResult with p-value 1."""
   return TestResult(1.0, "")
+
+def reportPearsonIndependence(X, Y):
+  """Pearson r^2 test of independence."""
+  r2, pval = stats.pearsonr(X, Y)
+  return TestResult(pval, "\n".join([
+      "X  : " + fmtlst("% 4.1f", X),
+      "Y  : " + fmtlst("% 4.1f", Y),
+      "r^2: " + str(r2),
+      "p  : " + str(pval)
+    ]))

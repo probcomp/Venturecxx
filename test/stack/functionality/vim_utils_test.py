@@ -14,8 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
-from nose.plugins.attrib import attr
 import unittest
+
+from nose.plugins.attrib import attr
 
 from venture.exception import VentureException
 from venture.sivm import utils
@@ -160,7 +161,7 @@ class TestSivmUtils(unittest.TestCase):
 
     def test_desugar_expression_identity(self):
         a = ['identity','b']
-        b = ['make_csp', ['quote', []], ['quote', 'b']]
+        b = 'b'
         self.assertEqual(macro_system.desugar_expression(a),b)
 
     def test_desugar_nothing(self):
@@ -218,7 +219,7 @@ class TestSivmUtils(unittest.TestCase):
             ['identity',[['identity',['a','b']],'c','d']]
             ]
     def test_sugar_expression_index_standard_cases(self):
-        """make sure that all sugared locations are properly translated"""
+        # make sure that all sugared locations are properly translated
         msg_string ="\n\nsym: {}\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "desugared_index: {}\nexpected_index: {}\n"\
                     "got_index: {}"
@@ -234,7 +235,7 @@ class TestSivmUtils(unittest.TestCase):
                     raise
                 self.assertEqual(i3,i1,msg=msg_string.format(sym,a,s,i2,i1,i3))
     def test_sugar_expression_index_all_cases(self):
-        """make sure that none of the edge cases crash the thingy"""
+        # make sure that none of the edge cases crash the thingy
         msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "desugared_index: {}"
         for a in self.fancy_expressions:
@@ -248,7 +249,7 @@ class TestSivmUtils(unittest.TestCase):
                     raise
 
     def test_desugar_expression_index_standard_cases(self):
-        """make sure that all sugared locations are properly translated"""
+        # make sure that all sugared locations are properly translated
         msg_string ="\n\nsym: {}\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "sugared_index: {}\nexpected_index: {}\n"\
                     "got_index: {}"
@@ -264,7 +265,7 @@ class TestSivmUtils(unittest.TestCase):
                     raise
                 self.assertEqual(i3,i2,msg=msg_string.format(sym,a,s,i1,i2,i3))
     def test_desugar_expression_index_all_cases(self):
-        """make sure that none of the edge cases crash the thingy"""
+        # make sure that none of the edge cases crash the thingy
         msg_string ="\n\nsugared_exp: {}\ndesugared_exp: {}\n"\
                     "sugared_index: {}"
         for a in self.fancy_expressions:
@@ -292,15 +293,6 @@ class TestSivmUtils(unittest.TestCase):
     def test_validate_instruction_3(self):
         i = {'instruction':"moo"}
         self.assertEqual(utils.validate_instruction(i,['moo']),i)
-
-    def test_require_state_1(self):
-        utils.require_state('default','red','default')
-    def test_require_state_2(self):
-        try:
-            utils.require_state('moo','default')
-        except VentureException as e:
-            self.assertEqual(e.exception,'invalid_state')
-            self.assertEqual(e.data['state'],'moo')
 
     def test_validate_symbol_1(self):
         self.assertEqual(utils.validate_symbol('add'),'add')
@@ -348,28 +340,26 @@ class TestSivmUtils(unittest.TestCase):
             self.assertEqual(e.exception, 'parse')
 
     def test_validate_arg_1(self):
-        i = {"instruction":"moo","symbol":"moo"}
-        self.assertEqual(utils.validate_arg(i,"symbol",utils.validate_symbol),"moo")
+        i = {'instruction':"moo",'symbol':"moo"}
+        self.assertEqual(utils.validate_arg(i,'symbol',utils.validate_symbol),"moo")
     def test_validate_arg_2(self):
-        i = {"instruction":"moo","symbol":2}
+        i = {'instruction':"moo",'symbol':2}
         try:
-            utils.validate_arg(i,"symbol",utils.validate_symbol)
+            utils.validate_arg(i,'symbol',utils.validate_symbol)
         except VentureException as e:
             self.assertEqual(e.exception,'invalid_argument')
             self.assertEqual(e.data['argument'],'symbol')
     def test_validate_arg_3(self):
-        i = {"instruction":"moo","symbol":2}
+        i = {'instruction':"moo",'symbol':2}
         try:
-            utils.validate_arg(i,"red",utils.validate_symbol)
+            utils.validate_arg(i,'red',utils.validate_symbol)
         except VentureException as e:
             self.assertEqual(e.exception,'missing_argument')
             self.assertEqual(e.data['argument'],'red')
     def test_validate_arg_4(self):
-        i = {"instruction":"moo"}
-        self.assertEqual(utils.validate_arg(i,"red",utils.validate_symbol,required=False),None)
+        i = {'instruction':"moo"}
+        self.assertEqual(utils.validate_arg(i,'red',utils.validate_symbol,required=False),None)
     def test_validate_arg_5(self):
-        i = {"instruction":"moo","symbol":"moo"}
-        self.assertEqual(utils.validate_arg(i,"symbol",utils.validate_symbol,
-            modifier=lambda x: "red"),"red")
-
-
+        i = {'instruction':"moo",'symbol':"moo"}
+        self.assertEqual(utils.validate_arg(i,'symbol',utils.validate_symbol,
+            modifier=lambda x: 'red'),'red')

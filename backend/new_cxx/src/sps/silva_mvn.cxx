@@ -18,16 +18,16 @@ int rmvnorm(const gsl_rng *r, const int n, const gsl_vector *mean, const gsl_mat
 *	result	output variable with a sigle random vector normal distribution generation
 */
 int k;
-gsl_matrix *work = gsl_matrix_alloc(n,n);
+gsl_matrix *work = gsl_matrix_alloc(n, n);
 
-gsl_matrix_memcpy(work,var);
+gsl_matrix_memcpy(work, var);
 gsl_linalg_cholesky_decomp(work);
 
 for(k=0; k<n; k++)
 	gsl_vector_set( result, k, gsl_ran_ugaussian(r) );
 
 gsl_blas_dtrmv(CblasLower, CblasNoTrans, CblasNonUnit, work, result);
-gsl_vector_add(result,mean);
+gsl_vector_add(result, mean);
 
 gsl_matrix_free(work);
 
@@ -44,10 +44,10 @@ double dmvnorm(const int n, const gsl_vector *x, const gsl_vector *mean, const g
 *	var	variance matrix of dimension n x n
 */
 int s;
-double ax,ay;
+double ax, ay;
 gsl_vector *ym, *xm;
-gsl_matrix *work = gsl_matrix_alloc(n,n),
-           *winv = gsl_matrix_alloc(n,n);
+gsl_matrix *work = gsl_matrix_alloc(n, n),
+           *winv = gsl_matrix_alloc(n, n);
 gsl_permutation *p = gsl_permutation_alloc(n);
 
 gsl_matrix_memcpy( work, var );
@@ -59,7 +59,7 @@ gsl_linalg_LU_invert( work, p, winv );
 //}
 //for (int i = 0; i < n ; i++){
 //	for(int j = 0; j < n ; j++){
-//		std::cout << gsl_matrix_get(work, i,j) << " ";
+//		std::cout << gsl_matrix_get(work, i, j) << " ";
 //	}
 //	std::cout << "\n";
 //}
@@ -73,14 +73,14 @@ xm = gsl_vector_alloc(n);
 gsl_vector_memcpy( xm, x);
 gsl_vector_sub( xm, mean );
 ym = gsl_vector_alloc(n);
-gsl_blas_dsymv(CblasUpper,1.0,winv,xm,0.0,ym);
+gsl_blas_dsymv(CblasUpper, 1.0, winv, xm, 0.0, ym);
 gsl_matrix_free( winv );
 gsl_blas_ddot( xm, ym, &ay);
 gsl_vector_free(xm);
 gsl_vector_free(ym);
 //std::cout << ay << " "<< ax << "\n";
-ay = -0.5*ay - 0.5* (log(pow((2*M_PI),n))+ ax);
-//ay = exp(-0.5*ay)/sqrt( pow((2*M_PI),n)*ax );
+ay = -0.5*ay - 0.5* (log(pow((2*M_PI), n))+ ax);
+//ay = exp(-0.5*ay)/sqrt( pow((2*M_PI), n)*ax );
 //std::cout << ay << "\n";
 return ay;
 }
@@ -97,12 +97,12 @@ int rmvt(const gsl_rng *r, const int n, const gsl_vector *location, const gsl_ma
 *	result	 output variable with a single random vector normal distribution generation
 */
 int k;
-gsl_matrix *work = gsl_matrix_alloc(n,n);
+gsl_matrix *work = gsl_matrix_alloc(n, n);
 double ax = 0.5*dof;
 
-ax = gsl_ran_gamma(r,ax,(1/ax));     /* gamma distribution */
+ax = gsl_ran_gamma(r, ax,(1/ax));     /* gamma distribution */
 
-gsl_matrix_memcpy(work,scale);
+gsl_matrix_memcpy(work, scale);
 gsl_matrix_scale(work,(1/ax));       /* scaling the matrix */
 gsl_linalg_cholesky_decomp(work);
 
@@ -128,10 +128,10 @@ double dmvt(const int n, const gsl_vector *x, const gsl_vector *location, const 
 *	dof	 degrees of freedom
 */
 int s;
-double ax,ay,az=0.5*(dof + n);
+double ax, ay, az=0.5*(dof + n);
 gsl_vector *ym, *xm;
-gsl_matrix *work = gsl_matrix_alloc(n,n),
-           *winv = gsl_matrix_alloc(n,n);
+gsl_matrix *work = gsl_matrix_alloc(n, n),
+           *winv = gsl_matrix_alloc(n, n);
 gsl_permutation *p = gsl_permutation_alloc(n);
 
 gsl_matrix_memcpy( work, scale );
@@ -145,13 +145,13 @@ xm = gsl_vector_alloc(n);
 gsl_vector_memcpy( xm, x);
 gsl_vector_sub( xm, location );
 ym = gsl_vector_alloc(n);
-gsl_blas_dsymv(CblasUpper,1.0,winv,xm,0.0,ym);
+gsl_blas_dsymv(CblasUpper, 1.0, winv, xm, 0.0, ym);
 gsl_matrix_free( winv );
 gsl_blas_ddot( xm, ym, &ay);
 gsl_vector_free(xm);
 gsl_vector_free(ym);
 
-ay = pow((1+ay/dof),-az)*gsl_sf_gamma(az)/(gsl_sf_gamma(0.5*dof)*sqrt( pow((dof*M_PI),n)*ax ));
+ay = pow((1+ay/dof),-az)*gsl_sf_gamma(az)/(gsl_sf_gamma(0.5*dof)*sqrt( pow((dof*M_PI), n)*ax ));
 
 return ay;
 }

@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,9 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from request import Request
-from sp import VentureSPRecord
-from value import VentureValue
+from collections import OrderedDict
+import random
+
+import numpy.random as npr
+
+from venture.lite.request import Request
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_use import MockArgs
+from venture.lite.value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from
 # Puma. The ForeignLiteSP class is a wrapper that handles value
@@ -40,30 +46,31 @@ def fromStackDict(thing):
 def asStackDict(thing):
     # proxy for VentureValue.asStackDict that handles SPs by wrapping them
     if isinstance(thing, VentureSPRecord):
-        return {"type": "foreign_sp", "value": thing.show(),
-                "sp": ForeignLiteSP(thing.sp), "aux": thing.spAux}
+        return OrderedDict([
+            ("type", "foreign_sp"),
+            ("value", thing.show()),
+            ("sp", ForeignLiteSP(thing.sp)),
+            ("aux", thing.spAux),
+        ])
     elif isinstance(thing, Request):
-        return {"type": "request", "value": {"esrs": thing.esrs, "lsrs": thing.lsrs}}
+        return OrderedDict([
+            ("type", "request"),
+            ("value",
+             OrderedDict([("esrs", thing.esrs), ("lsrs", thing.lsrs)])),
+        ])
     else:
         return thing.asStackDict()
 
-class ForeignArgs(object):
-    """A mock Args object used to call a Lite SP from other backends."""
-
-    def __init__(self, args, output=True):
-        self.node = None
-        self.operandValues = map(fromStackDict, args.get('operandValues'))
-        self.operandNodes = [None for _ in self.operandValues]
-        if output:
-            self.requestValue = None
-            self.esrValues = []
-            self.esrNodes = []
-            self.madeSPAux = args.get('madeSPAux')
-            self.isOutput = True
-        else:
-            self.isOutput = False
-        self.spaux = args.get('spaux')
-        self.env = None
+def asArgsObject(args):
+    seed = args['seed']
+    assert seed is not None
+    prng = random.Random(seed)
+    return MockArgs(
+        map(fromStackDict, args.get('operandValues')),
+        args.get('spaux'),
+        py_rng=random.Random(prng.randint(1, 2**31 - 1)),
+        np_rng=npr.RandomState(prng.randint(1, 2**31 - 1)),
+        madeSPAux=args.get('madeSPAux'))
 
 class ForeignLitePSP(object):
     """A wrapper around a Lite PSP that can be called by other backends."""
@@ -72,25 +79,28 @@ class ForeignLitePSP(object):
         self.psp = psp
 
     def simulate(self, args):
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         result = self.psp.simulate(args)
         return asStackDict(result)
 
     def logDensity(self, value, args):
         value = fromStackDict(value)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         result = self.psp.logDensity(value, args)
         return result
 
     def incorporate(self, value, args):
         value = fromStackDict(value)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         self.psp.incorporate(value, args)
 
     def unincorporate(self, value, args):
         value = fromStackDict(value)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         self.psp.unincorporate(value, args)
+
+    def logDensityOfData(self, aux):
+        return self.psp.logDensityOfData(aux)
 
     def isRandom(self):
         return self.psp.isRandom()
@@ -114,37 +124,36 @@ class ForeignLitePSP(object):
         return self.psp.canEnumerate()
 
     def enumerateValues(self, args):
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         result = self.psp.enumerateValues(args)
         return [asStackDict(value) for value in result]
 
-    def logDensityOfCounts(self, aux):
-        return self.psp.logDensityOfCounts(aux)
-
 class ForeignLiteLKernel(object):
+    # TODO This is not actually an LKernel, because its methods do not
+    # accept the trace argument (since it is not effectively transferred)
     def __init__(self, lkernel):
         self.lkernel = lkernel
 
-    def simulate(self, oldValue, args):
+    def forwardSimulate(self, oldValue, args):
         oldValue = fromStackDict(oldValue)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
-        result = self.lkernel.simulate(None, oldValue, args)
+        result = self.lkernel.forwardSimulate(None, oldValue, args)
         return asStackDict(result)
 
-    def weight(self, newValue, oldValue, args):
+    def forwardWeight(self, newValue, oldValue, args):
         newValue = fromStackDict(newValue)
         oldValue = fromStackDict(oldValue)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
-        result = self.lkernel.weight(None, newValue, oldValue, args)
+        result = self.lkernel.forwardWeight(None, newValue, oldValue, args)
         return result
 
     def reverseWeight(self, oldValue, args):
         oldValue = fromStackDict(oldValue)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
         result = self.lkernel.reverseWeight(None, oldValue, args)
@@ -163,15 +172,18 @@ class ForeignLiteSP(object):
 
     def constructLatentDB(self):
         return self.sp.constructLatentDB()
-    def simulateLatents(self,spaux,lsr,shouldRestore,latentDB):
-        return self.sp.simulateLatents(spaux,lsr,shouldRestore,latentDB)
-    def detachLatents(self,spaux,lsr,latentDB):
-        return self.sp.detachLatents(spaux,lsr,latentDB)
+    def simulateLatents(self, args, lsr, shouldRestore, latentDB):
+        return self.sp.simulateLatents(asArgsObject(args), lsr,
+                                       shouldRestore, latentDB)
+    def detachLatents(self, args, lsr, latentDB):
+        return self.sp.detachLatents(asArgsObject(args), lsr, latentDB)
 
     def hasAEKernel(self):
         return self.sp.hasAEKernel()
-    def AEInfer(self, aux):
-        return self.sp.AEInfer(aux)
+    def AEInfer(self, aux, seed):
+        assert seed is not None
+        np_rng = npr.RandomState(seed)
+        return self.sp.AEInfer(aux, np_rng)
 
     def show(self, spaux):
         return self.sp.show(spaux)

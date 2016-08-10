@@ -18,9 +18,15 @@
 import numpy as np
 import scipy.stats as stats
 from nose.plugins.attrib import attr
+
 from venture.lite.infer.subsampled_mh import sequentialTest
-from venture.test.config import in_backend, get_ripl, collectSamples, broken_in, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import in_backend
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
 
 @in_backend("none")
 def testSequentialTest():
@@ -59,8 +65,8 @@ def testSequentialTest():
 @broken_in('puma', "Subsampled MH only implemented in Lite.")
 @statisticalTest
 @on_inf_prim("subsampled_mh")
-def testNormalWithObserves1():
-  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0)
+def testNormalWithObserves1(seed):
+  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0, seed)
   predictions = collectSamples(ripl,"pid",infer="(subsampled_mh default one 2 3 0.01 false 0 false 50)")
   return reportKnownContinuous(cdf, predictions, "N(%f,%f^2)" % (post_mean, post_std))
 
@@ -68,15 +74,15 @@ def testNormalWithObserves1():
 @broken_in('puma', "Subsampled MH only implemented in Lite.")
 @statisticalTest
 @on_inf_prim("subsampled_mh")
-def testNormalWithObserves2():
-  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0)
+def testNormalWithObserves2(seed):
+  ripl, post_mean, post_std, cdf = setupNormalWithObserves(100, 3.0, seed)
   # The sample distribution is an approximation to cdf with the accuracy
   # controlled by epsilon, the fifth argument.
   predictions = collectSamples(ripl,"pid",infer="(subsampled_mh default one 2 3 0.01 true %f false 50)" % post_std)
   return reportKnownContinuous(cdf, predictions, "N(%f,%f^2)" % (post_mean, post_std))
 
-def setupNormalWithObserves(N, sigma):
-  ripl = get_ripl()
+def setupNormalWithObserves(N, sigma, seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("mu", "(normal 10.0 %f)" % sigma, label="pid")
   x = np.random.normal(10,1,N)
   for i in range(len(x)):
@@ -88,4 +94,3 @@ def setupNormalWithObserves(N, sigma):
   cdf = stats.norm(loc=post_mean, scale=post_std).cdf
 
   return ripl, post_mean, post_std, cdf
-

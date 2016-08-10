@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -16,14 +16,24 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import scipy.stats as stats
-from nose.tools import eq_, assert_greater, assert_less # Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from nose.tools import eq_
+# Pylint misses metaprogrammed names pylint:disable=no-name-in-module
+from nose.tools import assert_greater
+from nose.tools import assert_less
 
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
-from venture.test.stats import statisticalTest, reportKnownContinuous
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_samples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testObserveAVar1a():
-  "Observations should propagate through variables."
+  # Observations should propagate through variables.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
@@ -46,7 +56,7 @@ def testObserveAVar1b():
 
 @on_inf_prim("none")
 def testObserveAMem1a():
-  "Observations should propagate through mem."
+  # Observations should propagate through mem.
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (normal 0.0 1.0)))")
   ripl.observe("(f)", 3.0)
@@ -69,7 +79,7 @@ def testObserveAMem1b():
 
 @on_inf_prim("none")
 def testObserveThenProcessDeterministically1a():
-  "Observations should propagate through deterministic SPs."
+  # Observations should propagate through deterministic SPs.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
@@ -78,14 +88,14 @@ def testObserveThenProcessDeterministically1a():
   ripl.infer("(incorporate)")
   # But the infer should have propagated by here
   eq_(ripl.report("pid"), 15)
-  
+
 @on_inf_prim("none")
 def testObserveThenProcessDeterministically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.predict("(* x 5)", label="pid")
   ripl.observe("x", 3.0)
-  
+
   # TODO assert that ripl.report("pid") is normally distributed here
   ripl.infer("(incorporate)")
   # But the infer should have propagated by here
@@ -93,7 +103,7 @@ def testObserveThenProcessDeterministically1b():
 
 @on_inf_prim("mh")
 def testObserveThenProcessStochastically1a():
-  "Observations should propagate through stochastic SPs without crashing."
+  # Observations should propagate through stochastic SPs without crashing.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.observe("x", 3.0)
@@ -102,15 +112,15 @@ def testObserveThenProcessStochastically1a():
   ripl.infer(1)
   # But the infer should have propagated by here
   assert_greater(ripl.report("pid"), 2.99)
-  assert_less(ripl.report("pid"), 3.01)  
-  
+  assert_less(ripl.report("pid"), 3.01)
+
 @on_inf_prim("mh")
 def testObserveThenProcessStochastically1b():
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.predict("(normal x 0.00001)", label="pid")
   ripl.observe("x", 3.0)
-  
+
   # TODO assert that ripl.report("pid") is normally distributed here
   ripl.infer(1)
   # But the infer should have propagated by here
@@ -119,9 +129,10 @@ def testObserveThenProcessStochastically1b():
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testObserveOutputOfIf1():
-  "It is natural to want deterministic conditionals in one's error models.  Some cases Venture can handle gracefully."
-  ripl = get_ripl()
+def testObserveOutputOfIf1(seed):
+  # It is natural to want deterministic conditionals in one's error
+  # models.  Some cases Venture can handle gracefully.
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("x","""
@@ -134,3 +145,33 @@ def testObserveOutputOfIf1():
   predictions = collectSamples(ripl,"pid")
   cdf = stats.beta(2,1).cdf # The observation nearly guarantees the first branch is taken
   return reportKnownContinuous(cdf, predictions, "approximately beta(2,1)")
+
+@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+@statisticalTest
+def testObserveThroughRef(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume("coin", "(make_beta_bernoulli 1 1)")
+  ripl.assume("items", "(list (ref (coin)) (ref (coin)))")
+  ripl.observe("(deref (first items))", True)
+  ripl.predict("(deref (second items))", label="pid")
+
+  predictions = collectSamples(ripl,"pid",num_samples=default_num_samples(5))
+  ans = [(False,0.333),(True,0.666)]
+  return reportKnownDiscrete(ans, predictions)
+
+def testObserveExpression():
+  r = get_ripl()
+  r.execute_program('''
+[assume y (normal 0 1)]
+[observe y (sqrt 4)]
+''')
+  eq_(2, r.report('y'))
+
+def testObserveExpressionVS():
+  r = get_ripl()
+  r.set_mode('venture_script')
+  r.execute_program('''
+assume y = normal(0,1);
+observe y = sqrt(4);
+''')
+  eq_(2, r.report('y'))

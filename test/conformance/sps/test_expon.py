@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,14 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples
 from scipy.stats import expon
 
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
+
 @statisticalTest
-def testExpon1():
-  "Check that exponential distribution is parameterized correctly"
-  ripl = get_ripl()
+def testExpon1(seed):
+  # Check that exponential distribution is parameterized correctly
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(expon 4.0)", label = "pid")
   observed = collectSamples(ripl, "pid")
   expon_cdf = lambda x: expon.cdf(x, scale = 1. / 4)

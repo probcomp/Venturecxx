@@ -17,7 +17,6 @@
 
 #include "pytrace.h"
 #include "regen.h"
-#include "render.h"
 #include "scaffold.h"
 #include "detach.h"
 #include "concrete_trace.h"
@@ -34,6 +33,7 @@
 #include "gkernels/pgibbs.h"
 #include "gkernels/egibbs.h"
 #include "gkernels/slice.h"
+
 #include <boost/foreach.hpp>
 
 #include <boost/python/exception_translator.hpp>
@@ -44,56 +44,68 @@ PyTrace::PyTrace() : trace(new ConcreteTrace())
 }
 PyTrace::~PyTrace() {}
 
-void PyTrace::evalExpression(DirectiveID did, boost::python::object object)
+void PyTrace::evalExpression(
+    DirectiveID did, const boost::python::object & object)
 {
   VentureValuePtr exp = parseExpression(object);
-  pair<double,Node*> p = evalFamily(trace.get(),
+  pair<double, Node*> p = evalFamily(trace.get(),
                                     exp,
                                     trace->globalEnvironment,
-                                    shared_ptr<Scaffold>(new Scaffold()),
+                                    boost::shared_ptr<Scaffold>(new Scaffold()),
                                     false,
-                                    shared_ptr<DB>(new DB()),
-                                    shared_ptr<map<Node*,Gradient> >());
+                                    boost::shared_ptr<DB>(new DB()),
+                                    boost::shared_ptr<map<Node*, Gradient> >());
   assert(p.first == 0);
   assert(!trace->families.count(did));
-  trace->families[did] = shared_ptr<Node>(p.second);
+  trace->families[did] = boost::shared_ptr<Node>(p.second);
 }
 
 void PyTrace::unevalDirectiveID(DirectiveID did)
 {
  assert(trace->families.count(did));
- unevalFamily(trace.get(),trace->families[did].get(),shared_ptr<Scaffold>(new Scaffold()),shared_ptr<DB>(new DB()));
+ unevalFamily(trace.get(), trace->families[did].get(),
+              boost::shared_ptr<Scaffold>(new Scaffold()),
+              boost::shared_ptr<DB>(new DB()));
  trace->families.erase(did);
 }
 
-void PyTrace::observe(DirectiveID did,boost::python::object valueExp)
+void PyTrace::observe(DirectiveID did, const boost::python::object & valueExp)
 {
   assert(trace->families.count(did));
   RootOfFamily root = trace->families[did];
   trace->unpropagatedObservations[root.get()] = parseExpression(valueExp);
 }
 
-void PyTrace::unobserve(DirectiveID did)
+double PyTrace::unobserve(DirectiveID did)
 {
   assert(trace->families.count(did));
   Node * node = trace->families[did].get();
   OutputNode * appNode = trace->getConstrainableNode(node);
-  if (trace->isObservation(node)) { unconstrain(trace.get(),appNode); trace->unobserveNode(node); }
-  else
-  {
+  double weight;
+  if (trace->isObservation(node)) {
+    weight = unconstrain(trace.get(), appNode);
+    trace->unobserveNode(node);
+  } else {
     assert(trace->unpropagatedObservations.count(node));
     trace->unpropagatedObservations.erase(node);
+    weight = 0;
   }
+  return weight;
 }
 
 void PyTrace::bindInGlobalEnv(const string& sym, DirectiveID did)
 {
-  trace->globalEnvironment->addBinding(sym,trace->families[did].get());
+  trace->globalEnvironment->addBinding(sym, trace->families[did].get());
 }
 
 void PyTrace::unbindInGlobalEnv(const string& sym)
 {
   trace->globalEnvironment->removeBinding(sym);
+}
+
+bool PyTrace::boundInGlobalEnv(const string& sym)
+{
+  return trace->globalEnvironment->safeLookupSymbol(sym) != NULL;
 }
 
 boost::python::object PyTrace::extractPythonValue(DirectiveID did)
@@ -110,141 +122,106 @@ void PyTrace::setSeed(size_t n) {
 }
 
 size_t PyTrace::getSeed() {
-  // TODO FIXME get_seed can't be implemented as spec'd (need a generic RNG state); current impl always returns 0, which may not interact well with VentureUnit
+  // TODO FIXME get_seed can't be implemented as spec'd (need a
+  // generic RNG state); current impl always returns 0, which may not
+  // interact well with VentureUnit
   return 0;
 }
 
-double PyTrace::getGlobalLogScore()
+uint32_t PyTrace::numUnconstrainedChoices()
 {
-  // TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
-  double ls = 0.0;
-  for (set<Node*>::iterator iter = trace->unconstrainedChoices.begin();
-       iter != trace->unconstrainedChoices.end();
-       ++iter)
-  {
-    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
-    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    shared_ptr<Args> args = trace->getArgs(node);
-    if (psp->canAbsorb(trace.get(), node, NULL))
-    {
-      ls += psp->logDensity(trace->getValue(node),args);
-    }
-  }
-  for (set<Node*>::iterator iter = trace->constrainedChoices.begin();
-       iter != trace->constrainedChoices.end();
-       ++iter)
-  {
-    ApplicationNode * node = dynamic_cast<ApplicationNode*>(*iter);
-    shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
-    shared_ptr<Args> args = trace->getArgs(node);
-    ls += psp->logDensity(trace->getValue(node),args);
-  }
-  return ls;
+  return trace->numUnconstrainedChoices();
 }
-
-uint32_t PyTrace::numUnconstrainedChoices() { return trace->numUnconstrainedChoices(); }
 
 // parses params and does inference
 struct Inferer
 {
-  shared_ptr<ConcreteTrace> trace;
-  shared_ptr<GKernel> gKernel;
+  boost::shared_ptr<ConcreteTrace> trace;
+  boost::shared_ptr<GKernel> gKernel;
   ScopeID scope;
   BlockID block;
-  shared_ptr<ScaffoldIndexer> scaffoldIndexer;
+  boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer;
   size_t transitions;
-  vector<shared_ptr<Inferer> > subkernels;
+  vector<boost::shared_ptr<Inferer> > subkernels;
 
-  Inferer(shared_ptr<ConcreteTrace> trace, boost::python::dict params) : trace(trace)
+  Inferer(
+      const boost::shared_ptr<ConcreteTrace> & trace,
+      const boost::python::dict & params)
+    : trace(trace)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
-    if (kernel == "mh")
-    {
-      gKernel = shared_ptr<GKernel>(new MHGKernel);
-    }
-    else if (kernel == "bogo_possibilize")
-    {
-      gKernel = shared_ptr<GKernel>(new BogoPossibilizeGKernel);
-    }
-    else if (kernel == "func_mh")
-    {
-      gKernel = shared_ptr<GKernel>(new FuncMHGKernel);
-    }
-    else if (kernel == "pgibbs")
-    {
+    if (kernel == "mh") {
+      gKernel = boost::shared_ptr<GKernel>(new MHGKernel);
+    } else if (kernel == "bogo_possibilize") {
+      gKernel = boost::shared_ptr<GKernel>(new BogoPossibilizeGKernel);
+    } else if (kernel == "func_mh") {
+      gKernel = boost::shared_ptr<GKernel>(new FuncMHGKernel);
+    } else if (kernel == "pgibbs") {
       size_t particles = boost::python::extract<size_t>(params["particles"]);
       bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
-      gKernel = shared_ptr<GKernel>(new PGibbsGKernel(particles,inParallel));
-    }
-    else if (kernel == "gibbs")
-    {
+      gKernel = boost::shared_ptr<GKernel>(new PGibbsGKernel(particles, inParallel));
+    } else if (kernel == "gibbs") {
       bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
-      gKernel = shared_ptr<GKernel>(new EnumerativeGibbsGKernel(inParallel));
-    }
-    else if (kernel == "emap")
-    {
+      gKernel = boost::shared_ptr<GKernel>(new EnumerativeGibbsGKernel(inParallel));
+    } else if (kernel == "emap") {
       bool inParallel  = boost::python::extract<bool>(params["in_parallel"]);
-      gKernel = shared_ptr<GKernel>(new EnumerativeMAPGKernel(inParallel));
-    }
-    else if (kernel == "slice")
-    {
+      gKernel = boost::shared_ptr<GKernel>(new EnumerativeMAPGKernel(inParallel));
+    } else if (kernel == "slice") {
       double w = boost::python::extract<double>(params["w"]);
       int m = boost::python::extract<int>(params["m"]);
-      gKernel = shared_ptr<GKernel>(new SliceGKernel(w,m));
-    }
-    else
-    {
+      gKernel = boost::shared_ptr<GKernel>(new SliceGKernel(w, m));
+    } else {
       cout << "\n***Kernel '" << kernel << "' not supported. Using MH instead.***" << endl;
-      gKernel = shared_ptr<GKernel>(new MHGKernel);
+      gKernel = boost::shared_ptr<GKernel>(new MHGKernel);
     }
 
-    scope = fromPython(params["scope"]);
-    block = fromPython(params["block"]);
+    scope = parseValueO(params["scope"]);
+    block = parseValueO(params["block"]);
 
-    if (block->hasSymbol() && block->getSymbol() == "ordered_range")
-    {
-      VentureValuePtr minBlock = fromPython(params["min_block"]);
-      VentureValuePtr maxBlock = fromPython(params["max_block"]);
-      scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block,minBlock,maxBlock));
-    }
-    else
-    {
-      scaffoldIndexer = shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope,block));
+    if (block->hasSymbol() && block->getSymbol() == "ordered_range") {
+      VentureValuePtr minBlock = parseValueO(params["min_block"]);
+      VentureValuePtr maxBlock = parseValueO(params["max_block"]);
+      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block, minBlock, maxBlock));
+    } else {
+      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block));
     }
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
 
-  void infer()
+  double infer()
   {
-    if (trace->numUnconstrainedChoices() == 0) { return; }
-    for (size_t i = 0; i < transitions; ++i)
-    {
-      inferPrimitive(); inferAEKernels();
+    if (trace->numUnconstrainedChoices() == 0) { return 0.0; }
+    double total = 0.0;
+    for (size_t i = 0; i < transitions; ++i) {
+      total += (double)inferPrimitive(); total += (double)inferAEKernels();
     }
+    return total / transitions;
   }
 
-  void inferPrimitive()
+  int inferPrimitive()
   {
-    mixMH(trace.get(), scaffoldIndexer, gKernel);
+    return mixMH(trace.get(), scaffoldIndexer, gKernel);
   }
 
-  void inferAEKernels()
+  int inferAEKernels()
   {
+    int ct = 0;
     for (set<Node*>::iterator iter = trace->arbitraryErgodicKernels.begin();
       iter != trace->arbitraryErgodicKernels.end();
-      ++iter)
-    {
+      ++iter) {
       OutputNode * node = dynamic_cast<OutputNode*>(*iter);
       assert(node);
-      trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node),trace->getArgs(node),trace->getRNG());
+      trace->getMadeSP(node)->AEInfer(trace->getMadeSPAux(node), trace->getArgs(node), trace->getRNG());
+      ct += 1;
     }
+    return ct;
   }
 };
 
-void PyTrace::primitive_infer(boost::python::dict params)
+double PyTrace::primitive_infer(const boost::python::dict & params)
 {
   Inferer inferer(trace, params);
-  inferer.infer();
+  return inferer.infer();
 }
 
 void translateStringException(const string& err) {
@@ -260,16 +237,27 @@ double PyTrace::makeConsistent()
   return trace->makeConsistent();
 }
 
-double PyTrace::likelihoodAt(boost::python::object pyscope, boost::python::object pyblock) {
-  ScopeID scope = fromPython(pyscope);
-  ScopeID block = fromPython(pyblock);
-  return trace->likelihoodAt(scope, block);
+void PyTrace::registerConstraints()
+{
+  trace->registerConstraints();
 }
 
-double PyTrace::posteriorAt(boost::python::object pyscope, boost::python::object pyblock) {
-  ScopeID scope = fromPython(pyscope);
-  ScopeID block = fromPython(pyblock);
-  return trace->posteriorAt(scope, block);
+double PyTrace::logLikelihoodAt(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
+{
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->logLikelihoodAt(scope, block);
+}
+
+double PyTrace::logJointAt(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
+{
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->logJointAt(scope, block);
 }
 
 double PyTrace::likelihoodWeight()
@@ -277,60 +265,30 @@ double PyTrace::likelihoodWeight()
   return trace->likelihoodWeight();
 }
 
-int PyTrace::numNodesInBlock(boost::python::object scope, boost::python::object block)
+int PyTrace::numNodesInBlock(
+    const boost::python::object & pyscope,
+    const boost::python::object & pyblock)
 {
-  return trace->getNodesInBlock(fromPython(scope), fromPython(block)).size();
+  ScopeID scope = parseValueO(pyscope);
+  BlockID block = parseValueO(pyblock);
+  return trace->getNodesInBlock(scope, block).size();
 }
 
-boost::python::list PyTrace::dotTrace(bool colorIgnored)
+int PyTrace::numBlocksInScope(const boost::python::object & pyscope)
 {
-  boost::python::list dots;
-  Renderer r;
-
-  r.dotTrace(trace,shared_ptr<Scaffold>(),false,colorIgnored);
-  dots.append(r.dot);
-  r.dotTrace(trace,shared_ptr<Scaffold>(),true,colorIgnored);
-  dots.append(r.dot);
-
-  set<Node *> ucs = trace->unconstrainedChoices;
-  BOOST_FOREACH (Node * pNode, ucs)
-    {
-      set<Node*> pNodes;
-      pNodes.insert(pNode);
-      vector<set<Node*> > pNodesSequence;
-      pNodesSequence.push_back(pNodes);
-
-      shared_ptr<Scaffold> scaffold = constructScaffold(trace.get(),pNodesSequence,false);
-      r.dotTrace(trace,scaffold,false,colorIgnored);
-      dots.append(r.dot);
-      r.dotTrace(trace,scaffold,true,colorIgnored);
-      dots.append(r.dot);
-      cout << "detaching..." << flush;
-      pair<double,shared_ptr<DB> > p = detachAndExtract(trace.get(),scaffold->border[0],scaffold);
-      cout << "done" << endl;
-      r.dotTrace(trace,scaffold,false,colorIgnored);
-      dots.append(r.dot);
-      r.dotTrace(trace,scaffold,true,colorIgnored);
-      dots.append(r.dot);
-
-      cout << "restoring..." << flush;
-      regenAndAttach(trace.get(),scaffold->border[0],scaffold,true,p.second,shared_ptr<map<Node*,Gradient> >());
-      cout << "done" << endl;
-    }
-
-  return dots;
+  ScopeID scope = parseValueO(pyscope);
+  return trace->numBlocksInScope(scope);
 }
 
 boost::python::list PyTrace::numFamilies()
 {
   boost::python::list xs;
   xs.append(trace->families.size());
-  for (map<Node*, shared_ptr<VentureSPRecord> >::iterator iter = trace->madeSPRecords.begin();
+  for (map<Node*, boost::shared_ptr<VentureSPRecord> >::iterator iter = trace->madeSPRecords.begin();
        iter != trace->madeSPRecords.end();
-       ++iter)
-    {
-      if (iter->second->spFamilies->families.size()) { xs.append(iter->second->spFamilies->families.size()); }
-    }
+       ++iter) {
+    if (iter->second->spFamilies->families.size()) { xs.append(iter->second->spFamilies->families.size()); }
+  }
   return xs;
 }
 
@@ -343,11 +301,16 @@ boost::python::list PyTrace::scope_keys()
 {
   boost::python::list xs;
   typedef pair<VentureValuePtr, SamplableMap<set<Node*> > > goal;
-  BOOST_FOREACH(goal p, trace->scopes)
-    {
-      xs.append(p.first->toPython(trace.get())["value"]);
-    }
+  BOOST_FOREACH(goal p, trace->scopes) {
+    xs.append(p.first->toPython(trace.get())["value"]);
+  }
   return xs;
+}
+
+void PyTrace::bindPumaSP(const string& sym, SP* sp)
+{
+  Node* node = trace->bindPrimitiveSP(sym, sp);
+  trace->boundForeignSPNodes.insert(boost::shared_ptr<Node>(node));
 }
 
 BOOST_PYTHON_MODULE(libpumatrace)
@@ -359,28 +322,31 @@ BOOST_PYTHON_MODULE(libpumatrace)
   register_exception_translator<string>(&translateStringException);
   register_exception_translator<const char*>(&translateCStringException);
 
-  class_<OrderedDB, shared_ptr<OrderedDB> >("OrderedDB", no_init);
+  class_<SP, SP* >("PumaSP", no_init); // raw pointer because Puma wants to take ownership
+  class_<OrderedDB, boost::shared_ptr<OrderedDB> >("OrderedDB", no_init);
 
-  class_<PyTrace>("Trace",init<>())
+  class_<PyTrace>("Trace", init<>())
     .def("eval", &PyTrace::evalExpression)
     .def("uneval", &PyTrace::unevalDirectiveID)
     .def("bindInGlobalEnv", &PyTrace::bindInGlobalEnv)
     .def("unbindInGlobalEnv", &PyTrace::unbindInGlobalEnv)
+    .def("boundInGlobalEnv", &PyTrace::boundInGlobalEnv)
     .def("extractValue", &PyTrace::extractPythonValue)
-    .def("bindPrimitiveSP", &PyTrace::bindPrimitiveSP)
+    .def("bindPythonSP", &PyTrace::bindPythonSP)
+    .def("bindPumaSP", &PyTrace::bindPumaSP)
     .def("set_seed", &PyTrace::setSeed)
     .def("get_seed", &PyTrace::getSeed)
     .def("numRandomChoices", &PyTrace::numUnconstrainedChoices)
-    .def("getGlobalLogScore", &PyTrace::getGlobalLogScore)
     .def("observe", &PyTrace::observe)
     .def("unobserve", &PyTrace::unobserve)
     .def("primitive_infer", &PyTrace::primitive_infer)
-    .def("dot_trace", &PyTrace::dotTrace)
     .def("makeConsistent", &PyTrace::makeConsistent)
-    .def("likelihood_at", &PyTrace::likelihoodAt)
-    .def("posterior_at", &PyTrace::posteriorAt)
+    .def("registerConstraints", &PyTrace::registerConstraints)
+    .def("log_likelihood_at", &PyTrace::logLikelihoodAt)
+    .def("log_joint_at", &PyTrace::logJointAt)
     .def("likelihood_weight", &PyTrace::likelihoodWeight)
     .def("numNodesInBlock", &PyTrace::numNodesInBlock)
+    .def("numBlocksInScope", &PyTrace::numBlocksInScope)
     .def("numFamilies", &PyTrace::numFamilies)
     .def("freeze", &PyTrace::freeze)
     .def("stop_and_copy", &PyTrace::stop_and_copy, return_value_policy<manage_new_object>())

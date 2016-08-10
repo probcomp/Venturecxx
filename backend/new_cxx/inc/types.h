@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -43,18 +43,18 @@ struct Node;
 struct ForwardingMap;
 
 typedef int DirectiveID;
-typedef shared_ptr<VentureValue> VentureValuePtr;
+typedef boost::shared_ptr<VentureValue> VentureValuePtr;
 typedef VentureValuePtr ScopeID;
 typedef VentureValuePtr BlockID;
 typedef VentureValuePtr FamilyID;
-typedef shared_ptr<Node> RootOfFamily;
+typedef boost::shared_ptr<Node> RootOfFamily;
 typedef vector<double> Simplex;
 typedef vector<double> Gradient;
 
-/* TODO I keep oscillating on these. 
+/* TODO I keep oscillating on these.
    One convention could be to only use this shortcut for VentureValuePtr.
    Another could be to only use it for all VentureValues, which would include
-   SP,Environment,SPRef,and others. */
+   SP, Environment, SPRef, and others. */
 
 //typedef shared_ptr<VentureSP> VentureSPPtr;
 //typedef shared_ptr<VentureEnvironment> VentureEnvironmentPtr;

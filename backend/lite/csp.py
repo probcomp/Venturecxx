@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,11 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, ESRRefOutputPSP
-from sp import SP, VentureSPRecord
-from env import VentureEnvironment
-from request import Request,ESR
-from exception import VentureError
+from venture.lite.env import VentureEnvironment
+from venture.lite.exception import VentureError
+from venture.lite.psp import DeterministicPSP
+from venture.lite.psp import ESRRefOutputPSP
+from venture.lite.request import ESR
+from venture.lite.request import Request
+from venture.lite.sp import SP
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 class CSPRequestPSP(DeterministicPSP):
   def __init__(self,ids,exp,addr,env):
@@ -38,14 +44,13 @@ class CSPRequestPSP(DeterministicPSP):
     # TODO Collect derivatives with respect to constants in the body
     # of the lambda and pass them through the constructor to whoever
     # came up with those constants.
-    return [0 for _ in args.operandValues]
+    return [0 for _ in args.operandNodes]
 
   def canAbsorb(self, _trace, _appNode, _parentNode): return True
 
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
-    ids = args.operandValues[0]
-    exp = args.operandValues[1]
+    (ids, exp) = args.operandValues()
     # point to the desugared source code location of lambda body
     addr = args.operandNodes[1].address.last.append(1)
     return VentureSPRecord(SP(CSPRequestPSP(ids,exp,addr,args.env),ESRRefOutputPSP()))
@@ -53,7 +58,11 @@ class MakeCSPOutputPSP(DeterministicPSP):
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,
     # depending on how I want to handle closed-over values.
-    return [0 for _ in args.operandValues]
+    return [0 for _ in args.operandNodes]
 
   def description(self,name):
     return "%s\n  Used internally in the implementation of compound procedures." % name
+
+registerBuiltinSP("make_csp", typed_nr(MakeCSPOutputPSP(),
+                                       [t.HomogeneousArrayType(t.SymbolType()), t.ExpressionType()],
+                                       t.AnyType("a compound SP")))

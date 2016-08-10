@@ -28,7 +28,7 @@ struct VentureNumber : VentureValue
 
   bool hasDouble() const { return true; }
   double getDouble() const { return x; }
-  bool hasInt() const { return false; }
+  bool hasInt() const { return true; }
   long getInt() const { return static_cast<int>(x); }
   bool getBool() const { return x; }
 
@@ -68,37 +68,11 @@ struct VentureInteger : VentureValue
   int n;
 };
 
-struct VentureProbability : VentureValue
-{
-  VentureProbability(double x): x(x) {}
-
-  bool hasDouble() const { return true; }
-  double getDouble() const { return x; }
-  double getProbability() const { return x; }
-
-  boost::python::dict toPython(Trace * trace) const;
-
-  int getValueTypeRank() const;
-  bool ltSameType(const VentureValuePtr & other) const;
-  bool equalsSameType(const VentureValuePtr & other) const;
-  size_t hash() const;
-
-  string toString() const;
-  string asExpression() const;
-
-  double x;
-};
-
 struct VentureAtom : VentureValue
 {
   VentureAtom(int n): n(n) {}
 
-  bool hasDouble() const { return true; }
-  double getDouble() const { return n; }
-  bool hasInt() const { return true; }
-  long getInt() const { return n; }
   int getAtom() const { return n; }
-  bool getBool() const { return n; }
 
   boost::python::dict toPython(Trace * trace) const;
 
@@ -117,7 +91,6 @@ struct VentureBool : VentureValue
 {
   VentureBool(bool b): b(b) {}
 
-  bool isBool() const { return true; }
   bool getBool() const { return b; }
 
   boost::python::dict toPython(Trace * trace) const;
@@ -153,6 +126,26 @@ struct VentureSymbol : VentureValue
   string s;
 };
 
+struct VentureString : VentureValue
+{
+  VentureString(string s): s(s) {}
+
+  bool hasString() const { return true; }
+  const string& getString() const { return s; }
+
+  boost::python::dict toPython(Trace * trace) const;
+
+  int getValueTypeRank() const;
+  bool ltSameType(const VentureValuePtr & other) const;
+  bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
+
+  string toString() const;
+  string asExpression() const;
+
+  string s;
+};
+
 struct VentureNil : VentureValue
 {
   bool isNil() const { return true; }
@@ -166,8 +159,10 @@ struct VentureNil : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const { throw "Tried to lookup in nil or list index out of range"; }
-  bool contains(VentureValuePtr index) const { return false; }
+  VentureValuePtr lookup(const VentureValuePtr & index) const {
+    throw "Tried to lookup in nil or list index out of range";
+  }
+  bool contains(const VentureValuePtr & index) const { return false; }
   int size() const { return 0; }
 
   string toString() const;
@@ -176,7 +171,8 @@ struct VentureNil : VentureValue
 
 struct VenturePair : VentureValue
 {
-  VenturePair(VentureValuePtr car,VentureValuePtr cdr): car(car), cdr(cdr) { }
+  VenturePair(const VentureValuePtr & car, const VentureValuePtr & cdr):
+    car(car), cdr(cdr) { }
 
   const VentureValuePtr& getFirst() const { return car; }
   const VentureValuePtr& getRest() const { return cdr; }
@@ -190,8 +186,8 @@ struct VenturePair : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const;
-  bool contains(VentureValuePtr index) const;
+  VentureValuePtr lookup(const VentureValuePtr & index) const;
+  bool contains(const VentureValuePtr & index) const;
   int size() const { return 1 + getRest()->size(); }
 
   string toString() const;
@@ -213,8 +209,10 @@ struct VentureArray : VentureValue
 
   boost::python::dict toPython(Trace * trace) const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return xs[index->getInt()]; }
-  bool contains(VentureValuePtr index) const;
+  VentureValuePtr lookup(const VentureValuePtr & index) const {
+    return xs[index->getInt()];
+  }
+  bool contains(const VentureValuePtr & index) const;
   int size() const { return xs.size(); }
 
   int getValueTypeRank() const;
@@ -245,8 +243,10 @@ struct VentureSimplex : VentureValue
   bool equalsSameType(const VentureValuePtr & other) const;
   size_t hash() const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureProbability(ps[index->getInt()])); }
-  bool contains(VentureValuePtr index) const;
+  VentureValuePtr lookup(const VentureValuePtr & index) const {
+    return VentureValuePtr(new VentureNumber(ps[index->getInt()]));
+  }
+  bool contains(const VentureValuePtr & index) const;
   int size() const { return ps.size(); }
 
   string toString() const;
@@ -266,8 +266,10 @@ struct VentureDictionary : VentureValue
 
   int getValueTypeRank() const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const;
-  bool contains(VentureValuePtr index) const { return dict.count(index); }
+  VentureValuePtr lookup(const VentureValuePtr & index) const;
+  bool contains(const VentureValuePtr & index) const {
+    return dict.count(index);
+  }
   int size() const { return dict.size(); }
 
   string toString() const;
@@ -289,7 +291,7 @@ struct VentureMatrix : VentureValue
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const;
+  VentureValuePtr lookup(const VentureValuePtr & index) const;
 
   string toString() const;
 
@@ -322,9 +324,12 @@ struct VentureVector : VentureValue
   int getValueTypeRank() const;
   bool ltSameType(const VentureValuePtr & other) const;
   bool equalsSameType(const VentureValuePtr & other) const;
+  size_t hash() const;
 
-  VentureValuePtr lookup(VentureValuePtr index) const { return VentureValuePtr(new VentureNumber(v(index->getInt()))); }
-  bool contains(VentureValuePtr index) const;
+  VentureValuePtr lookup(const VentureValuePtr & index) const {
+    return VentureValuePtr(new VentureNumber(v(index->getInt())));
+  }
+  bool contains(const VentureValuePtr & index) const;
   int size() const { return v.size(); }
 
   string toString() const;
@@ -334,19 +339,19 @@ struct VentureVector : VentureValue
 
 struct VentureRequest : VentureValue
 {
-  VentureRequest(const vector<ESR> & esrs, const vector<shared_ptr<LSR> > & lsrs): esrs(esrs), lsrs(lsrs) {}
+  VentureRequest(const vector<ESR> & esrs, const vector<boost::shared_ptr<LSR> > & lsrs): esrs(esrs), lsrs(lsrs) {}
   VentureRequest(const vector<ESR> & esrs): esrs(esrs) {}
-  VentureRequest(const vector<shared_ptr<LSR> > & lsrs): lsrs(lsrs) {}
+  VentureRequest(const vector<boost::shared_ptr<LSR> > & lsrs): lsrs(lsrs) {}
 
   int getValueTypeRank() const;
 
   const vector<ESR>& getESRs() const { return esrs; }
-  const vector<shared_ptr<LSR> >& getLSRs() const { return lsrs; }
+  const vector<boost::shared_ptr<LSR> >& getLSRs() const { return lsrs; }
 
   string toString() const;
 
   vector<ESR> esrs;
-  vector<shared_ptr<LSR> > lsrs;
+  vector<boost::shared_ptr<LSR> > lsrs;
 };
 
 

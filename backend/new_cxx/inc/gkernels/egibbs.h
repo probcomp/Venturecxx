@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -28,34 +28,39 @@ struct Particle;
 /* enumerative Gibbs */
 struct EnumerativeGibbsGKernel : GKernel
 {
- EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
-  pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
-  void accept();
-  void reject();
-  
+  EnumerativeGibbsGKernel(bool inParallel): inParallel(inParallel) {}
+  pair<Trace*, double> propose(
+      ConcreteTrace * trace,
+      const boost::shared_ptr<Scaffold> & scaffold);
+  int accept();
+  int reject();
+
   ConcreteTrace * trace;
-  shared_ptr<Scaffold> scaffold;
-  
+  boost::shared_ptr<Scaffold> scaffold;
+
   /* The old DB */
-  shared_ptr<DB> rhoDB;
-  
+  boost::shared_ptr<DB> rhoDB;
+
   /* The particle chosen by propose(). */
-  shared_ptr<Particle> finalParticle;
+  boost::shared_ptr<Particle> finalParticle;
 
   bool inParallel;
 
   // An overridable hook for enumerative MAP
-  virtual shared_ptr<Particle> selectParticle(const vector<shared_ptr<Particle> >& particles,
-                                              const vector<double>& particleWeights,
-                                              ConcreteTrace* trace) const;
+  virtual boost::shared_ptr<Particle> selectParticle(
+    const vector<boost::shared_ptr<Particle> >& particles,
+    const vector<double>& particleWeights,
+    ConcreteTrace* trace) const;
 };
 
 struct EnumerativeMAPGKernel : EnumerativeGibbsGKernel
 {
-  EnumerativeMAPGKernel(bool inParallel): EnumerativeGibbsGKernel(inParallel) {}
-  shared_ptr<Particle> selectParticle(const vector<shared_ptr<Particle> >& particles,
-                                      const vector<double>& particleWeights,
-                                      ConcreteTrace* trace) const;
+  EnumerativeMAPGKernel(bool inParallel):
+    EnumerativeGibbsGKernel(inParallel) {}
+  boost::shared_ptr<Particle> selectParticle(
+    const vector<boost::shared_ptr<Particle> >& particles,
+    const vector<double>& particleWeights,
+    ConcreteTrace* trace) const;
 
 };
 #endif

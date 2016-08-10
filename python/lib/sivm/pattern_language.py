@@ -19,7 +19,11 @@
 # See the SyntaxRule class.
 
 from venture.exception import VentureException
-from macro_system import Macro, Syntax, isSym, getSym, expand
+from venture.sivm.macro_system import Macro
+from venture.sivm.macro_system import Syntax
+from venture.sivm.macro_system import expand
+from venture.sivm.macro_system import getSym
+from venture.sivm.macro_system import isSym
 
 def traverse(exp):
   if isinstance(exp, list):
@@ -97,23 +101,26 @@ constructs a SyntaxRule object, and expands with that.
     self.pattern = pattern
     self.template = template
     self.desc = desc
-    
-    patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
-    templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
-    
-    self.desugar = lambda index: replace(pattern, templateIndeces, index)
-    self.resugar = lambda index: replace(template, patternIndeces, index)
-    
+
+    self._patternIndeces = {sym: index for index, sym in traverse(pattern) if isSym(sym)}
+    self._templateIndeces = {sym: index for index, sym in traverse(template) if isSym(sym)}
+
+  def desugar(self, index):
+    return replace(self.pattern, self._templateIndeces, index)
+
+  def resugar(self, index):
+    return replace(self.template, self._patternIndeces, index)
+
   def applies(self, exp):
     return isinstance(exp, list) and len(exp) > 0 and getSym(exp[0]) == self.name
-  
+
   def expand(self, exp):
     verify(self.pattern, exp, self.pattern[0])
     try:
       bindings = bind(self.pattern, exp)
       subbed = sub(bindings, self.template)
       expanded = expand(subbed)
-      return SubstitutionSyntax(expanded, self.desugar, self.resugar)
+      return SubstitutionSyntax(expanded, self)
     except VentureException as e:
       e.data['expression_index'] = self.resugar(e.data['expression_index'])
       raise
@@ -125,17 +132,20 @@ def replace(exp, indexMap, index):
       return []
     exp = exp[index[i]]
     i += 1
-  
+
   if isSym(exp) and exp in indexMap:
     return indexMap[exp] + index[i:]
-  
+
   return []
 
 class SubstitutionSyntax(Syntax):
-  def __init__(self, syntax, desugar, resugar):
+  def __init__(self, syntax, sugarer):
     self.syntax = syntax
-    self.desugar = desugar
-    self.resugar = resugar
+    self.sugarer = sugarer
+  def desugar(self, index):
+    return self.sugarer.desugar(index)
+  def resugar(self, index):
+    return self.sugarer.resugar(index)
   def desugared(self):
     return self.syntax.desugared()
   def desugar_index(self, index):
@@ -144,4 +154,3 @@ class SubstitutionSyntax(Syntax):
   def resugar_index(self, index):
     index = self.syntax.resugar_index(index)
     return self.resugar(index)
-

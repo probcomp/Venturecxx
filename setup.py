@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015, 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,11 +14,59 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 #!/usr/bin/env python
 
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+    from setuptools.command.build_py import build_py
+    from setuptools.command.sdist import sdist
+    from setuptools.command.test import test as test_py
+except ImportError:
+    from distutils.core import setup, Extension
+    from distutils.command.build_py import build_py
+    from distutils.command.sdist import sdist
+    from distutils.command.test import test as test_py
+
 import os
+import subprocess
 import sys
+
+with open('VERSION', 'rU') as f:
+    version = f.readline().strip()
+
+# Append the Git commit id if this is a development version.
+if version.endswith('+'):
+    prefix = 'release-'
+    tag = prefix + version[:-1]
+    try:
+        # The --tags option includes non-annotated tags in the search.
+        desc = subprocess.check_output([
+            'git', 'describe', '--dirty', '--match', tag, '--tags'
+        ])
+    except Exception:
+        version += 'unknown'
+    else:
+        assert desc.startswith(tag)
+        import re
+        match = re.match(prefix + r'([^-]*)-([0-9]+)-(.*)$', desc)
+        if match is None:       # paranoia
+            version += 'unknown'
+        else:
+            ver, rev, local = match.groups()
+            version = '%s.post%s+%s' % (ver, rev, local.replace('-', '.'))
+            assert '-' not in version
+
+# XXX Mega-kludge.  See below about grammars for details.
+try:
+    with open('python/lib/version.py', 'rU') as f:
+        version_old = f.readlines()
+except IOError:
+    version_old = None
+version_new = ['__version__ = %s\n' % (repr(version),)]
+if version_old != version_new:
+    with open('python/lib/version.py', 'w') as f:
+        f.writelines(version_new)
 
 ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
@@ -28,8 +76,9 @@ cflags = os.getenv("CFLAGS", "").split()
 if ON_LINUX:
     os.environ['CC'] = 'ccache gcc '
 if ON_MAC:
-    os.environ['CC'] = 'ccache gcc-4.9'
-    os.environ['CXX'] = 'ccache g++-4.9'
+    os.environ['CC'] = 'ccache gcc'
+    os.environ['CXX'] = 'ccache g++'
+    os.environ['CFLAGS'] = "-std=c++11 -stdlib=libc++ -mmacosx-version-min=10.7"
 
 puma_src_files = [
     "src/args.cxx",
@@ -53,7 +102,6 @@ puma_src_files = [
     "src/pytrace.cxx",
     "src/pyutils.cxx",
     "src/regen.cxx",
-    "src/render.cxx",
     "src/scaffold.cxx",
     "src/serialize.cxx",
     "src/sp.cxx",
@@ -85,6 +133,7 @@ puma_src_files = [
     "src/sps/hmm.cxx",
     "src/sps/lite.cxx",
     "src/sps/matrix.cxx",
+    "src/sps/misc.cxx",
     "src/sps/msp.cxx",
     "src/sps/mvn.cxx",
     "src/sps/silva_mvn.cxx",
@@ -93,34 +142,42 @@ puma_src_files = [
 ]
 puma_src_files = ["backend/new_cxx/" + f for f in puma_src_files]
 
-puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/', 'inc/Eigen']
+puma_inc_dirs = ['inc/', 'inc/sps/', 'inc/infer/']
 puma_inc_dirs = ["backend/new_cxx/" + d for d in puma_inc_dirs]
 
 ext_modules = []
 packages = [
     "venture",
     "venture.engine",
+    "venture.ggplot",
+    "venture.ggplot.components",
+    "venture.ggplot.coords",
+    "venture.ggplot.exampledata",
+    "venture.ggplot.geoms",
+    "venture.ggplot.scales",
+    "venture.ggplot.stats",
+    "venture.ggplot.tests",
+    "venture.ggplot.themes",
+    "venture.ggplot.utils",
     "venture.lite",
     "venture.lite.infer",
+    "venture.untraced",
     "venture.parser",
     "venture.parser.church_prime",
+    "venture.parser.venture_script",
     "venture.plex",
+    "venture.plugins",
     "venture.puma",
     "venture.ripl",
     "venture.server",
     "venture.shortcuts",
     "venture.sivm",
     "venture.test",
-    "venture.unit",
     "venture.value",
-    "venture.venturemagics",
 ]
 
 if ON_LINUX:
     puma = Extension("venture.puma.libpumatrace",
-        define_macros = [('MAJOR_VERSION', '0'),
-                         ('MINOR_VERSION', '1'),
-                         ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python', 'boost_system', 'boost_thread'],
         extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
@@ -128,9 +185,6 @@ if ON_LINUX:
         sources = puma_src_files)
 if ON_MAC:
     puma = Extension("venture.puma.libpumatrace",
-        define_macros = [('MAJOR_VERSION', '0'),
-                         ('MINOR_VERSION', '1'),
-                         ('REVISION', '1')],
         libraries = ['gsl', 'gslcblas', 'boost_python-mt', 'boost_system-mt', 'boost_thread-mt'],
         extra_compile_args = ["-Wall", "-g", "-O2", "-fPIC", "-fno-omit-frame-pointer"] + cflags,
         #undef_macros = ['NDEBUG', '_FORTIFY_SOURCE'],
@@ -157,7 +211,7 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
     if ON_LINUX:
         self.compiler_so = ["ccache", "gcc"]
     if ON_MAC:
-        self.compiler_so = ["ccache", "gcc-4.9"]
+        self.compiler_so = ["ccache", "gcc"]
 
     # parallel code
     import multiprocessing, multiprocessing.pool
@@ -172,55 +226,181 @@ def parallelCCompile(self, sources, output_dir=None, macros=None, include_dirs=N
 import distutils.ccompiler
 distutils.ccompiler.CCompiler.compile=parallelCCompile
 
-# XXX This is a mega-kludge.  Since distutils/setuptools has no way to
-# order dependencies (what kind of brain-dead build system can't do
-# this?), we just always regenerate the grammar.  Could hack
-# distutils.command.build to include a dependency mechanism, but this
-# is more expedient for now.
+lemonade = 'external/lemonade/dist'
 grammars = [
     'python/lib/parser/church_prime/grammar.y',
+    'python/lib/parser/venture_script/grammar.y',
 ]
 
-import distutils.spawn
-import errno
-import os
-import os.path
-root = os.path.dirname(os.path.abspath(__file__))
-lemonade = root + '/external/lemonade/dist'
-for grammar in grammars:
-    parser = os.path.splitext(grammar)[0] + '.py'
-    parser_mtime = None
+def sha256_file(pathname):
+    import hashlib
+    sha256 = hashlib.sha256()
+    with open(pathname, 'rb') as source_file:
+        for block in iter(lambda: source_file.read(65536), ''):
+            sha256.update(block)
+    return sha256
+
+def uptodate(path_in, path_out, path_sha256):
+    import errno
     try:
-        parser_mtime = os.path.getmtime(parser)
-    except OSError as e:
+        sha256_in = sha256_file(path_in).hexdigest()
+        sha256_out = sha256_file(path_out).hexdigest()
+        expected = bytes('%s\n%s\n' % (sha256_in, sha256_out))
+        with open(path_sha256, 'rb') as file_sha256:
+            actual = file_sha256.read(len(expected))
+            if actual != expected or file_sha256.read(1) != '':
+                return False
+    except (IOError, OSError) as e:
         if e.errno != errno.ENOENT:
             raise
-    if parser_mtime is not None:
-        if os.path.getmtime(grammar) < parser_mtime:
-            continue
-    print 'generating %s -> %s' % (grammar, parser)
+        return False
+    return True
+
+def commit(path_in, path_out, path_sha256):
+    with open(path_sha256 + '.tmp', 'wb') as file_sha256:
+        file_sha256.write('%s\n' % (sha256_file(path_in).hexdigest(),))
+        file_sha256.write('%s\n' % (sha256_file(path_out).hexdigest(),))
+    os.rename(path_sha256 + '.tmp', path_sha256)
+
+def generate_parser(lemonade, path_y):
+    import distutils.spawn
+    root = os.path.dirname(os.path.abspath(__file__))
+    lemonade = os.path.join(root, *lemonade.split('/'))
+    base, ext = os.path.splitext(path_y)
+    assert ext == '.y'
+    path_py = base + '.py'
+    path_sha256 = base + '.sha256'
+    if uptodate(path_y, path_py, path_sha256):
+        return
+    print 'generating %s -> %s' % (path_y, path_py)
     distutils.spawn.spawn([
         '/usr/bin/env', 'PYTHONPATH=' + lemonade,
         lemonade + '/bin/lemonade',
         '-s',                   # Write statistics to stdout.
-        grammar,
+        path_y,
     ])
+    commit(path_y, path_py, path_sha256)
+
+class local_build_py(build_py):
+    def run(self):
+        for grammar in grammars:
+            generate_parser(lemonade, grammar)
+        build_py.run(self)
+
+def parse_req_file(filename):
+    def parse_req_line(line):
+        return line.split('#')[0].strip()
+    return [parse_req_line(line)
+            for line in open(filename).read().splitlines()
+            if len(parse_req_line(line)) > 0]
+
+class local_test(test_py):
+    def acknowledge_missing_egg(self, req):
+        '''To mirror self.distribution.fetch_build_egg, but report instead.'''
+        # req is a Requirements object:
+        # https://pythonhosted.org/setuptools/pkg_resources.html
+        pass  #
+
+    def check_build_eggs(self, requires, **kwargs):
+        '''To mirror self.distribution.fetch_build_eggs, but don't fetch.'''
+        import pkg_resources
+        pkg_resources.working_set.resolve(
+            pkg_resources.parse_requirements(requires),
+            installer=self.acknowledge_missing_egg,
+        )  # Resolve will raise DistributionNotFound for missing deps.
+
+    def run(self):
+        if '-n' in sys.argv or '--dry-run' in sys.argv:
+            # I can't believe self._dry_run exists but does not get set.
+            if self.distribution.install_requires:
+                self.check_build_eggs(self.distribution.install_requires)
+            if self.distribution.tests_require:
+                self.check_build_eggs(self.distribution.tests_require)
+            self.run_tests()
+        else:
+            test_py.run(self)
+
+    def run_tests(self):
+        status = subprocess.check_output('git submodule status --recursive',
+                                         shell=True)
+        for line in status.split('\n'):
+            if not line: continue
+            if line[0] == '-':
+                print status
+                raise ImportError("Missing submodules."
+                                  " Consider running"
+                                  " `git submodule update --init --recursive`.")
+        print "Test prerequisites satisfied."
+        print "Please use ./check.sh instead and read ./HACKING.md"
+        sys.exit(0)  # A success(!) because we have what tests_require.
+
+install_requires = parse_req_file("install_requires.txt")
+
+tests_require = [
+    'nose>=1.3',
+    'nose-testconfig>=0.9',
+    'nose-cov>=1.6',
+    'flaky',
+    'pexpect',
+    'cython', # Because it has to be installed before pystan, and pip
+              # does the wrong thing with ordering packages pulled in
+              # as dependencies.
+    'pystan', # For testing the venstan integration
+    'markdown2', # For building the tutorial with venture-transcript
+    # TODO Is markdown2 a real dependency?
+]
+
+# XXX For inexplicable reasons, during sdist.run, setuptools quietly
+# modifies self.distribution.metadata.version to replace plus signs by
+# hyphens -- even where they are explicitly allowed by PEP 440.
+# distutils does not do this -- only setuptools.
+class local_sdist(sdist):
+    # This is not really a subcommand -- it's actually a predicate to
+    # determine whether to run a subcommand.  So modifying anything in
+    # it is a little evil.  But it'll do.
+    def fixidioticegginfomess(self):
+        self.distribution.metadata.version = version
+        return False
+    sub_commands = [('sdist_fixidioticegginfomess', fixidioticegginfomess)]
 
 setup (
-    name = 'Venture CXX',
-    version = '0.2',
-    author = 'MIT.PCP',
-    url = 'TBA',
+    name = 'venture',
+    version = version,
+    author = 'MIT Probabilistic Computing Project',
+    author_email = 'venture-dev@lists.csail.mit.edu',
+    url = 'http://probcomp.csail.mit.edu/venture/',
     long_description = 'TBA.',
+    install_requires = install_requires,
+    tests_require = tests_require,
+    extras_require = {
+        'tests': tests_require,
+    },
     packages = packages,
     package_dir = {
-        "venture": "python/lib/",
-        "venture.lite": "backend/lite/",
-        "venture.plex": "external/plex/dist/Plex/",
-        "venture.puma": "backend/new_cxx/",
-        "venture.test": "test/",
+        "venture": "python/lib",
+        "venture.ggplot": "external/ggplot/dist/ggplot",
+        "venture.lite": "backend/lite",
+        "venture.untraced": "backend/untraced",
+        "venture.plex": "external/plex/dist/Plex",
+        "venture.puma": "backend/new_cxx",
+        "venture.test": "test",
     },
-    package_data = {'':['*.vnt']},
+    package_data = {
+        '': ['*.vnt'],
+        'venture.ggplot': [
+            'tests/baseline_images/%s/*' % (x,)
+            for x in os.listdir(
+                    'external/ggplot/dist/ggplot/tests/baseline_images')
+        ] + [
+            'exampledata/*.csv',
+            'geoms/*.png',
+        ],
+    },
     ext_modules = ext_modules,
-    scripts = ['script/venture', 'script/vendoc']
+    scripts = ['script/venture', 'script/vendoc'],
+    cmdclass={
+        'build_py': local_build_py,
+        'sdist': local_sdist,
+        'test': local_test,
+    },
 )

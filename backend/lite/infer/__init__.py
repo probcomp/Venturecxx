@@ -15,14 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from egibbs import EnumerativeGibbsOperator, EnumerativeMAPOperator, EnumerativeDiversify
-from hmc import HamiltonianMonteCarloOperator
-from map_gradient import MAPOperator, NesterovAcceleratedGradientAscentOperator
-from meanfield import MeanfieldOperator
-from mh import mixMH,MHOperator,BlockScaffoldIndexer
-from subsampled_mh import (subsampledMixMH, SubsampledMHOperator,
-                           SubsampledBlockScaffoldIndexer)
-from draw_scaffold import drawScaffold
-from pgibbs import PGibbsOperator,ParticlePGibbsOperator,ParticlePMAPOperator
-from rejection import RejectionOperator, BogoPossibilizeOperator, MissingEsrParentError, NoSPRefError
-from slice_sample import StepOutSliceOperator, DoublingSliceOperator
+from venture.lite.infer.dispatch import primitive_infer
+from venture.lite.infer.dispatch import log_likelihood_at
+from venture.lite.infer.dispatch import log_joint_at
+from venture.lite.infer.mh import BlockScaffoldIndexer
+from venture.lite.infer.egibbs import EnumerativeDiversify
+from venture.lite.infer.rejection import MissingEsrParentError
+from venture.lite.infer.rejection import NoSPRefError

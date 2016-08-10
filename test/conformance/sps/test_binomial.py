@@ -15,16 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import assert_almost_equal
 import scipy.stats
-from nose.tools import assert_equal, assert_almost_equal
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, default_num_transitions_per_sample, on_inf_prim, broken_in
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import default_num_transitions_per_sample
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testBinomial1():
-  "A simple test that checks the interface of binomial and its simulate method"
-  ripl = get_ripl()
+def testBinomial1(seed):
+  # A simple test that checks the interface of binomial and its
+  # simulate method
+  ripl = get_ripl(seed=seed)
 
   p = 0.3
   n = 4
@@ -37,9 +43,9 @@ def testBinomial1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testBinomial2():
-  "A simple test that checks the binomial logdensity"
-  ripl = get_ripl()
+def testBinomial2(seed):
+  # A simple test that checks the binomial logdensity
+  ripl = get_ripl(seed=seed)
 
   b = 0.7
   p1 = 0.3
@@ -56,9 +62,9 @@ def testBinomial2():
 @statisticalTest
 @broken_in("puma", "Puma is missing an enumerate method here")
 @on_inf_prim("gibbs") # Also MH, but really testing gibbs
-def testBinomial3():
-  "A simple test that checks the binomial enumerate method"
-  ripl = get_ripl()
+def testBinomial3(seed):
+  # A simple test that checks the binomial enumerate method
+  ripl = get_ripl(seed=seed)
 
   b = 0.7
   p1 = 0.3

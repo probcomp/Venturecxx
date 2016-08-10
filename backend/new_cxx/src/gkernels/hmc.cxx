@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -23,30 +23,28 @@
 #include "detach.h"
 #include "consistency.h"
 
-pair<Trace*,double> HMCGKernel::propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> HMCGKernel::propose(
+    ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;
   /* detach and extract */
-  pair<double,shared_ptr<DB> > p = detachAndExtract(trace,scaffold->border[0],scaffold);
+  pair<double, boost::shared_ptr<DB> > p = detachAndExtract(trace, scaffold->border[0], scaffold);
   double rhoWeight = p.first;
   rhoDB = p.second;
   assertTorus(scaffold);
 
-  
+  double xiWeight = regenAndAttach(trace, scaffold->border[0], scaffold, false, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
 
-  
-  double xiWeight = regenAndAttach(trace,scaffold->border[0],scaffold,false,rhoDB,shared_ptr<map<Node*,Gradient> >());
-
-  return make_pair(trace,xiWeight - rhoWeight);
+  return make_pair(trace, xiWeight - rhoWeight);
 }
 
-void HMCGKernel::accept() { }
+int HMCGKernel::accept() { return this->scaffold->numAffectedNodes(); }
 
-
-void HMCGKernel::reject()
+int HMCGKernel::reject()
 {
-  detachAndExtract(trace,scaffold->border[0],scaffold);
+  detachAndExtract(trace, scaffold->border[0], scaffold);
   assertTorus(scaffold);
-  regenAndAttach(trace,scaffold->border[0],scaffold,true,rhoDB,shared_ptr<map<Node*,Gradient> >());
+  regenAndAttach(trace, scaffold->border[0], scaffold, true, rhoDB, boost::shared_ptr<map<Node*, Gradient> >());
+  return this->scaffold->numAffectedNodes();
 }

@@ -28,6 +28,9 @@ of correct type (by analogy to ValueError in Python)."""
 class VentureBuiltinSPMethodError(VentureError):
   """This exception means that an unimplemented method was called on a built-in PSP."""
 
+class VentureBuiltinLKernelMethodError(VentureError):
+  """This exception means that an unimplemented method was called on a built-in LKernel."""
+
 class SubsampledScaffoldError(VentureError):
   """This exception means that the subsampled scaffold cannot be constructed."""
 
@@ -61,3 +64,14 @@ class SubsampledScaffoldNotApplicableWarning(VentureWarning):
 class SubsampledScaffoldStaleNodesWarning(VentureWarning):
   '''This warning means that the stale nodes may cause incorrect behavior.'''
   pass
+
+class VentureNestedRiplMethodError(VentureError):
+  """This exception means that this SP attempted a recursive Ripl operation which failed."""
+  def __init__(self, message, cause, stack, addr):
+    super(VentureNestedRiplMethodError, self).__init__(message)
+    self.cause = cause
+    self.stack = stack
+    self.addr = addr
+
+  def __str__(self):
+    return str(self.cause)

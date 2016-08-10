@@ -15,10 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
 import time
 
-from venture.test.config import get_ripl, broken_in, on_inf_prim
+from nose.tools import eq_
+
+from venture.test.config import broken_in
+from venture.test.config import gen_broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.test.errors as err
 import venture.value.dicts as v
 
@@ -60,8 +64,8 @@ def testAnnotateErrorTriggeredByInference():
 def testAnnotateProgrammaticAssume():
   ripl = get_ripl()
   err.assert_error_message_contains("""\
-((assume x (add 1 foo)) model)
- ^^^^^^^^^^^^^^^^^^^^^^
+(run (assume x (add 1 foo)))
+     ^^^^^^^^^^^^^^^^^^^^^^
 """,
   ripl.infer, "(assume x (+ 1 foo))")
   err.assert_error_message_contains("""\
@@ -91,31 +95,31 @@ def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
 @on_inf_prim("none")
 def testAnnotateDefinedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
-  ripl.define("action", "(lambda () (assume x (+ 1 foo)))")
+  ripl.define("act", "(lambda () (assume x (+ 1 foo)))")
   # Hm.  Blaming makers of inference actions rather than the actions
   # themselves produces this; which does point to the culprit.
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   err.assert_error_message_contains("""\
-((action) model)
- ^^^^^^^^
+(run (act))
+     ^^^^^
 (lambda () (assume x (add 1 foo)))
            ^^^^^^^^^^^^^^^^^^^^^^
 """,
-  ripl.infer, "(action)")
+  ripl.infer, "(act)")
   err.assert_error_message_contains("""\
 (add 1.0 foo)
          ^^^
 """,
-  ripl.infer, "(action)")
+  ripl.infer, "(act)")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
 def testAnnotateInferenceProgramError():
   ripl = get_ripl()
   err.assert_error_message_contains("""\
-((observe (normal 0 1) (add 1 foo)) model)
-                              ^^^
+(run (observe (normal 0 1) (add 1 foo)))
+                                  ^^^
 """,
   ripl.infer, "(observe (normal 0 1) (+ 1 foo))")
 
@@ -135,8 +139,8 @@ def testAnnotateDefinedInferenceProgramError():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.define("badness", "(lambda () (observe (normal 0 1) (+ 1 foo)))")
   err.assert_error_message_contains("""\
-((badness) model)
- ^^^^^^^^^
+(run (badness))
+     ^^^^^^^^^
 (lambda () (observe (normal 0 1) (add 1 foo)))
                                         ^^^
 """,
@@ -146,23 +150,23 @@ def testAnnotateDefinedInferenceProgramError():
 @on_inf_prim("none")
 def testAnnotateDefinedQuasiquotedProgrammaticAssume():
   ripl = get_ripl(persistent_inference_trace=True)
-  ripl.define("action", "(lambda (name) (assume x (+ 1 ,name)))")
+  ripl.define("act", "(lambda (name) (assume x (+ 1 ,name)))")
   # Hm.  Blaming makers of inference actions rather than the actions
   # themselves produces this; which does point to the culprit.
   # However, the top stack frame is somewhat misleading as to when the
   # problem was identified.  I might be able to live with that.
   err.assert_error_message_contains("""\
-((action (quote foo)) model)
- ^^^^^^^^^^^^^^^^^^^^
+(run (act (quote foo)))
+     ^^^^^^^^^^^^^^^^^
 (lambda (name) (assume x (add 1 (unquote name))))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 """,
-  ripl.infer, "(action 'foo)")
+  ripl.infer, "(act 'foo)")
   err.assert_error_message_contains("""\
 (add 1.0 foo)
          ^^^
 """,
-  ripl.infer, "(action 'foo)")
+  ripl.infer, "(act 'foo)")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
@@ -184,10 +188,10 @@ def testAnnotateInferenceErrorInDo():
 (do (assume x (normal 0 1))
     (observe x (+ 1 badness)))"""
   err.assert_error_message_contains("""\
-((do (assume x (normal 0 1)) (observe x (add 1 badness))) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((do (assume x (normal 0 1)) (observe x (add 1 badness))) model)
-                                               ^^^^^^^
+(run (do (assume x (normal 0 1)) (observe x (add 1 badness))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (do (assume x (normal 0 1)) (observe x (add 1 badness))))
+                                                   ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -195,30 +199,30 @@ def testAnnotateInferenceErrorInDo():
 @on_inf_prim("none")
 def testAnnotateInferenceErrorInDefinedDo():
   ripl = get_ripl(persistent_inference_trace=True)
-  ripl.define("action", """\
+  ripl.define("act", """\
 (do (assume x (normal 0 1))
     (y <- (sample x))
     (observe x (+ 1 badness)))""")
   err.assert_error_message_contains("""\
-(action model)
-^^^^^^^^^^^^^^
+(run act)
+^^^^^^^^^
 (do (assume x (normal 0 1)) (y <- (sample x)) (observe x (add 1 badness)))
                                                                 ^^^^^^^
 """,
-  ripl.infer, "action")
+  ripl.infer, "act")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
 def testAnnotateInferenceErrorInQuasiquote():
   ripl = get_ripl()
   expression = """\
-(lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t))
+(inference_action (lambda (t) (pair (lookup `(,(+ 1 badness) 5) 0) t)))
 """
   err.assert_error_message_contains("""\
-((lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t)) model)
-                                                        ^^^^^^^
+(run (inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (inference_action (lambda (t) (pair (lookup (quasiquote ((unquote (add 1 badness)) 5)) 0) t))))
+                                                                              ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -230,8 +234,8 @@ def testAnnotateInferenceErrorInImplicitQuasiquote():
 (assume x (normal ,(+ 1 badness) 1))
 """
   err.assert_error_message_contains("""\
-((assume x (normal (unquote (add 1 badness)) 1)) model)
-                                   ^^^^^^^
+(run (assume x (normal (unquote (add 1 badness)) 1)))
+                                       ^^^^^^^
 """,
   ripl.infer, expression)
 
@@ -241,15 +245,108 @@ def testLoopErrorAnnotationSmoke():
   numthreads = threading.active_count()
 
   ripl = get_ripl()
-  expression = "(loop (lambda (t) (pair (+ 1 badness) t)))"
+  expression = "(loop (inference_action (lambda (t) (pair (+ 1 badness) t))))"
   def doit():
     ripl.infer(expression)
     time.sleep(0.01) # Give it time to start
     ripl.stop_continuous_inference() # Join the other thread to make sure it errored
   err.assert_print_output_contains("""\
-((make_csp (quote (t)) (quote (pair (add 1 badness) t))) model)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-((make_csp (quote (t)) (quote (pair (add 1 badness) t))) model)
-                                           ^^^^^^^
+(run (inference_action (make_csp (quote (t)) (quote (pair (add 1 badness) t)))))
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(run (inference_action (make_csp (quote (t)) (quote (pair (add 1 badness) t)))))
+                                                                 ^^^^^^^
 """, doit)
   eq_(numthreads, threading.active_count()) # Erroring out in loop does not leak active threads
+
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
+def testAnnotateErrorInMemmedProcedure():
+  ripl = get_ripl()
+  ripl.assume("f", "(mem (lambda () (normal (+ 1 badness) 1)))")
+  err.assert_error_message_contains("""\
+(f)
+^^^
+(mem (lambda () (normal (add 1 badness) 1)))
+                               ^^^^^^^
+""",
+  ripl.predict, "(f)")
+
+@broken_in("puma", "Puma does not report polite exceptions")
+def testAnnotationSuppressionSmoke():
+  from nose.tools import assert_raises
+  from venture.exception import VentureException
+
+  ripl = get_ripl()
+  ripl.disable_error_annotation()
+  with assert_raises(VentureException) as cm:
+    ripl.predict("(f)")
+  # I want annotation not to succeed
+  assert "stack_trace" not in cm.exception.data
+
+def testAnnotateErrorInEvaluate():
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+(autorun (badness))
+          ^^^^^^^
+""",
+  ripl.evaluate, "(badness)")
+
+def testAnnotateErrorInListLookup():
+  # Doubles as a regression test for Issue #510 (silent acceptance of
+  # negative list indexes).
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+Index out of bounds VentureNumber(-1.0)
+(autorun (lookup (list 2 3) -1))
+         ^^^^^^^^^^^^^^^^^^^^^^
+""",
+  ripl.evaluate, "(lookup (list 2 3) -1)")
+
+@broken_in("puma", "Puma does not report error addresses")
+def testAnnotateErrorInListLookup2():
+  # Doubles as a regression test for Issue #510 (silent acceptance of
+  # negative list indexes).
+  ripl = get_ripl()
+  # TODO Include the segment
+  # (autorun (lookup (list 2 3) -1))
+  #          ^^^^^^^^^^^^^^^^^^^^^^
+  # once Issue #491 is fixed
+  err.assert_error_message_contains("""\
+Index out of bounds VentureNumber(-1.0)
+""",
+  ripl.sample, "(lookup (list 2 3) -1)")
+
+@gen_broken_in("puma", "Puma does not report error addresses")
+def testAnnotateModelProgramError():
+  for form in ['(predict foo)', '(predict_all foo)', '(sample foo)',
+               '(sample_all foo)', '(force foo 3)']:
+    yield checkAnnotateModelProgramError, form
+
+def checkAnnotateModelProgramError(form):
+  ripl = get_ripl()
+  err.assert_error_message_contains("""\
+(autorun %s)
+         %s
+Caused by
+*** evaluation: Cannot find symbol 'foo'
+foo
+^^^
+""" % (form, "^" * len(form)),
+  ripl.evaluate, form)
+
+@broken_in("puma", "Puma does not report error addresses")
+@on_inf_prim("none")
+def testAnnotateInModelError():
+  # Tests Github Issue #538.
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  err.assert_error_message_contains("""\
+*** evaluation: Nested ripl operation signalled an error
+(autorun (in_model (run (new_model)) (action (run (sample (add foo 1))))))
+                                                  ^^^^^^^^^^^^^^^^^^^^
+Caused by
+*** evaluation: Cannot find symbol 'foo'
+(add foo 1.0)
+     ^^^
+""",
+  ripl.evaluate, "in_model(run(new_model()), action(run(sample(foo + 1))))")

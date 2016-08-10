@@ -1,4 +1,4 @@
-# Copyright (c) 2013 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -14,11 +14,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
 # from http://flask.pocoo.org/snippets/56/
 
 from datetime import timedelta
-from flask import make_response, request, current_app
 from functools import update_wrapper
+
+from flask import make_response
+from flask import request
+from flask import current_app
 
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,

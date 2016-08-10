@@ -20,6 +20,7 @@
 
 import numpy.random as npr
 from venture.lite import value as v
+from venture.lite import types as t
 from venture.lite.utils import normalizeList
 from venture.lite import env as env
 
@@ -38,7 +39,7 @@ class DefaultRandomVentureValue(object):
   def positive(self, **_kwargs):
     return v.VentureNumber(npr.uniform(0, 10)) # TODO Prevent zero
   def probability(self, **_kwargs):
-    return v.VentureProbability(npr.uniform(0, 1))
+    return v.VentureNumber(npr.uniform(0, 1))
   def atom(self, **_kwargs):
     return v.VentureAtom(npr.randint(0, 11)) # Open at the top
   def bool(self, **_kwargs):
@@ -50,6 +51,11 @@ class DefaultRandomVentureValue(object):
       length = npr.randint(1, 10)
     alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return v.VentureSymbol(''.join(npr.choice(list(alphabet), length)))
+  def string(self, length=None, **_kwargs):
+    if length is None:
+      length = npr.randint(1, 10)
+    alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return v.VentureString(''.join(npr.choice(list(alphabet), length)))
   def array(self, length=None, elt_dist=None, **kwargs):
     if length is None:
       length = npr.randint(0, 10)
@@ -60,7 +66,7 @@ class DefaultRandomVentureValue(object):
     if length is None:
       length = npr.randint(0, 10)
     if elt_type is None:
-      elt_type = v.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
+      elt_type = t.NumberType() # TODO Do I want to test on a screwy class of unboxed arrays in general?
     return v.VentureArrayUnboxed([elt_type.asPython(elt_type.distribution(self.__class__, **kwargs).generate()) for _ in range(length)], elt_type)
   def nil(self, **_kwargs):
     return v.VentureNil()
@@ -116,6 +122,6 @@ class DefaultRandomVentureValue(object):
     if depth is None:
       depth = npr.randint(0, 5)
     if depth == 0:
-      return getattr(self, npr.choice(["number", "integer", "probability", "atom", "bool", "symbol", "nil"]))(**kwargs)
+      return getattr(self, npr.choice(["number", "integer", "probability", "atom", "bool", "symbol", "string", "nil"]))(**kwargs)
     else:
       return getattr(self, npr.choice(["pair", "list", "array", "array_unboxed", "simplex", "matrix", "symmetricmatrix"]))(depth=depth-1, **kwargs)

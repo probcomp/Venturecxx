@@ -1,4 +1,4 @@
-// Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -27,21 +27,23 @@ struct VentureEnvironment : VentureValue
 {
   VentureEnvironment() {}
 
-  VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv);
+  VentureEnvironment(const boost::shared_ptr<VentureEnvironment> & outerEnv);
 
-  VentureEnvironment(shared_ptr<VentureEnvironment> outerEnv,
-		     const vector<shared_ptr<VentureSymbol> > & syms,
+  VentureEnvironment(const boost::shared_ptr<VentureEnvironment> & outerEnv,
+		     const vector<boost::shared_ptr<VentureSymbol> > & syms,
 		     const vector<Node*> & nodes);
 
   int getValueTypeRank() const;
 
-  void addBinding(const string& sym,Node * node);
+  void addBinding(const string& sym, Node * node);
   void removeBinding(const string& sym);
-  Node * lookupSymbol(shared_ptr<VentureSymbol> sym);
+  void fillBinding(const string& sym, Node * node);
+  Node * lookupSymbol(VentureSymbol * sym);
   Node * lookupSymbol(const string& sym);
+  Node * safeLookupSymbol(const string& sym);
 
-  shared_ptr<VentureEnvironment> outerEnv;
-  map<string,Node*> frame;
+  boost::shared_ptr<VentureEnvironment> outerEnv;
+  map<string, Node*> frame;
 
   VentureEnvironment* copy_help(ForwardingMap* m) const;
 };

@@ -15,32 +15,47 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import random
 import math
 import time
+from collections import OrderedDict
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
 from ..lkernel import DeterministicLKernel
 
-def getCurrentValues(trace,pnodes): return [trace.valueAt(pnode) for pnode in pnodes]
+def getCurrentValues(trace, pnodes):
+  return [trace.valueAt(pnode) for pnode in pnodes]
 
-def registerDeterministicLKernels(trace,scaffold,pnodes,currentValues):
-  for (pnode,currentValue) in zip(pnodes,currentValues):
-    assert not isinstance(currentValue,list)
-    scaffold.lkernels[pnode] = DeterministicLKernel(trace.pspAt(pnode),currentValue)
+def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues,
+    unconditional=None):
+  if unconditional is None:
+    unconditional = False
+  for (pnode, currentValue) in zip(pnodes, currentValues):
+    assert not isinstance(currentValue, list)
+    if not unconditional and pnode in scaffold.brush:
+      raise Exception("Cannot deterministically propose values for nodes " \
+                      "whose existence is conditional")
+    scaffold.lkernels[pnode] = \
+        DeterministicLKernel(trace.pspAt(pnode), currentValue)
 
-def getCurrentValuesWithAddresses(trace,pnodes): return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
+def unregisterDeterministicLKernels(_trace, scaffold, pnodes):
+  for pnode in pnodes:
+    del scaffold.lkernels[pnode]
 
-def registerDeterministicLKernelsByAddress(trace,scaffold,addressesAndValues):
+def getCurrentValuesWithAddresses(trace, pnodes):
+  return [(pnode.address, trace.valueAt(pnode)) for pnode in pnodes]
+
+def registerDeterministicLKernelsByAddress(
+    trace, scaffold, addressesAndValues):
   nodes = dict([(node.address, node) for node in scaffold.getPrincipalNodes()])
-  for (addr,currentValue) in addressesAndValues:
-    assert not isinstance(currentValue,list)
+  for (addr, currentValue) in addressesAndValues:
+    assert not isinstance(currentValue, list)
     assert addr in nodes
     node = nodes[addr]
-    scaffold.lkernels[node] = DeterministicLKernel(trace.pspAt(node),currentValue)
+    scaffold.lkernels[node] = \
+        DeterministicLKernel(trace.pspAt(node), currentValue)
 
-def mixMH(trace,indexer,operator):
+def mixMH(trace, indexer, operator):
   start = time.time()
   index = indexer.sampleIndex(trace)
 
@@ -57,21 +72,24 @@ def mixMH(trace,indexer,operator):
   rhoMix = indexer.logDensityOfIndex(trace,index)
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
-  proposedTrace,logAlpha = operator.propose(trace,index)
-  xiMix = indexer.logDensityOfIndex(proposedTrace,index)
+  proposedTrace, logAlpha = operator.propose(trace, index)
+  xiMix = indexer.logDensityOfIndex(proposedTrace, index)
 
   # record the proposed values for the profiler
   if trace.profiling_enabled:
     proposed = [trace.valueAt(node) for node in nodes]
 
   alpha = xiMix + logAlpha - rhoMix
-  if math.log(random.random()) < alpha:
+  logU = math.log(trace.py_rng.random())
+  # print "Alpha", alpha, "= xiMix", xiMix, "+ proposal alpha", \
+  #   logAlpha, "- rhoMix", rhoMix, "; logU", logU
+  if logU < alpha:
 #    sys.stdout.write(".")
-    operator.accept() # May mutate trace
+    ans = operator.accept() # May mutate trace
     accepted = True
   else:
 #    sys.stdout.write("!")
-    operator.reject() # May mutate trace
+    ans = operator.reject() # May mutate trace
     accepted = False
 
   if trace.profiling_enabled:
@@ -79,7 +97,6 @@ def mixMH(trace,indexer,operator):
       operator = operator.name(),
       indexer = indexer.name(),
       time = time.time() - start,
-      logscore = trace.getGlobalLogScore(),
       current = current,
       proposed = proposed,
       accepted = accepted,
@@ -90,10 +107,17 @@ def mixMH(trace,indexer,operator):
       brush = brush
     )
 
+  return ans
+
 class BlockScaffoldIndexer(object):
-  def __init__(self,scope,block,interval=None,useDeltaKernels=False,deltaKernelArgs=None,updateValues=False):
-    if scope == "default" and not (block == "all" or block == "none" or block == "one" or block == "ordered"):
-        raise Exception("INFER default scope does not admit custom blocks (%r)" % block)
+  def __init__(self, scope, block, interval=None,
+               useDeltaKernels=False, deltaKernelArgs=None,
+               updateValues=False):
+    if scope == "default" and \
+       not (block == "all" or block == "none" or \
+            block == "one" or block == "ordered"):
+        raise Exception(
+          "INFER default scope does not admit custom blocks (%r)" % block)
     self.scope = scope
     self.block = block
     self.interval = interval
@@ -101,24 +125,30 @@ class BlockScaffoldIndexer(object):
     self.deltaKernelArgs = deltaKernelArgs
     self.updateValues = updateValues
 
-  def getSetsOfPNodes(self,trace):
+  def getSetsOfPNodes(self, trace):
     if self.block == "one":
       self.true_block = trace.sampleBlock(self.scope)
-      setsOfPNodes = [trace.getNodesInBlock(self.scope,self.true_block)]
-    elif self.block == "all": setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
-    elif self.block == "none": setsOfPNodes = [set()]
-    elif self.block == "ordered": setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
+      setsOfPNodes = [trace.getNodesInBlock(self.scope, self.true_block)]
+    elif self.block == "all":
+      setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
+    elif self.block == "none":
+      setsOfPNodes = [OrderedSet()]
+    elif self.block == "ordered":
+      setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
     elif self.block == "ordered_range":
       assert self.interval
-      setsOfPNodes = trace.getOrderedSetsInScope(self.scope,self.interval)
-    else: setsOfPNodes = [trace.getNodesInBlock(self.scope,self.block)]
+      setsOfPNodes = trace.getOrderedSetsInScope(self.scope, self.interval)
+    else: setsOfPNodes = [trace.getNodesInBlock(self.scope, self.block)]
     return setsOfPNodes
 
-  def sampleIndex(self,trace):
+  def sampleIndex(self, trace):
     setsOfPNodes = self.getSetsOfPNodes(trace)
-    return constructScaffold(trace,setsOfPNodes,useDeltaKernels=self.useDeltaKernels,deltaKernelArgs=self.deltaKernelArgs,updateValues=self.updateValues)
+    return constructScaffold(
+      trace, setsOfPNodes,
+      useDeltaKernels=self.useDeltaKernels,
+      deltaKernelArgs=self.deltaKernelArgs, updateValues=self.updateValues)
 
-  def logDensityOfIndex(self,trace,_):
+  def logDensityOfIndex(self, trace, _):
     if self.block == "one": return trace.logDensityOfBlock(self.scope)
     elif self.block == "all": return 0
     elif self.block == "none": return 0
@@ -127,7 +157,9 @@ class BlockScaffoldIndexer(object):
     else: return 0
 
   def name(self):
-    return ["scaffold", self.scope, self.block] + ([self.interval] if self.interval is not None else []) + ([self.true_block] if hasattr(self, "true_block") else [])
+    return ["scaffold", self.scope, self.block] + \
+      ([self.interval] if self.interval is not None else []) + \
+      ([self.true_block] if hasattr(self, "true_block") else [])
 
 class InPlaceOperator(object):
   def prepare(self, trace, scaffold, compute_gradient = False):
@@ -135,24 +167,45 @@ class InPlaceOperator(object):
     detach along the scaffold and return the weight thereof."""
     self.trace = trace
     self.scaffold = scaffold
-    rhoWeight,self.rhoDB = detachAndExtract(trace, scaffold, compute_gradient)
+    rhoWeight, self.rhoDB = detachAndExtract(trace, scaffold, compute_gradient)
     return rhoWeight
 
-  def accept(self): pass
+  def accept(self):
+    return self.scaffold.numAffectedNodes()
+
   def reject(self):
-    detachAndExtract(self.trace,self.scaffold)
-    regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+    detachAndExtract(self.trace, self.scaffold)
+    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, OrderedDict())
+    return self.scaffold.numAffectedNodes()
 
 #### Resampling from the prior
 
 class MHOperator(InPlaceOperator):
   def propose(self, trace, scaffold):
     rhoWeight = self.prepare(trace, scaffold)
-    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
     return trace, xiWeight - rhoWeight
 
   def name(self): return "resimulation MH"
 
 
+class FuncMHOperator(object):
+  def propose(self, trace, scaffold):
+    self.trace = trace
+    self.scaffold = scaffold
+    from ..particle import Particle
+    rhoWeight, self.rhoDB = detachAndExtract(trace, scaffold)
+    self.particle = Particle(trace)
+    xiWeight = regenAndAttach(self.particle, scaffold, False, self.rhoDB, OrderedDict())
+    return self.particle, xiWeight - rhoWeight
 
+  def accept(self):
+    self.particle.commit()
+    return self.scaffold.numAffectedNodes()
 
+  def reject(self):
+    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, OrderedDict())
+    return self.scaffold.numAffectedNodes()
+
+  def name(self):
+    return "resimulation MH"

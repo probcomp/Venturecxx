@@ -16,20 +16,20 @@
 // along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 function Plotter(doc, svg, ns) {
-	this.doc = doc;
-	this.svg = svg;
-	this.ns = ns;
-	this.minX = -3;
-	this.minY = 0.0;
-	this.stepX = 1;
-	this.stepY = 0.1;
-	this.maxX = 3;
-	this.maxY = 1.0;
-	this.points = [];
-	this.functions = [];
-	this.gridElements = [];
+    this.doc = doc;
+    this.svg = svg;
+    this.ns = ns;
+    this.minX = -3;
+    this.minY = 0.0;
+    this.stepX = 1;
+    this.stepY = 0.1;
+    this.maxX = 3;
+    this.maxY = 1.0;
+    this.points = [];
+    this.functions = [];
+    this.gridElements = [];
 
-	this.xSVGToGraph = function(x) {
+    this.xSVGToGraph = function(x) {
         return Math.pow(10, x * (this.maxX - this.minX) / this.svg.width.baseVal.value + this.minX);
     }
 
@@ -108,7 +108,7 @@ function Plotter(doc, svg, ns) {
     }
 
     this.reDraw = function() {
-    	this.gridElements.forEach(function(e){this.svg.removeChild(e)});
+        this.gridElements.forEach(function(e){this.svg.removeChild(e)});
         this.gridElements = [];
         this.drawGrid();
         var self = this;
@@ -128,7 +128,7 @@ function Plotter(doc, svg, ns) {
         });
     }
 
-	this.addPoint = function(cx, cy) {
+    this.addPoint = function(cx, cy) {
         var point = this.doc.createElementNS(this.ns, "circle");
         point.setAttribute("cx", cx);
         point.setAttribute("cy", cy);

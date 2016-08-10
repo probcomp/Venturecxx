@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -27,18 +27,19 @@ struct Trace;
 
 struct GKernel
 {
-  virtual pair<Trace*,double> propose(ConcreteTrace * trace,
-				      shared_ptr<Scaffold> scaffold) =0;
+  virtual pair<Trace*, double>
+  propose(
+      ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold) =0;
 
-  virtual void accept() =0;
-  virtual void reject() =0;
+  virtual int accept() =0;
+  virtual int reject() =0;
 
   virtual ~GKernel() {}
 };
 
 
 void registerDeterministicLKernels(Trace * trace,
-  shared_ptr<Scaffold> scaffold,
+  const boost::shared_ptr<Scaffold> & scaffold,
   const vector<ApplicationNode*>& applicationNodes,
   const vector<VentureValuePtr>& values);
 

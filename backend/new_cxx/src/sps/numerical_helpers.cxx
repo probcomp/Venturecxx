@@ -72,7 +72,7 @@ double BetaDistributionLogLikelihood(double sampled_value, double alpha, double 
   //x^{a-1} * (1-x)^{b-1} / Beta(a, b)
   double loglikelihood = 0.0;
   loglikelihood += (alpha - 1.0) * log(sampled_value);
-  loglikelihood += (beta - 1.0) * log(1.0 - sampled_value);
+  loglikelihood += (beta - 1.0) * log1p(-sampled_value);
   loglikelihood -= gsl_sf_lnbeta(alpha, beta);
   if (!isfinite(loglikelihood)) { loglikelihood = -DBL_MAX; }
   return loglikelihood;
@@ -102,8 +102,7 @@ double InvChiSquaredDistributionLogLikelihood(double sampled_value, double nu) {
 double PoissonDistributionLogLikelihood(int sampled_value_count, double lambda) {
   //l^k * e^{-l} / k!
   double loglikelihood = 0.0;
-  if (sampled_value_count > 0)
-  {
+  if (sampled_value_count > 0) {
     loglikelihood = sampled_value_count * log(lambda);
     loglikelihood -= gsl_sf_lnfact(sampled_value_count);
   }

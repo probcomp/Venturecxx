@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,23 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, defaultInfer, skipWhenInParallel, collectSamples
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.lite import builtin
-from venture.lite.builtin import binaryNum
-
 import numpy as np
 from nose.tools import assert_raises_regexp
+
+from venture.lite import builtin
+from venture.lite.sp_help import binaryNum
+from venture.test.config import collectSamples
+from venture.test.config import defaultInfer
+from venture.test.config import get_ripl
+from venture.test.config import skipWhenInParallel
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
-    ripl.bind_foreign_sp("test_sym_dir_mult", builtins["make_sym_dir_mult"])
+    ripl.bind_foreign_sp("test_sym_dir_cat", builtins["make_sym_dir_cat"])
 
-    ripl.assume("f", "(test_sym_dir_mult 1 1)")
+    ripl.assume("f", "(test_sym_dir_cat 1 1)")
     assert ripl.sample("f")["counts"] == [0]
 
-    ripl.observe("(f)", "atom<0>")
+    ripl.observe("(f)", "integer<0>")
     assert ripl.sample("f")["counts"] == [1]
 
     ripl.infer(defaultInfer())
@@ -41,13 +45,13 @@ def test_foreign_aaa():
 def test_foreign_aaa_resampled():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
-    ripl.bind_foreign_sp("test_sym_dir_mult", builtins["make_sym_dir_mult"])
+    ripl.bind_foreign_sp("test_sym_dir_cat", builtins["make_sym_dir_cat"])
 
     ripl.assume("a", "(gamma 1 1)")
-    ripl.assume("f", "(test_sym_dir_mult a 1)")
+    ripl.assume("f", "(test_sym_dir_cat a 1)")
     assert ripl.sample("f")["counts"] == [0]
 
-    ripl.observe("(f)", "atom<0>")
+    ripl.observe("(f)", "integer<0>")
     assert ripl.sample("f")["counts"] == [1]
 
     ripl.infer(defaultInfer())
@@ -57,12 +61,12 @@ def test_foreign_aaa_resampled():
 def test_foreign_aaa_uc():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
-    ripl.bind_foreign_sp("test_sym_dir_mult", builtins["make_uc_sym_dir_mult"])
+    ripl.bind_foreign_sp("test_sym_dir_cat", builtins["make_uc_sym_dir_cat"])
 
-    ripl.assume("f", "(test_sym_dir_mult 1 1)")
+    ripl.assume("f", "(test_sym_dir_cat 1 1)")
     assert ripl.sample("f")["counts"] == [0]
 
-    ripl.observe("(f)", "atom<0>")
+    ripl.observe("(f)", "integer<0>")
     assert ripl.sample("f")["counts"] == [1]
 
     ripl.infer(defaultInfer())
@@ -70,10 +74,10 @@ def test_foreign_aaa_uc():
 
 @skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
-def test_foreign_aaa_infer():
-    "Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1"
+def test_foreign_aaa_infer(seed):
+    # Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1
     builtins = builtin.builtInSPs()
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.bind_foreign_sp("test_beta_bernoulli", builtins["make_uc_beta_bernoulli"])
 
     ripl.assume("a", "(normal 10.0 1.0)")
@@ -94,7 +98,7 @@ def test_foreign_latents():
     ripl.assume("f", "(test_lazy_hmm (simplex 1) (id_matrix 1) (id_matrix 1))")
     assert ripl.sample("f")[0] == []
 
-    ripl.observe("(f 1)", "atom<0>")
+    ripl.observe("(f 1)", "integer<0>")
     assert ripl.sample("f")[0] == [np.matrix([[1]]), np.matrix([[1]])]
 
     ripl.infer(defaultInfer())
@@ -102,11 +106,11 @@ def test_foreign_latents():
 
 @skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
-def test_foreign_latents_infer():
-    "Same as test.inference_quality.micro.test_latents.testHMMSP1"
+def test_foreign_latents_infer(seed):
+    # Same as test.inference_quality.micro.test_latents.testHMMSP1
 
     builtins = builtin.builtInSPs()
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.bind_foreign_sp("test_lazy_hmm", builtins["make_lazy_hmm"])
 
     ripl.assume("f", """
@@ -117,11 +121,11 @@ def test_foreign_latents_infer():
  (matrix (array (array 0.9 0.2)
                 (array 0.1 0.8))))
 """)
-    ripl.observe("(f 1)","atom<0>")
-    ripl.observe("(f 2)","atom<0>")
-    ripl.observe("(f 3)","atom<1>")
-    ripl.observe("(f 4)","atom<0>")
-    ripl.observe("(f 5)","atom<0>")
+    ripl.observe("(f 1)","integer<0>")
+    ripl.observe("(f 2)","integer<0>")
+    ripl.observe("(f 3)","integer<1>")
+    ripl.observe("(f 4)","integer<0>")
+    ripl.observe("(f 5)","integer<0>")
     ripl.predict("(f 6)",label="pid")
     ripl.predict("(f 7)")
     ripl.predict("(f 8)")
@@ -131,16 +135,15 @@ def test_foreign_latents_infer():
     return reportKnownDiscrete(ans, predictions)
 
 def test_unpicklable_sp_sequential():
-    'If we attempt to bind an unpicklable SP in sequential mode, should work'
+    # If we attempt to bind an unpicklable SP in sequential mode, should work
     ripl = get_ripl()
     ripl.infer('(resample 2)')
     ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
 
 def test_unpicklable_sp_parallel():
-    '''
-    If we attempt to bind an unpicklable SP and the engine is in parallel
-    or emulating mode, check that we get the proper warning.
-    '''
+    # If we attempt to bind an unpicklable SP and the engine is in
+    # parallel or emulating mode, check that we get the proper
+    # warning.
     for mode in ['serializing', 'thread_ser', 'multiprocess']:
         yield check_unpicklable_sp_parallel, mode
 
@@ -152,4 +155,8 @@ def check_unpicklable_sp_parallel(mode):
     with assert_raises_regexp(TypeError, regexp):
         ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
 
-
+def test_return_foreign_sp():
+    # Foreign SPs can be returned as the result of directives.
+    ripl = get_ripl()
+    ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
+    ripl.sample('f')

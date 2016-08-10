@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,15 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, broken_in
 from scipy.stats import laplace
+
+from venture.test.config import broken_in
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownContinuous
+from venture.test.stats import statisticalTest
 
 @statisticalTest
 @broken_in('puma', "Laplace distribution not implemented in Puma")
-def testLaplace1():
-  "Test that laplace distribution does what it should"
-  ripl = get_ripl()
+def testLaplace1(seed):
+  # Test that laplace distribution does what it should
+  ripl = get_ripl(seed=seed)
   # samples
   ripl.assume("a","(laplace -3 2)", label="pid")
   observed = collectSamples(ripl,"pid")

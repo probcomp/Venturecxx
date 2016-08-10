@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -28,26 +28,28 @@ struct Particle;
 /* Functional particle gibbs. */
 struct PGibbsGKernel : GKernel
 {
-  PGibbsGKernel(size_t numNewParticles,bool inParallel): inParallel(inParallel), numNewParticles(numNewParticles) {}
+  PGibbsGKernel(size_t numNewParticles, bool inParallel):
+    inParallel(inParallel), numNewParticles(numNewParticles) {}
 
-  pair<Trace*,double> propose(ConcreteTrace * trace,shared_ptr<Scaffold> scaffold);
-  void accept();
-  void reject();
-  
+  pair<Trace*, double>
+  propose(ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold);
+  int accept();
+  int reject();
+
   ConcreteTrace * trace;
-  shared_ptr<Scaffold> scaffold;
-  shared_ptr<DB> rhoDB;
+  boost::shared_ptr<Scaffold> scaffold;
+  boost::shared_ptr<DB> rhoDB;
 
   bool inParallel;
-  
+
   /* Does not include the old particle. */
   size_t numNewParticles;
 private:
-  
+
   /* The particle generated from the old trace. */
-  shared_ptr<Particle> oldParticle;
-  
+  boost::shared_ptr<Particle> oldParticle;
+
   /* The particle chosen by propose(). */
-  shared_ptr<Particle> finalParticle;
+  boost::shared_ptr<Particle> finalParticle;
 };
 #endif

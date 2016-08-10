@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -16,10 +16,15 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from numbers import Number
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, on_inf_prim
-from venture.ripl import Ripl
+
 from nose.tools import eq_
+
+from venture.ripl import Ripl
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @on_inf_prim("none")
 def testRIPL():
@@ -61,8 +66,8 @@ def testFlip1():
   assert isinstance(get_ripl().predict("(bernoulli 0.5)"), Number)
 
 @statisticalTest
-def testFlip2():
-  ripl = get_ripl()
+def testFlip2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict("(bernoulli 0.5)",label="pid")
   predictions = collectSamples(ripl, "pid")
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)
@@ -70,3 +75,11 @@ def testFlip2():
 @on_inf_prim("none")
 def testAtom():
   assert get_ripl().predict("(is_atom atom<1>)")
+
+@on_inf_prim("none")
+def testString():
+  eq_("foo", get_ripl().evaluate('"foo"'))
+
+@on_inf_prim("none")
+def testModelString():
+  eq_("foo", get_ripl().sample('"foo"'))

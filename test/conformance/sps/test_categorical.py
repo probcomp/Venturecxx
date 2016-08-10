@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,16 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from testconfig import config
 from nose import SkipTest
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, on_inf_prim
 from nose.tools import eq_
+from testconfig import config
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testCategorical1():
-  "A simple test that checks the interface of categorical and its simulate method"
-  ripl = get_ripl()
+def testCategorical1(seed):
+  # A simple test that checks the interface of categorical and its
+  # simulate method
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x", "(categorical (simplex 0.1 0.2 0.3 0.4) (array 1 2 3 4))")
   ripl.assume("y", "(categorical (simplex 0.2 0.6 0.2) (array 1 2 3))")
@@ -40,9 +45,10 @@ def testCategorical1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testCategoricalAbsorb():
-  "A simple test that checks the interface of categorical and its simulate and log density methods"
-  ripl = get_ripl()
+def testCategoricalAbsorb(seed):
+  # A simple test that checks the interface of categorical and its
+  # simulate and log density methods
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x","(simplex .1 .9)")
   ripl.assume("y","(simplex .55 .45)")
@@ -58,11 +64,12 @@ def testCategoricalDefault1():
   eq_(get_ripl().predict("(categorical (simplex 1))"), 0)
 
 @statisticalTest
-def testLogCategoricalAbsorb():
-  "A simple test that checks the interface of log categorical and its simulate and log density methods"
+def testLogCategoricalAbsorb(seed):
+  # A simple test that checks the interface of log categorical and its
+  # simulate and log density methods
   if config["get_ripl"] != "puma":
     raise SkipTest("log categorical only implemented in Puma")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x","(simplex (log .1) (log .9))")
   ripl.assume("y","(simplex (log .55) (log .45))")

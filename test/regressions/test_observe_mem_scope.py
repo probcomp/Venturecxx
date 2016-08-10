@@ -17,10 +17,13 @@
 
 from nose.tools import eq_
 
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 import venture.lite.value as val
-from venture.test.config import get_ripl, broken_in
 
 @broken_in("puma", "No introspection on blocks in scope")
+@on_inf_prim("none")
 def testScopeObservedThroughMem1():
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
@@ -28,17 +31,16 @@ def testScopeObservedThroughMem1():
   r.predict("(tag (quote foo) 0 (frob 1))")
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   scope = trace._normalizeEvaluatedScopeOrBlock(val.VentureSymbol("foo")) # pylint:disable=protected-access
-  eq_(1, len(trace.getAllNodesInScope(scope)))
-  r.infer("(incorporate)")
+  # TODO test for when auto-incorporation is disabled
   eq_(0, len(trace.getAllNodesInScope(scope)))
 
 @broken_in("puma", "No introspection on blocks in scope")
+@on_inf_prim("resample")
 def testScopeObservedThroughMem2():
-  """The way resample happened to be implemented in Lite when I wrote
-this test, it had the effect of undoing [infer (incorporate)] for all
-observations.  This was detected through a horrible mess involving mem.
-
-  """
+  # The way resample happened to be implemented in Lite when I wrote
+  # this test, it had the effect of undoing [infer (incorporate)] for
+  # all observations.  This was detected through a horrible mess
+  # involving mem.
   r = get_ripl()
   r.assume("frob", "(mem (lambda (x) (flip 0.5)))")
   r.observe("(frob 1)", True)
@@ -52,12 +54,11 @@ observations.  This was detected through a horrible mess involving mem.
   trace = r.sivm.core_sivm.engine.getDistinguishedTrace()
   eq_(0, len(trace.getAllNodesInScope(scope)))
 
+@on_inf_prim("resample")
 def testResamplingObservations():
-  """The way resample happened to be implemented in Lite when I wrote
-this test, it had the effect of undoing [infer (incorporate)] for all
-observations.
-
-  """
+  # The way resample happened to be implemented in Lite when I wrote
+  # this test, it had the effect of undoing [infer (incorporate)] for
+  # all observations.
   r = get_ripl()
   r.assume("x", "(normal 0 1)")
   r.observe("x", 1)

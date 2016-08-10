@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,28 +15,37 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, NullRequestPSP, RandomPSP, TypedPSP
-from sp import SP, VentureSPRecord, SPType
 import math
 from scipy.special import gammaln
-from value import HomogeneousArrayType, NumberType # The type names are metaprogrammed pylint: disable=no-name-in-module
 import numpy as np
 
+from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import NullRequestPSP
+from venture.lite.psp import RandomPSP
+from venture.lite.psp import TypedPSP
+from venture.lite.sp import SP
+from venture.lite.sp import SPAux
+from venture.lite.sp import SPType
+from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
+
 def logGenGamma(d,x):
-  term1 = float(d * (d - 1)) / 4 * math.log(math.pi)
-  term2 = sum([gammaln(float(2 * x - i) / 2) for i in range(d)])
+  term1 = math.log(math.pi) * d * (d - 1) / 4.
+  term2 = sum([gammaln((2 * x - i) / 2.) for i in range(d)])
   return term1 + term2
 
 def mvtLogDensity(x,mu,Sigma,v):
   p = np.size(x)
-  pterm1 = gammaln(float(v + p) / 2)
-  nterm1 = gammaln(float(v) / 2)
-  nterm2 = (float(p)/2) * math.log(v * math.pi)
-  nterm3 = (float(1)/2) * np.linalg.slogdet(Sigma)[1]
-  nterm4 = (float(v + p)/2) * math.log(1 + (float(1)/v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
+  pterm1 = gammaln((v + p) / 2.)
+  nterm1 = gammaln(v / 2.)
+  nterm2 = (p / 2.) * math.log(v * math.pi)
+  nterm3 = 0.5 * np.linalg.slogdet(Sigma)[1]
+  nterm4 = ((v + p) / 2.) * math.log1p((1. / v) * (x - mu).T * np.linalg.inv(Sigma) * (x - mu))
   return pterm1 - (nterm1 + nterm2 + nterm3 + nterm4)
 
-def mvtSample(mu,Sigma,N):
+def mvtSample(mu,Sigma,N,rng):
   # TODO at some point this code was copied from the Internet, though it has since been modified
   # enough to make search non trivial
   '''
@@ -50,8 +59,8 @@ def mvtSample(mu,Sigma,N):
   '''
 
   d = len(Sigma)
-  g = np.tile(np.random.gamma(N/2.,2./N,1),(d,1))
-  Z = np.random.multivariate_normal(np.zeros(d),Sigma,1)
+  g = np.tile(rng.gamma(N/2., 2./N, 1), (d, 1))
+  Z = rng.multivariate_normal(np.zeros(d), Sigma, 1)
 
   return mu + (Z.T)/np.sqrt(g)
 
@@ -65,7 +74,7 @@ def mvtSample(mu,Sigma,N):
 
 # TODO: I remember there being mistakes in this section (wrt dividing by N)
 
-class CMVNSPAux(object):
+class CMVNSPAux(SPAux):
   def __init__(self,d):
     self.N = 0
     self.STotal = np.mat(np.zeros((d,d)))
@@ -86,19 +95,17 @@ class CMVNSP(SP):
   def constructSPAux(self): return CMVNSPAux(self.d)
   def show(self,spaux): return self.outputPSP.psp.getMVTParams(spaux)
 
-class MakeCMVNOutputPSP(DeterministicPSP):
+class MakeCMVNOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self,args):
-    (m0,k0,v0,S0) = args.operandValues
+    (m0,k0,v0,S0) = args.operandValues()
     m0 = np.mat(m0).transpose()
 
     d = np.size(m0)
-    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], HomogeneousArrayType(NumberType())))
+    output = TypedPSP(CMVNOutputPSP(d,m0,k0,v0,S0), SPType([], t.HomogeneousArrayType(t.NumberType())))
     return VentureSPRecord(CMVNSP(NullRequestPSP(),output,d))
 
-  def childrenCanAAA(self): return True
-
   def description(self,name):
-    return "(%s m0 k0 v0 S0) -> <SP () <float array>>\n  Collapsed multivariate normal with hyperparameters m0,k0,v0,S0, where parameters are named as in (Murphy, section 4.6.3.3, page 134)." % name
+    return "%s(m0, k0, v0, S0) -> <SP () <float array>>\n  Collapsed multivariate normal with hyperparameters m0, k0, v0, S0, where parameters are named as in (Murphy, section 4.6.3.3, page 134)." % name
 
 
 class CMVNOutputPSP(RandomPSP):
@@ -122,38 +129,45 @@ class CMVNOutputPSP(RandomPSP):
     SArg = (float(kN + 1) / (kN * (vN - self.d + 1))) * SN
     vArg = vN - self.d + 1
     return mArg,SArg,vArg
-  
+
   def getMVTParams(self, spaux):
     return self.mvtParams(*self.updatedParams(spaux))
-  
+
   def simulate(self,args):
-    params = self.getMVTParams(args.spaux)
-    x = mvtSample(*params)
+    (mu, Sigma, N) = self.getMVTParams(args.spaux())
+    x = mvtSample(mu, Sigma, N, args.np_prng())
     return x.A1
 
   def logDensity(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    return mvtLogDensity(x, *self.getMVTParams(args.spaux))
+    return mvtLogDensity(x, *self.getMVTParams(args.spaux()))
 
   def incorporate(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    args.spaux.N += 1
-    args.spaux.xTotal += x
-    args.spaux.STotal += x * x.T
+    aux = args.spaux()
+    aux.N += 1
+    aux.xTotal += x
+    aux.STotal += x * x.T
 
   def unincorporate(self,x,args):
     x = np.mat(x).reshape((self.d,1))
-    args.spaux.N -= 1
-    args.spaux.xTotal -= x
-    args.spaux.STotal -= x * x.T
+    aux = args.spaux()
+    aux.N -= 1
+    aux.xTotal -= x
+    aux.STotal -= x * x.T
 
-  def logDensityOfCounts(self,aux):
+  def logDensityOfData(self,aux):
     (mN,kN,vN,SN) = self.updatedParams(aux)
-    term1 = - (aux.N * self.d * math.log(math.pi)) / 2
-    term2 = logGenGamma(self.d,float(vN) / 2)
-    term3 = - logGenGamma(self.d,float(self.v0) / 2)
-    term4 = (float(self.v0) / 2) * np.linalg.slogdet(self.S0)[1] # first is sign
-    term5 = -(float(vN) / 2) * np.linalg.slogdet(SN)[1]
-    term6 = (float(self.d) / 2) * math.log(float(self.k0) / kN)
+    term1 = - (aux.N * self.d * math.log(math.pi)) / 2.
+    term2 = logGenGamma(self.d, vN / 2.)
+    term3 = - logGenGamma(self.d, self.v0 / 2.)
+    term4 = (self.v0 / 2.) * np.linalg.slogdet(self.S0)[1] # first is sign
+    term5 = -(vN / 2.) * np.linalg.slogdet(SN)[1]
+    term6 = (self.d / 2.) * math.log(float(self.k0) / kN)
     return term1 + term2 + term3 + term4 + term5 + term6
 
+
+registerBuiltinSP("make_niw_normal",
+                  typed_nr(MakeCMVNOutputPSP(),
+                           [t.HomogeneousArrayType(t.NumberType()),t.NumberType(),t.NumberType(),t.MatrixType()],
+                           SPType([], t.HomogeneousArrayType(t.NumberType()))))

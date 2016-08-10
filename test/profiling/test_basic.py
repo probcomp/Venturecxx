@@ -17,13 +17,16 @@
 
 from scipy import stats
 
-from venture.test.config import get_ripl, broken_in
 from venture.exception import underline
+from venture.lite import types as t
 from venture.lite.psp import LikelihoodFreePSP
-from venture.lite import value as v
-from venture.lite.builtin import typed_nr
+from venture.lite.sp_help import typed_nr
+from venture.test.config import broken_in
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @broken_in('puma', "Profiler only implemented for Lite")
+@on_inf_prim("none") # Does not test inference quality of anything
 def test_profiling1():
   ripl = get_ripl()
 
@@ -38,7 +41,7 @@ def test_profiling1():
 
   ripl.profiler_enable()
   ripl.infer('(mh default one 10)')
-  ripl.infer('(gibbs tricky one 1)')
+  ripl.infer("(gibbs 'tricky one 1)")
 
   def printAddr((did, index)):
     exp = ripl.sivm._get_exp(did)
@@ -53,13 +56,14 @@ def test_profiling1():
   map(lambda addrs: map(printAddr, addrs), data.principal)
 
 @broken_in('puma', "Profiler only implemented for Lite")
+@on_inf_prim("none") # Does not test inference quality of anything
 def test_profiling_likelihoodfree():
-  "Make sure profiling doesn't break with likelihood-free SP's"
+  # Make sure profiling doesn't break with likelihood-free SP's
   class TestPSP(LikelihoodFreePSP):
     def simulate(self, args):
-      x = args.operandValues[0]
+      x = args.operandValues()[0]
       return x + stats.distributions.norm.rvs()
-  tester = typed_nr(TestPSP(), [v.NumberType()], v.NumberType())
+  tester = typed_nr(TestPSP(), [t.NumberType()], t.NumberType())
   ripl = get_ripl()
   ripl.bind_foreign_sp('test', tester)
   prog = '''
@@ -67,4 +71,3 @@ def test_profiling_likelihoodfree():
   [INFER (mh default one 10)]'''
   ripl.profiler_enable()
   ripl.execute_program(prog)
-

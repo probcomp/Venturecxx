@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,12 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from node import ConstantNode, LookupNode, ApplicationNode, RequestNode, OutputNode
-from omegadb import OmegaDB
-from value import SPRef
-from scope import isTagOutputPSP
-from sp import VentureSPRecord
-from consistency import assertTorus, assertTrace
+from venture.lite.node import isConstantNode
+from venture.lite.node import isLookupNode
+from venture.lite.node import isApplicationNode
+from venture.lite.node import isRequestNode
+from venture.lite.node import isOutputNode
+from venture.lite.omegadb import OmegaDB
+from venture.lite.value import SPRef
+from venture.lite.scope import isTagOutputPSP
+from venture.lite.sp import VentureSPRecord
+from venture.lite.consistency import assertTorus, assertTrace
 
 def detachAndExtract(trace, scaffold, compute_gradient = False):
   assertTrace(trace, scaffold)
@@ -42,9 +46,12 @@ def detachAndExtractAtBorder(trace, border, scaffold, compute_gradient = False):
     if scaffold.isAbsorbing(node):
       weight += detach(trace, node, scaffold, omegaDB, compute_gradient)
     else:
-      if node.isObservation: weight += unconstrain(trace,trace.getConstrainableNode(node))
+      if node.isObservation: weight += getAndUnconstrain(trace,node)
       weight += extract(trace,node,scaffold,omegaDB, compute_gradient)
   return weight,omegaDB
+
+def getAndUnconstrain(trace,node):
+  return unconstrain(trace,trace.getConstrainableNode(node))
 
 def unconstrain(trace,node):
   psp,args,value = trace.pspAt(node),trace.argsAt(node),trace.valueAt(node)
@@ -55,16 +62,21 @@ def unconstrain(trace,node):
   return weight
 
 def detach(trace, node, scaffold, omegaDB, compute_gradient = False):
+  weight = unabsorb(trace, node, omegaDB, compute_gradient)
+  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
+  return weight
+
+def unabsorb(trace, node, omegaDB, compute_gradient = False):
   # we need to pass groundValue here in case the return value is an SP
   # in which case the node would only contain an SPRef
-  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)  
+  psp,args,gvalue = trace.pspAt(node),trace.argsAt(node),trace.groundValueAt(node)
+  maybeUnregisterRandomChoiceInScope(trace, node)
   psp.unincorporate(gvalue,args)
   weight = psp.logDensity(gvalue,args)
   if compute_gradient:
     # Ignore the partial derivative of the value because the value is fixed
     (_, grad) = psp.gradientOfLogDensity(gvalue, args)
     omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
-  weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   return weight
 
 def extractParents(trace, node, scaffold, omegaDB, compute_gradient = False):
@@ -83,21 +95,19 @@ def extractESRParents(trace, node, scaffold, omegaDB, compute_gradient = False):
 
 def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
-  value = trace.valueAt(node)
-  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
-    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
+  weight += maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient)
 
   if scaffold.isResampling(node):
     trace.decRegenCountAt(scaffold,node)
     assert trace.regenCountAt(scaffold,node) >= 0
     if trace.regenCountAt(scaffold,node) == 0:
-      if isinstance(node,ApplicationNode):
-        if isinstance(node,RequestNode):
+      if isApplicationNode(node):
+        if isRequestNode(node):
           weight += unevalRequests(trace, node, scaffold, omegaDB, compute_gradient)
         weight += unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient)
-      else: 
+      else:
         trace.setValueAt(node,None)
-        assert isinstance(node, LookupNode) or isinstance(node, ConstantNode)
+        assert isLookupNode(node) or isConstantNode(node)
         assert len(trace.parentsAt(node)) <= 1
         if compute_gradient:
           for p in trace.parentsAt(node):
@@ -106,11 +116,17 @@ def extract(trace, node, scaffold, omegaDB, compute_gradient = False):
 
   return weight
 
+def maybeExtractStaleAAA(trace, node, scaffold, omegaDB, compute_gradient = False):
+  weight = 0
+  value = trace.valueAt(node)
+  if isinstance(value,SPRef) and value.makerNode != node and scaffold.isAAA(value.makerNode):
+    weight += extract(trace, value.makerNode, scaffold, omegaDB, compute_gradient)
+  return weight
+
 def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
   weight = 0
-  if isinstance(node,ConstantNode): pass
-  elif isinstance(node,OutputNode) and node.isFrozen: pass
-  elif isinstance(node,LookupNode):
+  if isConstantNode(node): pass
+  elif isLookupNode(node):
     assert len(trace.parentsAt(node)) == 1
     if compute_gradient:
       for p in trace.parentsAt(node):
@@ -119,7 +135,7 @@ def unevalFamily(trace, node, scaffold, omegaDB, compute_gradient = False):
     trace.setValueAt(node,None)
     weight += extractParents(trace, node, scaffold, omegaDB, compute_gradient)
   else:
-    assert isinstance(node,OutputNode)
+    assert isOutputNode(node)
     weight += unapply(trace, node, scaffold, omegaDB, compute_gradient)
     for operandNode in reversed(node.operandNodes):
       weight += unevalFamily(trace, operandNode, scaffold, omegaDB, compute_gradient)
@@ -145,10 +161,7 @@ def teardownMadeSP(trace,node,isAAA):
 
 def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
   psp,args = trace.pspAt(node),trace.argsAt(node)
-  if isTagOutputPSP(psp):
-    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
-    blockNode = node.operandNodes[2]
-    trace.unregisterRandomChoiceInScope(scope,block,blockNode)
+  maybeUnregisterRandomChoiceInScope(trace, node)
   if psp.isRandom(): trace.unregisterRandomChoice(node)
   if isinstance(trace.valueAt(node),SPRef) and trace.valueAt(node).makerNode == node:
     teardownMadeSP(trace,node,scaffold.isAAA(node))
@@ -167,16 +180,21 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
 #  print "unapplyPSP",trace.valueAt(node)
 
   trace.setValueAt(node,None)
-  if compute_gradient and any([scaffold.isResampling(p) or scaffold.isBrush(p) for p in trace.parentsAt(node)]):
+  if compute_gradient and any([scaffold.isResampling(p) or scaffold.isBrush(p) for p in trace.parentsAt(node)]) and not scaffold.hasLKernel(node):
     # Don't need to compute the simulation gradient if the parents are
     # not in the DRG or brush.
+    # Not clear how to deal with LKernels.
+    # - DeterministicLKernel is probably ok because the nodes they are applied at
+    #   do not have interesting parents
+    # - DeterministicMakerAAALKernel is probably ok because its gradientOfReverseWeight
+    #   method computes the same thing gradientOfSimulate would properly have computed
     grad = psp.gradientOfSimulate(args, omegaDB.getValue(node), omegaDB.getPartial(node))
     omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
 
   return weight
 
 def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
-  assert isinstance(node,RequestNode)
+  assert isRequestNode(node)
   weight = 0
   request = trace.valueAt(node)
   # TODO I may have the following AD bug: if a request constructs an
@@ -188,7 +206,7 @@ def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
     omegaDB.registerLatentDB(trace.spAt(node),trace.spAt(node).constructLatentDB())
 
   for lsr in reversed(request.lsrs):
-    weight += trace.spAt(node).detachLatents(trace.spauxAt(node),lsr,omegaDB.getLatentDB(trace.spAt(node)))
+    weight += trace.spAt(node).detachLatents(trace.argsAt(node),lsr,omegaDB.getLatentDB(trace.spAt(node)))
     # TODO add gradient information for detached latents?
 
   for esr in reversed(request.esrs):
@@ -199,3 +217,10 @@ def unevalRequests(trace, node, scaffold, omegaDB, compute_gradient = False):
       weight += unevalFamily(trace, esrParent, scaffold, omegaDB, compute_gradient)
 
   return weight
+
+def maybeUnregisterRandomChoiceInScope(trace, node):
+  psp = trace.pspAt(node)
+  if isTagOutputPSP(psp):
+    scope,block = [trace.valueAt(n) for n in node.operandNodes[0:2]]
+    blockNode = node.operandNodes[2]
+    trace.unregisterRandomChoiceInScope(scope,block,blockNode)

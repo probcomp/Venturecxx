@@ -92,6 +92,8 @@ comment syntaxes obey this convention.
   if comments is None:
     # Initially, assume unknown comment syntax
     print "Unknown comment syntax", fname
+  elif comments == "skip":
+    print "Skipping", fname
   else:
     (detect_comments, make_comments) = comments
     with open(fname) as f:
@@ -148,6 +150,8 @@ def _comment_syntax(filename):
     return repeated_character_comment_syntax('/', 2, 2)
   elif extension in [".elm"]:
     return repeated_character_comment_syntax('-', 2, 2)
+  elif extension in [".png", ".jpg", ".gif"]:
+    return "skip"
   return None
 
 
@@ -237,9 +241,9 @@ This is used for a file that has no 'git blame' information to deduce
 years from, and no existing copyright header to blindly propagate
 years from, such as __init__.py files.
 
-Default: "2015"
+Default: "2016"
 '''
-    return "2015"
+    return "2016"
 
   def claim_present(self):
 

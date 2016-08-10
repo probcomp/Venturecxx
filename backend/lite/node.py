@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,20 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, ExpressionType
-from request import Request
+from venture.lite.orderedset import OrderedSet
+from venture.lite.psp import IArgs
+from venture.lite.request import Request
+from venture.lite.types import ExpressionType
+from venture.lite.value import VentureValue
 
 class Node(object):
   def __init__(self, address):
+    assert address is not None
     self.address = address
     self.value = None
-    self.children = set()
+    self.children = OrderedSet()
     self.isObservation = False
     self.madeSPRecord = None
     self.aaaMadeSPAux = None
     self.numRequests = 0
     self.esrParents = []
     self.esrParents = []
+    self.isFrozen = False
 
   def observe(self,val):
     self.observedValue = val
@@ -84,6 +89,8 @@ class RequestNode(ApplicationNode):
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes
 
+  def relevantPSP(self, sp): return sp.requestPSP
+
   def isAppropriateValue(self, value):
     return value is None or isinstance(value, Request)
 
@@ -97,29 +104,51 @@ class OutputNode(ApplicationNode):
 
   def definiteParents(self): return [self.operatorNode] + self.operandNodes + [self.requestNode]
   def parents(self): return self.definiteParents() + self.esrParents
+  def relevantPSP(self, sp): return sp.outputPSP
 
 
-class Args(object):
-  def __init__(self,trace,node):
+def isConstantNode(thing):
+  return isinstance(thing, ConstantNode) or (isinstance(thing, Node) and thing.isFrozen)
+def isLookupNode(thing):
+  return isinstance(thing, LookupNode) and not thing.isFrozen
+def isApplicationNode(thing):
+  return isinstance(thing, ApplicationNode) and not thing.isFrozen
+def isRequestNode(thing):
+  return isinstance(thing, RequestNode) and not thing.isFrozen
+def isOutputNode(thing):
+  return isinstance(thing, OutputNode) and not thing.isFrozen
+
+class TraceNodeArgs(IArgs):
+  def __init__(self, trace, node):
+    super(TraceNodeArgs, self).__init__()
+    self.trace = trace
     self.node = node
-    self.operandValues = [trace.valueAt(operandNode) for operandNode in node.operandNodes]
-    for v in self.operandValues:
+    self.operandNodes = node.operandNodes
+    self.env = node.env
+
+  def operandValues(self):
+    ans = [self.trace.valueAt(operandNode) for operandNode in self.operandNodes]
+    for v in ans:
       # v could be None if this is for logDensityBound for rejection
       # sampling, which is computed from the torus.
       assert v is None or isinstance(v, VentureValue)
-    self.operandNodes = node.operandNodes
+    return ans
 
-    if isinstance(node,OutputNode):
-      self.requestValue = trace.valueAt(node.requestNode)
-      self.esrValues = [trace.valueAt(esrParent) for esrParent in trace.esrParentsAt(node)]
-      self.esrNodes = trace.esrParentsAt(node)
-      self.madeSPAux = trace.getAAAMadeSPAuxAt(node)
-      self.isOutput = True
-    else:
-      self.isOutput = False
+  def spaux(self): return self.trace.spauxAt(self.node)
 
-    self.spaux = trace.spauxAt(node)
-    self.env = node.env
+  # There four are for Args at output nodes.
+  def requestValue(self):
+    return self.trace.valueAt(self.node.requestNode)
+  def esrNodes(self): return self.trace.esrParentsAt(self.node)
+  def esrValues(self):
+    return [self.trace.valueAt(esrParent) for esrParent in self.trace.esrParentsAt(self.node)]
+  def madeSPAux(self):
+    return self.trace.getAAAMadeSPAuxAt(self.node)
+
+  def py_prng(self):
+    return self.trace.py_rng
+  def np_prng(self):
+    return self.trace.np_rng
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)

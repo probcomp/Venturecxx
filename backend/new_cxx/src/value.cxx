@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -44,16 +44,14 @@ long VentureValue::getInt() const
 double VentureValue::getProbability() const
 {
   double x;
-  try {
+  if (hasDouble()) {
     x = getDouble();
-  }
-  catch (string) {
+  } else {
     cannotConvertType(this,"probability"); assert(false); throw "no return";
   }
   if (0 <= x && x <= 1) {
     return x;
-  }
-  else {
+  } else {
     throw "Probability out of range " + toString();
   }
 }
@@ -63,7 +61,6 @@ int VentureValue::getAtom() const
   cannotConvertType(this,"atom"); assert(false); throw "no return";
 }
 
-bool VentureValue::isBool() const { return false; }
 bool VentureValue::getBool() const
 {
   cannotConvertType(this,"bool"); assert(false); throw "no return";
@@ -73,6 +70,12 @@ bool VentureValue::hasSymbol() const { return false; }
 const string& VentureValue::getSymbol() const
 {
   cannotConvertType(this,"symbol"); assert(false); throw "no return";
+}
+
+bool VentureValue::hasString() const { return false; }
+const string& VentureValue::getString() const
+{
+  cannotConvertType(this,"string"); assert(false); throw "no return";
 }
 
 
@@ -86,7 +89,7 @@ const VentureValuePtr& VentureValue::getRest() const
   cannotConvertType(this,"pair"); assert(false); throw "no return";
 }
 
-  
+
 vector<VentureValuePtr> VentureValue::getArray() const
 {
   cannotConvertType(this,"array"); assert(false); throw "no return";
@@ -118,15 +121,14 @@ MatrixXd VentureValue::getSymmetricMatrix() const
   MatrixXd m = getMatrix();
   if (m.isApprox(m.transpose())) {
     return m;
-  }
-  else {
+  } else {
     throw "Matrix is not symmetric " + toString();
   }
 }
 
 
 boost::python::dict VentureValue::toPython(Trace * trace) const
-{ 
+{
   boost::python::dict value;
   value["type"] = "unknown";
   value["value"] = "opaque";
@@ -134,8 +136,11 @@ boost::python::dict VentureValue::toPython(Trace * trace) const
 }
 
 
-bool VentureValue::operator<(const VentureValuePtr & rhs) const 
+bool VentureValue::operator<(const VentureValuePtr & rhs) const
 {
+  if (hasDouble() && rhs->hasDouble()) {
+    return getDouble() < rhs->getDouble();
+  }
   int t1 = getValueTypeRank();
   int t2 = rhs->getValueTypeRank();
   if (t1 < t2) { return true; }
@@ -143,29 +148,52 @@ bool VentureValue::operator<(const VentureValuePtr & rhs) const
   else { return ltSameType(rhs); }
 }
 
-int VentureValue::getValueTypeRank() const { throw "Cannot compare type " + toString(); }
-
-bool VentureValue::ltSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
-
-
-bool VentureValue::equals(const VentureValuePtr & other) const 
+int VentureValue::getValueTypeRank() const
 {
+  throw "Cannot compare type " + toString();
+}
+
+bool VentureValue::ltSameType(const VentureValuePtr & rhs) const
+{
+  throw "Cannot compare " + toString();
+}
+
+
+bool VentureValue::equals(const VentureValuePtr & other) const
+{
+  if (hasDouble() && other->hasDouble()) {
+    return getDouble() == other->getDouble();
+  }
   int t1 = getValueTypeRank();
   int t2 = other->getValueTypeRank();
   if (t1 != t2) { return false; }
   else { return equalsSameType(other); }
 }
 
-bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const { throw "Cannot compare " + toString(); }
+bool VentureValue::equalsSameType(const VentureValuePtr & rhs) const
+{
+  throw "Cannot compare " + toString();
+}
 
 size_t VentureValue::hash() const
 {
   assert(false); assert(false); throw "no return";
 }
 
-VentureValuePtr VentureValue::lookup(VentureValuePtr index) const { throw "Cannot look things up in " + toString(); }
-bool VentureValue::contains(VentureValuePtr index) const { throw "Cannot look for things in " + toString(); }
-int VentureValue::size() const { throw "Cannot measure size of " + toString(); }
+VentureValuePtr VentureValue::lookup(const VentureValuePtr & index) const
+{
+  throw "Cannot look things up in " + toString();
+}
+
+bool VentureValue::contains(const VentureValuePtr & index) const
+{
+  throw "Cannot look for things in " + toString();
+}
+
+int VentureValue::size() const
+{
+  throw "Cannot measure size of " + toString();
+}
 
 
 const vector<ESR>& VentureValue::getESRs() const
@@ -173,7 +201,7 @@ const vector<ESR>& VentureValue::getESRs() const
   cannotConvertType(this,"requests"); assert(false); throw "no return";
 }
 
-const vector<shared_ptr<LSR> >& VentureValue::getLSRs() const
+const vector<boost::shared_ptr<LSR> >& VentureValue::getLSRs() const
 {
   cannotConvertType(this,"requests"); assert(false); throw "no return";
 }
@@ -185,7 +213,7 @@ Node * VentureValue::getNode() const
 }
 
 
-shared_ptr<SPAux> VentureValue::getSPAux() const
+boost::shared_ptr<SPAux> VentureValue::getSPAux() const
 {
   cannotConvertType(this,"sprecord") ; assert(false); throw "no return";
 }

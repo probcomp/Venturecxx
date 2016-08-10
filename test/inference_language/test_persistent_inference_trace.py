@@ -17,9 +17,11 @@
 
 from nose.tools import eq_
 
-from venture.test.config import get_ripl, on_inf_prim
 from venture.lite import builtin
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
+@on_inf_prim("define")
 def testPersistenceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -27,20 +29,23 @@ def testPersistenceSmoke1():
 [assume x (flip 0.1)]
 [infer (mh default one foo)]""")
 
+@on_inf_prim("define")
 def testPersistenceSmoke2():
   r = get_ripl(persistent_inference_trace=True)
-  r.set_mode("venture_script")
+  r.set_mode('venture_script')
   r.execute_program("""
-define foo = 5
-assume x = flip(0.1)
-infer mh(default, one, foo)""")
+define foo = 5;
+assume x = flip(0.1);
+infer mh(default, one, foo);""")
 
+@on_inf_prim("define")
 def testPersistenceSmoke3():
   r = get_ripl(persistent_inference_trace=True)
   r.define("foo", "5")
   r.assume("x", "(flip 0.1)")
   r.infer("(mh default one foo)")
 
+@on_inf_prim("observe")
 def testInferObserveSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -49,12 +54,14 @@ def testInferObserveSmoke1():
 [infer (incorporate)]""")
   eq_(3, r.sample("x"))
 
+@on_inf_prim("observe")
 def testInferObserveSmoke2():
   r = get_ripl()
   r.infer("(observe (normal 0 1) 3 label)")
   r.infer("(incorporate)")
   eq_(3, r.report("label"))
 
+@on_inf_prim("define")
 def testInlineSMCSmoke():
   r = get_ripl(persistent_inference_trace=True)
   import venture.engine.inference_prelude as p
@@ -74,6 +81,7 @@ def testInlineSMCSmoke():
   for i in range(20):
     eq_(i, r.report(i+len(p.prelude)+3))
 
+@on_inf_prim("define")
 def testInlineSMCSmoke2():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -93,21 +101,25 @@ def testInlineSMCSmoke2():
   for i in range(20):
     eq_(i, r.sample("(frob %s)" % i))
 
+@on_inf_prim("define")
 def testDirectivesInInfer1():
   r = get_ripl()
   r.infer("(assume x 5)")
   eq_(5, r.sample("x"))
 
+@on_inf_prim("define")
 def testDirectivesInInfer2():
   r = get_ripl()
   r.infer("(predict (+ 5 2) foo)")
   eq_(7.0, r.report("foo"))
 
+@on_inf_prim("bind_foreign_sp")
 def testForeignInfSPs():
   r = get_ripl(persistent_inference_trace = True)
-  r.bind_foreign_inference_sp("my_bernoulli", builtin.builtInSPs()["bernoulli"])
-  r.infer("(mh default one (+ (my_bernoulli 0.5) 1))")
+  r.bind_foreign_inference_sp("my_mul", builtin.builtInSPs()["mul"])
+  r.infer("(mh default one (+ (my_mul 2 2) 1))")
 
+@on_inf_prim("force")
 def testForceSmoke1():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -117,6 +129,7 @@ def testForceSmoke1():
   x = r.sample('x')
   eq_(x, 5)
 
+@on_inf_prim("force")
 def testForceSmoke2():
   r = get_ripl(persistent_inference_trace=True)
   r.execute_program("""
@@ -129,15 +142,15 @@ def testForceSmoke2():
   x = r.sample('x')
   eq_(x, -3)
 
-@on_inf_prim("assume")
+@on_inf_prim('assume')
 def testAssumeTracked():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x (normal 0 1))")
   directives = ripl.list_directives()
   assert len(directives) == 1
-  assert directives[0]["instruction"] == "assume"
+  assert directives[0]['instruction'] == 'assume'
 
-@on_inf_prim("assume")
+@on_inf_prim('assume')
 def testDirectivesTracked():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x (normal 0 1))")
@@ -145,11 +158,11 @@ def testDirectivesTracked():
   ripl.infer("(predict (normal x 1))")
   directives = ripl.list_directives()
   assert len(directives) == 3
-  assert directives[0]["instruction"] == "assume"
-  assert directives[1]["instruction"] == "observe"
-  assert directives[2]["instruction"] == "predict"
+  assert directives[0]['instruction'] == 'assume'
+  assert directives[1]['instruction'] == 'observe'
+  assert directives[2]['instruction'] == 'predict'
 
-@on_inf_prim("assume")
+@on_inf_prim('assume')
 def testLabelingDirectives():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
@@ -159,7 +172,7 @@ def testLabelingDirectives():
   eq_(2, ripl.report("bar"))
   eq_(6, ripl.report("baz"))
 
-@on_inf_prim("forget")
+@on_inf_prim('forget')
 def testDirectivesForgettable():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
@@ -169,10 +182,10 @@ def testDirectivesForgettable():
   ripl.forget("bar")
   directives = ripl.list_directives()
   assert len(directives) == 2
-  assert directives[0]["instruction"] == "assume"
-  assert directives[1]["instruction"] == "predict"
+  assert directives[0]['instruction'] == 'assume'
+  assert directives[1]['instruction'] == 'predict'
 
-@on_inf_prim("forget")
+@on_inf_prim('forget')
 def testDirectivesForgettableFromInference():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x 5 foo)")
@@ -182,14 +195,14 @@ def testDirectivesForgettableFromInference():
   ripl.infer("(forget 'bar)")
   directives = ripl.list_directives()
   assert len(directives) == 2
-  assert directives[0]["instruction"] == "assume"
-  assert directives[1]["instruction"] == "predict"
+  assert directives[0]['instruction'] == 'assume'
+  assert directives[1]['instruction'] == 'predict'
   ripl.infer("(forget 'baz)")
   assert len(ripl.list_directives()) == 1
   ripl.infer("(forget 'foo)")
   assert len(ripl.list_directives()) == 0
 
-@on_inf_prim("freeze")
+@on_inf_prim('freeze')
 def testDirectivesFreezableFromInference():
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.infer("(assume x (normal 0 1) foo)")
@@ -198,10 +211,10 @@ def testDirectivesFreezableFromInference():
   xval = ripl.sample("x")
   yval = ripl.sample("y")
   engine = ripl.sivm.core_sivm.engine
-  eq_(engine.get_entropy_info()["unconstrained_random_choices"],2)
+  eq_(engine.get_entropy_info()['unconstrained_random_choices'],2)
 
   ripl.infer("(freeze 'bar)")
-  eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
+  eq_(engine.get_entropy_info()['unconstrained_random_choices'],1)
   ripl.infer(30)
-  assert not xval == ripl.sample("x")
+  assert xval != ripl.sample("x")
   eq_(yval, ripl.sample("y"))

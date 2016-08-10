@@ -21,149 +21,196 @@
 #include "psp.h"
 #include "args.h"
 
-struct AddOutputPSP : PSP
+struct AddOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct SubOutputPSP : PSP
+struct SubOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct MulOutputPSP : PSP
+struct MulOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct DivOutputPSP : PSP
+struct DivOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IntDivOutputPSP : PSP
+struct IntDivOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IntModOutputPSP : PSP
+struct IntModOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct EqOutputPSP : PSP
+struct EqOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct GtOutputPSP : PSP
+struct GtOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct GteOutputPSP : PSP
+struct GteOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct LtOutputPSP : PSP
+struct LtOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct LteOutputPSP : PSP
+struct LteOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct FloorOutputPSP : PSP
+struct FloorOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct SinOutputPSP : PSP
+struct SinOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct CosOutputPSP : PSP
+struct CosOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct TanOutputPSP : PSP
+struct TanOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct HypotOutputPSP : PSP
+struct HypotOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ExpOutputPSP : PSP
+struct ExpOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct LogOutputPSP : PSP
+struct LogOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct PowOutputPSP : PSP
+struct PowOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct SqrtOutputPSP : PSP
+struct SqrtOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct NotOutputPSP : PSP
+struct NotOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsNumberOutputPSP : PSP
+struct RealOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsIntegerOutputPSP : PSP
+struct IsNumberOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsBoolOutputPSP : PSP
+struct IsBoolOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsSymbolOutputPSP : PSP
+struct IsSymbolOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ToAtomOutputPSP : PSP
+struct AtomOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsAtomOutputPSP : PSP
+struct AtomIndexOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ProbabilityOutputPSP : PSP
+struct IsAtomOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct IsProbabilityOutputPSP : PSP
+struct IntegerOutputPSP : virtual PSP
+  , DeterministicPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct IsIntegerOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct ProbabilityOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+};
+
+struct IsProbabilityOutputPSP : virtual PSP
+  , DeterministicPSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
 #endif

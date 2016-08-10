@@ -15,18 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.stats import statisticalTest, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testReferences1():
-  """Checks that the program runs without crashing. At some point, this
-program caused the old CXX backend to fire an assert.  When the (flip)
-had a 0.0 or 1.0 it didn't fail."""
-  ripl = get_ripl()
+def testReferences1(seed):
+  # Checks that the program runs without crashing. At some point, this
+  # program caused the old CXX backend to fire an assert.  When the
+  # (flip) had a 0.0 or 1.0 it didn't fail.
+  ripl = get_ripl(seed=seed)
   ripl.assume("draw_type0", "(make_crp 1.0)")
   ripl.assume("draw_type1", "(if (flip) draw_type0 (lambda () atom<1>))")
-  ripl.assume("draw_type2", "(make_dir_mult (array 1.0 1.0))")
+  ripl.assume("draw_type2", "(make_dir_cat (array 1.0 1.0))")
   ripl.assume("class", "(if (flip) (lambda (name) (draw_type1)) (lambda (name) (draw_type2)))")
   ripl.predict("(class 1)")
   ripl.predict("(flip)", label="pid")
@@ -37,10 +39,10 @@ had a 0.0 or 1.0 it didn't fail."""
 
 
 @statisticalTest
-def testReferences2():
-  "Simpler version of the old bug testReferences1() tries to trigger"
-  ripl = get_ripl()
-  ripl.assume("f", "(if (flip 0.5) (make_dir_mult (array 1.0 1.0)) (lambda () atom<1>))")
+def testReferences2(seed):
+  # Simpler version of the old bug testReferences1() tries to trigger
+  ripl = get_ripl(seed=seed)
+  ripl.assume("f", "(if (flip 0.5) (make_dir_cat (array 1.0 1.0)) (lambda () atom<1>))")
   ripl.predict("(f)", label="pid")
 
   predictions = collectSamples(ripl,"pid")

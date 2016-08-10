@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -20,27 +20,37 @@
 #include "sp.h"
 #include "sprecord.h"
 
-VentureValuePtr DefaultAAALKernel::simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng) 
-{ 
-  shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args,rng));
+VentureValuePtr DeterministicMakerAAALKernel::simulate(
+    Trace * trace, const boost::shared_ptr<Args> & args, gsl_rng * rng)
+{
+  boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(makerPSP->simulate(args, rng));
 
   spRecord->spAux = args->aaaMadeSPAux;
   return spRecord;
 }
 
-double DefaultAAALKernel::weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args) 
-{ 
-  shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(newValue);
+double DeterministicMakerAAALKernel::weight(
+    Trace * trace,
+    const VentureValuePtr & value,
+    const boost::shared_ptr<Args> & args)
+{
+  boost::shared_ptr<VentureSPRecord> spRecord = dynamic_pointer_cast<VentureSPRecord>(value);
   assert(spRecord);
-  return spRecord->sp->outputPSP->logDensityOfCounts(spRecord->spAux);
+  return spRecord->sp->outputPSP->logDensityOfData(spRecord->spAux);
 }
 
-VentureValuePtr DeterministicLKernel::simulate(Trace * trace,VentureValuePtr oldValue,shared_ptr<Args> args,gsl_rng * rng) 
-{ 
+VentureValuePtr DeterministicLKernel::simulate(
+    Trace * trace,
+    const boost::shared_ptr<Args> & args,
+    gsl_rng * rng)
+{
   return value;
 }
 
-double DeterministicLKernel::weight(Trace * trace,VentureValuePtr newValue,VentureValuePtr oldValue,shared_ptr<Args> args)
+double DeterministicLKernel::weight(
+    Trace * trace,
+    const VentureValuePtr & value,
+    const boost::shared_ptr<Args> & args)
 {
-  return psp->logDensity(newValue,args);
+  return psp->logDensity(value, args);
 }

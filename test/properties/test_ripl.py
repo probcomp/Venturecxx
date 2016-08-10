@@ -16,13 +16,18 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
+from nose.tools import eq_
 from testconfig import config
 
-from venture.test.config import get_ripl, on_inf_prim, gen_on_inf_prim
-from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
-from venture.lite.value import AnyType, VentureValue
+from venture.lite.sp_use import simulate
+from venture.lite.types import AnyType
+from venture.lite.value import VentureValue
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 import venture.value.dicts as v
 
 from test_sps import relevantSPs
@@ -56,8 +61,8 @@ def testRiplSimulate():
     if name in [# Because tag is misannotated as to the true
                 # permissible types of scopes and blocks
                 "tag", "tag_exclude",
-                "get_current_environment", # Because BogusArgs gives a bogus environment
-                "extend_environment", # Because BogusArgs gives a bogus environment
+                "get_current_environment", # Because MockArgs gives a bogus environment
+                "extend_environment", # Because MockArgs gives a bogus environment
               ]:
       continue
     if config["get_ripl"] != "lite" and name in [
@@ -68,27 +73,25 @@ def testRiplSimulate():
         "get_empty_environment", # Environments can't be rendered to stack dicts
     ]:
       continue
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Printable representation of equivalent covariance kernels
+      # or mean functions don't necessarily match.
+      continue
     if not sp.outputPSP.isRandom():
       yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
   if config["get_ripl"] != "lite" and name in [
     ## Incompatibilities with Puma
-    "to_list", # Not implemented
-    "min", # Not implemented
-    "mod", # Not implemented
-    "atan2", # Not implemented
-    "real", # Not implemented
-    "atom_eq", # Not implemented
-    "arange", # Not implemented
-    "linspace", # Not implemented
-    "diag_matrix", # Not implemented
-    "ravel", # Not implemented
-    "matrix_mul", # Not implemented
-    "repeat", # Not implemented
-    "zip", # Not implemented
-    "is_procedure", # Not implemented
-    "print", # Not implemented
+    "apply", # Not implemented, and can't seem to import it as a foreign from Python
+    "arange", # Not the same return type (elements boxed in Puma?)
+    "vector_dot", # Numerical inconsistency between Eigen and Numpy
+    "matrix_times_vector", # Numerical inconsistency between Eigen and Numpy
+    "vector_times_matrix", # Numerical inconsistency between Eigen and Numpy
+    "int_div", # Discrpancy on negative divisor between C++ and Python
+    "int_mod", # Discrpancy on negative modulus between C++ and Python
+    "vector_add", # Size-mismatched vectors crash Puma
+    "matrix_add", # Size-mismatched matrices crash Puma
   ]:
     raise SkipTest("%s in Puma not implemented compatibly with Lite" % name)
   checkTypedProperty(propRiplAgreesWithDeterministicSimulate, fully_uncurried_sp_type(sp.venture_type()), name, sp)
@@ -96,23 +99,27 @@ def checkRiplAgreesWithDeterministicSimulate(name, sp):
 def propRiplAgreesWithDeterministicSimulate(args_lists, name, sp):
   """Check that the given SP produces the same answer directly and
 through a ripl (applied fully uncurried)."""
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  answer = carefully(sp.outputPSP.simulate, args)
+  answer = carefully(simulate(sp), args_lists[0])
   if isinstance(answer, VentureSPRecord):
     if isinstance(answer.sp.requestPSP, NullRequestPSP):
       if not answer.sp.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], answer.spAux)
-        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
+        ans2 = carefully(simulate(answer.sp), args_lists[1], spaux=answer.spAux)
         inner = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
-        assert ans2.equal(carefully(eval_in_ripl, expr))
+        assert eq_(ans2, carefully(eval_in_ripl, expr))
       else:
         raise SkipTest("Putatively deterministic sp %s returned a random SP" % name)
     else:
       raise SkipTest("Putatively deterministic sp %s returned a requesting SP" % name)
   else:
     expr = [v.symbol(name)] + [val.expressionFor() for val in args_lists[0]]
-    assert answer.equal(carefully(eval_in_ripl, expr))
+    eq_(answer, carefully(eval_in_ripl, expr))
+
+@on_inf_prim("none")
+def testVectorArrayExample():
+  from venture.lite.sp_registry import builtInSPs
+  from venture.lite.value import VentureArray
+  propRiplAgreesWithDeterministicSimulate([[VentureArray([])]], "is_vector", builtInSPs()["is_vector"])
 
 def eval_foreign_sp(name, sp, expr):
   ripl = get_ripl()
@@ -128,8 +135,8 @@ def testForeignInterfaceSimulate():
                                  # permissible types of scopes and
                                  # blocks
                 "tag",
-                "get_current_environment", # Because BogusArgs gives a bogus environment
-                "extend_environment", # Because BogusArgs gives a bogus environment
+                "get_current_environment", # Because MockArgs gives a bogus environment
+                "extend_environment", # Because MockArgs gives a bogus environment
               ]:
       continue
     if config["get_ripl"] != "lite" and name in [
@@ -138,6 +145,10 @@ def testForeignInterfaceSimulate():
         "matrix", # Because rows must be the same length
         "get_empty_environment", # Environments can't be rendered to stack dicts
     ]:
+      continue
+    if name.startswith('gp_cov_') or name.startswith('gp_mean_'):
+      # XXX Can't compare equivalent functions for equality without
+      # false negatives.
       continue
     if not sp.outputPSP.isRandom():
       yield checkForeignInterfaceAgreesWithDeterministicSimulate, name, sp
@@ -148,13 +159,11 @@ def checkForeignInterfaceAgreesWithDeterministicSimulate(name, sp):
 def propForeignInterfaceAgreesWithDeterministicSimulate(args_lists, name, sp):
   """Check that the given SP produces the same answer directly and
 through the foreign function interface (applied fully uncurried)."""
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  answer = carefully(sp.outputPSP.simulate, args)
+  answer = carefully(simulate(sp), args_lists[0])
   if isinstance(answer, VentureSPRecord):
     if isinstance(answer.sp.requestPSP, NullRequestPSP):
       if not answer.sp.outputPSP.isRandom():
-        args2 = BogusArgs(args_lists[1], answer.spAux)
-        ans2 = carefully(answer.sp.outputPSP.simulate, args2)
+        ans2 = carefully(simulate(answer.sp), args_lists[1], spaux=answer.spAux)
         inner = [v.symbol("test_sp")] + [val.expressionFor() for val in args_lists[0]]
         expr = [inner] + [val.expressionFor() for val in args_lists[1]]
         assert ans2.equal(carefully(eval_foreign_sp, "test_sp", sp, expr))

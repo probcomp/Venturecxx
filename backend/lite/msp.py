@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,11 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from psp import DeterministicPSP, ESRRefOutputPSP
-from sp import SP, VentureSPRecord
-from env import VentureEnvironment
-from request import Request,ESR
-from address import emptyAddress
+from venture.lite.address import emptyList
+from venture.lite.env import VentureEnvironment
+from venture.lite.psp import DeterministicPSP, ESRRefOutputPSP
+from venture.lite.request import Request,ESR
+from venture.lite.sp import SP, VentureSPRecord
+from venture.lite.sp import SPType
+from venture.lite.sp_help import typed_nr
+from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.types as t
 
 class MakeMSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
@@ -33,8 +37,13 @@ class MSPRequestPSP(DeterministicPSP):
   def __init__(self,sharedOperatorNode):
     self.sharedOperatorNode = sharedOperatorNode
 
-  def simulate(self,args): 
-    id = str(args.operandValues)
-    exp = ["memoizedSP"] + [["quote",val] for val in args.operandValues]
+  def simulate(self,args):
+    vals = args.operandValues()
+    id = str(vals)
+    exp = ["memoizedSP"] + [["quote",val] for val in vals]
     env = VentureEnvironment(None,["memoizedSP"],[self.sharedOperatorNode])
-    return Request([ESR(id,exp,emptyAddress,env)])
+    return Request([ESR(id,exp,emptyList.append(id),env)])
+
+registerBuiltinSP("mem",typed_nr(MakeMSPOutputPSP(),
+                                 [SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)],
+                                 SPType([t.AnyType("a")], t.AnyType("b"), variadic=True)))

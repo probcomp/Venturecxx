@@ -17,8 +17,9 @@
 
 from nose.tools import raises
 
-from venture.test.config import get_ripl, on_inf_prim
 from venture.exception import VentureException
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 @raises(VentureException)

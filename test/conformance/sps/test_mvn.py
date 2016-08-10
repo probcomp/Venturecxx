@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,38 +15,38 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import eq_
-from nose import SkipTest
-import scipy.stats as stats
-from testconfig import config
 import math
 
-from venture.test.stats import statisticalTest, reportKnownContinuous
-from venture.test.config import get_ripl, collectSamples, skipWhenRejectionSampling, on_inf_prim
+from nose.tools import eq_
+
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.config import skipWhenRejectionSampling
+from venture.test.stats import reportKnownGaussian
+from venture.test.stats import statisticalTest
 import venture.value.dicts as v
 
 @on_inf_prim("none")
 def testMVGaussSmoke():
-  if config["get_ripl"] == "puma": raise SkipTest("Puma Vectors do not answer to is_array")
-  eq_(get_ripl().predict("(is_array (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
+  eq_(get_ripl().predict("(is_vector (multivariate_normal (vector 1 2) (matrix (array (array 3 4) (array 4 6)))))"), True)
 
 @statisticalTest
-def testMVGaussPrior():
-  """Confirm that projecting a multivariate Gaussian to one dimension
-  results in a univariate Gaussian."""
+def testMVGaussPrior(seed):
+  # Confirm that projecting a multivariate Gaussian to one dimension
+  # results in a univariate Gaussian.
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("vec", "(multivariate_normal (vector 1 2) (matrix (array (array 1 0.5) (array 0.5 1))))")
   ripl.predict("(lookup vec 0)",label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
-  cdf = stats.norm(loc=1, scale=1).cdf
-  return reportKnownContinuous(cdf, predictions, "N(1,1)")
+  return reportKnownGaussian(1, 1, predictions)
 
 @statisticalTest
-def testMVN1a():
-  "Check that MVN recovers normal correctly"
-  ripl = get_ripl()
+def testMVN1a(seed):
+  # Check that MVN recovers normal correctly
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("mu","(vector 10)")
   ripl.assume("sigma","(matrix (array (array 1.0)))")
@@ -54,13 +54,12 @@ def testMVN1a():
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous(cdf, predictions, "N(10,1)")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
-def testMVN1b():
-  "Check that MVN recovers normal with observe correctly"
-  ripl = get_ripl()
+def testMVN1b(seed):
+  # Check that MVN recovers normal with observe correctly
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("mu","(vector 10)")
   ripl.assume("sigma","(matrix (array (array 1.0)))")
@@ -69,13 +68,12 @@ def testMVN1b():
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid",infer="mixes_slowly")
-  cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(0.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @statisticalTest
-def testMVN2a():
-  "Check that MVN runs in 2 dimensions"
-  ripl = get_ripl()
+def testMVN2a(seed):
+  # Check that MVN runs in 2 dimensions
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("mu","(vector 100 10)")
   ripl.assume("sigma","(matrix (array (array 1.0 0.2) (array 0.2 1.0)))")
@@ -83,13 +81,12 @@ def testMVN2a():
   ripl.predict("(lookup x 1)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=10,scale=1)
-  return reportKnownContinuous(cdf, predictions, "N(10,1)")
+  return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
-def testMVN2b():
-  "Check that MVN runs in 2 dimensions with observe"
-  ripl = get_ripl()
+def testMVN2b(seed):
+  # Check that MVN runs in 2 dimensions with observe
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("mu","(vector 100 10)")
   ripl.assume("sigma","(matrix (array (array 1.0 0.2) (array 0.2 1.0)))")
@@ -98,14 +95,13 @@ def testMVN2b():
   ripl.predict("(lookup x 1)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=12,scale=math.sqrt(0.5))
-  return reportKnownContinuous(cdf, predictions, "N(12,sqrt(.5))")
+  return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
 @skipWhenRejectionSampling("MVN has no log density bound")
 @statisticalTest
-def testMVN3():
-  "Check that MVN is observable"
-  ripl = get_ripl()
+def testMVN3(seed):
+  # Check that MVN is observable
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("mu","(vector 0 0)")
   ripl.assume("sigma","(matrix (array (array 1.0 0.0) (array 0.0 1.0)))")
@@ -115,5 +111,4 @@ def testMVN3():
   ripl.predict("(lookup x 0)",label="pid")
 
   predictions = collectSamples(ripl,"pid")
-  cdf = lambda x: stats.norm.cdf(x,loc=1,scale=math.sqrt(0.5))
-  return reportKnownContinuous(cdf, predictions, "N(1,sqrt(.5))")
+  return reportKnownGaussian(1, math.sqrt(0.5), predictions)

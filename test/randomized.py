@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -39,8 +39,7 @@ from nose import SkipTest
 from venture.test import random_values as r
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
-from venture.lite.value import VentureType
-from venture.lite import env as env
+from venture.lite.types import VentureType
 
 def checkTypedProperty(prop, type_, *args, **kwargs):
   """Checks a property, given a description of the arguments to pass it.
@@ -136,7 +135,7 @@ passed to the given SP."""
     return sp_type.args_types
   else:
     length = npr.randint(0, 10)
-    return [sp_type.args_types[0] for _ in range(length)]
+    return sp_type.args_types[:-1] + [sp_type.args_types[-1] for _ in range(length)]
 
 def fully_uncurried_sp_type(sp_type):
   """Returns a list of argument list types representing arguments that
@@ -155,17 +154,3 @@ def final_return_type(sp_type):
     return sp_type
   else:
     return final_return_type(sp_type.return_type)
-
-class BogusArgs(object):
-  """Calling an SP requires an Args object, which is supposed to point
-  to Nodes in a Trace and all sorts of things.  Mock that for testing
-  purposes, since most SPs do not read the hairy stuff."""
-
-  def __init__(self, args, aux):
-    # TODO Do I want to try to synthesize an actual real random valid Args object?
-    self.operandValues = args
-    self.operandNodes = [None for _ in args]
-    self.isOutput = True
-    self.esrValues = []
-    self.env = env.VentureEnvironment()
-    self.spaux = aux

@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl, gen_on_inf_prim
+from venture.test.config import gen_on_inf_prim
+from venture.test.config import get_ripl
 
 @gen_on_inf_prim("pgibbs")
 def testBrushScopePGibbs():
@@ -26,8 +27,8 @@ def testBrushScopeFuncPGibbs():
   yield checkBrushScope, "func_pgibbs"
 
 def checkBrushScope(operator):
-  """Check that putting scope control in the brush doesn't cause
-  particle Gibbs to crash."""
+  # Check that putting scope control in the brush doesn't cause
+  # particle Gibbs to crash.
   ripl = get_ripl()
   ripl.assume("x1", "(tag (quote state) 0 (normal 1 1))")
   ripl.assume("t", "1") # This variable matters to get the block id into the brush.
@@ -36,4 +37,4 @@ def checkBrushScope(operator):
     (tag (quote state) t (normal 2 1))
     (tag (quote state) t (normal 0 1)))
 """)
-  ripl.infer("(%s state ordered 4 3)" % operator)
+  ripl.infer("(%s 'state ordered 4 3)" % operator)

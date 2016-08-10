@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,48 +15,34 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
-import scipy.stats as stats
-from nose import SkipTest
-
-from venture.test.stats import statisticalTest, reportKnownContinuous, reportKnownMeanVariance, reportKnownDiscrete
-from venture.test.config import get_ripl, collectSamples, collect_iid_samples
+from venture.test.config import collectSamples
+from venture.test.config import get_ripl
+from venture.test.stats import reportKnownDiscrete
+from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testBernoulli1():
-  ripl = get_ripl()
-  ripl.predict("(bernoulli 0.3)")
-  # ripl.assume("x2", "(bernoulli 0.4)")
-  # ripl.assume("x3", "(bernoulli 0.0)")
-  # ripl.assume("x4", "(bernoulli 1.0)")
-  # ripl.assume("x5", "(bernoulli)")  
+def testBernoulli1(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.predict("(bernoulli 0.3)", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(True, 0.3),(False, 0.7)]
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testCategorical1():
-  ripl = get_ripl()
-  ripl.predict("(categorical (simplex 0.3 0.7))")
-  # ripl.assume("x2", "(bernoulli 0.4)")
-  # ripl.assume("x3", "(bernoulli 0.0)")
-  # ripl.assume("x4", "(bernoulli 1.0)")
-  # ripl.assume("x5", "(bernoulli)")  
+def testCategorical1(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.predict("(categorical (simplex 0.3 0.7))", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(0, 0.3),(1, 0.7)]
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testCategorical2():
-  ripl = get_ripl()
-  ripl.predict("(categorical (simplex 0.3 0.7) (array true false))")
-  # ripl.assume("x2", "(bernoulli 0.4)")
-  # ripl.assume("x3", "(bernoulli 0.0)")
-  # ripl.assume("x4", "(bernoulli 1.0)")
-  # ripl.assume("x5", "(bernoulli)")  
+def testCategorical2(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.predict("(categorical (simplex 0.3 0.7) (array true false))", label="pid")
 
-  predictions = collectSamples(ripl,1)
+  predictions = collectSamples(ripl,"pid")
   ans = [(True, 0.3),(False, 0.7)]
   return reportKnownDiscrete(ans, predictions)

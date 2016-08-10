@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.wttree import PMap
+from venture.lite.wttree import PSet
 from venture.test.config import in_backend
-from venture.lite.wttree import PMap, PSet
 
 @in_backend("none")
 def testPMapInsertContainsDelete():
@@ -145,3 +146,39 @@ def testPSetIterate():
 
   for i in range(N):
     assert _hash(i) in xs
+
+class Lose(object):
+  def __init__(self, value):
+    self._value = value
+  @property
+  def value(self):
+    return self._value
+  def __cmp__(self, other):
+    raise Exception
+
+@in_backend("none")
+def testPMapKey():
+  r = PMap(lambda x: x.value)
+  r = r.insert(Lose(42), 'quagga')
+  r = r.insert(Lose(54), 'moose')
+  r = r.insert(Lose(50), 'caribou')
+  r = r.delete(Lose(50))
+  r = r.adjust(Lose(54), lambda s: s.replace('moose', 'eland'))
+  it = iter(r)
+  x = it.next()
+  assert isinstance(x, Lose)
+  assert x.value == 42
+  x = it.next()
+  assert isinstance(x, Lose)
+  assert x.value == 54
+  it = r.iteritems()
+  x = it.next()
+  assert len(x) == 2
+  assert isinstance(x[0], Lose)
+  assert x[0].value == 42
+  assert x[1] == 'quagga'
+  x = it.next()
+  assert len(x) == 2
+  assert isinstance(x[0], Lose)
+  assert x[0].value == 54
+  assert x[1] == 'eland'

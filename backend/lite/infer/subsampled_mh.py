@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -16,10 +16,12 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import warnings
-import random
 import math
+from collections import OrderedDict
+
 import numpy as np
 import scipy.stats as stats
+
 from ..exception import (SubsampledScaffoldError,
                          SubsampledScaffoldNotEffectiveWarning,
                          SubsampledScaffoldNotApplicableWarning,
@@ -27,9 +29,11 @@ from ..exception import (SubsampledScaffoldError,
 from ..value import SPRef
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..node import LookupNode, OutputNode
+from ..node import isLookupNode, isOutputNode
+from ..orderedset import OrderedSet
 from ..scaffold import constructScaffold, updateValuesAtScaffold
-from mh import BlockScaffoldIndexer, InPlaceOperator
+from venture.lite.infer.mh import BlockScaffoldIndexer
+from venture.lite.infer.mh import InPlaceOperator
 
 # To apply subsampled MH, we assume the following structure in a scaffold:
 # - The scaffold is partitioned into a global section and N local sections.
@@ -81,7 +85,7 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
   global_xiMix = indexer.logDensityOfIndex(proposedGlobalTrace,global_index)
 
   # Sample u.
-  log_u = math.log(random.random())
+  log_u = math.log(trace.py_rng.random())
 
   alpha = global_xiMix + logGlobalAlpha - global_rhoMix
 
@@ -96,15 +100,15 @@ def subsampledMixMH(trace,indexer,operator,Nbatch,k0,epsilon):
     assert N > 1
 
     mu_0 = (log_u - alpha) / N
-    perm_local_roots = np.random.permutation(global_index.local_roots)
+    perm_local_roots = trace.np_rng.permutation(global_index.local_roots)
 
     accept, n, _ = sequentialTest(mu_0, k0, Nbatch, N, epsilon,
         lambda i: operator.evalOneLocalSection(indexer, perm_local_roots[i]))
 
   if accept:
-    operator.accept() # May mutate trace
+    return operator.accept() # May mutate trace
   else:
-    operator.reject(indexer, perm_local_roots, n) # May mutate trace
+    return operator.reject(indexer, perm_local_roots, n) # May mutate trace
 
   # DEBUG
   # if global_index.globalBorder:
@@ -192,12 +196,12 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
     return index
 
   def sampleLocalIndex(self,trace,local_root,globalBorder):
-    if not (isinstance(local_root, LookupNode) or
-        (isinstance(local_root, OutputNode) and
+    if not (isLookupNode(local_root) or
+        (isOutputNode(local_root) and
          len(globalBorder) == 1 and
          not trace.pspAt(local_root).canAbsorb(trace, local_root, globalBorder[0]))):
       raise SubsampledScaffoldError("Invalid local root node.")
-    setsOfPNodes = [set([local_root])]
+    setsOfPNodes = [OrderedSet([local_root])]
     # Set updateValues = False because we'll update values in evalOneLocalSection.
     index = constructScaffold(trace,setsOfPNodes,updateValues=False)
 
@@ -242,7 +246,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
 
       # Check the global section.
       if not self.checkOneSection(trace, index,
-          lambda: self.traverseTrace(trace, allNodes, set(globalBorder), False, set()),
+          lambda: self.traverseTrace(trace, allNodes, OrderedSet(globalBorder), False, OrderedSet()),
           lambda: self.sampleGlobalIndex(trace), False):
         return False
 
@@ -251,7 +255,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
       local_roots = trace.childrenAt(globalBorder[0])
       for local_root in local_roots:
         if not self.checkOneSection(trace, index,
-            lambda: self.traverseTrace(trace, allNodes, {local_root}, True, set(globalBorder)),
+            lambda: self.traverseTrace(trace, allNodes, OrderedSet([local_root]), True, OrderedSet(globalBorder)),
             lambda: self.sampleLocalIndex(trace, local_root, globalBorder), True):
           return False
 
@@ -299,23 +303,23 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
             (node in index1.brush)    == (node in index2.brush))
 
   def allNodesInScaffold(self, index):
-    return set(index.regenCounts.keys()) | index.absorbing | index.brush
+    return OrderedSet(index.regenCounts.keys()) | index.absorbing | index.brush
 
   def traverseTrace(self, trace, include, startSet, descend, failAt):
-    nodeSet = set()
+    nodeSet = OrderedSet()
     q = list(startSet & include)
     while q:
       node = q.pop()
       if node not in nodeSet:
         nodeSet.add(node)
 
-        toExtend = set()
+        toExtend = OrderedSet()
         if node not in startSet or descend:
           toExtend = toExtend.union(trace.childrenAt(node))
         if node not in startSet or not descend:
           toExtend = toExtend.union(trace.parentsAt(node))
         for n in toExtend:
-          if n in failAt: return False, set()
+          if n in failAt: return False, OrderedSet()
           if n in include: q.append(n)
     return True, nodeSet
 
@@ -341,7 +345,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
         break
       numLONode = 0
       for child in children:
-        if isinstance(child, (LookupNode, OutputNode)):
+        if isLookupNode(child) or isOutputNode(child):
           numLONode += 1
           nextNode = child
         else:
@@ -356,7 +360,7 @@ class SubsampledBlockScaffoldIndexer(BlockScaffoldIndexer):
       # assert maybeBorder
       # assert not isinstance(trace.valueAt(globalBorder[0]), SPRef)
       # assert not trace.pspAt(globalBorder[0]).childrenCanAAA()
-      if not (maybeBorder and 
+      if not (maybeBorder and
           not isinstance(trace.valueAt(globalBorder[0]), SPRef) and
           not trace.pspAt(globalBorder[0]).childrenCanAAA()):
         # Is not a valid globalBorder. Revert to regular MH.
@@ -389,24 +393,24 @@ class SubsampledInPlaceOperator(InPlaceOperator):
     ## Regen and attach with the old value
     # proposed_value = trace.valueAt(globalBorderNode)
     # trace.setValueAt(globalBorderNode, self.rhoDB.getValue(globalBorderNode))
-    # regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
+    # regenAndAttach(trace,local_scaffold,False,local_rhoDB,OrderedDict())
 
     # Update with the old value.
     proposed_value = trace.valueAt(globalBorderNode)
     trace.setValueAt(globalBorderNode, self.rhoDB.getValue(globalBorderNode))
-    updateValuesAtScaffold(trace,local_scaffold,set(globalBorder))
+    updateValuesAtScaffold(trace,local_scaffold,OrderedSet(globalBorder))
 
     # Detach and extract
     rhoWeight,local_rhoDB = detachAndExtract(trace, local_scaffold, compute_gradient)
 
     # Regen and attach with the new value
     trace.setValueAt(globalBorderNode, proposed_value)
-    xiWeight = regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
+    xiWeight = regenAndAttach(trace,local_scaffold,False,local_rhoDB,OrderedDict())
     return xiWeight - rhoWeight
 
   def reject(self, indexer, perm_local_roots, n):
     # Restore the global section.
-    super(SubsampledInPlaceOperator, self).reject()
+    ans = super(SubsampledInPlaceOperator, self).reject()
 
     # Restore local sections in perm_local_roots[0:n]
     globalBorder = self.scaffold.globalBorder
@@ -414,23 +418,27 @@ class SubsampledInPlaceOperator(InPlaceOperator):
       for i in range(int(n)):
         local_root = perm_local_roots[i]
         local_scaffold = indexer.sampleLocalIndex(self.trace, local_root, globalBorder)
-        updateValuesAtScaffold(self.trace,local_scaffold,set(globalBorder))
+        updateValuesAtScaffold(self.trace,local_scaffold,OrderedSet(globalBorder))
+
+    return ans
 
   # Go through every local child and do extract and regen.
   # This is to be called at the end of a number of transitions.
   def makeConsistent(self,trace,indexer):
     if hasattr(self, "scaffold"):
-      self.makeConsistentGivenGlobal(trace,indexer,self.scaffold)
+      return self.makeConsistentGivenGlobal(trace,indexer,self.scaffold)
     else:
       # If a global section does not exist yet, try every possible block value.
       block_list = ([indexer.block] if indexer.block != "one"
                     else trace.blocksInScope(indexer.scope))
       block_old = indexer.block
+      tot = 0
       for block in block_list:
         indexer.block = block
         scaffold = indexer.sampleGlobalIndex(trace)
-        self.makeConsistentGivenGlobal(trace,indexer,scaffold)
+        tot += self.makeConsistentGivenGlobal(trace,indexer,scaffold)
       indexer.block = block_old
+      return tot
 
   # Make consistent local sections given a global scaffold.
   def makeConsistentGivenGlobal(self,trace,indexer,scaffold):
@@ -441,7 +449,10 @@ class SubsampledInPlaceOperator(InPlaceOperator):
         local_scaffold = indexer.sampleLocalIndex(trace,local_root,
             scaffold.globalBorder)
         _,local_rhoDB = detachAndExtract(trace, local_scaffold)
-        regenAndAttach(trace,local_scaffold,False,local_rhoDB,{})
+        regenAndAttach(trace,local_scaffold,False,local_rhoDB,OrderedDict())
+      return scaffold.numAffectedNodes() # TODO Is this actually right?
+    else:
+      return 0
 
 #### Subsampled_MH Operator
 #### Resampling from the prior
@@ -449,8 +460,7 @@ class SubsampledInPlaceOperator(InPlaceOperator):
 class SubsampledMHOperator(SubsampledInPlaceOperator):
   def propose(self, trace, scaffold):
     rhoWeight = self.prepare(trace, scaffold)
-    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
     return trace, xiWeight - rhoWeight
 
   def name(self): return "resimulation subsampled MH"
-

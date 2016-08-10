@@ -1,5 +1,5 @@
-venture.shortcuts package
-=========================
+Entry Point: package venture.shortcuts
+======================================
 
 Module contents
 ---------------

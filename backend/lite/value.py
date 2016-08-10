@@ -19,15 +19,17 @@
 
 The design currently lives in doc/type-system.md
 """
-import operator
+from collections import OrderedDict
 from numbers import Number
-import numpy as np
 import hashlib
+import operator
 
-from mlens import MLens
-import ensure_numpy as enp
-from request import Request # TODO Pull that file in here?
-from exception import VentureValueError, VentureTypeError
+import numpy as np
+
+from venture.lite.exception import VentureTypeError
+from venture.lite.exception import VentureValueError
+from venture.lite.mlens import MLens
+import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
@@ -36,27 +38,44 @@ import venture.value.dicts as v
 class VentureValue(object):
   """Base class of all Venture values."""
   ### "natural" representation and conversions
-  def getNumber(self): raise VentureTypeError("Cannot convert %s to number" % type(self))
-  def getInteger(self): raise VentureTypeError("Cannot convert %s to integer" % type(self))
-  def getProbability(self): raise VentureTypeError("Cannot convert %s to probability" % type(self))
-  def getAtom(self): raise VentureTypeError("Cannot convert %s to atom" % type(self))
-  def getBool(self): raise VentureTypeError("Cannot convert %s to bool" % type(self))
-  def getSymbol(self): raise VentureTypeError("Cannot convert %s to symbol" % type(self))
-  def getForeignBlob(self): raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
-  def getPair(self): raise VentureTypeError("Cannot convert %s to pair" % type(self))
+  def getNumber(self):
+    raise VentureTypeError("Cannot convert %s to number" % type(self))
+  def getInteger(self):
+    raise VentureTypeError("Cannot convert %s to integer" % type(self))
+  def getAtom(self):
+    raise VentureTypeError("Cannot convert %s to atom" % type(self))
+  def getBool(self):
+    raise VentureTypeError("Cannot convert %s to bool" % type(self))
+  def getSymbol(self):
+    raise VentureTypeError("Cannot convert %s to symbol" % type(self))
+  def getString(self):
+    raise VentureTypeError("Cannot convert %s to string" % type(self))
+  def getForeignBlob(self):
+    raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
+  def getPair(self):
+    raise VentureTypeError("Cannot convert %s to pair" % type(self))
   # Convention for containers: if the elt_type argument is None,
   # return a Python container of VentureValue objects.  Otherwise,
   # apply the transformation given by the given type to the elements.
-  def getArray(self, _elt_type=None): raise VentureTypeError("Cannot convert %s to array" % type(self))
-  def getSimplex(self): raise VentureTypeError("Cannot convert %s to simplex" % type(self))
-  def getDict(self): raise VentureTypeError("Cannot convert %s to dict" % type(self))
-  def getMatrix(self): raise VentureTypeError("Cannot convert %s to matrix" % type(self))
-  def getSymmetricMatrix(self): raise VentureTypeError("Cannot convert %s to symmetric matrix" % type(self))
-  def getSP(self): raise VentureTypeError("Cannot convert %s to sp" % type(self))
-  def getEnvironment(self): raise VentureTypeError("Cannot convert %s to environment" % type(self))
+  def getArray(self, _elt_type=None):
+    raise VentureTypeError("Cannot convert %s to array" % type(self))
+  def getSimplex(self):
+    raise VentureTypeError("Cannot convert %s to simplex" % type(self))
+  def getDict(self):
+    raise VentureTypeError("Cannot convert %s to dict" % type(self))
+  def getMatrix(self):
+    raise VentureTypeError("Cannot convert %s to matrix" % type(self))
+  def getSymmetricMatrix(self):
+    raise VentureTypeError(
+      "Cannot convert %s to symmetric matrix" % type(self))
+  def getSP(self):
+    raise VentureTypeError("Cannot convert %s to sp" % type(self))
+  def getEnvironment(self):
+    raise VentureTypeError("Cannot convert %s to environment" % type(self))
 
   ### Stack representation
-  def asStackDict(self, _trace=None): raise Exception("Cannot convert %s to a stack dictionary" % type(self))
+  def asStackDict(self, _trace=None):
+    raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
     if isinstance(thing, list):
@@ -74,30 +93,50 @@ class VentureValue(object):
     ot = type(other)
     if st == ot:
       return self.compareSameType(other)
+    if st in venture_numeric_types and ot in venture_numeric_types:
+      return stupidCompare(self.getNumber(), other.getNumber())
     if venture_types.index(st) < venture_types.index(ot) : return -1
     else: return 1 # We already checked for equality
-  def compareSameType(self, _): raise Exception("Cannot compare %s" % type(self))
+  def compareSameType(self, _):
+    raise Exception("Cannot compare %s" % type(self))
   def equal(self, other):
     st = type(self)
     ot = type(other)
     if st == ot:
       return self.equalSameType(other)
+    if st in venture_numeric_types and ot in venture_numeric_types:
+      return self.getNumber() == other.getNumber()
     else:
       return False
   def equalSameType(self, other): return self.compareSameType(other) == 0
 
   ### Generic container methods
-  def lookup(self, _): raise VentureTypeError("Cannot look things up in %s" % type(self))
+  def lookup(self, _):
+    raise VentureTypeError("Cannot look things up in %s" % type(self))
   def lookup_grad(self, _index, _direction):
-    raise VentureTypeError("Cannot compute gradient of looking things up in %s" % type(self))
-  def contains(self, _): raise VentureTypeError("Cannot look for things in %s" % type(self))
-  def length(self): raise VentureTypeError("Cannot measure length of %s" % type(self))
+    raise VentureTypeError(
+      "Cannot compute gradient of looking things up in %s" % type(self))
+  def contains(self, _):
+    raise VentureTypeError("Cannot look for things in %s" % type(self))
+  def length(self):
+    raise VentureTypeError("Cannot measure length of %s" % type(self))
+  def take(self, _ct):
+    raise VentureTypeError("Cannot take a prefix of %s" % type(self))
 
   def __eq__(self, other):
     if isinstance(other, VentureValue):
       return self.equal(other)
     else:
       return False
+
+  def __ne__(self, other):
+    return not self == other
+
+  def __cmp__(self, other):
+    if isinstance(other, VentureValue):
+      return self.compare(other)
+    else:
+      return NotImplemented
 
   # Some Venture value types form a natural vector space over reals,
   # so overload addition, subtraction, and multiplication by scalars.
@@ -108,12 +147,16 @@ class VentureValue(object):
   # cotangent space is exposed through map_real, which constructs a
   # cotangent for a value given a function to which to feed the
   # value's current value at every dimension.
-  def map_real(self, _f): return 0
+  def map_real(self, _f):
+    return 0
 
   def expressionFor(self):
+    # TODO Do we actually need to be able to override this anywhere?
+    # Or does quote insertion work reliably now?
     return v.quote(self.asStackDict(None))
 
-  def isValidCompoundForm(self): return False
+  def isValidCompoundForm(self):
+    return False
 
 def vv_dot_product(v1, v2):
   """Dot product of venture values taking into account that either may be
@@ -125,27 +168,30 @@ this."""
 class VentureNumber(VentureValue):
   def __init__(self,number):
     if not isinstance(number, Number):
-      raise VentureTypeError("%s is of %s, not Number" % (str(number), type(number)))
+      raise VentureTypeError(
+        "%s is of %s, not Number" % (str(number), type(number)))
     self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
       return "VentureNumber(%s)" % self.number
     else:
       return "VentureNumber(uninitialized)"
-  def getNumber(self): return self.number
-  def getInteger(self): return int(self.number)
-  def getProbability(self):
-    if 0 <= self.number and self.number <= 1:
-      return self.number
-    else: # TODO Do what?  Clip to [0,1]?  Raise?
-      raise VentureTypeError("Probability out of range %s" % self.number)
-  def getBool(self): return self.number
+  def getNumber(self):
+    return self.number
+  def getInteger(self):
+    return int(self.number)
+  def getBool(self):
+    return self.number
 
-  def asStackDict(self, _trace=None): return v.number(self.number)
+  def asStackDict(self, _trace=None):
+    return v.number(self.number)
   @staticmethod
-  def fromStackDict(thing): return VentureNumber(thing["value"])
-  def compareSameType(self, other): return stupidCompare(self.number, other.number)
-  def __hash__(self): return hash(self.number)
+  def fromStackDict(thing):
+    return VentureNumber(thing["value"])
+  def compareSameType(self, other):
+    return stupidCompare(self.number, other.number)
+  def __hash__(self):
+    return hash(self.number)
   def __add__(self, other):
     if other == 0:
       return self
@@ -205,49 +251,28 @@ class VentureInteger(VentureValue):
       return "VentureInteger(%s)" % self.number
     else:
       return "VentureInteger(uninitialized)"
-  def getInteger(self): return self.number
-  def getNumber(self): return float(self.number)
-  def getBool(self): return self.number
-  def asStackDict(self, _trace=None): return v.integer(self.number)
+  def getInteger(self):
+    return self.number
+  def getNumber(self):
+    return float(self.number)
+  def getBool(self):
+    return self.number
+  def asStackDict(self, _trace=None):
+    return v.integer(self.number)
   @staticmethod
-  def fromStackDict(thing): return VentureInteger(thing["value"])
-  def compareSameType(self, other): return stupidCompare(self.number, other.number)
-  def __hash__(self): return hash(self.number)
-  def expressionFor(self): return self.number
-
-class VentureProbability(VentureValue):
-  def __init__(self, number):
-    assert isinstance(number, Number)
-    assert 0 <= number and number <= 1
-    self.number = float(number)
-  def __repr__(self):
-    if hasattr(self, "number"):
-      return "VentureProbability(%s)" % self.number
+  def fromStackDict(thing):
+    return VentureInteger(thing["value"])
+  def compareSameType(self, other):
+    return stupidCompare(self.number, other.number)
+  def __hash__(self):
+    return hash(self.number)
+  def __add__(self, other):
+    if other == 0:
+      return self
     else:
-      return "VentureProbability(uninitialized)"
-  def getNumber(self): return self.number
-  def getProbability(self): return self.number
-  def asStackDict(self, _trace=None): return v.probability(self.number)
-  @staticmethod
-  def fromStackDict(thing): return VentureProbability(thing["value"])
-  def compareSameType(self, other): return stupidCompare(self.number, other.number)
-  def __hash__(self): return hash(self.number)
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
-    return [v.symbol("probability"), self.number]
-  def map_real(self, f):
-    return VentureNumber(f(self.number))
-  def real_lenses(self):
-    class NumberLens(MLens):
-      # Poor man's closure: pass the relevant thing from the lexical
-      # scope directly.
-      def __init__(self, vn):
-        self.vn = vn
-      def get(self):
-        return self.vn.number
-      def set(self, new):
-        assert isinstance(new, Number)
-        self.vn.number = new
-    return [NumberLens(self)]
+    return self.number
 
 def stupidCompare(thing, other):
   # number.__cmp__(other) works for ints but not floats.  Guido, WTF!?
@@ -281,7 +306,7 @@ def lexicographicMatrixCompare(thing, other):
   ct_other = reduce(operator.mul, np.shape(other), 1)
   if ct_thing == 0 and ct_other == 0: return 0
   shape_cmp = lexicographicUnboxedCompare(np.shape(thing), np.shape(other))
-  if not shape_cmp == 0: return shape_cmp
+  if shape_cmp != 0: return shape_cmp
 
   # else shame shape
   if np.array_equal(thing, other): return 0
@@ -299,83 +324,163 @@ class VentureAtom(VentureValue):
   def __init__(self,atom):
     assert isinstance(atom, Number)
     self.atom = atom
-  def __repr__(self): return "Atom(%s)" % self.atom
-  def getNumber(self): return self.atom
-  def getAtom(self): return self.atom
-  def getBool(self): return self.atom
-  def asStackDict(self, _trace=None): return v.atom(self.atom)
+  def __repr__(self):
+    return "Atom(%s)" % self.atom
+  def getAtom(self):
+    return self.atom
+  def asStackDict(self, _trace=None):
+    return v.atom(self.atom)
   @staticmethod
-  def fromStackDict(thing): return VentureAtom(thing["value"])
-  def compareSameType(self, other): return stupidCompare(self.atom, other.atom)
-  def __hash__(self): return hash(self.atom)
-  def expressionFor(self): return v.quote(self) # TODO Is this right?
+  def fromStackDict(thing):
+    return VentureAtom(thing["value"])
+  def compareSameType(self, other):
+    return stupidCompare(self.atom, other.atom)
+  def __hash__(self):
+    return hash(self.atom)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
+  def expressionFor(self):
+    return v.quote(self) # TODO Is this right?
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
     self.boolean = bool(boolean)
-  def __repr__(self): return "Bool(%s)" % self.boolean
-  def getBool(self): return self.boolean
-  def getNumber(self):
-    # TODO This horrible thing permits adding the outputs of bernoulli
-    # trials as well as dispatching on them.  Or should flip and
-    # bernoulli be different SPs?
+  def __repr__(self):
+    return "Bool(%s)" % self.boolean
+  def getBool(self):
     return self.boolean
-  def getInteger(self): return self.boolean
-  def asStackDict(self, _trace=None): return v.boolean(self.boolean)
+  def asStackDict(self, _trace=None):
+    return v.boolean(self.boolean)
   @staticmethod
-  def fromStackDict(thing): return VentureBool(thing["value"])
+  def fromStackDict(thing):
+    return VentureBool(thing["value"])
   def compareSameType(self, other):
     return stupidCompare(self.boolean, other.boolean)
-  def __hash__(self): return hash(self.boolean)
+  def __hash__(self):
+    return hash(self.boolean)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
   def expressionFor(self):
     return v.symbol("true") if self.boolean else v.symbol("false")
 
 class VentureSymbol(VentureValue):
-  def __init__(self,symbol): self.symbol = symbol
-  def __repr__(self): return "Symbol(%s)" % self.symbol
-  def getSymbol(self): return self.symbol
-  def asStackDict(self, _trace=None): return v.symbol(self.symbol)
+  def __init__(self,symbol):
+    self.symbol = symbol
+  def __repr__(self):
+    return "Symbol(%s)" % self.symbol
+  def getSymbol(self):
+    return self.symbol
+  def asStackDict(self, _trace=None):
+    return v.symbol(self.symbol)
   @staticmethod
-  def fromStackDict(thing): return VentureSymbol(thing["value"])
-  def compareSameType(self, other): return stupidCompare(self.symbol, other.symbol)
-  def __hash__(self): return hash(self.symbol)
-  def expressionFor(self): return v.quote(self.asStackDict(None))
+  def fromStackDict(thing):
+    return VentureSymbol(thing["value"])
+  def compareSameType(self, other):
+    return stupidCompare(self.symbol, other.symbol)
+  def __hash__(self):
+    return hash(self.symbol)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
+  def expressionFor(self):
+    return v.quote(self.asStackDict(None))
+
+# The difference between strings and symbols is that strings are
+# self-evaluating
+class VentureString(VentureValue):
+  def __init__(self,strng):
+    self.strng = strng
+  def __repr__(self):
+    return "Strng(%s)" % self.strng
+  def getSymbol(self):
+    return self.strng
+  def getString(self):
+    return self.strng
+  def asStackDict(self, _trace=None):
+    return v.string(self.strng)
+  @staticmethod
+  def fromStackDict(thing):
+    return VentureString(thing["value"])
+  def compareSameType(self, other):
+    return stupidCompare(self.strng, other.strng)
+  def __hash__(self):
+    return hash(self.strng)
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
+  def expressionFor(self):
+    return v.quote(self.asStackDict(None))
 
 class VentureForeignBlob(VentureValue):
   # TODO Think about the interaction of foreign blobs with trace
   # copying and serialization
-  def __init__(self, datum): self.datum = datum
-
-  def getForeignBlob(self): return self.datum
-
+  def __init__(self, datum):
+    self.datum = datum
+  def getForeignBlob(self):
+    return self.datum
   def asStackDict(self, _trace=None):
     return v.blob(self.datum)
   @staticmethod
-  def fromStackDict(thing): return VentureForeignBlob(thing["value"])
+  def fromStackDict(thing):
+    return VentureForeignBlob(thing["value"])
 
 class VentureNil(VentureValue):
-  def __init__(self): pass
-  def __repr__(self): return "Nil"
+  def __init__(self):
+    pass
+  def __repr__(self):
+    return "Nil"
 
-  def asStackDict(self, _trace=None): return v.list([])
+  def getArray(self, elt_type=None):
+    return VentureArray([]).getArray(elt_type)
+
+  def asStackDict(self, _trace=None):
+    return v.list([])
   @staticmethod
-  def fromStackDict(_): return VentureNil()
+  def fromStackDict(_):
+    return VentureNil()
 
-  def compareSameType(self, _): return 0 # All Nils are equal
-  def __hash__(self): return 0
+  def compareSameType(self, _):
+    return 0 # All Nils are equal
+  def __hash__(self):
+    return 0
+  def __add__(self, other):
+    if other == 0:
+      return self
+    else:
+      raise "Cannot move %s by a non-zero displacement" % (self,)
 
   def lookup(self, index):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
-  def contains(self, _obj): return False
-  def size(self): return 0
+  def contains(self, _obj):
+    return False
+  def size(self):
+    return 0
+  def take(self, ct):
+    if ct < 1:
+      return self
+    else:
+      raise VentureValueError("Index out of bounds: too long by %s" % ct)
 
   def expressionFor(self):
     return [v.symbol("list")]
 
-  def isValidCompoundForm(self): return True
-  def asPossiblyImproperList(self): return ([], None)
-  def asPythonList(self, _elt_type=None): return []
+  def isValidCompoundForm(self):
+    return True
+  def asPossiblyImproperList(self):
+    return ([], None)
+  def asPythonList(self, _elt_type=None):
+    return []
 
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
@@ -383,8 +488,8 @@ class VenturePair(VentureValue):
     # spaces after all.  A true pair needs to have a venture value
     # inside; a pair that represents the cotangent of something needs
     # to have cotangents; but cotangents permit symbolic zeros.
-    if not first == 0: assert isinstance(first, VentureValue)
-    if not rest == 0:  assert isinstance(rest, VentureValue)
+    if first != 0: assert isinstance(first, VentureValue)
+    if rest != 0:  assert isinstance(rest, VentureValue)
     self.first = first
     self.rest = rest
   def __repr__(self):
@@ -394,7 +499,8 @@ class VenturePair(VentureValue):
     else:
       return "VentureList(%r . %r)" % (list_, tail)
 
-  def getPair(self): return (self.first,self.rest)
+  def getPair(self):
+    return (self.first,self.rest)
   def getArray(self, elt_type=None):
     (list_, tail) = self.asPossiblyImproperList()
     if tail is None:
@@ -407,15 +513,18 @@ class VenturePair(VentureValue):
     if tail is None:
       return v.list([val.asStackDict(trace) for val in list_])
     else:
-      return v.improper_list([val.asStackDict(trace) for val in list_], tail.asStackDict())
+      return v.improper_list([val.asStackDict(trace) for val in list_],
+                             tail.asStackDict())
   @staticmethod
   def fromStackDict(thing):
     if thing["type"] == "improper_list":
       (list_, tail) = thing["value"]
-      return pythonListToImproperVentureList(VentureValue.fromStackDict(tail),
-                                             *[VentureValue.fromStackDict(val) for val in list_])
+      return pythonListToImproperVentureList(
+        VentureValue.fromStackDict(tail),
+        *[VentureValue.fromStackDict(val) for val in list_])
     else:
-      return pythonListToVentureList([VentureValue.fromStackDict(val) for val in thing["value"]])
+      return pythonListToVentureList([VentureValue.fromStackDict(val)
+                                      for val in thing["value"]])
 
   def compareSameType(self, other):
     fstcmp = self.first.compare(other.first)
@@ -429,6 +538,8 @@ class VenturePair(VentureValue):
       ind = index.getNumber()
     except VentureTypeError:
       raise VentureValueError("Looking up non-number %r in a list" % index)
+    if ind < 0: # Equivalent to floor for negative floats
+      raise VentureValueError("Index out of bounds %s" % index)
     if ind < 1: # Equivalent to truncating for positive floats
       return self.first
     else:
@@ -442,7 +553,8 @@ class VenturePair(VentureValue):
     if ind < 1:
       return VenturePair((direction, 0))
     else:
-      return VenturePair((0, self.rest.lookup_grad(VentureNumber(ind - 1), direction)))
+      return VenturePair((0, self.rest.lookup_grad(VentureNumber(ind - 1),
+                                                   direction)))
   def contains(self, obj): # Treat the list as a set
     if obj.equal(self.first):
       return True
@@ -454,6 +566,11 @@ class VenturePair(VentureValue):
       return self.rest.contains(obj)
   def size(self): # Really, length
     return 1 + self.rest.size()
+  def take(self, ind):
+    if ind < 1:
+      return VentureNil()
+    else:
+      return VenturePair((self.first, self.rest.take(ind-1)))
 
   def __add__(self, other):
     if other == 0:
@@ -481,12 +598,14 @@ class VenturePair(VentureValue):
     assert isinstance(other, Number)
     return VenturePair((other * self.first, other * self.rest))
   def dot(self, other):
-    return vv_dot_product(self.first, other.first) + vv_dot_product(self.rest, other.rest)
+    return vv_dot_product(self.first, other.first) + \
+      vv_dot_product(self.rest, other.rest)
   def map_real(self, f):
     return VenturePair((self.first.map_real(f), self.rest.map_real(f)))
 
   def expressionFor(self):
-    return [v.symbol("pair"), self.first.expressionFor(), self.rest.expressionFor()]
+    return [v.symbol("pair"), self.first.expressionFor(),
+            self.rest.expressionFor()]
 
   def isValidCompoundForm(self):
     return self.rest.isValidCompoundForm()
@@ -512,9 +631,10 @@ def pythonListToImproperVentureList(tail, *l):
 
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy."""
-  def __init__(self, array): self.array = array
+  def __init__(self, array):
+    self.array = array
   def __repr__(self):
-    return "VentureArray(%s)" % self.array
+    return "VentureArray(%s)" % (self.array,)
   def getArray(self, elt_type=None):
     if elt_type is None: # No conversion
       return self.array
@@ -529,7 +649,8 @@ class VentureArray(VentureValue):
     return v.array([val.asStackDict(trace) for val in self.array])
   @staticmethod
   def fromStackDict(thing):
-    return VentureArray([VentureValue.fromStackDict(val) for val in thing["value"]])
+    return VentureArray([VentureValue.fromStackDict(val)
+                         for val in thing["value"]])
 
   def lookup(self, index):
     try:
@@ -541,13 +662,17 @@ class VentureArray(VentureValue):
     else:
       raise VentureValueError("Index out of bounds: %s" % index)
   def lookup_grad(self, index, direction):
-    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
+    return VentureArray([direction if i == index else 0
+                         for (_,i) in enumerate(self.array)])
   def contains(self, obj):
     # Not Python's `in` because I need to use custom equality
     # TODO I am going to have to overload the equality for dicts
     # anyway, so might as well eventually use `in` here.
     return any(obj.equal(li) for li in self.array)
-  def size(self): return len(self.array)
+  def size(self):
+    return len(self.array)
+  def take(self, ind):
+    return VentureArray(self.array[0:ind])
 
   def __add__(self, other):
     if other == 0:
@@ -575,7 +700,8 @@ class VentureArray(VentureValue):
     assert isinstance(other, Number)
     return VentureArray([other * x  for x in self.array])
   def dot(self, other):
-    return sum([vv_dot_product(x, y) for (x,y) in zip(self.array, other.array)])
+    return sum([vv_dot_product(x, y)
+                for (x,y) in zip(self.array, other.array)])
   def map_real(self, f):
     return VentureArray([x.map_real(f) for x in self.array])
 
@@ -587,10 +713,13 @@ class VentureArray(VentureValue):
     return self.getArray(elt_type)
 
 class VentureArrayUnboxed(VentureValue):
-  """Venture arrays of unboxed objects are homogeneous, with O(1) access and O(n) copy."""
+  """Venture arrays of unboxed objects are homogeneous, with O(1) access
+and O(n) copy."""
   def __init__(self, array, elt_type):
+    from venture.lite.types import VentureType
     if not isinstance(elt_type, VentureType):
-      raise VentureTypeError("%s of %s is not a VentureType" % (elt_type, type(elt_type)))
+      raise VentureTypeError("%s of %s is not a VentureType" %
+                             (elt_type, type(elt_type)))
     self.elt_type = elt_type
     self.array = enp.ensure_numpy_if_possible(elt_type, array)
   def __repr__(self):
@@ -608,7 +737,8 @@ class VentureArrayUnboxed(VentureValue):
       if elt_type == self.elt_type:
         return self.array
       else:
-        return [elt_type.asPython(self.elt_type.asVentureValue(val)) for val in self.array]
+        return [elt_type.asPython(self.elt_type.asVentureValue(val))
+                for val in self.array]
 
   def compareSameType(self, other):
     return lexicographicUnboxedCompare(self.array, other.array)
@@ -622,6 +752,7 @@ class VentureArrayUnboxed(VentureValue):
       # TODO HACK: treat Puma's vectors as unboxed arrays of numbers,
       # because Puma can't make a NumberType to stick in the stack
       # dict.
+      from venture.lite.types import NumberType
       return VentureArrayUnboxed(thing["value"], NumberType())
     return VentureArrayUnboxed(thing["value"], thing["subtype"])
 
@@ -637,44 +768,63 @@ class VentureArrayUnboxed(VentureValue):
   def lookup_grad(self, index, direction):
     # TODO Really this should be an unboxed array of the gradient
     # types of the elements, with generic zeroes.
-    return VentureArray([direction if i == index else 0 for (_,i) in enumerate(self.array)])
+    return VentureArrayUnboxed(
+      [self.elt_type.asPython(direction) if i == index else 0
+       for (_,i) in enumerate(self.array)],
+      self.elt_type)
   def contains(self, obj):
-    return any(obj.equal(self.elt_type.asVentureValue(li)) for li in self.array)
-  def size(self): return len(self.array)
+    return any(obj.equal(self.elt_type.asVentureValue(li))
+               for li in self.array)
+  def size(self):
+    return len(self.array)
+  def take(self, ind):
+    return VentureArrayUnboxed(self.array[0:ind], self.elt_type)
 
   def __add__(self, other):
     if other == 0:
       return self
     else:
-      return VentureArrayUnboxed(*enp.map2(operator.add, self.array, self.elt_type, other.array, other.elt_type))
+      return VentureArrayUnboxed(
+        *enp.map2(operator.add, self.array, self.elt_type,
+                  other.array, other.elt_type))
   def __radd__(self, other):
     if other == 0:
       return self
     else:
-      return VentureArrayUnboxed(*enp.map2(operator.add, other.array, other.elt_type, self.array, self.elt_type))
+      return VentureArrayUnboxed(
+        *enp.map2(operator.add, other.array, other.elt_type,
+                  self.array, self.elt_type))
   def __neg__(self):
-    return VentureArrayUnboxed(enp.map(operator.neg, self.array, self.elt_type), self.elt_type)
+    return VentureArrayUnboxed(
+      enp.map(operator.neg, self.array, self.elt_type), self.elt_type)
   def __sub__(self, other):
     if other == 0:
       return self
     else:
-      return VentureArrayUnboxed(*enp.map2(operator.sub, self.array, self.elt_type, other.array, other.elt_type))
+      return VentureArrayUnboxed(
+        *enp.map2(operator.sub, self.array, self.elt_type,
+                  other.array, other.elt_type))
   def __mul__(self, other):
     # Assume other is a scalar
     assert isinstance(other, Number)
-    return VentureArrayUnboxed(enp.map(lambda x: x * other, self.array, self.elt_type), self.elt_type)
+    return VentureArrayUnboxed(
+      enp.map(lambda x: x * other, self.array, self.elt_type), self.elt_type)
   def __rmul__(self, other):
     # Assume other is a scalar
     assert isinstance(other, Number)
-    return VentureArrayUnboxed(enp.map(lambda x: other * x, self.array, self.elt_type), self.elt_type)
+    return VentureArrayUnboxed(
+      enp.map(lambda x: other * x, self.array, self.elt_type), self.elt_type)
   def dot(self, other):
     return enp.dot(self.array, self.elt_type, other.array, other.elt_type)
   def map_real(self, f):
-    # TODO Ascertain whether self.elt_type represents a real number or not so I can do
-    # return VentureArrayUnboxed(enp.map(f, self.array, self.elt_type), self.elt_type)
+    # TODO Ascertain whether self.elt_type represents a real number or
+    # not so I can do
+    # return VentureArrayUnboxed(
+    #   enp.map(f, self.array, self.elt_type), self.elt_type)
     # but the general case is
     new_type = self.elt_type.gradient_type()
-    new_data = [new_type.asPython(self.elt_type.asVentureValue(val).map_real(f)) for val in self.array]
+    new_data = [new_type.asPython(self.elt_type.asVentureValue(val).map_real(f))
+                for val in self.array]
     return VentureArrayUnboxed(new_data, new_type)
 
   def isValidCompoundForm(self): return False
@@ -686,18 +836,22 @@ class VentureSimplex(VentureValue):
 are also supposed to sum to 1, but we are not checking that.
 
   """
-  def __init__(self,simplex): self.simplex = simplex
+  def __init__(self,simplex):
+    self.simplex = simplex
   def __repr__(self):
     return "VentureSimplex(%s)" % self.simplex
   def getArray(self, elt_type=None):
-    # TODO Abstract similarities between this and the getArray method of ArrayUnboxed
+    from venture.lite.types import ProbabilityType
+    # TODO Abstract similarities between this and the getArray method
+    # of ArrayUnboxed
     if elt_type is None: # Convert to VentureValue
       return [ProbabilityType().asVentureValue(val) for val in self.simplex]
     else:
       if elt_type.__class__ == ProbabilityType:
         return self.simplex
       else:
-        return [elt_type.asPython(ProbabilityType().asVentureValue(val)) for val in self.simplex]
+        return [elt_type.asPython(ProbabilityType().asVentureValue(val))
+                for val in self.simplex]
   def getSimplex(self): return self.simplex
 
   def compareSameType(self, other):
@@ -715,29 +869,51 @@ are also supposed to sum to 1, but we are not checking that.
   def fromStackDict(thing): return VentureSimplex(thing["value"])
 
   def lookup(self, index):
+    from venture.lite.types import ProbabilityType
     return ProbabilityType().asVentureValue(self.simplex[index.getNumber()])
   def contains(self, obj):
-    # Homogeneous; TODO make it return False instead of exploding for non-numeric objects.
+    # Homogeneous; TODO make it return False instead of exploding for
+    # non-numeric objects.
     return obj.getNumber() in self.simplex
   def size(self): return len(self.simplex)
+  def take(self, ind):
+    from venture.lite.types import ProbabilityType
+    return VentureArrayUnboxed(self.simplex[0:ind], ProbabilityType())
 
   def expressionFor(self):
     return [v.symbol("simplex")] + self.simplex
   def map_real(self, f):
-    # The cotangent space actually has the constraint that the cotangents sum to 0
+    # The cotangent space actually has the constraint that the
+    # cotangents sum to 0
+    from venture.lite.types import NumberType
     return VentureArrayUnboxed([f(p) for p in self.simplex], NumberType())
 
-class VentureDict(VentureValue):
-  def __init__(self,d): self.dict = d
+  def asPythonList(self, elt_type=None):
+    from venture.lite.types import ProbabilityType
+    if elt_type is None:
+      return [ProbabilityType().asVentureValue(val) for val in self.simplex]
+    else:
+      if elt_type == ProbabilityType():
+        return self.simplex
+      else:
+        return [elt_type.asPython(ProbabilityType().asVentureValue(val))
+                for val in self.simplex]
 
-  def getDict(self): return self.dict
+class VentureDict(VentureValue):
+  def __init__(self,d):
+    assert isinstance(d, OrderedDict)
+    self.dict = d
+
+  def getDict(self):
+    return self.dict
 
   def asStackDict(self, _trace=None):
-    return v.dict([(key.asStackDict(_trace), val.asStackDict(_trace)) for (key, val) in self.dict.items()])
+    return v.dict([(key.asStackDict(_trace), val.asStackDict(_trace))
+                   for (key, val) in self.dict.items()])
   @staticmethod
   def fromStackDict(thing):
     f = VentureValue.fromStackDict
-    return VentureDict({f(key):f(val) for (key, val) in thing["value"]})
+    return VentureDict(OrderedDict((f(key), f(val)) for (key, val) in thing["value"]))
 
   def equalSameType(self, other):
     return len(set(self.dict.iteritems()) ^ set(other.dict.iteritems())) == 0
@@ -756,11 +932,13 @@ class VentureDict(VentureValue):
 
 # 2D array of numbers backed by a numpy array object
 class VentureMatrix(VentureValue):
-  def __init__(self,matrix): self.matrix = np.asarray(matrix)
+  def __init__(self,matrix):
+    self.matrix = np.asarray(matrix)
   def __repr__(self):
     return "VentureMatrix(%s)" % self.matrix
 
-  def getMatrix(self): return self.matrix
+  def getMatrix(self):
+    return self.matrix
   def getSymmetricMatrix(self):
     if matrixIsSymmetric(self.matrix):
       return self.matrix
@@ -777,7 +955,8 @@ class VentureMatrix(VentureValue):
   def asStackDict(self, _trace=None):
     return v.matrix(self.matrix)
   @staticmethod
-  def fromStackDict(thing): return VentureMatrix(thing["value"])
+  def fromStackDict(thing):
+    return VentureMatrix(thing["value"])
 
   def lookup(self, index):
     try:
@@ -786,6 +965,7 @@ class VentureMatrix(VentureValue):
       ind2 = vind2.getNumber()
     except VentureTypeError:
       raise VentureValueError("Looking up non-pair-of-numbers %r in a matrix" % index)
+    from venture.lite.types import NumberType
     return NumberType().asVentureValue(self.matrix[int(ind1), int(ind2)])
 
   def __add__(self, other):
@@ -817,12 +997,14 @@ class VentureMatrix(VentureValue):
     assert isinstance(other, VentureMatrix)
     return np.sum(np.multiply(self.matrix, other.matrix))
   def map_real(self, f):
-    if self.matrix.size == 0: return self # Do I seriously have to special-case this?
+    # Do I seriously have to special-case this?
+    if self.matrix.size == 0: return self
     return VentureMatrix(np.vectorize(f)(self.matrix))
 
   def expressionFor(self):
     return [v.symbol("matrix"),
-            [v.symbol("list")] + [[v.symbol("list")] + [val for val in row] for row in self.matrix]]
+            [v.symbol("list")] + [[v.symbol("list")] + [val for val in row]
+                                  for row in self.matrix]]
 
 class VentureSymmetricMatrix(VentureMatrix):
   def __init__(self, matrix):
@@ -834,7 +1016,8 @@ class VentureSymmetricMatrix(VentureMatrix):
   def asStackDict(self, _trace=None):
     return v.symmetric_matrix(self.matrix)
   @staticmethod
-  def fromStackDict(thing): return VentureSymmetricMatrix(thing["value"])
+  def fromStackDict(thing):
+    return VentureSymmetricMatrix(thing["value"])
 
   def __add__(self, other):
     if other == 0:
@@ -868,9 +1051,10 @@ class VentureSymmetricMatrix(VentureMatrix):
     assert isinstance(other, Number)
     return VentureSymmetricMatrix(other * self.matrix)
   def map_real(self, f):
-    if self.matrix.size == 0: return self # Do I seriously have to special-case this?
+    # Do I seriously have to special-case this?
+    if self.matrix.size == 0: return self
     candidate = np.vectorize(f)(self.matrix)
-    return VentureSymmetricMatrix( (candidate + candidate.T)/2 )
+    return VentureSymmetricMatrix( (candidate + candidate.T) / 2. )
 
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
@@ -879,10 +1063,11 @@ def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
 
 class SPRef(VentureValue):
-  def __init__(self,makerNode): self.makerNode = makerNode
+  def __init__(self,makerNode):
+    self.makerNode = makerNode
   def asStackDict(self, trace=None):
     assert trace is not None
-    return v.val("sp", trace.madeSPRecordAt(self.makerNode).show())
+    return trace.madeSPRecordAt(self.makerNode).asStackDict()
 
   @staticmethod
   def fromStackDict(thing): return thing["value"]
@@ -895,32 +1080,35 @@ class SPRef(VentureValue):
 ## Not Requests, because we do not reflect on them
 
 venture_types = [
-  VentureNumber, VentureInteger, VentureProbability, VentureAtom, VentureBool,
-  VentureSymbol, VentureForeignBlob, VentureNil, VenturePair,
-  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict, VentureMatrix,
-  VentureSymmetricMatrix, SPRef]
+  VentureNumber, VentureInteger, VentureAtom, VentureBool,
+  VentureSymbol, VentureString, VentureForeignBlob, VentureNil, VenturePair,
+  VentureArray, VentureArrayUnboxed, VentureSimplex, VentureDict,
+  VentureMatrix, VentureSymmetricMatrix, SPRef]
   # Break load order dependency by not adding SPs and Environments yet
 
-stackable_types = {
-  "number": VentureNumber,
-  "real": VentureNumber,
-  "integer": VentureInteger,
-  "probability": VentureProbability,
-  "atom": VentureAtom,
-  "boolean": VentureBool,
-  "symbol": VentureSymbol,
-  "blob": VentureForeignBlob,
-  "list": VenturePair,
-  "improper_list": VenturePair,
-  "vector": VentureArrayUnboxed,
-  "array": VentureArray,
-  "array_unboxed": VentureArrayUnboxed,
-  "simplex": VentureSimplex,
-  "dict": VentureDict,
-  "matrix": VentureMatrix,
-  "symmetric_matrix": VentureSymmetricMatrix,
-  "SP": SPRef, # As opposed to VentureSPRecord?
-  }
+venture_numeric_types = [VentureNumber, VentureInteger]
+
+stackable_types = OrderedDict([
+  ("number", VentureNumber),
+  ("real", VentureNumber),
+  ("integer", VentureInteger),
+  ("probability", VentureNumber), # TODO Eliminate this stack dict type?
+  ("atom", VentureAtom),
+  ("boolean", VentureBool),
+  ("symbol", VentureSymbol),
+  ("string", VentureString),
+  ("blob", VentureForeignBlob),
+  ("list", VenturePair),
+  ("improper_list", VenturePair),
+  ("vector", VentureArrayUnboxed),
+  ("array", VentureArray),
+  ("array_unboxed", VentureArrayUnboxed),
+  ("simplex", VentureSimplex),
+  ("dict", VentureDict),
+  ("matrix", VentureMatrix),
+  ("symmetric_matrix", VentureSymmetricMatrix),
+  ("SP", SPRef), # As opposed to VentureSPRecord?
+])
 
 def registerVentureType(t, name = None):
   if t in venture_types: pass
@@ -928,416 +1116,3 @@ def registerVentureType(t, name = None):
     venture_types.append(t)
     if name is not None:
       stackable_types[name] = t
-
-### Venture Types
-
-class VentureType(object):
-  """Base class of all Venture types.  See the "Types" section of doc/type-system.md."""
-  def asPythonNoneable(self, vthing):
-    if vthing is None:
-      return None
-    else:
-      return self.asPython(vthing) # Function will be added by inheritance pylint:disable=no-member
-  def distribution(self, base, **kwargs):
-    return base(self.name()[1:-1], **kwargs) # Strip the angle brackets
-  def __eq__(self, other):
-    return type(self) == type(other)
-
-  def gradient_type(self):
-    "The type of the cotangent space of the space represented by this type."
-    return self
-  
-  def toJSON(self):
-    return self.__class__.__name__
-
-# TODO Is there any way to make these guys be proper singleton
-# objects?
-
-class AnyType(VentureType):
-  """The type object to use for parametric types -- does no conversion."""
-  def __init__(self, type_name=None):
-    self.type_name = type_name
-  def asVentureValue(self, thing):
-    assert isinstance(thing, VentureValue)
-    return thing
-  def asPython(self, thing):
-    # TODO Make symbolic zeroes a venture value!
-    assert isinstance(thing, VentureValue) or thing is 0
-    return thing
-  def __contains__(self, vthing): return isinstance(vthing, VentureValue)
-  def name(self):
-    if self.type_name is None:
-      return "<object>"
-    else:
-      return self.type_name
-  def distribution(self, base, **kwargs):
-    return base("object", **kwargs)
-
-# This is a prototypical example of the classes I am autogenerating
-# below, for legibility.  I could have removed this and added "Number"
-# to the list in the for.
-class NumberType(VentureType):
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, thing): return VentureNumber(thing)
-  def asPython(self, vthing): return vthing.getNumber()
-  def __contains__(self, vthing): return isinstance(vthing, VentureNumber)
-  def name(self): return self._name or "<number>"
-
-def standard_venture_type(typename, gradient_typename=None):
-  if gradient_typename is None:
-    gradient_typename = typename
-  return """
-class %sType(VentureType):
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, thing): return Venture%s(thing)
-  def asPython(self, vthing): return vthing.get%s()
-  def __contains__(self, vthing): return isinstance(vthing, Venture%s)
-  def name(self): return self._name or "<%s>"
-  def gradient_type(self): return %sType()
-""" % (typename, typename, typename, typename, typename.lower(), gradient_typename)
-
-for typename in ["Integer", "Atom", "Bool", "Symbol", "ForeignBlob"]:
-  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
-  # pylint: disable=exec-used
-  exec(standard_venture_type(typename, gradient_typename="Zero"))
-
-for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
-  # Exec is appropriate for metaprogramming, but indeed should not be used lightly.
-  # pylint: disable=exec-used
-  exec(standard_venture_type(typename))
-
-# Exec is appropriate for metaprogramming, but indeed should not be used lightly.
-# pylint: disable=exec-used
-exec(standard_venture_type("Probability", gradient_typename="Number"))
-
-class CountType(VentureType):
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, thing):
-    assert 0 <= thing
-    return VentureInteger(thing)
-  def asPython(self, vthing):
-    ans = vthing.getInteger()
-    if 0 <= ans:
-      return ans
-    else:
-      # TODO: Or what?  Clip to 0?
-      raise VentureTypeError("Count is not positive %s" % self.number)
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureInteger) and 0 <= vthing.getInteger()
-  def name(self): return self._name or "<count>"
-
-class PositiveType(VentureType):
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, thing):
-    assert 0 < thing
-    return VentureNumber(thing)
-  def asPython(self, vthing):
-    ans = vthing.getNumber()
-    if 0 < ans:
-      return ans
-    else:
-      # TODO: Or what?  Can't even clip to 0!
-      raise VentureTypeError("Number is not positive %s" % ans)
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureNumber) and 0 < vthing.getNumber()
-  def name(self): return self._name or "<positive>"
-  def gradient_type(self): return NumberType()
-
-class NilType(VentureType):
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, _thing):
-    # TODO Throw an error if not null-like?
-    return VentureNil()
-  def asPython(self, _vthing):
-    # TODO Throw an error if not nil?
-    return []
-  def __contains__(self, vthing): return isinstance(vthing, VentureNil)
-  def name(self): return self._name or "()"
-  def distribution(self, base, **kwargs):
-    return base("nil", **kwargs)
-
-class PairType(VentureType):
-  def __init__(self, first_type=None, second_type=None, name=None):
-    self.first_type = first_type if first_type is not None else AnyType()
-    self.second_type = second_type if second_type is not None else AnyType()
-    self._name = name
-  def asVentureValue(self, thing):
-    (f, r) = thing
-    return VenturePair((self.first_type.asVentureValue(f), self.second_type.asVentureValue(r)))
-  def asPython(self, vthing):
-    (vf, vr) = vthing.getPair()
-    return (self.first_type.asPython(vf), self.second_type.asPython(vr))
-  def __contains__(self, vthing): return isinstance(vthing, VenturePair)
-  def name(self):
-    if self._name is not None:
-      return self._name
-    if self.first_type is None and self.second_type is None:
-      return "<pair>"
-    first_name = self.first_type.name() if self.first_type else "<object>"
-    second_name = self.second_type.name() if self.second_type else "<object>"
-    return "<pair %s %s>" % (first_name, second_name)
-  def distribution(self, base, **kwargs):
-    first_dist = self.first_type.distribution(base, **kwargs) if self.first_type else None
-    second_dist = self.second_type.distribution(base, **kwargs) if self.second_type else None
-    return base("pair", first_dist=first_dist, second_dist=second_dist, **kwargs)
-
-class ListType(VentureType):
-  """A Venture list is either a VentureNil or a VenturePair whose
-second field is a Venture list.  I choose that the corresponding
-Python object is a list of VentureValue objects (this is consistent
-with the Any type doing no conversion).
-
-In Haskell type notation:
-
-data List = Nil | Pair Any List
-"""
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, thing):
-    return pythonListToVentureList(thing)
-  def asPython(self, thing):
-    return thing.asPythonList()
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureNil) or (isinstance(vthing, VenturePair) and vthing.rest in self)
-  def name(self): return self._name or "<list>"
-
-class HomogeneousListType(VentureType):
-  """Type objects for homogeneous lists.  Right now, the homogeneity
-  is not captured in the implementation, in that on the Venture side
-  such data is still stored as heterogenous Venture lists.  This type
-  does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype, name = None):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return pythonListToVentureList([self.subtype.asVentureValue(t) for t in thing])
-  def asPython(self, vthing):
-    return vthing.asPythonList(self.subtype)
-  def __contains__(self, vthing):
-    return vthing in ListType() and all([val in self.subtype for val in vthing.asPythonList()])
-  def __eq__(self, other):
-    return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return self._name or "<list %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("list", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
-
-class HomogeneousArrayType(VentureType):
-  """Type objects for homogeneous arrays.  Right now, the homogeneity
-  is not captured in the implementation, in that on the Venture side
-  such data is still stored as heterogenous Venture arrays.  This type
-  does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, subtype, name = None):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return VentureArray([self.subtype.asVentureValue(val) for val in thing])
-  def asPython(self, vthing):
-    return vthing.getArray(self.subtype)
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureArray) and all([val in self.subtype for val in vthing.getArray()])
-  def __eq__(self, other):
-    return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return self._name or "<array %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
-
-class ArrayUnboxedType(VentureType):
-  """Type objects for arrays of unboxed values.  Perforce homogeneous."""
-  def __init__(self, subtype, name = None):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return VentureArrayUnboxed(thing, self.subtype)
-  def asPython(self, vthing):
-    return vthing.getArray(self.subtype)
-  def __contains__(self, vthing):
-    # TODO Need a more general element type compatibility check
-    return isinstance(vthing, VentureArrayUnboxed) and vthing.elt_type == self.subtype
-  def __eq__(self, other):
-    return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return self._name or "<array %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    return base("array_unboxed", elt_type=self.subtype, **kwargs)
-
-class HomogeneousSequenceType(VentureType):
-  """Type objects for homogeneous sequences of any persuasion (lists,
-  arrays, vectors, simplexes).  Right now, the homogeneity is not
-  captured in the implementation, in that on the Venture side such
-  data is still stored as heterogenous Venture arrays.  This type is
-  purely advisory and does not do any conversion.
-
-  """
-  def __init__(self, subtype, name = None):
-    assert isinstance(subtype, VentureType)
-    self.subtype = subtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return thing
-  def asPython(self, vthing):
-    return vthing
-  def __contains__(self, vthing):
-    return (isinstance(vthing, VentureArray) or isinstance(vthing, VentureSimplex) or isinstance(vthing, VentureArrayUnboxed) or vthing in ListType()) and all([val in self.subtype for val in vthing.getArray()])
-  def __eq__(self, other):
-    return type(self) == type(other) and self.subtype == other.subtype
-  def name(self): return self._name or "<sequence %s>" % self.subtype.name()
-  def distribution(self, base, **kwargs):
-    # TODO Other types of sequences?
-    return base("array", elt_dist=self.subtype.distribution(base, **kwargs), **kwargs)
-
-
-class ExpressionType(VentureType):
-  """A Venture expression is either a Venture self-evaluating object
-(bool, number, integer, atom), or a Venture symbol, or a Venture array of
-Venture Expressions.  Note: I adopt the convention that, to
-distinguish them from numbers, Venture Atoms will be represented in
-Python as VentureAtom objects for purposes of this type.
-
-Note 2: Consumers of expressions should also be able to consume lists
-of expressions, but the Python-side representation of expressions does
-not distinguish the representation of lists and arrays.  So
-round-tripping from Venture to Python and back will not be the
-identity function, but should still be idempotent.
-
-Note 3: The same discussion applies to other nice types like
-VentureSPRecords.
-
-In Haskell type notation:
-
-data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
-"""
-  def __init__(self, name=None):
-    self._name = name
-
-  def asVentureValue(self, thing):
-    if isinstance(thing, bool) or isinstance(thing, np.bool_):
-      return VentureBool(thing)
-    if isinstance(thing, int):
-      return VentureInteger(thing)
-    if isinstance(thing, Number):
-      return VentureNumber(thing)
-    if isinstance(thing, VentureAtom):
-      return thing
-    if isinstance(thing, str):
-      return VentureSymbol(thing)
-    if hasattr(thing, "__getitem__"): # Already not a string
-      return VentureArray([self.asVentureValue(val) for val in thing])
-    if isinstance(thing, VentureValue):
-      return thing
-    else:
-      raise Exception("Cannot convert Python object %r to a Venture Expression" % thing)
-
-  def asPython(self, thing):
-    if isinstance(thing, VentureBool):
-      return thing.getBool()
-    if isinstance(thing, VentureInteger):
-      return thing.getInteger()
-    if isinstance(thing, VentureNumber):
-      return thing.getNumber()
-    if isinstance(thing, VentureAtom):
-      return thing # Atoms are valid elements of expressions
-    if isinstance(thing, VentureSymbol):
-      return thing.getSymbol()
-    if thing.isValidCompoundForm():
-      # Leave quoted data as they are, on the grounds that (quote
-      # <thing>) should evaluate to exactly that <thing>, even if
-      # constructed programmatically from a <thing> that does not
-      # normally appear in expressions.
-      if thing.size() == 2 and thing.lookup(VentureNumber(0)) == VentureSymbol("quote"):
-        return ["quote", thing.lookup(VentureNumber(1))]
-      else:
-        return thing.asPythonList(self)
-    # Most other things are represented as themselves.
-    return thing
-
-  def name(self): return self._name or "<exp>"
-
-class HomogeneousDictType(VentureType):
-  """Type objects for homogeneous dicts.  Right now, the homogeneity
-  is not captured in the implementation, in that on the Venture side
-  such data is still stored as heterogenous Venture dicts.  This type
-  does, however, encapsulate the necessary wrapping and unwrapping."""
-  def __init__(self, keytype, valtype, name = None):
-    assert isinstance(keytype, VentureType)
-    assert isinstance(valtype, VentureType)
-    self.keytype = keytype
-    self.valtype = valtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return VentureDict(dict([(self.keytype.asVentureValue(key), self.valtype.asVentureValue(val)) for (key, val) in thing.iteritems()]))
-  def asPython(self, vthing):
-    return dict([(self.keytype.asPython(key), self.valtype.asPython(val)) for (key, val) in vthing.getDict().iteritems()])
-  def __contains__(self, vthing):
-    return isinstance(vthing, VentureDict) and all([key in self.keytype and val in self.valtype for (key,val) in vthing.getDict().iteritems()])
-  def __eq__(self, other):
-    return type(self) == type(other) and self.keytype == other.keytype and self.valtype == other.valtype
-  def name(self): return self._name or "<dict %s %s>" % (self.keytype.name(), self.valtype.name())
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("dict", key_dist=self.keytype.distribution(base, **kwargs),
-                val_dist=self.valtype.distribution(base, **kwargs), **kwargs)
-
-class HomogeneousMappingType(VentureType):
-  """Type objects for all Venture mappings.  Dicts are the only fully
-  generic mappings, but Venture also treats arrays and lists as
-  mappings from integers to values, and environments as mappings from
-  symbols to values.  This type is purely advisory and does not do any
-  conversion."""
-  def __init__(self, keytype, valtype, name = None):
-    assert isinstance(keytype, VentureType)
-    assert isinstance(valtype, VentureType)
-    self.keytype = keytype
-    self.valtype = valtype
-    self._name = name
-  def asVentureValue(self, thing):
-    return thing
-  def asPython(self, vthing):
-    if not isinstance(vthing, (VentureArray, VentureArrayUnboxed, VentureNil, VenturePair, VentureMatrix, VentureDict, VentureSimplex)):
-      raise VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
-    return vthing
-  def name(self): return self._name or "<mapping %s %s>" % (self.keytype.name(), self.valtype.name())
-  def distribution(self, base, **kwargs):
-    # TODO Is this splitting what I want?
-    return base("mapping", key_dist=self.keytype.distribution(base, **kwargs),
-                val_dist=self.valtype.distribution(base, **kwargs), **kwargs)
-
-class RequestType(VentureType):
-  """A type object for Venture's Requests.  Requests are not Venture
-  values in the strict sense, and reflection is not permitted on them.
-  This type exists to permit requester PSPs to be wrapped in the
-  TypedPSP wrapper."""
-  def __init__(self, name="<request>"):
-    # Accept a name to report in the documentation because the
-    # synthesizer is not clever enough to properly compose
-    # descriptions of SPs from descriptions of their PSPs.
-    self._name = name
-  def asVentureValue(self, thing):
-    assert isinstance(thing, Request)
-    return thing
-  def asPython(self, thing):
-    assert isinstance(thing, Request)
-    return thing
-  def name(self): return self._name
-
-class ZeroType(VentureType):
-  """A type object representing elements of the zero-dimensional vector
-space.  This is needed only to serve as the gradient type of discrete
-types like BoolType."""
-  def __init__(self, name=None):
-    self._name = name
-  def asVentureValue(self, thing):
-    assert thing == 0
-    return thing
-  def asPython(self, thing):
-    assert thing == 0
-    return thing
-  def name(self): return self._name or "<zero>"

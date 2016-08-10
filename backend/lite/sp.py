@@ -15,9 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from value import VentureValue, registerVentureType, VentureType
-import copy
-from exception import VentureError
+from collections import OrderedDict
+
+from venture.lite.exception import VentureError
+from venture.lite.types import VentureType
+from venture.lite.value import VentureNil
+from venture.lite.value import VentureValue
+from venture.lite.value import registerVentureType
 import venture.value.dicts as v
 
 class SPFamilies(object):
@@ -26,36 +30,62 @@ class SPFamilies(object):
       assert type(families) is dict
       self.families = families
     else:
-      self.families = {} # id => node
+      self.families = OrderedDict() # id => node
 
-  def containsFamily(self,id): return id in self.families
-  def getFamily(self,id): return self.families[id]
-  def registerFamily(self,id,esrParent):
+  def containsFamily(self, id):
+    return id in self.families
+
+  def getFamily(self, id):
+    return self.families[id]
+
+  def registerFamily(self, id, esrParent):
     assert not id in self.families
     self.families[id] = esrParent
-  def unregisterFamily(self,id): del self.families[id]
+
+  def unregisterFamily(self,id):
+    del self.families[id]
 
   def copy(self):
     return SPFamilies(self.families.copy())
 
 class SPAux(object):
-  def copy(self): return SPAux()
+  def copy(self):
+    return SPAux()
+
+  def asVentureValue(self):
+    return VentureNil()
+
+  @staticmethod
+  def fromVentureValue(_thing):
+    raise Exception("Cannot convert a Venture value into a generic SPAux")
 
 class SP(object):
-  def __init__(self,requestPSP,outputPSP):
+  def __init__(self, requestPSP, outputPSP):
     from psp import PSP
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
     assert isinstance(requestPSP, PSP)
     assert isinstance(outputPSP, PSP)
 
-  def constructSPAux(self): return SPAux()
-  def constructLatentDB(self): return None
-  def simulateLatents(self,spaux,lsr,shouldRestore,latentDB): pass
-  def detachLatents(self,spaux,lsr,latentDB): pass
-  def hasAEKernel(self): return False
-  def show(self, _spaux): return "unknown spAux"
-  def description(self,name):
+  def constructSPAux(self):
+    return SPAux()
+
+  def constructLatentDB(self):
+    return None
+
+  def simulateLatents(self, args, lsr, shouldRestore, latentDB):
+    pass
+
+  def detachLatents(self, args, lsr, latentDB):
+    pass
+
+  def hasAEKernel(self):
+    return False
+
+  def show(self, _spaux):
+    return "<procedure>"
+
+  def description(self, name):
     candidate = self.outputPSP.description(name)
     if candidate:
       return candidate
@@ -63,7 +93,8 @@ class SP(object):
     if candidate:
       return candidate
     return name
-  def description_rst_format(self,name):
+
+  def description_rst_format(self, name):
     candidate = self.outputPSP.description_rst_format(name)
     if candidate:
       return candidate
@@ -71,6 +102,7 @@ class SP(object):
     if candidate:
       return candidate
     return (".. function:: %s" % name, name)
+
   def venture_type(self):
     if hasattr(self.outputPSP, "f_type"):
       return self.outputPSP.f_type
@@ -93,31 +125,36 @@ class VentureSPRecord(VentureValue):
     return self.sp.show(self.spAux)
 
   def asStackDict(self, _trace=None):
-    return v.val("sp", self.show())
+    return v.sp(self.show(), self.spAux.asVentureValue().asStackDict())
 
 registerVentureType(VentureSPRecord)
 
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
-the types expected for the arguments and the return, and thus knows
-how to wrap and unwrap individual values or Args objects.  This is
-used in the implementation of TypedPSP and TypedLKernel."""
-  def asVentureValue(self, thing): return thing
-  def asPython(self, vthing): return vthing
+  the types expected for the arguments and the return, and thus knows
+  how to wrap and unwrap individual values or Args objects.  This is
+  used in the implementation of TypedPSP and TypedLKernel.
+  """
+  def asVentureValue(self, thing):
+    return thing
+
+  def asPython(self, vthing):
+    return vthing
+
   def distribution(self, _base, **_kwargs):
     return None
-  def __contains__(self, vthing): return isinstance(vthing, VentureSPRecord)
+
+  def __contains__(self, vthing):
+    return isinstance(vthing, VentureSPRecord)
 
   def __init__(self, args_types, return_type, variadic=False, min_req_args=None):
-    """args_types is expected to be a Python list of instances of venture.lite.sp.VentureType,
-    and return_type is expected to be one instance of same.
-
-    See also the "Types" section of doc/type-system.md."""
+    """args_types is expected to be a Python list of instances of
+    venture.lite.sp.VentureType, and return_type is expected to be one instance
+    of same. See also the "Types" section of doc/type-system.md.
+    """
     self.args_types = args_types
     self.return_type = return_type
     self.variadic = variadic
-    if variadic:
-      assert len(args_types) == 1 # TODO Support non-homogeneous variadics later
     self.min_req_args = len(args_types) if min_req_args is None else min_req_args
 
   def wrap_return(self, value):
@@ -126,38 +163,73 @@ used in the implementation of TypedPSP and TypedLKernel."""
     except VentureError as e:
       e.message = "Wrong return type: " + e.message
       raise e
+
   def unwrap_return(self, value):
     # value could be None for e.g. a "delta kernel" that is expected,
     # by e.g. pgibbs, to actually be a simulation kernel; also when
     # computing log density bounds over a torus for rejection
     # sampling.
     return self.return_type.asPythonNoneable(value)
+
   def unwrap_args(self, args):
-    if args.isOutput:
-      assert not args.esrValues # TODO Later support outputs that have non-latent requesters
-    answer = copy.copy(args)
-    answer.operandValues = self.unwrap_arg_list(args.operandValues)
-    return answer
+    from venture.lite.sp_use import RemappingArgs
+    def remap(values):
+      return self.unwrap_arg_list(values)
+    return RemappingArgs(remap, args)
+
+  def args_match(self, args):
+    vals = args.operandValues()
+    if not self.variadic:
+      if len(vals) < self.min_req_args or len(vals) > len(self.args_types):
+        return False
+      return all((val in self.args_types[i] for (i,val) in enumerate(vals)))
+    else:
+      min_req_args = len(self.args_types) - 1
+      if len(vals) < min_req_args:
+        return False
+      first_args = all((val in self.args_types[i] for (i,val) in
+            enumerate(vals[:min_req_args])))
+      rest_args = all((val in self.args_types[-1] for (i,val) in
+            enumerate(vals[min_req_args:])))
+      return first_args and rest_args
 
   def unwrap_arg_list(self, lst):
     if not self.variadic:
       if len(lst) < self.min_req_args:
-        raise VentureError("Too few arguments: SP requires at least %d args, got only %d." % (self.min_req_args, len(lst)))
+        raise VentureError("Too few arguments: SP requires at least %d args, "
+          "got only %d." % (self.min_req_args, len(lst)))
       if len(lst) > len(self.args_types):
-        raise VentureError("Too many arguments: SP takes at most %d args, got %d." % (len(self.args_types), len(lst)))
+        raise VentureError("Too many arguments: SP takes at most %d args, "
+          "got %d." % (len(self.args_types), len(lst)))
       # v could be None when computing log density bounds for a torus
-      return [self.args_types[i].asPythonNoneable(v) for (i,v) in enumerate(lst)]
+      return [self.args_types[i].asPythonNoneable(val) for (i,val)
+          in enumerate(lst)]
     else:
-      return [self.args_types[0].asPythonNoneable(v) for v in lst]
+      min_req_args = len(self.args_types) - 1
+      if len(lst) < min_req_args:
+        raise VentureError("Too few arguments: SP requires at least %d args, "
+          "got only %d." % (min_req_args, len(lst)))
+      first_args = [self.args_types[i].asPythonNoneable(val) for (i,val) in
+          enumerate(lst[:min_req_args])]
+      rest_args = [self.args_types[-1].asPythonNoneable(val) for val in
+          lst[min_req_args:]]
+      return first_args + rest_args
 
   def wrap_arg_list(self, lst):
     if not self.variadic:
       assert len(lst) >= self.min_req_args
       assert len(lst) <= len(self.args_types)
       # v could be None when computing log density bounds for a torus
-      return [self.args_types[i].asVentureValue(v) for (i,v) in enumerate(lst)]
+      return [self.args_types[i].asVentureValue(val)
+          for (i,val) in enumerate(lst)]
     else:
-      return [self.args_types[0].asVentureValue(v) for v in lst]
+      min_req_args = len(self.args_types) - 1
+      assert len(lst) >= min_req_args
+      first_args = [self.args_types[i].asVentureValue(val) for (i,val) in
+          enumerate(lst[:min_req_args])]
+      rest_args = [self.args_types[-1].asVentureValue(val) for val in
+          lst[min_req_args:]]
+      return first_args + rest_args
 
   def _name_for_fixed_arity(self, args_types):
     args_spec = " ".join([t.name() for t in args_types])
@@ -167,7 +239,8 @@ used in the implementation of TypedPSP and TypedLKernel."""
 
   def names(self):
     """One name for each possible arity of this procedure."""
-    return [self._name_for_fixed_arity(self.args_types[0:i]) for i in range(self.min_req_args, len(self.args_types) + 1)]
+    return [self._name_for_fixed_arity(self.args_types[0:i]) for i in
+        range(self.min_req_args, len(self.args_types) + 1)]
 
   def name(self):
     """A default name for when there is only room for one name."""
@@ -197,4 +270,5 @@ used in the implementation of TypedPSP and TypedLKernel."""
     return result
 
   def gradient_type(self):
-    return SPType([t.gradient_type() for t in self.args_types], self.return_type.gradient_type(), self.variadic, self.min_req_args)
+    return SPType([t.gradient_type() for t in self.args_types],
+      self.return_type.gradient_type(), self.variadic, self.min_req_args)

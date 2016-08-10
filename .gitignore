@@ -1,10 +1,10 @@
 # Build artifacts
-build
+/build
 env.d
 a.out
 
 # Log location for dev tools
-tool/logs/*
+/tool/logs/*
 
 # Python compiled files
 *.pyc
@@ -15,19 +15,33 @@ tool/logs/*
 .DS_Store
 
 # Coverage reports
-htmlcov
-.coverage
-.coverage.*
+/htmlcov
+/.coverage
+/.coverage.*
 
 # Dev/testing
 dump
 .noseids
+# Compiled Stan model cache
+/test/integration/models/
 
 # Release artifacts
-venture-*.tgz
-venture-*.tar
-venture-*.tar.gz
+/venture-*.tgz
+/venture-*.tar
+/venture-*.tar.gz
+/dist
+/MANIFEST
+/venture.egg-info
 
 # Lemonade parser generator output
-python/lib/parser/church_prime/grammar.out
-python/lib/parser/church_prime/grammar.py
+/python/lib/parser/church_prime/grammar.out
+/python/lib/parser/church_prime/grammar.py
+/python/lib/parser/venture_script/grammar.out
+/python/lib/parser/venture_script/grammar.py
+/python/lib/parser/church_prime/grammar.sha256
+/python/lib/parser/venture_script/grammar.sha256
+
+ideal_prior_trick_mar.png
+.eggs
+*.so
+ideal_prior_weight_mar.png

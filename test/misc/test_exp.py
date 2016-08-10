@@ -1,4 +1,4 @@
-# Copyright (c) 2014 MIT Probabilistic Computing Project.
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.test.config import get_ripl
-import venture.value.dicts as v
 import numpy
 
+from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+import venture.value.dicts as v
+
+@on_inf_prim("none")
 def testVector():
-  """Test that array-like objects don't get interpreted as expressions."""
+  # Test that array-like objects don't get interpreted as expressions.
   ripl = get_ripl()
   ripl.predict(v.vector(numpy.array([1, 2])))
-

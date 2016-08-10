@@ -1,4 +1,4 @@
-// Copyright (c) 2014 MIT Probabilistic Computing Project.
+// Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
 //
 // This file is part of Venture.
 //
@@ -64,19 +64,23 @@ struct Trace;
 struct VentureValue
 {
   // Conversions to "native" representation
-  virtual bool hasDouble() const; // TODO hack for operator<
+  virtual bool hasDouble() const;
   virtual double getDouble() const;
 
   virtual bool hasInt() const;
   virtual long getInt() const;
-  virtual double getProbability() const;
+
+  double getProbability() const;
 
   virtual int getAtom() const;
-  virtual bool isBool() const;
+
   virtual bool getBool() const;
 
   virtual bool hasSymbol() const;
   virtual const string & getSymbol() const;
+
+  virtual bool hasString() const;
+  virtual const string & getString() const;
 
   // TODO: Maybe foreign blob?
 
@@ -110,8 +114,8 @@ struct VentureValue
   virtual size_t hash() const;
 
   // Generic container methods
-  virtual VentureValuePtr lookup(VentureValuePtr index) const;
-  virtual bool contains(VentureValuePtr index) const;
+  virtual VentureValuePtr lookup(const VentureValuePtr & index) const;
+  virtual bool contains(const VentureValuePtr & index) const;
   virtual int size() const;
 
   // For stop_and_copy
@@ -119,12 +123,12 @@ struct VentureValue
 
   // Other
   virtual const vector<ESR>& getESRs() const;
-  virtual const vector<shared_ptr<LSR> >& getLSRs() const;
+  virtual const vector<boost::shared_ptr<LSR> >& getLSRs() const;
 
   bool hasNode() const { return false; }
   virtual Node * getNode() const;
 
-  virtual shared_ptr<SPAux> getSPAux() const;
+  virtual boost::shared_ptr<SPAux> getSPAux() const;
 
   virtual string toString() const { return "Unknown VentureValue"; };
 
@@ -136,11 +140,11 @@ struct VentureValue
 
 
 inline bool operator==(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return lhs->equals(rhs); }
-inline bool operator!=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator==(lhs,rhs);}
+inline bool operator!=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator==(lhs, rhs);}
 inline bool operator< (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return lhs->operator<(rhs); }
-inline bool operator> (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return  operator< (rhs,lhs);}
-inline bool operator<=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator> (lhs,rhs);}
-inline bool operator>=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator< (lhs,rhs);}
+inline bool operator> (const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return  operator< (rhs, lhs);}
+inline bool operator<=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator> (lhs, rhs);}
+inline bool operator>=(const VentureValuePtr& lhs, const VentureValuePtr& rhs){ return !operator< (lhs, rhs);}
 
 /* for unordered map */
 struct VentureValuePtrsEqual

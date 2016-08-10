@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2013-2015 MIT Probabilistic Computing Project.
-# 
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
 # This file is part of Venture.
-# 	
+#
 # Venture is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 	
+#
 # Venture is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 	
+#
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -22,9 +22,11 @@ import string
 import textwrap
 import subprocess
 
-from venture.lite.builtin import builtInSPsList
+from venture.lite.builtin import builtInSPsIter
 from venture.lite.inference_sps import inferenceSPsList
 import venture.sivm.macro # To register the macros
+import venture.engine.inference # To register the inference SPs that live there
+import venture.untraced.trace_search # To register the inference SPs that live there
 from venture.sivm.macro_system import macros
 import venture.engine.inference_prelude
 from venture.shortcuts import Lite
@@ -61,13 +63,13 @@ def wrap_description_rst_format(header, body):
   return header + "\n\n" + indent(body, "   ")
 
 def model_SPs():
-  for (name,sp) in builtInSPsList:
+  for (name,sp) in builtInSPsIter():
     print ""
     print wrap_description(sp.description(name))
     print "  " + string.capitalize(string.join(flags(sp.outputPSP), ", "))
 
 def model_SPs_rst_format():
-  for (name,sp) in builtInSPsList:
+  for (name,sp) in builtInSPsIter():
     print ""
     print wrap_description_rst_format(*sp.description_rst_format(name))
     print

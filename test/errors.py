@@ -1,4 +1,4 @@
-# Copyright (c) 2013, 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2013, 2015 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import assert_raises
 from StringIO import StringIO
-import sys
 import re
+import sys
+
+from nose.tools import assert_raises
 
 from venture.exception import VentureException
 

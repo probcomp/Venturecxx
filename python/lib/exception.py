@@ -45,7 +45,7 @@ class VentureException(Exception):
     return cls(exception,message,**data)
 
   def __str__(self):
-    s = "*** " + self.exception + ": " + self.message
+    s = "*** " + str(self.exception) + ": " + str(self.message)
     # TODO exceptions need to be annotated to get an 'instruction_string'
     # perhaps this should not be done in the ripl but in the parser itself?
     if self.exception in ['parse', 'text_parse', 'invalid_argument'] and 'instruction_string' in self.data:
