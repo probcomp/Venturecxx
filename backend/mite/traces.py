@@ -15,7 +15,7 @@ from venture.mite.evaluator import Evaluator
 from venture.mite.evaluator import Regenerator
 from venture.mite.evaluator import Restorer
 from venture.mite.scaffold import DefaultAllScaffold
-from venture.mite.scaffold import MinimalScaffold
+from venture.mite.scaffold import Scaffold
 from venture.mite.scaffold import single_site_scaffold
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.sps.compound import CompoundSP
@@ -126,7 +126,7 @@ class AbstractTrace(ITrace):
 
   def pyselect(self, code, ctx=None):
     selector = eval(code, vars(addresses), ctx)
-    return MinimalScaffold(selector)
+    return Scaffold(selector)
 
   def single_site_subproblem(self, address):
     scaffold = single_site_scaffold(self, address)
@@ -307,7 +307,7 @@ class FlatTrace(AbstractTrace):
   def extract_kernel(self, kernel, output, input_values):
     addr = kernel['addr']
     sp_ref = kernel['sp_ref']
-    subproblem = MinimalScaffold({addr: kernel})
+    subproblem = Scaffold({addr: kernel})
     sp_node = self.deref_sp(sp_ref)
     inputs = []
     for index, val in enumerate(input_values):
@@ -321,7 +321,7 @@ class FlatTrace(AbstractTrace):
   def regen_kernel(self, kernel, input_values, trace_fragment):
     addr = kernel['addr']
     sp_ref = kernel['sp_ref']
-    subproblem = MinimalScaffold({addr: kernel})
+    subproblem = Scaffold({addr: kernel})
     sp_node = self.deref_sp(sp_ref)
     inputs = []
     for index, val in enumerate(input_values):
@@ -334,7 +334,7 @@ class FlatTrace(AbstractTrace):
   def restore_kernel(self, kernel, input_values, trace_fragment):
     addr = kernel['addr']
     sp_ref = kernel['sp_ref']
-    subproblem = MinimalScaffold({addr: kernel})
+    subproblem = Scaffold({addr: kernel})
     sp_node = self.deref_sp(sp_ref)
     inputs = []
     for index, val in enumerate(input_values):

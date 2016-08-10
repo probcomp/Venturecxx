@@ -3,7 +3,7 @@ from collections import OrderedDict
 from venture.mite.sp import ApplicationKernel
 import venture.mite.address as addresses
 
-class MinimalScaffold(object):
+class Scaffold(object):
   def __init__(self, kernels):
     # address -> kernel or kernel selector
     self.kernels = kernels
