@@ -421,6 +421,8 @@ class Semantics(object):
         return l
     def p_primary_symbol(self, s):
         return ast.map_value(val.symbol, s)
+    def p_primary_qsymbol(self, o, s, c):
+        return ast.locmerge(o, c, val.quote(val.symbol(s.value)))
     def p_primary_language(self, ll):
         assert ast.isloc(ll), '%r' % (ll,)
         l = ll.value

@@ -154,6 +154,7 @@ primary(unquote)	::= T_LDOLLAR(op) primary(e).
 primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
+primary(qsymbol)        ::= T_QUOTE(o) L_NAME(s) T_QUOTE(c).
 primary(language)	::= L_LANGUAGE(ll).
 
 paramlist(none)		::= .
