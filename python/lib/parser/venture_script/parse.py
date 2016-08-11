@@ -688,7 +688,8 @@ class VentureScriptParser(object):
             return expression
         elif isinstance(expression, list):
             terms = (self.unparse_expression(e) for e in expression)
-            return '(' + ' '.join(terms) + ')'
+            proc = terms.next()
+            return proc + '(' + ', '.join(terms) + ')'
         else:
             raise TypeError('Invalid expression: %s of type %s' %
                 (repr(expression), type(expression)))
