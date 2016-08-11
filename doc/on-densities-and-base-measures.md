@@ -174,6 +174,21 @@ to do so, however, introduces another problem very analogous to the
 base measure problem, namely that the normalization constant needs to
 actually cancel across different values of the parameters.
 
+Other inference algorithms may be misled by errors in normalization
+constants:
+
+- If the normalization depends on the _parameters_, resimulation M-H
+  and likelihood weighting will produce the wrong distribution.
+
+- If the normalization depends on the _output_, inference on said
+  output will produce the wrong distribution if it needs to compare
+  prior densities.  Slice sampling, HMC, and M-H with custom proposal
+  kernels are examples of such.
+
+- Any user-supplied bounds for rejection will need to take
+  normalization discrepancies into account, even if they do not depend
+  on the parameters or the output.
+
 Approaches
 ==========
 
