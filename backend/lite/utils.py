@@ -31,6 +31,8 @@ def override(interface_class):
 
 def extendedLog(x): return float('-inf') if x == 0 else math.log(x)
 def extendedLog1p(x): return float('-inf') if x == -1 else math.log1p(x)
+def xlogx(x): return 0 if x == 0 else x*math.log(x)
+def expm1(x): return math.expm1(x)
 
 def logsumexp(array):
   """Given [log x_0, ..., log x_{n-1}], yield log (x_0 + ... + x_{n-1}).

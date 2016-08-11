@@ -22,9 +22,11 @@ import math
 from nose.tools import assert_raises
 
 from venture.lite.utils import careful_exp
+from venture.lite.utils import expm1
 from venture.lite.utils import extendedLog
 from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logsumexp
+from venture.lite.utils import xlogx
 
 def relerr(expected, actual):
   if expected == 0:
@@ -59,6 +61,27 @@ def test_exp():
   assert relerr(2.718281828, careful_exp(1)) < 1e-8
   assert careful_exp(+inf) == +inf
   assert math.isnan(careful_exp(nan))
+
+def test_expm1():
+  inf = float('inf')
+  nan = float('nan')
+  assert expm1(-inf) == -1
+  assert expm1(0) == 0
+  assert relerr(1.718281828, expm1(1)) < 1e-8
+  assert expm1(+inf) == +inf
+  assert relerr(1e-20, expm1(1e-20)) < 1e-16
+  assert math.isnan(expm1(nan))
+
+def test_xlogx():
+  inf = float('inf')
+  nan = float('nan')
+  assert_raises(ValueError, lambda: xlogx(-inf))
+  assert_raises(ValueError, lambda: xlogx(-1))
+  assert xlogx(+inf) == +inf
+  assert xlogx(0) == 0
+  assert xlogx(1) == 0
+  assert relerr(2.718281828, xlogx(2.718281828)) < 1e-8
+  assert math.isnan(xlogx(nan))
 
 def test_logsumexp():
   inf = float('inf')
