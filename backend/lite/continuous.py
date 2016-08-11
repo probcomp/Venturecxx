@@ -46,6 +46,9 @@ from venture.lite.utils import careful_exp
 from venture.lite.utils import expm1
 from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logDensityMVNormal
+from venture.lite.utils import log_d_logistic
+from venture.lite.utils import logistic
+from venture.lite.utils import logit
 from venture.lite.utils import logsumexp
 from venture.lite.utils import numpy_force_number
 from venture.lite.utils import override
@@ -502,6 +505,60 @@ class UniformOutputPSP(RandomPSP):
 
 registerBuiltinSP("uniform_continuous",typed_nr(UniformOutputPSP(),
   [t.NumberType(), t.NumberType()], t.NumberType()))
+
+
+class LogOddsUniformOutputPSP(RandomPSP):
+  def simulate(self, args):
+    return logit(args.np_prng().uniform())
+
+  def logDensity(self, x, _args):
+    # If Y ~ U[0,1] and X = logit(Y), then Y = logistic(X), so that
+    # since P_Y(y) = 1, we have the change of variables density
+    #
+    #   P_X(x) = P_Y(logistic(x))*logistic'(x) = 1*logistic'(x)
+    #          = logistic'(x).
+    #
+    # Hence log P(x) = log logistic'(x).
+    #
+    return log_d_logistic(x)
+
+  def gradientOfLogDensity(self, x, _args):
+    # Let L(x) = logistic(x).  We need
+    #
+    #   d/dx log P(x) = d/dx log L'(x)
+    #     = (log o L')'(x) = log'(L'(x)) L''(x)
+    #     = L''(x)/L'(x).
+    #
+    # Note that L' = L*(1 - L), so
+    #
+    #   L'' = (L*(1 - L))' = L'*(1 - L) + L*(1 - L)'
+    #     = L'*(1 - L) - L*L';
+    #
+    # hence L''/L' = (1 - L) - L = 1 - 2 L.
+    #
+    return 1 - 2*logistic(x), []
+
+  def logDensityBound(self, _x, _args):
+    # Any maximum of log P(x) is a zero of d/dx log P(x) = 1 - 2 L(x),
+    # where L(x) is the logistic function; hence if x is maximum then
+    # L(x) = 1/(1 + e^{-x}) = 1/2, so that x = 0.  The maximum value
+    # is
+    #
+    #   log P(0) = log L'(0) = log (1 - L(0)) L(0)
+    #     = log (1 - 1/2)*(1/2) = log (1/4)
+    #     = -log 4.
+    #
+    return -extendedLog(4)
+
+  def description(self, name):
+    return "  %s() samples a log-odds representation of a uniform real number"\
+      " between 0 and 1.  This is also called the `logistic distribution',"\
+      " named differently to avoid confusion with the logistic function."\
+      % (name,)
+
+
+registerBuiltinSP("log_odds_uniform", typed_nr(LogOddsUniformOutputPSP(),
+  [], t.NumberType()))
 
 
 class BetaOutputPSP(RandomPSP):
