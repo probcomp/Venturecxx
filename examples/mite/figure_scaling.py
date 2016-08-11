@@ -9,9 +9,7 @@ import venture.shortcuts as vs
 
 vnts_file = os.path.join(os.path.dirname(__file__), 'chain_scaling.vnts')
 
-chain_sizes = [5, 10, 20, 50]
-
-def timing(trace_type, num_iters):
+def timing(trace_type, chain_sizes, num_iters):
   ripl = vs.Mite().make_ripl()
   ripl.execute_program_from_file(vnts_file)
   ans = []
@@ -21,32 +19,40 @@ def timing(trace_type, num_iters):
     else:
       ripl.define("trace_" + str(i), "extend_chain(%s, %s, trace_%s)" % (low, high, i-1))
     then = time.time()
-    ripl.evaluate("go(%s, trace_%s)" % (num_iters, i))
+    ripl.evaluate("go(%s, %s, trace_%s)" % (num_iters, high, i))
     now = time.time()
     ans.append(now - then)
   return ans
 
-def compute_results(num_iters, stub=False):
+def compute_results(stub=False):
+  chain_sizes = [5, 10, 20, 50, 100]
+  num_iters = 40
   if stub:
-    return { "flats": [1, 2, 3, 4], "graphs": [2, 2, 2, 2] }
+    return { "flats": [1, 2, 3, 4], "graphs": [2, 2, 2, 2],
+             "chain_sizes": chain_sizes,
+             "num_iters": num_iters }
   else:
-    flats = timing("flat_trace", num_iters)
-    graphs = timing("graph_trace", num_iters)
-    return { "flats": flats, "graphs": graphs }
+    flats = timing("flat_trace", chain_sizes, num_iters)
+    graphs = timing("graph_trace", chain_sizes, num_iters)
+    return { "flats": flats, "graphs": graphs,
+             "chain_sizes": chain_sizes,
+             "num_iters": num_iters}
 
 def save(stub=False):
-  results = compute_results(10, stub=stub)
+  results = compute_results(stub=stub)
   with open("scaling.sav", "w") as f:
     pickle.dump(results, f)
 
 def scale_plot(results):
   flats = results["flats"]
   graphs = results["graphs"]
+  chain_sizes = results["chain_sizes"]
+  num_iters = results["num_iters"]
   plt.figure()
-  plt.plot(chain_sizes, flats, label="Flat table")
-  plt.plot(chain_sizes, graphs, label="Dependency graph")
+  plt.plot(chain_sizes, [float(f)/num_iters for f in flats], label="Flat table")
+  plt.plot(chain_sizes, [float(g)/num_iters for g in graphs], label="Dependency graph")
   plt.xlabel("Number of timesteps")
-  plt.ylabel("Time (s)")
+  plt.ylabel("Time per transition (s)")
   plt.title("Inference speed scaling on an HMM")
   plt.legend(fontsize=25)
   set_font_size(plt.gca(), 25)

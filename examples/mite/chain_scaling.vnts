@@ -24,14 +24,14 @@ define extend_chain = (init, limit, trace) -> {
   }, trace)
 };
 
-define go = (iters, trace) -> {
-  run_in(repeat(iters, single_site_step), trace)
+define go = (iters, timesteps, trace) -> {
+  run_in(repeat(iters, single_site_step(timesteps)), trace)
 };
 
 define run_program = (chain, iters, trace_type) -> {
   run_in({
     chain;
-    repeat(iters, single_site_step)
+    repeat(iters, single_site_step(5))
   }, trace_type())
 };
 
@@ -45,9 +45,9 @@ define graph10 = (iters) -> run_program(chain10, iters, graph_trace);
 define graph20 = (iters) -> run_program(chain20, iters, graph_trace);
 define graph50 = (iters) -> run_program(chain50, iters, graph_trace);
 
-define single_site_step = {
-  let n = uniform_discrete(1, 5);
-  subproblem <- single_site_subproblem(toplevel(n));
+define single_site_step = (timesteps) -> {
+  let n = uniform_discrete(1, timesteps);
+  subproblem <- single_site_subproblem(toplevel(2 * n + 1));
   resimulation_step(subproblem)
 };
 
