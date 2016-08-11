@@ -29,8 +29,8 @@ def override(interface_class):
     return method
   return overrider
 
-def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
-def extendedLog1p(x): return math.log1p(x) if x > -1 else float("-inf")
+def extendedLog(x): return float('-inf') if x == 0 else math.log(x)
+def extendedLog1p(x): return float('-inf') if x == -1 else math.log1p(x)
 
 def logsumexp(array):
   """Given [log x_0, ..., log x_{n-1}], yield log (x_0 + ... + x_{n-1}).
