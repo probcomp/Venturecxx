@@ -11,24 +11,31 @@ vnts_file = os.path.join(os.path.dirname(__file__), 'chain_scaling.vnts')
 
 chain_sizes = [5, 10, 20, 50]
 
-def timing(ripl, chain, num_iters):
-  then = time.time()
-  ripl.evaluate(chain + "(" + str(num_iters) + ")")
-  now = time.time()
-  return now - then
+def timing(trace_type, num_iters):
+  ripl = vs.Mite().make_ripl()
+  ripl.execute_program_from_file(vnts_file)
+  ans = []
+  for (i, (low, high)) in enumerate(zip([0] + chain_sizes, chain_sizes)):
+    if i == 0:
+      ripl.define("trace_0", "start_chain(" + str(high) + ", " + trace_type + ")")
+    else:
+      ripl.define("trace_" + str(i), "extend_chain(%s, %s, trace_%s)" % (low, high, i-1))
+    then = time.time()
+    ripl.evaluate("go(%s, trace_%s)" % (num_iters, i))
+    now = time.time()
+    ans.append(now - then)
+  return ans
 
 def compute_results(num_iters, stub=False):
   if stub:
     return { "flats": [1, 2, 3, 4], "graphs": [2, 2, 2, 2] }
   else:
-    ripl = vs.Mite().make_ripl()
-    ripl.execute_program_from_file(vnts_file)
-    flats = [timing(ripl, "flat" + str(size), num_iters) for size in chain_sizes]
-    graphs = [timing(ripl, "graph" + str(size), num_iters) for size in chain_sizes]
+    flats = timing("flat_trace", num_iters)
+    graphs = timing("graph_trace", num_iters)
     return { "flats": flats, "graphs": graphs }
 
 def save(stub=False):
-  results = compute_results(1, stub=stub)
+  results = compute_results(10, stub=stub)
   with open("scaling.sav", "w") as f:
     pickle.dump(results, f)
 

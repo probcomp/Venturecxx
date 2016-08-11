@@ -1,3 +1,33 @@
+define start_chain = (limit, trace_type) -> {
+  run_in({
+    assume x_0 = flip();
+    assume y_0 = flip(biplex(x_0, 0.9, 0.1));
+    extend_chain_lp(0, limit);
+    split_trace()
+  }, trace_type())
+};
+
+define extend_chain_lp = (init, limit) -> {
+  if (init >= limit) {
+    return(0)
+  } else {
+    assume ${name("x", init + 1)} = flip(biplex(unquote(name("x", init)), 0.7, 0.3));
+    assume ${name("y", init + 1)} = flip(biplex(unquote(name("y", init)), 0.9, 0.1));
+    extend_chain_lp(init + 1, limit)
+  }
+};
+
+define extend_chain = (init, limit, trace) -> {
+  run_in({
+    extend_chain_lp(init, limit);
+    split_trace()
+  }, trace)
+};
+
+define go = (iters, trace) -> {
+  run_in(repeat(iters, single_site_step), trace)
+};
+
 define run_program = (chain, iters, trace_type) -> {
   run_in({
     chain;
