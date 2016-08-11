@@ -55,6 +55,33 @@ class VentureFunction(VentureValue):
 
 registerVentureType(VentureFunction, "function")
 
+class VentureDiffableFunction(VentureFunction):
+  """Differentiable function.
+
+  df must have the same parameters as f, and return a list of partial
+  derivatives, one for each parameter.
+  """
+
+  def __init__(self, f, df, *args, **kwargs):
+    # df is list of partial derivatives.
+    super(VentureDiffableFunction, self).__init__(f, *args, **kwargs)
+    self.df = df
+
+  def gradient_type(self):
+    return VentureDiffableFunction
+
+  @staticmethod
+  def fromStackDict(thing):
+    derivative = thing.pop('derivative')
+    return VentureDiffableFunction(thing['value'], derivative, **thing)
+
+  def asStackDict(self, _trace=None):
+    val = v.val('diffable_function', self.f)
+    val['derivative'] = self.df
+    val['sp_type'] = self.sp_type
+    val.update(self.stuff)
+    return val
+
 class ApplyFunctionOutputPSP(DeterministicPSP):
   def simulate(self,args):
     vals = args.operandValues()
