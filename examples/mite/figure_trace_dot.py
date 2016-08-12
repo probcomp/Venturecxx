@@ -31,4 +31,4 @@ render(target1, "bernoulli", view=False)
 # render(target2, "beta", view=True)
 
 # The whole trace
-ren.digraph_trace(trace).render("trace", view=False)
+ren.digraph_trace(trace).render("trace", directory="figures", view=False)
