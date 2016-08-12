@@ -54,7 +54,7 @@ def _jsonable_request((exp, env)):
 
 def _jsonable_address(address):
   if isinstance(address, addr.DirectiveAddress):
-    return "toplevel(" + str(address.directive_id) + ")"
+    return "/" + str(address.directive_id)
   elif isinstance(address, addr.SubexpressionAddress):
     return _jsonable_address(address.parent) + "/" + str(address.index)
   elif isinstance(address, addr.RequestAddress):
