@@ -8,7 +8,7 @@ def digraph(trace, scaffold, principal_nodes=None):
     principal_nodes = set()
   dot = Digraph(name="A scaffold")
   for ad in scaffold.kernels.keys():
-    name = _jsonable_address(ad)
+    name = _node_name(ad)
     def kernel_type(ad):
       ker = scaffold.kernels[ad]
       if isinstance(ker, dict) and 'type' in ker:
@@ -29,7 +29,7 @@ def digraph_trace(trace):
   dot = Digraph(name="A trace")
   addrs = [ad for ad in trace.nodes.keys() if not isinstance(ad, addr.BuiltinAddress)]
   for ad in addrs:
-    name = _jsonable_address(ad)
+    name = _node_name(ad)
     dot.node(name, label=name)
   _add_links(dot, trace, addrs)
   return dot
@@ -38,5 +38,7 @@ def _add_links(dot, trace, addrs):
   for ad in addrs:
     for child in trace.nodes[ad].children:
       if child in addrs:
-        dot.edge(_jsonable_address(ad),
-                 _jsonable_address(child))
+        dot.edge(_node_name(ad), _node_name(child))
+
+def _node_name(ad):
+  return _jsonable_address(ad).replace(":", r"-")
