@@ -28,6 +28,10 @@ define go = (iters, timesteps, trace) -> {
   run_in(repeat(iters, single_site_step(timesteps)), trace)
 };
 
+define go_select = (iters, timesteps, trace) -> {
+  run_in(repeat(iters, single_site(timesteps)), trace)
+};
+
 define run_program = (chain, iters, trace_type) -> {
   run_in({
     chain;
@@ -50,9 +54,9 @@ define single_site_step = (timesteps) -> {
   resimulation_step(subproblem)
 };
 
-def single_site = (timesteps) -> {
+define single_site = (timesteps) -> {
   let n = uniform_discrete(1, timesteps);
-  single_site_subproblem(toplevel(2 * n + 1));
+  single_site_subproblem(toplevel(2 * n + 1))
 };
 
 define chain5 = {
