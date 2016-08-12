@@ -16,8 +16,15 @@ define trace = run_in({
 trace = r.evaluate("trace")
 
 def render(target, name, view):
-    return ren.digraph(trace, trace.single_site_subproblem(target),
-                       principal_nodes=set([target])).render(name, directory="figures", view=view)
+    dot = ren.digraph(trace, trace.single_site_subproblem(target),
+                      principal_nodes=set([target]))
+    dot.format = 'png'
+    dot.render(name, directory="figures", view=view)
+
+def render_trace(view):
+    dot = ren.digraph_trace(trace)
+    dot.format = 'png'
+    dot.render("trace", directory="figures", view=view)
 
 # The minimal scaffold around the bernoulli choice
 target1 = addr.directive(1)
@@ -31,4 +38,4 @@ render(target1, "bernoulli", view=False)
 # render(target2, "beta", view=True)
 
 # The whole trace
-ren.digraph_trace(trace).render("trace", directory="figures", view=False)
+render_trace(view=False)
