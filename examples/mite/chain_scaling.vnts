@@ -32,6 +32,10 @@ define go_select = (iters, timesteps, trace) -> {
   run_in(repeat(iters, single_site(timesteps)), trace)
 };
 
+define go_blank = (iters, timesteps, trace) -> {
+  run_in(repeat(iters, { return(uniform_discrete(1, timesteps)) }), trace)
+};
+
 define run_program = (chain, iters, trace_type) -> {
   run_in({
     chain;

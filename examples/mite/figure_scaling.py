@@ -20,17 +20,21 @@ def timing(trace_type, chain_sizes, num_iters):
     else:
       ripl.define("trace_" + str(i), "extend_chain(%s, %s, trace_%s)" % (low, high, i-1))
     then = time.time()
+    ripl.evaluate("go_blank(%s, %s, trace_%s)" % (num_iters, high, i))
+    now = time.time()
+    blank_time = now - then
+    then = time.time()
     ripl.evaluate("go(%s, %s, trace_%s)" % (num_iters, high, i))
     now = time.time()
-    ans_full.append(now - then)
+    ans_full.append(max(now - then - blank_time, 0))
     then = time.time()
     ripl.evaluate("go_select(%s, %s, trace_%s)" % (num_iters, high, i))
     now = time.time()
-    ans_select.append(now - then)
+    ans_select.append(max(now - then - blank_time, 0))
   return (ans_full, ans_select)
 
 def compute_results(stub=False):
-  chain_sizes = [5, 10, 20, 50, 100]
+  chain_sizes = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   num_iters = 40
   if stub:
     return { "flats": [1, 2, 3, 4], "graphs": [2, 2, 2, 2],
