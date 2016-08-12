@@ -28,7 +28,11 @@ def digraph(trace, scaffold, principal_nodes=None):
 
 def _represent_value(v):
   if isinstance(v, vv.SPRef):
-    return "a procedure"
+    ad = v.makerNode.address
+    if isinstance(ad, addr.BuiltinAddress):
+      return ad.name
+    else:
+      return "a procedure"
   else:
     return str(t.Exp.asPython(v))
 
