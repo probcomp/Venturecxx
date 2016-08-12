@@ -41,6 +41,8 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'inference_action', 'action_func',
              # The type signatures are too imprecise
              'dict', 'to_dict',
+             # Can't synthesize dict arguments
+             'keys', 'values',
              'make_ref', 'ref_get']
 
 # Select particular SPs to test thus:

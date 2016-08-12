@@ -48,6 +48,19 @@ def testCompare():
   assert not get_ripl().predict("(>= 1 2)")
 
 @on_inf_prim("none")
+def testAnyAll():
+  # list argument
+  assert get_ripl().predict("(any (list True False True))")
+  assert not get_ripl().predict("(any (list False False False))")
+  assert get_ripl().predict("(all (list True True True))")
+  assert not get_ripl().predict("(all (list True False False))")
+  # array argument
+  assert get_ripl().predict("(any (array True False True))")
+  assert not get_ripl().predict("(any (array False False False))")
+  assert get_ripl().predict("(all (array True True True))")
+  assert not get_ripl().predict("(all (array True False False))")
+
+@on_inf_prim("none")
 def testRecordSmoke():
   assert not get_ripl().evaluate("(eq 1 (return 1))")
 

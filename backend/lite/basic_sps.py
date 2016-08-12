@@ -79,6 +79,14 @@ registerBuiltinSP("xor", deterministic_typed(lambda x, y: x != y,
     [t.BoolType(), t.BoolType()], t.BoolType(),
     descr="xor(x,y) returns true if exactly one of x and y is true"))
 
+registerBuiltinSP("all", deterministic_typed(lambda arr: all(arr),
+    [t.HomogeneousListType(t.BoolType())], t.BoolType(),
+    descr="all returns true if all of the elements in the input are true"))
+
+registerBuiltinSP("any", deterministic_typed(lambda arr: any(arr),
+    [t.HomogeneousListType(t.BoolType())], t.BoolType(),
+    descr="any returns true if any of the elements in the input are true"))
+
 registerBuiltinSP("is_number", type_test(t.NumberType()))
 registerBuiltinSP("is_integer", type_test(t.IntegerType()))
 registerBuiltinSP("is_probability", type_test(t.ProbabilityType()))
@@ -216,3 +224,11 @@ registerBuiltinSP("debug", deterministic_typed(debug_print,
 registerBuiltinSP("value_error",
   deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
     [t.AnyType()], t.AnyType()))
+
+def make_name(sym, index):
+  return sym + "_" + str(int(index))
+
+registerBuiltinSP("name", deterministic_typed(make_name,
+    [t.SymbolType(), t.NumberType()], t.SymbolType(),
+    descr = "Programmatically synthesize a variable name. " \
+            "The name is determined by the given prefix and index."))
