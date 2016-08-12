@@ -54,8 +54,9 @@ def scale_plot(results):
   plt.xlabel("Number of timesteps")
   plt.ylabel("Time per transition (s)")
   plt.title("Inference speed scaling on an HMM")
-  plt.legend(fontsize=25)
-  set_font_size(plt.gca(), 25)
+  plt.legend(fontsize=19, loc='best')
+  set_font_size(plt.gca(), 20)
+  plt.gcf().subplots_adjust(bottom=0.17, left=0.16)
   plt.savefig("figures/scaling.pdf")
   # plt.show()
 
