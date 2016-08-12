@@ -45,6 +45,7 @@ def _add_links(dot, trace, addrs):
   for ad in addrs:
     # Hack in dependencies due to requests created by compound SPs
     if isinstance(ad, addr.RequestAddress):
+      dot.edge(_node_name(ad.request_id), _node_name(ad), style="dashed", constraint="false")
       extra_children = [ad.request_id]
     else:
       extra_children = []
