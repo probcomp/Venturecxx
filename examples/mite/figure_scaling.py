@@ -63,12 +63,26 @@ def scale_plot(results):
   chain_sizes = results["chain_sizes"]
   num_iters = results["num_iters"]
   plt.figure()
-  plt.plot(chain_sizes, [float(f)/num_iters for f in flats], label="Flat table (total)")
-  plt.plot(chain_sizes, [float(g)/num_iters for g in graphs], label="Dependency graph (total)")
+  plt.plot(chain_sizes, [float(f)/num_iters for f in flats],
+           label="Flat table (total)",
+           color="blue")
+  plt.plot(chain_sizes, [float(g)/num_iters for g in graphs],
+           label="Dependency graph (total)",
+           color="green")
   plt.plot(chain_sizes, [float(f)/num_iters for f in flats_select],
-           label="Flat table (selection)")
+           label="Flat table (selection)",
+           color="blue", linestyle="--", marker="s")
   plt.plot(chain_sizes, [float(g)/num_iters for g in graphs_select],
-           label="Dependency graph (selection)")
+           label="Dependency graph (selection)",
+           color="green", linestyle="--", marker="s")
+  flats_regen = [(float(f) - float(fs))/num_iters for (f, fs) in zip(flats, flats_select)]
+  plt.plot(chain_sizes, flats_regen,
+           label="Flat table (regeneration)",
+           color="blue", linestyle="--", marker="D")
+  graphs_regen = [(float(g) - float(gs))/num_iters for (g, gs) in zip(graphs, graphs_select)]
+  plt.plot(chain_sizes, graphs_regen,
+           label="Dependency graph (regeneration)",
+           color="green", linestyle="--", marker="D")
   plt.xlabel("Number of timesteps")
   plt.ylabel("Time per transition (s)")
   plt.title("Inference speed scaling on an HMM")
