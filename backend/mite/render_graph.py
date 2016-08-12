@@ -6,6 +6,7 @@ import venture.lite.types as t
 
 import venture.mite.address as addr
 from venture.mite.render import _jsonable_address
+from venture.mite.sps.compound import CompoundSP
 
 def digraph(trace, scaffold, principal_nodes=None):
   if principal_nodes is None:
@@ -26,19 +27,24 @@ def digraph(trace, scaffold, principal_nodes=None):
   _add_links(dot, trace, scaffold.kernels.keys() + list(brush))
   return dot
 
-def _represent_value(v):
+def _represent_value(trace, v):
   if isinstance(v, vv.SPRef):
     ad = v.makerNode.address
     if isinstance(ad, addr.BuiltinAddress):
       return ad.name
     else:
-      return "a procedure"
+      proc = trace.made_sps[ad]
+      print proc
+      if isinstance(proc, CompoundSP):
+        return str(proc.exp)
+      else:
+        return "a foreign procedure"
   else:
     return str(t.Exp.asPython(v))
 
 def _add_node_for(dot, trace, ad, color=None):
   name = _node_name(ad)
-  val = _represent_value(trace.value_at(ad))
+  val = _represent_value(trace, trace.value_at(ad))
   label = name + "\n" + val
   if color is not None:
     dot.node(name, label=label, fillcolor=color, style="filled")
