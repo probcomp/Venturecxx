@@ -46,9 +46,13 @@ define graph20 = (iters) -> run_program(chain20, iters, graph_trace);
 define graph50 = (iters) -> run_program(chain50, iters, graph_trace);
 
 define single_site_step = (timesteps) -> {
-  let n = uniform_discrete(1, timesteps);
-  subproblem <- single_site_subproblem(toplevel(2 * n + 1));
+  subproblem <- single_site(timesteps);
   resimulation_step(subproblem)
+};
+
+def single_site = (timesteps) -> {
+  let n = uniform_discrete(1, timesteps);
+  single_site_subproblem(toplevel(2 * n + 1));
 };
 
 define chain5 = {
