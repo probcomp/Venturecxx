@@ -58,7 +58,7 @@ def _jsonable_address(address):
   elif isinstance(address, addr.SubexpressionAddress):
     return _jsonable_address(address.parent) + "/" + str(address.index)
   elif isinstance(address, addr.RequestAddress):
-    return _jsonable_address(address.sp_addr) + ":" + _jsonable_request_id(address.request_id)
+    return "r(" + _jsonable_address(address.sp_addr) + ", " + _jsonable_request_id(address.request_id) + ")"
   else:
     raise Exception("Unknown address %s of type %s" % (address, type(address)))
 

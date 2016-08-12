@@ -41,4 +41,4 @@ def _add_links(dot, trace, addrs):
         dot.edge(_node_name(ad), _node_name(child))
 
 def _node_name(ad):
-  return _jsonable_address(ad).replace(":", r"-")
+  return _jsonable_address(ad)
