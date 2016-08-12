@@ -3,6 +3,7 @@ from graphviz import Digraph
 from venture.lite.orderedset import OrderedSet
 import venture.lite.value as vv
 import venture.lite.types as t
+from venture.parser.church_prime.parse import ChurchPrimeParser
 
 import venture.mite.address as addr
 from venture.mite.render import _jsonable_address
@@ -34,9 +35,11 @@ def _represent_value(trace, v):
       return ad.name
     else:
       proc = trace.made_sps[ad]
-      print proc
       if isinstance(proc, CompoundSP):
-        return str(proc.exp)
+        lambda_exp = ['lambda', proc.params, proc.exp]
+        p = ChurchPrimeParser.instance()
+        stack_dict = t.Exp.asVentureValue(lambda_exp).asStackDict()
+        return p.unparse_expression(stack_dict)
       else:
         return "a foreign procedure"
   else:
