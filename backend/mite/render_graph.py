@@ -1,6 +1,8 @@
 from graphviz import Digraph
 
 from venture.lite.orderedset import OrderedSet
+import venture.lite.value as vv
+import venture.lite.types as t
 
 import venture.mite.address as addr
 from venture.mite.render import _jsonable_address
@@ -10,7 +12,6 @@ def digraph(trace, scaffold, principal_nodes=None):
     principal_nodes = set()
   dot = Digraph(name="A scaffold")
   for ad in scaffold.kernels.keys():
-    name = _node_name(ad)
     ker = scaffold.kernels[ad]
     if ad in principal_nodes:
       color = 'red'
@@ -18,13 +19,27 @@ def digraph(trace, scaffold, principal_nodes=None):
       color = 'yellow'
     elif kernel_type(ker) == 'constrained':
       color = 'blue'
-    dot.node(name, label=name, fillcolor=color, style="filled")
+    add_node_for(dot, trace, ad, color=color)
   brush = _compute_brush_hack(trace, scaffold)
   for ad in brush:
-    name = _node_name(ad)
-    dot.node(name, label=name, fillcolor='green', style="filled")
+    add_node_for(dot, trace, ad, color='green')
   _add_links(dot, trace, scaffold.kernels.keys() + list(brush))
   return dot
+
+def represent_value(v):
+  if isinstance(v, vv.SPRef):
+    return "a procedure"
+  else:
+    return str(t.Exp.asPython(v))
+
+def add_node_for(dot, trace, ad, color=None):
+  name = _node_name(ad)
+  val = represent_value(trace.value_at(ad))
+  label = name + "\n" + val
+  if color is not None:
+    dot.node(name, label=label, fillcolor=color, style="filled")
+  else:
+    dot.node(name, label=label)
 
 def kernel_type(ker):
   if isinstance(ker, dict) and 'type' in ker:
@@ -36,8 +51,7 @@ def digraph_trace(trace):
   dot = Digraph(name="A trace")
   addrs = [ad for ad in trace.nodes.keys() if not isinstance(ad, addr.BuiltinAddress)]
   for ad in addrs:
-    name = _node_name(ad)
-    dot.node(name, label=name)
+    add_node_for(dot, trace, ad)
   _add_links(dot, trace, addrs)
   return dot
 
