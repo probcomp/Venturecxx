@@ -68,13 +68,13 @@ def scale_plot(results):
            label="Flat table (total)",
            color="blue")
   plt.plot(chain_sizes, [float(g)/num_iters for g in graphs],
-           label="Dependency graph (total)",
+           label="Dep graph (total)",
            color="green")
   plt.plot(chain_sizes, [float(f)/num_iters for f in flats_select],
            label="Flat table (selection)",
            color="blue", linestyle="--", marker="s")
   plt.plot(chain_sizes, [float(g)/num_iters for g in graphs_select],
-           label="Dependency graph (selection)",
+           label="Dep graph (selection)",
            color="green", linestyle="--", marker="s")
   flats_regen = [(float(f) - float(fs))/num_iters for (f, fs) in zip(flats, flats_select)]
   plt.plot(chain_sizes, flats_regen,
@@ -82,12 +82,12 @@ def scale_plot(results):
            color="blue", linestyle="--", marker="D")
   graphs_regen = [(float(g) - float(gs))/num_iters for (g, gs) in zip(graphs, graphs_select)]
   plt.plot(chain_sizes, graphs_regen,
-           label="Dependency graph (regeneration)",
+           label="Dep graph (regeneration)",
            color="green", linestyle="--", marker="D")
   plt.xlabel("Number of timesteps")
   plt.ylabel("Time per transition (s)")
   plt.title("Inference speed scaling on an HMM")
-  plt.legend(fontsize=19, loc='best')
+  plt.legend(fontsize=10, loc='best')
   set_font_size(plt.gca(), 20)
   plt.gcf().subplots_adjust(bottom=0.17, left=0.16)
   plt.savefig("figures/scaling.pdf")
