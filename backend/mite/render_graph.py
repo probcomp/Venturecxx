@@ -32,6 +32,10 @@ def digraph_trace(trace):
     name = _node_name(ad)
     dot.node(name, label=name)
   _add_links(dot, trace, addrs)
+  for ad in addrs:
+    if isinstance(ad, addr.RequestAddress):
+      # Hack in dependencies due to requests created by compound SPs
+      dot.edge(_node_name(ad), _node_name(ad.request_id))
   return dot
 
 def _add_links(dot, trace, addrs):
