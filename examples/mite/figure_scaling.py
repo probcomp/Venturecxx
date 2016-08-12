@@ -14,23 +14,24 @@ def timing(trace_type, chain_sizes, num_iters):
   ripl.execute_program_from_file(vnts_file)
   ans_full = []
   ans_select = []
+  def time_one(string):
+    trials = []
+    for _ in range(3):
+      then = time.time()
+      ripl.evaluate(string)
+      now = time.time()
+      trials.append(now - then)
+    return min(trials)
   for (i, (low, high)) in enumerate(zip([0] + chain_sizes, chain_sizes)):
     if i == 0:
       ripl.define("trace_0", "start_chain(" + str(high) + ", " + trace_type + ")")
     else:
       ripl.define("trace_" + str(i), "extend_chain(%s, %s, trace_%s)" % (low, high, i-1))
-    then = time.time()
-    ripl.evaluate("go_blank(%s, %s, trace_%s)" % (num_iters, high, i))
-    now = time.time()
-    blank_time = now - then
-    then = time.time()
-    ripl.evaluate("go(%s, %s, trace_%s)" % (num_iters, high, i))
-    now = time.time()
-    ans_full.append(max(now - then - blank_time, 0))
-    then = time.time()
-    ripl.evaluate("go_select(%s, %s, trace_%s)" % (num_iters, high, i))
-    now = time.time()
-    ans_select.append(max(now - then - blank_time, 0))
+    time_blank = time_one("go_blank(%s, %s, trace_%s)" % (num_iters, high, i))
+    time_full = time_one("go(%s, %s, trace_%s)" % (num_iters, high, i))
+    ans_full.append(max(time_full - time_blank, 0))
+    time_select = time_one("go_select(%s, %s, trace_%s)" % (num_iters, high, i))
+    ans_select.append(max(time_select - time_blank, 0))
   return (ans_full, ans_select)
 
 def compute_results(stub=False):
@@ -102,6 +103,7 @@ def plot():
     results = pickle.load(f)
   scale_plot(results)
 
+# "save" takes about 6 minutes with default settings.
 if __name__ == '__main__':
   if len(sys.argv) == 1:
     save()
