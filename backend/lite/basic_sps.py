@@ -224,3 +224,11 @@ registerBuiltinSP("debug", deterministic_typed(debug_print,
 registerBuiltinSP("value_error",
   deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
     [t.AnyType()], t.AnyType()))
+
+def make_name(sym, index):
+  return sym + "_" + str(int(index))
+
+registerBuiltinSP("name", deterministic_typed(make_name,
+    [t.SymbolType(), t.NumberType()], t.SymbolType(),
+    descr = "Programmatically synthesize a variable name. " \
+            "The name is determined by the given prefix and index."))
