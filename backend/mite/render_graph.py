@@ -2,7 +2,9 @@ from graphviz import Digraph
 
 from venture.mite.render import _jsonable_address
 
-def digraph(trace, scaffold):
+def digraph(trace, scaffold, principal_nodes=None):
+  if principal_nodes is None:
+    principal_nodes = set()
   dot = Digraph(name="A scaffold")
   for addr in scaffold.kernels.keys():
     name = _jsonable_address(addr)
@@ -12,7 +14,9 @@ def digraph(trace, scaffold):
         return ker['type']
       else:
         return None
-    if kernel_type(addr) == 'proposal' or kernel_type(addr) == 'propagate_lookup':
+    if addr in principal_nodes:
+      color = 'red'
+    elif kernel_type(addr) == 'proposal' or kernel_type(addr) == 'propagate_lookup':
       color = 'yellow'
     elif kernel_type(addr) == 'constrained':
       color = 'blue'
