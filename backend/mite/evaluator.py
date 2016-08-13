@@ -36,7 +36,18 @@ class Evaluator(object):
       self.trace.register_constant(addr, value)
     elif e.isQuotation(exp):
       value = normalize(e.textOfQuotation(exp))
-      self.trace.register_constant(addr, value)
+      if isinstance(value, SPRef):
+        # HACK in case it's a toplevel compound SP definition spliced
+        # in from the parent trace
+        # TODO: should compounds close over the trace where they were
+        # defined?
+        sp = value.makerNode.value
+        assert isinstance(sp, CompoundSP)
+        sp = CompoundSP(sp.params, sp.exp, env)
+        self.trace.register_constant(addr, sp)
+        value = self.trace.register_made_sp(addr, sp)
+      else:
+        self.trace.register_constant(addr, value)
     elif e.isLambda(exp):
       (params, body) = e.destructLambda(exp)
       sp = CompoundSP(params, body, env)
