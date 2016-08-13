@@ -50,15 +50,15 @@ def testCompare():
 @on_inf_prim("none")
 def testAnyAll():
   # list argument
-  assert get_ripl().predict("(any (list True False True))")
-  assert not get_ripl().predict("(any (list False False False))")
-  assert get_ripl().predict("(all (list True True True))")
-  assert not get_ripl().predict("(all (list True False False))")
+  assert get_ripl().predict("(any_b (list True False True))")
+  assert not get_ripl().predict("(any_b (list False False False))")
+  assert get_ripl().predict("(all_b (list True True True))")
+  assert not get_ripl().predict("(all_b (list True False False))")
   # array argument
-  assert get_ripl().predict("(any (array True False True))")
-  assert not get_ripl().predict("(any (array False False False))")
-  assert get_ripl().predict("(all (array True True True))")
-  assert not get_ripl().predict("(all (array True False False))")
+  assert get_ripl().predict("(any_b (array True False True))")
+  assert not get_ripl().predict("(any_b (array False False False))")
+  assert get_ripl().predict("(all_b (array True True True))")
+  assert not get_ripl().predict("(all_b (array True False False))")
 
 @on_inf_prim("none")
 def testRecordSmoke():
