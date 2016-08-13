@@ -1,0 +1,134 @@
+// define utility procedures
+define pass = return(nil);
+
+define extract = {
+  let old_extract = extract;
+  (subproblem) -> {
+    package <- old_extract(subproblem);
+    return((first(package), rest(package)))
+  }
+};
+
+define make_elementary_sp = make_simulation_sp;
+
+define sum = (xs) -> {
+  if (is_empty(xs)) { 0 }
+  else { first(xs) + sum(rest(xs)) }
+};
+
+// end utility defs
+
+// example usage
+
+define example_beta_bern = (make_beta_bern, infer) -> {
+  run_in({
+    // import defs from toplevel environment -- remove this in figure
+    assume pass = $pass;
+    assume extract = $extract;
+    assume make_elementary_sp = make_simulation_sp;
+    assume counter_set = $counter_set;
+    assume counter = $counter;
+    assume counter_get = $counter_get;
+    assume counter_incr = $counter_incr;
+    assume counter_decr = $counter_decr;
+    // end defs
+    assume coin = ${make_beta_bern}(0.5, 0.5);
+    weights <- for_each([true, true, false, true, false], (x) -> {
+      infer();
+      addr <- { observe coin() = x };
+      weight <- incorporate_constraint(addr, x);
+      return (weight)
+    });
+    return (sum(weights))
+  }, flat_trace())
+};
+
+// definition as bare compound
+
+define make_beta_bern_lambda = (a, b) -> {
+  let theta ~ beta(a, b);
+  () ~> {
+    flip(theta)
+  }
+};
+
+// definition as tail-assessable compound
+
+define make_beta_bern_proc = (a, b) -> {
+  let theta ~ beta(a, b);
+  proc_(() ~> {
+    flip(theta)
+  })
+};
+
+// definition as stateful collapsed procedure
+
+define make_beta_bern_collapsed = (a, b) -> {
+  make_elementary_sp([| (a, b) -> {
+    // import defs from toplevel environment -- remove this in figure
+    let pass = $pass;
+    let old_extract = extract;
+    let extract = $extract;
+    let counter_set = $counter_set;
+    let counter = $counter;
+    let counter_get = $counter_get;
+    let counter_incr = $counter_incr;
+    let counter_decr = $counter_decr;
+    // end defs
+    dict(['state', counter(['N', 'K'])],
+         ['simulate', () ~> {
+           N <- counter_get('N');
+           K <- counter_get('K');
+           return (flip((a + K) / (a + b + N)))
+         }],
+         ['log_density', (x) -> {
+           N <- counter_get('N');
+           K <- counter_get('K');
+           let numerator = if (x) { log(a + K) } else { log(b + N - K) };
+           let denominator = log(a + b + N);
+           return (numerator - denominator)
+         }],
+         ['incorporate', (x) -> {
+           counter_incr('N');
+           if (x) { counter_incr('K') } else { pass };
+         }],
+         ['unincorporate', (x) -> {
+           counter_decr('N');
+           if (x) { counter_decr('K') } else { pass };
+         }])
+  } |], a, b)
+};
+
+// supporting definitions
+
+define counter = (keys) -> {
+  run_in({
+    for_each(keys, (key) -> {
+      assume $key = poisson(1);
+      counter_set(key, 0)
+    });
+    split_trace()
+  }, flat_trace())
+};
+
+define counter_set = (key, val) -> {
+  env <- global_env();
+  addr <- find_symbol(env, key);
+  set_value_at(addr, val);
+};
+
+define counter_get = (key) -> {
+  env <- global_env();
+  addr <- find_symbol(env, key);
+  value_at(addr)
+};
+
+define counter_incr = (key) -> {
+  val <- counter_get(key);
+  counter_set(key, val + 1);
+};
+
+define counter_decr = (key) -> {
+  val <- counter_get(key);
+  counter_set(key, val - 1);
+};
