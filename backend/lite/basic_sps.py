@@ -79,11 +79,11 @@ registerBuiltinSP("xor", deterministic_typed(lambda x, y: x != y,
     [t.BoolType(), t.BoolType()], t.BoolType(),
     descr="xor(x,y) returns true if exactly one of x and y is true"))
 
-registerBuiltinSP("all_b", deterministic_typed(lambda arr: all(arr),
+registerBuiltinSP("all_p", deterministic_typed(lambda arr: all(arr),
     [t.HomogeneousListType(t.BoolType())], t.BoolType(),
     descr="all returns true if all of the elements in the input are true"))
 
-registerBuiltinSP("any_b", deterministic_typed(lambda arr: any(arr),
+registerBuiltinSP("any_p", deterministic_typed(lambda arr: any(arr),
     [t.HomogeneousListType(t.BoolType())], t.BoolType(),
     descr="any returns true if any of the elements in the input are true"))
 
