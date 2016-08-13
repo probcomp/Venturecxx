@@ -256,8 +256,10 @@ subexpressions, their expansion can be short-circuited.
           return (pattern, template, False)
     else:
       return quote_result()
-  (pattern, template, _) = qqrecur(exp[1])
-  return SyntaxRule(["quasiquote", pattern], template).expand(exp)
+  # XXX how to get the indices right?
+  body = expand(exp[1]).desugared()
+  (pattern, template, _) = qqrecur(body)
+  return SyntaxRule(pattern, template).expand(body)
 
 def symbol_prepend(prefix, symbol):
   if isinstance(symbol, basestring):
