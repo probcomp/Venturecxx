@@ -108,3 +108,9 @@
         (rev <- (extract subproblem))
         (let trace_frag (rest rev))
         (regen subproblem trace_frag)))]
+
+;;; can be used by setting "_observe = incorporating_observe"
+[define incorporating_observe
+  (lambda (expr value)
+    (do (addr <- (_observe expr value))
+        (incorporate_constraint addr value)))]
