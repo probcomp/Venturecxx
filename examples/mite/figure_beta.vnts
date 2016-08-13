@@ -26,7 +26,7 @@ define my_beta_2_real = make_elementary_sp([| () -> {
     else { log_beta_function(a - 1, b) + log(a - 1) - log(a + b - 1) }
   };
   let pass = return(nil);
-  dict(['trace', nil],
+  dict(['state', nil],
        ['simulate', (a, b) -> {
          let y ~ gamma(a, 1);
          let z ~ gamma(b, 1);
