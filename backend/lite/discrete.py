@@ -33,9 +33,12 @@ from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import d_log_logistic
 from venture.lite.utils import extendedLog
 from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logDensityCategorical
+from venture.lite.utils import log_logistic
+from venture.lite.utils import logit
 from venture.lite.utils import simulateCategorical
 from venture.lite.value import VentureInteger
 import venture.lite.types as t
@@ -124,6 +127,42 @@ registerBuiltinSP("log_flip", typed_nr(LogBernoulliOutputPSP(),
 
 registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(),
   [t.NumberType()], t.BoolType()))
+
+
+class LogOddsBernoulliOutputPSP(DiscretePSP):
+  def simulate(self, args):
+    logodds = args.operandValues()[0]
+    return logit(args.py_prng().random()) < logodds
+
+  def logDensity(self, val, args):
+    logodds = args.operandValues()[0]
+    return log_logistic(logodds if val else -logodds)
+
+  def gradientOfLogDensity(self, val, args):
+    logodds = args.operandValues()[0]
+    return (0, [d_log_logistic(logodds) if val else -d_log_logistic(-logodds)])
+
+  def enumerateValues(self, args):
+    logodds = args.operandValues()[0]
+    inf = float('inf')
+    if logodds == +inf:
+      return [True]
+    elif logodds == -inf:
+      return [False]
+    else:
+      return [True, False]
+
+  def description(self, name):
+    return '  %s(logodds) returns true with specified log-odds.' \
+      '  Like log_bernoulli/log_flip, this avoids rounding low probabilities' \
+      ' to zero.'
+
+
+registerBuiltinSP("log_odds_flip", typed_nr(LogOddsBernoulliOutputPSP(),
+  [t.NumberType()], t.BoolType()))
+
+registerBuiltinSP("log_odds_bernoulli", typed_nr(LogOddsBernoulliOutputPSP(),
+  [t.NumberType()], t.IntegerType()))
 
 
 class BinomialOutputPSP(DiscretePSP):

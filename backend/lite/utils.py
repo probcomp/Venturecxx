@@ -29,8 +29,33 @@ def override(interface_class):
     return method
   return overrider
 
-def extendedLog(x): return math.log(x) if x > 0 else float("-inf")
-def extendedLog1p(x): return math.log1p(x) if x > -1 else float("-inf")
+def extendedLog(x): return float('-inf') if x == 0 else math.log(x)
+def extendedLog1p(x): return float('-inf') if x == -1 else math.log1p(x)
+def xlogx(x): return 0 if x == 0 else x*math.log(x)
+def expm1(x): return math.expm1(x)
+
+def logsumexp(array):
+  """Given [log x_0, ..., log x_{n-1}], yield log (x_0 + ... + x_{n-1}).
+
+  Computed carefully to avoid overflow by computing x_i/max{x_i}
+  instead of x_i directly, and to propagate infinities and NaNs
+  appropriately.
+  """
+  if len(array) == 0:
+    return float('-inf')
+  m = max(array)
+
+  # m = +inf means addends are all +inf, hence so are sum and log.
+  # m = -inf means addends are all zero, hence so is sum, and log is
+  # -inf.  But if +inf and -inf are among the inputs, or if input is
+  # NaN, let the usual computation yield a NaN.
+  if math.isinf(m) and min(array) != -m and \
+     all(not math.isnan(a) for a in array):
+    return m
+
+  # Since m = max{a_0, a_1, ...}, it follows that a <= m for all a,
+  # so a - m <= 0; hence exp(a - m) is guaranteed not to overflow.
+  return m + extendedLog(sum(careful_exp(a - m) for a in array))
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -148,17 +173,23 @@ def careful_exp(x):
     return float("inf")
 
 def logistic(x):
+  """Logistic function: 1/(1 + e^{-x}).  Inverse of logit.
+
+  Maps log-odds space probabilities into direct-space in [0, 1].
+  """
   # logistic never overflows, but e^{-x} does if x is much less than
   # -log 2^(emax + 1) ~= -709.  Fortunately, for x <= -37, IEEE 754
   # double-precision arithmetic rounds 1 + e^{-x} to e^{-x} anyway,
   # giving the approximation 1/(1 + e^{-x}) ~= 1/e^{-x} = e^x, which
   # never overflows.
+  #
   if x <= -37:
     return np.exp(x)
   else:
     return 1/(1 + np.exp(-x))
 
 def T_logistic(x):
+  """Tangent vector of logistic function: (logistic(x), d/dx logistic(x))."""
   # If L is the logistic function, we have
   #
   #                 e^{-x}         e^{-x}         1
@@ -180,11 +211,13 @@ def T_logistic(x):
   # either one were near 1.  We could compute L(x) and L(-x)
   # separately, but that would cost two exps.  We instead compute L(x)
   # and L'(x) simultaneously in terms of e^{-x}.
+  #
   if x <= -37:
     # When x <= -37, so that 1 + e^{-x} ~= e^{-x}, we have
     #
     #   1/(1 + e^{-x}) = 1/e^{-x} = e^x
     #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
+    #
     ex = np.exp(x)
     return (ex, ex)
   else:
@@ -192,7 +225,30 @@ def T_logistic(x):
     ex1 = 1 + ex
     return (1/ex1, ex/(ex1*ex1))
 
+def d_logistic(x):
+  """d/dx logistic(x) = e^{-x} / (1 + e^{-x})^2"""
+  if x <= -37:
+    # 1 + e^{-x} ~= e^{-x}, so e^{-x} / (1 + e^{-x}) ~=
+    # e^{-x}/(e^{-x})^2 = 1/e^{-x} = e^x.
+    return np.exp(x)
+  else:
+    ex = np.exp(-x)
+    ex1 = 1 + ex
+    return ex/(ex1*ex1)
+
+def log_d_logistic(x):
+  """log d/dx logistic(x) = -x - 2 log (1 + e^{-x})"""
+  if x <= -37:
+    # -x - 2 log (1 + e^{-x}) ~= -x - 2 log (e^{-x}) = -x - 2 (-x) = x
+    return x
+  else:
+    return -x - 2*extendedLog1p(careful_exp(-x))
+
 def log_logistic(x):
+  """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
+
+  Maps log-odds space probabilities in \R into log-space in (-\infty, 0].
+  """
   if x <= -37:
     return x
   else:
@@ -200,18 +256,70 @@ def log_logistic(x):
     #
     # When x is large and positive, e^{-x} is small relative to 1, so
     # computing 1 + e^{-x} may lose precision, which log1p avoids.
+    #
     return -np.log1p(np.exp(-x))
 
 def d_log_logistic(x):
+  """Derivative of the log-logistic function: d/dx log logistic(x)."""
   # Since 1 - L(x) = L(-x) and L'(x) = L(x) (1 - L(x)) = L(x) L(-x),
   # we have
   #
   #     (log o L)'(x) = L'(x) log'(L(x)) = L(x) L(-x) / L(x) = L(-x).
+  #
   return logistic(-x)
 
 def logit(x):
-  # TODO Check the numeric analysis of this
+  """Logit function, x/(1 - x).  Inverse of logistic.
+
+  Maps direct-space probabilities in [0, 1] into log-odds space.
+  """
   return extendedLog(x / (1 - x))
+
+def simulateLogGamma(shape, np_rng):
+  """Sample from log of standard Gamma distribution with given shape."""
+  if shape < 1:
+    # For shape < 1, if G ~ Gamma(shape + 1) and U ~ U[0, 1], then
+    # G * U^(1/shape) ~ Gamma(shape).  See
+    #
+    #       Luc Devroye, _Nonuniform Random Variate Generation_,
+    #       Springer-Verlag, 1986, Ch. IX `Continuous univariate
+    #       densities', Sec. 3.5 'Gamma variate generators when a
+    #       <= 1', p. 420,
+    #
+    # in particular option (3), the generator based on Stuart's
+    # theorem.  We compute log (G * U^(1/shape)) in log space by
+    # log G + (log U)/shape in order to avoid overflow when shape
+    # is very small.
+    #
+    G = np_rng.gamma(shape + 1)
+    U = np_rng.uniform()
+    return math.log(G) + math.log(U)/shape
+  else:
+    # Otherwise, if shape >= 1, simply take the log of a Gamma
+    # sample.  When shape = 1, the probability of any quantity
+    # rounded to zero is less than 1e-300 which is well below
+    # 2^-256 which will never happen.  Larger shapes give even
+    # smaller probability of yielding zero.
+    #
+    return math.log(np_rng.gamma(shape))
+
+def logDensityLogGamma(x, shape):
+  """Log density of the log of a Gamma sample with given shape."""
+  # For shape k, the Gamma PDF is
+  #
+  #     Gamma(y; k) = y^{k - 1} e^-y / Gamma(k),   or
+  #     log Gamma(y; k) = (k - 1) log y - y - log Gamma(k);
+  #
+  # hence if x = log y and thus y = e^x so dy/dx = d/dx e^x = e^x, we
+  # have
+  #
+  #     log LogGamma(x; k) = log [Gamma(y; k) dy/dx]
+  #       = (k - 1) log y - y - log Gamma(k) + log dy/dx
+  #       = (k - 1) log e^x - e^x - log Gamma(k) + log e^x
+  #       = (k - 1) x - e^x - log Gamma(k) + x
+  #       = k x - e^x - log Gamma(k).
+  #
+  return shape*x - careful_exp(x) - math.lgamma(shape)
 
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
