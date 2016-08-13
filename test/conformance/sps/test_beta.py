@@ -17,6 +17,7 @@
 
 from __future__ import division
 
+import math
 import multiprocessing
 import traceback
 
@@ -149,3 +150,67 @@ def test_beta_large_large(seed):
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
     assert all(sample == 1/2 for sample in samples)
+
+def test_log_beta_small():
+    a = 0.5
+    b = 0.5
+    nsamples = default_num_samples()
+    expression = '(log_beta %r %r)' % (a, b)
+    ripl = get_ripl()
+    ripl.assume('p', expression, label='p')
+    samples = collectSamples(ripl, 'p', nsamples)
+    # A single sample overflows with probability < F(10^{-10^300}),
+    # where F is the CDF of Beta(1/2, 1/2), which is hard to evaluate
+    # at such a tiny input but is probably smaller than we care about.
+    assert all(not math.isinf(sample) for sample in samples)
+    # A single sample is rounded to zero with probability < 10^-150.
+    assert all(sample != 0 for sample in samples)
+
+def test_log_beta_bernoulli_small():
+    a = 0.5
+    b = 0.5
+    nsamples = default_num_samples()
+    ripl = get_ripl()
+    ripl.assume('p', '(log_beta %r %r)' % (a, b), label='p')
+    ripl.observe('(log_bernoulli p)', 1, label='x')
+    samples = collectSamples(ripl, 'p', nsamples)
+    # A single sample overflows with probability < F(10^{-10^300}),
+    # where F is the CDF of Beta(1/2, 1/2), which is hard to evaluate
+    # at such a tiny input but is probably smaller than we care about.
+    assert all(not math.isinf(sample) for sample in samples)
+    # A single sample is rounded to zero with probability < 10^-150.
+    assert all(sample != 0 for sample in samples)
+
+def test_log_beta_smaller():
+    a = 0.001
+    b = 0.001
+    nsamples = default_num_samples()
+    expression = '(log_beta %r %r)' % (a, b)
+    ripl = get_ripl()
+    ripl.assume('p', expression, label='p')
+    samples = collectSamples(ripl, 'p', nsamples)
+    # A single sample overflows with probability < F(10^{-10^300}),
+    # where F is the CDF of Beta(0.001, 0.001), which is hard to
+    # evaluate at such a tiny input but is probably smaller than we
+    # care about.
+    assert all(not math.isinf(sample) for sample in samples)
+    # Unfortunately, the resolution around direct-space 1 / log-space
+    # 0 is coarse enough that we plausibly get zero here.
+    #assert all(sample != 0 for sample in samples)
+
+def test_log_beta_bernoulli_smaller():
+    a = 0.001
+    b = 0.001
+    nsamples = default_num_samples()
+    ripl = get_ripl()
+    ripl.assume('p', '(log_beta %r %r)' % (a, b), label='p')
+    ripl.observe('(log_bernoulli p)', 1, label='x')
+    samples = collectSamples(ripl, 'p', nsamples)
+    # A single sample overflows with probability < F(10^{-10^300}),
+    # where F is the CDF of Beta(0.001, 0.001), which is hard to
+    # evaluate at such a tiny input but is probably smaller than we
+    # care about.
+    assert all(not math.isinf(sample) for sample in samples)
+    # Unfortunately, the resolution around direct-space 1 / log-space
+    # 0 is coarse enough that we plausibly get zero here.
+    #assert all(sample != 0 for sample in samples)
