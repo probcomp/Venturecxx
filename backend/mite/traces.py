@@ -274,6 +274,10 @@ class FlatTrace(AbstractTrace):
 
   ## low level ops for manual inference programming
 
+  def find_symbol(self, env, symbol):
+    node = env.findSymbol(symbol)
+    return node.address
+
   def set_value_at(self, addr, value):
     # low level operation. may leave the trace in an inconsistent state
     self.results[addr] = value
@@ -414,6 +418,7 @@ register_trace_type("_trace", ITrace, {
   "bind_global": trace_action("bind_global", [t.Symbol, t.Blob], t.Nil),
   "register_observation": trace_action("register_observation", [t.Blob, t.Object], t.Nil),
   "value_at": trace_action("value_at", [t.Blob], t.Object),
+  "find_symbol": trace_action("find_symbol", [EnvironmentType(), t.Symbol], t.Blob),
   "set_value_at": trace_action("set_value_at", [t.Blob, t.Object], t.Nil),
   "apply_sp": trace_action("apply_sp", [t.Blob, t.Object, t.List(t.Object)], t.Object),
   "log_density_of_sp": trace_action("log_density_of_sp", [t.Object, t.Object, t.List(t.Object)], t.Number),
