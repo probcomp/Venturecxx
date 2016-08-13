@@ -47,6 +47,17 @@
                 (xs <- (accumulate (- n 1) address infer_act))
                 (return (pair x xs))))))]
 
+[define for_each
+  (lambda (items f)
+    (do (let loop
+            (lambda (loop xs)
+              (if (is_empty xs)
+                  (return nil)
+                  (do (y <- (f (first xs)))
+                      (ys <- (loop loop (rest xs)))
+                      (return (pair y ys))))))
+        (loop loop (to_list items))))]
+
 ;; trace interface
 
 [define eval_toplevel
