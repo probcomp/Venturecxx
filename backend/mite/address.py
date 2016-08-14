@@ -1,6 +1,7 @@
 from weakref import WeakValueDictionary
 
 import venture.lite.types as t
+from venture.lite.value import VentureValue
 
 from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
@@ -76,3 +77,55 @@ registerBuiltinSP("builtin", AddressMakerSP(builtin, [t.String]))
 registerBuiltinSP("toplevel", AddressMakerSP(directive, [t.Int]))
 registerBuiltinSP("request", AddressMakerSP(request, [t.Blob, t.Object]))
 registerBuiltinSP("subexpression", AddressMakerSP(subexpression, [t.Int, t.Blob]))
+
+
+## HACK for allowing SPs to get the addresses of their inputs:
+## values which carry hidden address metadata with them
+
+class VentureAddressed(VentureValue):
+  def __init__(self, address, value):
+    self.address = address
+    self.value = value
+
+  def getNumber(self): return self.value.getNumber()
+  def getInteger(self): return self.value.getInteger()
+  def getAtom(self): return self.value.getAtom()
+  def getBool(self): return self.value.getBool()
+  def getSymbol(self): return self.value.getSymbol()
+  def getString(self): return self.value.getString()
+  def getForeignBlob(self): return self.value.getForeignBlob()
+  def getPair(self): return self.value.getPair()
+  def getArray(self, elt_type): return self.value.getArray(elt_type)
+  def getSimplex(self): return self.value.getSimplex()
+  def getDict(self): return self.value.getDict()
+  def getMatrix(self): return self.value.getMatrix()
+  def getSymmetricMatrix(self): return self.value.getSymmetricMatrix()
+  def getSP(self): return self.value.getSP()
+  def getEnvironment(self): return self.value.getEnvironment()
+
+  def asStackDict(self, trace=None):
+    return dict(self.value.asStackDict(trace), address=self.address)
+
+  @staticmethod
+  def fromStackDict(thing):
+    return VentureAddressed(
+      thing["address"], VentureValue.fromStackDict(thing))
+
+  # TODO fill in the rest of the methods
+
+class AddressOfSP(SimulationSP):
+  def simulate(self, inputs, _prng):
+    assert len(inputs) == 1
+    [x] = inputs
+    assert isinstance(x, VentureAddressed)
+    return t.Blob.asVentureValue(x.address)
+
+class ValueOfSP(SimulationSP):
+  def simulate(self, inputs, _prng):
+    assert len(inputs) == 1
+    [x] = inputs
+    assert isinstance(x, VentureAddressed)
+    return x.value
+
+registerBuiltinSP("address_of", AddressOfSP())
+registerBuiltinSP("value_of", ValueOfSP())
