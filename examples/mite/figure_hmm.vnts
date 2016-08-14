@@ -63,7 +63,7 @@ define posterior_ffbs_simulator = (data, T, O) -> {
     last_state ~ categorical(first(rev_filtered));
     posterior_ffbs_sim_lp(list(last_state), rest(rev_filtered), T)
   }
-}
+};
 
 define posterior_ffbs_sim_lp = (states, filtered_probs, T) ~> {
   if (is_pair(filtered_probs)) {
@@ -75,4 +75,15 @@ define posterior_ffbs_sim_lp = (states, filtered_probs, T) ~> {
   } else {
     states
   }
-}
+};
+
+// Posterior assessment
+
+// Consists of scaling joint assessment by the probability of the
+// data, the latter computed by forward filtering.
+define posterior_assessor = (data, T, O) -> {
+  (data_prob, _) = forward_filter(data, T, O);
+  (states) -> {
+    assess_hmm(states, data, T, O, length(data)) - data_prob
+  }
+};
