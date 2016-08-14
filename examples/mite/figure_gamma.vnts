@@ -2,12 +2,12 @@ define simulate_gamma = (alpha) ~> {
   d = alpha - (1.0/3);
   c = 1.0 / sqrt(9 * d);
   x ~ normal(0, 1);
-  v = expt(1 + c * x, 3);
+  v = cube(1 + c * x);
   if (v <= 0) {
     simulate_gamma(alpha)
   } else {
     log_bound = 0.5 * x * x + d * (1 - v);
-    u ~ uniform(0, 1);
+    u ~ uniform_continuous(0, 1);
     if (log(u) >= log_bound) {
       simulate_gamma(alpha)
     } else {
@@ -23,3 +23,5 @@ define simulate_gamma = (alpha) ~> {
 define assess_std_gamma = (x, alpha) -> {
   (alpha - 1) * log(x) - x - log_gamma(alpha) // The log of the gamma function
 };
+
+define cube = (x) -> { x * x * x }
