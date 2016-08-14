@@ -16,6 +16,20 @@ define sum = (xs) -> {
   else { first(xs) + sum(rest(xs)) }
 };
 
+define resimulation_step = (subproblem) -> {
+  package <- extract(subproblem);
+  let (old_weight, old_trace_fragment) = package;
+  new_weight <- regen(subproblem, old_trace_fragment);
+  consistent <- check_consistent();
+  if (consistent && log_flip(new_weight - old_weight)) {
+    pass
+  }
+  else {
+    extract(subproblem);
+    restore(subproblem, old_trace_fragment)
+  }
+};
+
 // end utility defs
 
 // example usage
@@ -59,6 +73,14 @@ define make_beta_bern_proc = (a, b) -> {
   proc_(() ~> {
     flip(theta)
   })
+};
+
+// inference for the tail-assessable compound
+
+define resimulation_infer = () -> {
+  // hardcoding the subproblem...
+  subproblem <- single_site_subproblem(toplevel(9));
+  resimulation_step(subproblem)
 };
 
 // definition as stateful collapsed procedure
