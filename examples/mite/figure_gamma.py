@@ -63,8 +63,11 @@ def plot():
   plt.ylabel("Frequency")
   plt.title("Simulating the gamma distribution at shape=%3.1f" % (shape,))
   plt.legend(fontsize=19)
-  set_font_size(plt.gca(), 25)
-  plt.show()
+  set_font_size(plt.gca(), 22)
+  plt.gca().title.set_fontsize(20)
+  plt.tight_layout()
+  # plt.show()
+  plt.savefig("figures/gamma.png")
 
 def set_font_size(ax, size):
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
