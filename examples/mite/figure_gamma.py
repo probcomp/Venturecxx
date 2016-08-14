@@ -23,6 +23,24 @@ def gamma_samples(r, shape, ct):
 def gamma_assess(r, x, shape):
   return r.evaluate("assess_std_gamma(%s, %s)" % (x, shape))
 
+def gamma_samples2(shape, ct):
+  d = shape - 1.0/3
+  c = 1.0 / math.sqrt(9 * d)
+  def block():
+    xs = np.random.normal(size=2*ct)
+    cube_root_vs = 1 + c * xs
+    vs = cube_root_vs * cube_root_vs * cube_root_vs
+    us = np.log(np.random.uniform(size=2*ct))
+    return (xs, vs, us)
+  ans = []
+  while len(ans) < ct:
+    for (x, v, u) in zip(*block()):
+      if v <= 0: continue
+      log_bound = 0.5 * x * x + d * (1 - v)
+      if u >= log_bound: continue
+      ans.append(d * v)
+  return ans
+
 def gamma_assess2(x, shape):
   ln = (shape - 1) * math.log(x) - x - scipy.gammaln(shape)
   return math.exp(ln)
