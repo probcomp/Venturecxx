@@ -198,9 +198,9 @@ class Regenerator(Evaluator):
     (fragment, old_sp, old_args) = self.fragment[addr]
 
     # consistency check
-    assert self.is_same_sp(sp, old_sp)
-    for (arg, old_arg) in zip(args, old_args):
-      assert self.is_same_arg(arg, old_arg)
+    # assert self.is_same_sp(sp, old_sp)
+    # for (arg, old_arg) in zip(args, old_args):
+    #   assert self.is_same_arg(arg, old_arg)
 
     return fragment
 
