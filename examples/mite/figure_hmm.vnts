@@ -54,4 +54,3 @@ define forward_filter_lp = (prev, data_prob, filtered_probs, data, T, O) -> {
     (data_prob, reverse(filtered_probs))
   }
 };
-// Candidate caption: Joint assessor for a discrete HMM
