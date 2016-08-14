@@ -37,7 +37,7 @@ def gamma_samples2(shape, ct):
   while len(ans) < ct:
     for (x, v, u) in zip(*block()):
       if v <= 0: continue
-      log_bound = 0.5 * x * x + d * (1 - v)
+      log_bound = 0.5 * x * x + d * (1 - v + math.log(v))
       if u >= log_bound: continue
       ans.append(d * v)
   return ans

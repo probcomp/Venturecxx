@@ -1,3 +1,7 @@
+// This is theoretically from
+// Marsaglia, Tsang, "A simple method for generating gamma variables"
+// Transactions on Mathematical Software 26(3), 2000, pp 363-372.
+
 define simulate_std_gamma = (alpha) ~> {
   d = alpha - (1.0/3);
   c = 1.0 / sqrt(9 * d);
@@ -6,7 +10,7 @@ define simulate_std_gamma = (alpha) ~> {
   if (v <= 0) {
     simulate_std_gamma(alpha)
   } else {
-    log_bound = 0.5 * x * x + d * (1 - v);
+    log_bound = 0.5 * x * x + d * (1 - v + log(v));
     u ~ uniform_continuous(0, 1);
     if (log(u) >= log_bound) {
       simulate_std_gamma(alpha)
