@@ -45,10 +45,11 @@ example_beta_bern(make_beta_bern_{},
     ret = {}
     infer_programs = {
       'collapsed': ['pass'],
+      'uncollapsed': ['conjugate_gibbs_infer()'],
       'proc': ['repeat({}, resimulation_infer())'.format(steps)
                for steps in [0, 1, 2, 4, 8]]
     }
-    for variant in ['collapsed', 'proc']:
+    for variant in ['collapsed', 'uncollapsed', 'proc']:
       for infer in infer_programs[variant]:
         ret[variant, infer] = [
           time_and_result(variant, infer)
@@ -64,6 +65,7 @@ def timeplot(fname, results):
   fig = plt.figure()
   colors = {
     'collapsed': 'blue',
+    'uncollapsed': 'yellow',
     'proc': 'green'
   }
   # plot each kind
