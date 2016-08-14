@@ -5,6 +5,7 @@ import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.stats as stats
 import scipy.special as scipy
 
 import venture.shortcuts as vs
@@ -41,9 +42,15 @@ def gamma_samples2(shape, ct):
       ans.append(d * v)
   return ans
 
+def gamma_samples3(shape, ct):
+  return stats.gamma.rvs(shape, size=ct)
+
 def gamma_assess2(x, shape):
   ln = (shape - 1) * math.log(x) - x - scipy.gammaln(shape)
   return math.exp(ln)
+
+def gamma_assess3(x, shape):
+  return stats.gamma.pdf(x, shape)
 
 def save():
   r = prep()
