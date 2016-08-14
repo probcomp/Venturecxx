@@ -1,15 +1,15 @@
-define simulate_gamma = (alpha) ~> {
+define simulate_std_gamma = (alpha) ~> {
   d = alpha - (1.0/3);
   c = 1.0 / sqrt(9 * d);
   x ~ normal(0, 1);
   v = cube(1 + c * x);
   if (v <= 0) {
-    simulate_gamma(alpha)
+    simulate_std_gamma(alpha)
   } else {
     log_bound = 0.5 * x * x + d * (1 - v);
     u ~ uniform_continuous(0, 1);
     if (log(u) >= log_bound) {
-      simulate_gamma(alpha)
+      simulate_std_gamma(alpha)
     } else {
       d * v
     }
