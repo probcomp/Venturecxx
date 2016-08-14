@@ -54,9 +54,13 @@ def plot():
   plt.show()
 
 def main():
-  save()
-  plot()
-
+  if len(sys.argv) == 1:
+    save()
+    plot()
+  elif sys.argv[1] == "save":
+    save()
+  elif sys.argv[1] == "plot":
+    plot()
 
 if __name__ == '__main__':
   main()
