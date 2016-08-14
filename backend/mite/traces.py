@@ -299,6 +299,11 @@ class FlatTrace(AbstractTrace):
     sp = sp_node.value
     return sp.log_density(output, input_values)
 
+  def invoke_metaprogram_of_sp(self, sp_ref, key, input_values):
+    sp_node = self.deref_sp(sp_ref)
+    sp = sp_node.value
+    return sp.run_in_helper_trace(key, input_values)
+
   def proposal_kernel(self, addr, sp_ref):
     # XXX for now just store the dicts, with extra attributes
     # TODO make it easier to construct trace handles.
@@ -422,6 +427,7 @@ register_trace_type("_trace", ITrace, {
   "set_value_at": trace_action("set_value_at", [t.Blob, t.Object], t.Nil),
   "apply_sp": trace_action("apply_sp", [t.Blob, t.Object, t.List(t.Object)], t.Object),
   "log_density_of_sp": trace_action("log_density_of_sp", [t.Object, t.Object, t.List(t.Object)], t.Number),
+  "invoke_metaprogram_of_sp": trace_action("invoke_metaprogram_of_sp", [t.Object, t.Symbol, t.List(t.Object)], t.Object),
   "proposal_kernel_of_sp_at": trace_action("proposal_kernel", [t.Blob, t.Object], t.Blob),
   "constrained_kernel_of_sp_at": trace_action("constrained_kernel", [t.Blob, t.Object, t.Object], t.Blob),
   "extract_kernel": trace_action("extract_kernel", [t.Blob, t.Object, t.List(t.Object)], t.Pair(t.Number, t.Blob)),
