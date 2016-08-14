@@ -83,6 +83,14 @@ define resimulation_infer = () -> {
   resimulation_step(subproblem)
 };
 
+// inference for the uncollapsed Gibbs variant
+
+define conjugate_gibbs_infer = () -> {
+  // call the custom metaprogram
+  sp <- value_at(toplevel(9));
+  invoke_metaprogram_of_sp(sp, 'infer_latent_conjugate_gibbs', [])
+};
+
 // definition as stateful collapsed procedure
 
 define make_beta_bern_collapsed = (a, b) -> {
@@ -117,6 +125,50 @@ define make_beta_bern_collapsed = (a, b) -> {
          ['unincorporate', (x) -> {
            counter_decr('N');
            if (x) { counter_decr('K') } else { pass };
+         }])
+  } |], a, b)
+};
+
+// definition as stateful uncollapsed procedure with Gibbs kernels
+
+define make_beta_bern_uncollapsed = (a, b) -> {
+  make_elementary_sp([| (a, b) -> {
+    // import defs from toplevel environment -- remove this in figure
+    let pass = $pass;
+    let old_extract = extract;
+    let extract = $extract;
+    let counter_set = $counter_set;
+    let counter = $counter;
+    let counter_get = $counter_get;
+    let counter_incr = $counter_incr;
+    let counter_decr = $counter_decr;
+    // end defs
+    dict(['state', counter(['N', 'K', 'theta'])],
+         ['initialize', (trace_handle) -> {
+           let theta ~ beta(a, b);
+           counter_set('theta', theta);
+         }],
+         ['simulate', () -> {
+           theta <- counter_get('theta');
+           return (flip(theta))
+         }],
+         ['log_density', (x) -> {
+           theta <- counter_get('theta');
+           return (if (x) { log(theta) } else { log(1 - theta) })
+         }],
+         ['incorporate', (x) -> {
+           counter_incr('N');
+           if (x) { counter_incr('K') } else { pass };
+         }],
+         ['unincorporate', (x) -> {
+           counter_decr('N');
+           if (x) { counter_decr('K') } else { pass };
+         }],
+         ['infer_latent_conjugate_gibbs', () -> {
+           N <- counter_get('N');
+           K <- counter_get('K');
+           let new_theta ~ beta(a + K, b + N - K);
+           counter_set('theta', new_theta);
          }])
   } |], a, b)
 };
