@@ -1,0 +1,25 @@
+define simulate_gamma = (alpha) ~> {
+  d = alpha - (1.0/3);
+  c = 1.0 / sqrt(9 * d);
+  x ~ normal(0, 1);
+  v = expt(1 + c * x, 3);
+  if (v <= 0) {
+    simulate_gamma(alpha)
+  } else {
+    log_bound = 0.5 * x * x + d * (1 - v);
+    u ~ uniform(0, 1);
+    if (log(u) >= log_bound) {
+      simulate_gamma(alpha)
+    } else {
+      d * v
+    }
+  }
+};
+
+// Former caption: A sampler for the gamma distribution using an explicit
+// rejection loop.
+
+
+define assess_std_gamma = (x, alpha) -> {
+  (alpha - 1) * log(x) - x - log_gamma(alpha) // The log of the gamma function
+};
