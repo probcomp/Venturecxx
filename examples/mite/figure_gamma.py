@@ -41,7 +41,7 @@ def plot():
   n = len(samples)
   nbins = math.floor(math.sqrt(n))
   plt.figure()
-  (_counts, bin_edges, _) = plt.hist(samples, bins=nbins)
+  (_counts, bin_edges, _) = plt.hist(samples, bins=nbins, label="Sampled frequency")
   points = []
   assessments = []
   def do(place, width):
@@ -50,8 +50,18 @@ def plot():
   for (low, high) in zip(bin_edges, bin_edges[1:]):
     mid = (low+high) / 2
     do(mid, high - low)
-  plt.plot(points, assessments)
+  plt.plot(points, assessments, label="Scaled assessment value")
+  plt.xlabel("Output value")
+  plt.ylabel("Frequency")
+  plt.title("Simulating the gamma distribution at shape=%3.1f" % (shape,))
+  plt.legend(fontsize=19)
+  set_font_size(plt.gca(), 25)
   plt.show()
+
+def set_font_size(ax, size):
+    for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
+                 ax.get_xticklabels() + ax.get_yticklabels()):
+        item.set_fontsize(size)
 
 def main():
   if len(sys.argv) == 1:
