@@ -27,12 +27,19 @@ def gamma_assess2(x, shape):
   ln = (shape - 1) * math.log(x) - x - scipy.gammaln(shape)
   return math.exp(ln)
 
-def main():
+def save():
   r = prep()
   shape = 2
   n = 1000
-  nbins = math.floor(math.sqrt(n))
   samples = gamma_samples(r, shape, n)
+  with open("gamma.sav", "w") as f:
+    pickle.dump((shape, samples), f)
+
+def plot():
+  with open("gamma.sav", "r") as f:
+    (shape, samples) = pickle.load(f)
+  n = len(samples)
+  nbins = math.floor(math.sqrt(n))
   plt.figure()
   (_counts, bin_edges, _) = plt.hist(samples, bins=nbins)
   points = []
@@ -45,6 +52,10 @@ def main():
     do(mid, high - low)
   plt.plot(points, assessments)
   plt.show()
+
+def main():
+  save()
+  plot()
 
 
 if __name__ == '__main__':
