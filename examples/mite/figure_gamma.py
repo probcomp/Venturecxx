@@ -13,7 +13,7 @@ import venture.shortcuts as vs
 vnts_file = os.path.join(os.path.dirname(__file__), 'figure_gamma.vnts')
 
 def prep():
-  r = vs.Mite().make_ripl()
+  r = vs.Mite().make_ripl(seed=1)
   r.set_mode("venture_script")
   r.execute_program_from_file(vnts_file)
   return r
@@ -55,7 +55,7 @@ def gamma_assess3(x, shape):
 def save():
   r = prep()
   shape = 2
-  n = 1000
+  n = 10000
   samples = gamma_samples(r, shape, n)
   with open("gamma.sav", "w") as f:
     pickle.dump((shape, samples), f)
