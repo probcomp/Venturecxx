@@ -1,0 +1,54 @@
+// utility definitions
+define pass = return(nil);
+
+define make_sp = make_full_sp;
+
+// end utility defs
+
+// example usage
+
+define example_memoized_hmm = () -> {
+  run_in({
+    // import defs from toplevel environment
+    assume make_sp = make_full_sp;
+    assume mem = $mem;
+    // end defs
+    assume x = mem((t) -> {
+      if (t == 0) { flip() }
+      else {
+	flip(biplex(x(t - 1), 0.9, 0.1))
+      }
+    });
+    assume y = (t) -> {
+      flip(biplex(x(t), 0.7, 0.3))
+    };
+    assume ys = list(y(1), y(2), y(4), y(5), y(7), y(8));
+    value_at(toplevel(5))
+  }, blank_trace())
+};
+
+define mem = (f) -> {
+  make_sp([| (f) -> {
+    dict(['state', mem_table()],
+	 ['apply', (trace_handle, app_id, x) -> {
+	   has_value <- mem_has_value(x);
+	   if (has_value) {
+	     y <- mem_lookup(x);
+	     mem_incr(x);
+	     return (y)
+	   }
+	   else {
+	     let exp = [| f($x) |];
+	     let env = extend_environment(
+	       get_empty_environment(), 'f', address_of(f));
+	     y <- with(trace_handle, {
+	       addr <- new_request(x, exp, env);
+	       value_at(addr)
+	     });
+	     mem_assoc(x, y);
+	     mem_incr(x);
+	     return (y)
+	   }
+	 }])
+  } |], f)
+};
