@@ -54,3 +54,25 @@ define forward_filter_lp = (prev, data_prob, filtered_probs, data, T, O) -> {
     (data_prob, reverse(filtered_probs))
   }
 };
+
+// Simulation from the posterior by backward sampling
+define posterior_ffbs_simulator = (data, T, O) -> {
+  (_, filtered) = forward_filter(data, T, O);
+  rev_filtered = reverse(filtered)
+  () ~> {
+    last_state ~ categorical(first(rev_filtered));
+    posterior_ffbs_sim_lp(list(last_state), rest(rev_filtered), T)
+  }
+}
+
+define posterior_ffbs_sim_lp = (states, filtered_probs, T) ~> {
+  if (is_pair(filtered_probs)) {
+    next_state = first(states);
+    cur_filtered = first(filtered_probs);
+    cur_smoothed = dot(cur_filtered, col(T, next_state));
+    cur_state ~ categorical(cur_smoothed);
+    posterior_ffbs_sim_lp(pair(cur_state, states), rest(filtered_probs), T)
+  } else {
+    states
+  }
+}
