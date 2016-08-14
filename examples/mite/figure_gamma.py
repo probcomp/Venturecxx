@@ -2,8 +2,8 @@ import math
 import os
 import pickle
 import sys
-import time
 
+import numpy as np
 import matplotlib.pyplot as plt
 import scipy.special as scipy
 
@@ -35,6 +35,19 @@ def save():
   with open("gamma.sav", "w") as f:
     pickle.dump((shape, samples), f)
 
+def compute_assessment_curve(n, shape, bin_edges):
+  points = []
+  assessments = []
+  def do(place, width):
+    points.append(place)
+    assessments.append(width * n * gamma_assess2(place, shape))
+  bot = bin_edges[0]
+  top = bin_edges[-1]
+  (lowers, step) = np.linspace(bot, top, 100, endpoint=False, retstep=True)
+  for place in lowers:
+    do(place + step/2.0, step)
+  return (points, assessments)
+
 def plot():
   with open("gamma.sav", "r") as f:
     (shape, samples) = pickle.load(f)
@@ -42,14 +55,7 @@ def plot():
   nbins = math.floor(math.sqrt(n))
   plt.figure()
   (_counts, bin_edges, _) = plt.hist(samples, bins=nbins, label="Sampled frequency")
-  points = []
-  assessments = []
-  def do(place, width):
-    points.append(place)
-    assessments.append(width * n * gamma_assess2(place, shape))
-  for (low, high) in zip(bin_edges, bin_edges[1:]):
-    mid = (low+high) / 2
-    do(mid, high - low)
+  (points, assessments) = compute_assessment_curve(n, shape, bin_edges)
   plt.plot(points, assessments, label="Scaled assessment value")
   plt.xlabel("Output value")
   plt.ylabel("Frequency")
