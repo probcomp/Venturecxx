@@ -65,7 +65,7 @@ class MadeFullSP(VentureSP):
     expr = ['first',
             [['action_func',
               [['lookup', 'the_sp', ['quote', method]]] + names],
-             ['lookup', 'the_sp', ['quote', 'trace']]]]
+             ['lookup', 'the_sp', ['quote', 'state']]]]
     env = VentureEnvironment(helper_trace.global_env, names, values)
     w, value = helper_trace.eval_request(addr, expr, env)
     assert w == 0
