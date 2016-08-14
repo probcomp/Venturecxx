@@ -36,16 +36,18 @@ def save():
     pickle.dump((shape, samples), f)
 
 def compute_assessment_curve(n, shape, bin_edges):
+  bin_width = bin_edges[1] - bin_edges[0]
+  scale = n * bin_width # This is area under the histogram
   points = []
   assessments = []
-  def do(place, width):
+  def do(place):
     points.append(place)
-    assessments.append(width * n * gamma_assess2(place, shape))
+    assessments.append(scale * gamma_assess2(place, shape))
   bot = bin_edges[0]
   top = bin_edges[-1]
   (lowers, step) = np.linspace(bot, top, 100, endpoint=False, retstep=True)
   for place in lowers:
-    do(place + step/2.0, step)
+    do(place + step/2.0)
   return (points, assessments)
 
 def plot():
