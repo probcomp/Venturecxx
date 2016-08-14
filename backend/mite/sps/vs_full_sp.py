@@ -3,21 +3,23 @@ import venture.lite.types as t
 
 from venture.untraced.node import Node
 
+from venture.mite.address import VentureAddressed
 from venture.mite.sp import ApplicationKernel
 from venture.mite.sp import SimulationSP
 from venture.mite.sp import VentureSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import BlankTrace
 
-class MakeFullSP(SimulationSP):
-  def simulate(self, inputs, prng):
-    constructor = t.Exp.asPython(inputs[0])
+class MakeFullSP(VentureSP):
+  def apply(self, trace_handle, app_id, inputs):
+    constructor = t.Exp.asPython(inputs[0].value)
     ctor_inputs = inputs[1:]
-    seed = prng.py_prng.randint(1, 2**31 - 1)
+    seed = trace_handle.py_prng().randint(1, 2**31 - 1)
     helper_trace = BlankTrace(seed)
     addr = helper_trace.next_base_address()
     names = ['var{}'.format(i) for i in range(len(ctor_inputs))]
-    values = [Node(None, val) for val in ctor_inputs]
+    values = [Node(None, VentureAddressed(arg, trace_handle.value_at(arg)))
+              for arg in ctor_inputs]
     expr = [constructor] + names
     env = VentureEnvironment(helper_trace.global_env, names, values)
     helper_trace.eval_request(addr, expr, env)
