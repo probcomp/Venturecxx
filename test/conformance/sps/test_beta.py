@@ -22,7 +22,12 @@ import multiprocessing
 import traceback
 
 import nose.tools
+import scipy.integrate
 import scipy.stats
+
+from venture.lite.continuous import BetaOutputPSP
+from venture.lite.sp_use import MockArgs
+from venture.lite.utils import careful_exp
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
@@ -67,6 +72,25 @@ def timed(seconds):
             return result
         return f_
     return wrap
+
+def relerr(expected, actual):
+  if expected == 0:
+    return 0 if actual == 0 else 1
+  else:
+    return abs((actual - expected)/expected)
+
+def check_beta_density_quad(a, b):
+    args = MockArgs((a, b), None)
+    def pdf(x):
+        return careful_exp(BetaOutputPSP().logDensity(x, args))
+    one, esterr = scipy.integrate.quad(pdf, 0, 1)
+    assert relerr(1, one) < esterr
+
+def test_beta_density_quad():
+    v = [.1, .25, .5, .75, 1, 2, 5, 10, 100]
+    for a in v:
+        for b in v:
+            yield check_beta_density_quad, a, b
 
 @statisticalTest
 def test_beta_tail(seed):
