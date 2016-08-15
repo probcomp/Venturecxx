@@ -17,13 +17,37 @@
 
 import numpy as np
 import numpy.random
+import scipy.integrate
 import scipy.stats
 
+from nose import SkipTest
+
+from venture.lite.utils import careful_exp
+from venture.lite.utils import logDensityLogGamma
 from venture.lite.utils import simulateLogGamma
 
 from venture.test.config import default_num_samples
 from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest
+
+def relerr(expected, actual):
+  if expected == 0:
+    return 0 if actual == 0 else 1
+  else:
+    return abs((actual - expected)/expected)
+
+def check_loggamma_density_quad(shape):
+  inf = float('inf')
+  def pdf(x):
+    return careful_exp(logDensityLogGamma(x, shape))
+  one, esterr = scipy.integrate.quad(pdf, -inf, +inf)
+  assert relerr(1, one) < esterr
+
+def test_loggamma_density_quad():
+  for shape in [.01, .1, .5, 1, 2, 10, 100, 1e6, 1e10]:
+    if 1000 <= shape:
+      raise SkipTest('scipy numerical integrator is unable to cope')
+    yield check_loggamma_density_quad, shape
 
 @statisticalTest
 def check_loggamma_ks(shape, seed):
