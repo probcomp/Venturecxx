@@ -586,7 +586,7 @@ the command line.  Thus, reproducibility of potentially rare errors.
     else:
       seed = int(config['seed'])
     try:
-      return f(*args, seed=seed, **kwargs)
+      return f(seed, *args, **kwargs)
     except Exception as e:
       info = sys.exc_info()
       print "To reproduce, use --tc=seed:%d" % (seed,)

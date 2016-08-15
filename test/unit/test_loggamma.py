@@ -26,8 +26,8 @@ from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def check_loggamma_ks(shape):
-  np_rng = numpy.random.RandomState()         # XXX seed
+def check_loggamma_ks(shape, seed):
+  np_rng = numpy.random.RandomState(seed)
   nsamples = default_num_samples()
   log_samples = [simulateLogGamma(shape, np_rng) for _ in xrange(nsamples)]
   samples = np.exp(np.array(log_samples))

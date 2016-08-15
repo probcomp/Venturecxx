@@ -55,8 +55,8 @@ def testGP1():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
-def testGPMean1():
-  ripl = get_ripl()
+def testGPMean1(seed):
+  ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
 
   ripl.assume('gp', '(make_gp zero sq_exp)')
@@ -69,8 +69,8 @@ def testGPMean1():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
-def testGPMean2():
-  ripl = get_ripl()
+def testGPMean2(seed):
+  ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
 
   ripl.assume('gp', '(make_gp zero sq_exp)')
@@ -160,7 +160,7 @@ def testNormalParameters():
 
 @in_backend('none')
 @statisticalTest
-def testOneSample():
+def testOneSample(seed):
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   test_input = 1.4
@@ -178,14 +178,14 @@ def testOneSample():
   n = default_num_samples(4)
   def sample():
     return gp._gp_sample(mean, covariance, observations, [test_input],
-                         npr.RandomState())[0]
+                         npr.RandomState(seed))[0]
   samples = np.array([sample() for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
 
 @in_backend('none')
 @statisticalTest
-def testTwoSamples_low_covariance():
+def testTwoSamples_low_covariance(seed):
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   in_lo_cov = np.array([1.4, -20.0])
@@ -208,7 +208,7 @@ def testTwoSamples_low_covariance():
   lo_cov_y = []
   for i in range(n):
     x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov,
-                         npr.RandomState())
+                         npr.RandomState(seed))
     lo_cov_x.append(x)
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)

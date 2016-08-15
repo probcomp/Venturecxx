@@ -29,6 +29,7 @@ from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
+from venture.test.config import stochasticTest
 from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest
 
@@ -68,14 +69,14 @@ def timed(seconds):
     return wrap
 
 @statisticalTest
-def test_beta_tail():
+def test_beta_tail(seed):
     # Check that Beta(.1, .1) yields samples near 0 and 1, not just in
     # the middle.
     a = .1
     b = .1
     nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
     dist = scipy.stats.beta(a, b)
@@ -83,14 +84,15 @@ def test_beta_tail():
 
 @broken_in("puma", "Issue #504")
 @on_inf_prim("none")
-def test_beta_thagomizer():
+@stochasticTest
+def test_beta_thagomizer(seed):
     # Check that Beta with spiky tails yields sane samples, not NaN.
     v = (1, 1/2, 1e-5, 1e-15, 1e-20, 1e-299, 1e-301)
     nsamples = 50
     for a in v:
         for b in v:
             expression = '(beta %r %r)' % (a, b)
-            ripl = get_ripl()
+            ripl = get_ripl(seed=seed)
             for _ in xrange(nsamples):
                 sample = ripl.sample(expression)
                 assert 0 <= sample
@@ -100,12 +102,12 @@ def test_beta_thagomizer():
 
 @timed(5)
 @statisticalTest
-def test_beta_small_small():
+def test_beta_small_small(seed):
     a = 5.5
     b = 5.5
     nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
     dist = scipy.stats.beta(a, b)
@@ -113,12 +115,12 @@ def test_beta_small_small():
 
 @timed(5)
 @statisticalTest
-def test_beta_small_large():
+def test_beta_small_large(seed):
     a = 5.5
     b = 1e9
     nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
     dist = scipy.stats.beta(a, b)
@@ -126,24 +128,25 @@ def test_beta_small_large():
 
 @timed(5)
 @statisticalTest
-def test_beta_large_small():
+def test_beta_large_small(seed):
     a = 1e9
     b = 5.5
     nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr=expression)
 
 @timed(5)
-def test_beta_large_large():
+@stochasticTest
+def test_beta_large_large(seed):
     a = 1e300
     b = 1e300
     nsamples = default_num_samples()
     expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.assume('p', expression, label='p')
     samples = collectSamples(ripl, 'p', nsamples)
     assert all(sample == 1/2 for sample in samples)

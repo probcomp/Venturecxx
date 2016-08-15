@@ -25,8 +25,8 @@ from venture.test.stats import statisticalTest
 @statisticalTest
 @broken_in("puma", "Puma does not support rejection sampling")
 @on_inf_prim("rejection")
-def testUserDensityBound():
-  r = get_ripl()
+def testUserDensityBound(seed):
+  r = get_ripl(seed=seed)
   r.set_mode("venture_script")
   r.execute_program("""
   assume f = (small) ~> {

@@ -31,18 +31,18 @@ def testMeanFieldBasic():
   for test in tests: yield test, "(meanfield default one 20 10)"
 
 @statisticalTest
-def checkMeanFieldBasic1(infer):
+def checkMeanFieldBasic1(infer, seed):
   # Basic sanity test for meanfield
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   predictions = collectSamples(ripl,"pid",infer=infer)
   return reportKnownGaussian(10, 1, predictions)
 
 @statisticalTest
-def checkMeanFieldNormalWithObserve1(infer):
+def checkMeanFieldNormalWithObserve1(infer, seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2

@@ -51,8 +51,8 @@ def testDictSize2():
   assert get_ripl().predict("(size (dict (array 1 2) (array 5 6)))") == 2
 
 @statisticalTest
-def testDict1():
-  ripl = get_ripl()
+def testDict1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x","(bernoulli 1.0)")
   ripl.assume("d","""(dict (array (quote x) (normal 0.0 1.0))

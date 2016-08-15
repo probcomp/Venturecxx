@@ -69,7 +69,7 @@ PRELUDE_FILE = 'prelude.vnt'
 class Ripl():
     '''The Read, Infer, Predict Layer of one running Venture instance.'''
 
-    def __init__(self, sivm, parsers, extra_search_paths = None):
+    def __init__(self, sivm, parsers, extra_search_paths=None):
         self.sivm = sivm
         self.parsers = parsers
         self._compute_search_paths(extra_search_paths or [])
@@ -78,6 +78,7 @@ class Ripl():
         self.mode = parsers.keys()[0]
         self._n_prelude = 0
         self._do_not_annotate = False
+        self._languages = OrderedDict()
         # TODO Loading the prelude currently (6/26/14) slows the test
         # suite to a crawl
         # self.load_prelude()
@@ -115,6 +116,111 @@ class Ripl():
             raise VentureException('invalid_mode',
                     "Mode {} is not implemented by this RIPL".format(mode))
 
+    def register_language(self, name, language):
+        """Register the parser for an embedded sublanguage.
+
+        Subsequently parsed source code will recognize substrings of the form::
+
+            @{<name> <code-in-the-language>}
+
+        and execute them according to the semantics of the registered language.
+
+        The ``name`` parameter is a string, and serves, together with
+        the ``@{`` token, to mark to Venture the beginning of an
+        utterance in the registered language.
+
+        The ``language`` parameter is a constructor for a Python
+        callable responsible for parsing the language into an
+        appropriate embedding in Venture's abstract syntax.
+
+        Here is the interface to sublanguage parsers in
+        detail:
+
+        - On encountering ``@{<name>``, the VentureScript
+          parser stops interpreting the input stream as VentureScript,
+          and defers to the corresponding registered sublanguage parser.
+          Specifically, the VentureScript parser calls the ``language``
+          object with no arguments to allow it to initialize.
+
+        - Initialization must return a Python callable, ``subscan``.
+
+        - The VentureScript parser proceeds to call ``subscan``
+          repeatedly, with one input character at a time.  Each call to
+          ``subscan`` must return a 2-tuple, ``(done, result)``.
+
+        - If ``done`` is ``False``, the ``result`` is ignored and the
+          VentureScript parser will call ``subscan`` again with the next
+          character.
+
+        - If ``done`` is ``True``, the ``result`` must be a
+          valid VentureScript abstract syntax tree (see below).  The
+          ``result`` will be spliced in at this point in the parse, and
+          the VentureScript parser will resume parsing standard
+          VentureScript.  This ``subscan`` instance will not be called
+          again, but if another invocation in the same sublanguage
+          occurs, the ``language`` object will be invoked again to
+          initialize a new one.
+
+        Note from this interface that the sublanguage is responsible
+        for detecting a complete valid utterance.  The characters come
+        in one at a time because the VentureScript parser cannot
+        predict where the utterance will end without asking the
+        sublanguage (and, due to internal technical limitations,
+        cannot give the sublanguage the entire input stream and
+        continue from the unconsumed portion).  It is responsibility
+        of the sublanguage to consume the ``}`` that closes the ``@{``
+        from the beginning of the invocation.
+
+        The `venture.parser.venture_script.subscanner` module contains an adapter that
+        does a control inversion on the above interface.  The
+        inversion allows one to write a sublanguage with a library
+        like Plex that expects to scan a file-like object itself,
+        rather than exposing a callable that consumes characters.
+        However, the sublanguage must not read the given file-like
+        object beyond the end of the utterance, as there is no way to
+        put unused characters back.
+
+        There are no restrictions on the parse tree that a subparser
+        may emit.  In principle, this permits very deep integration of
+        arbitrary syntaxes, provided their underlying implementation
+        can be expressed as calls to appropriate Venture macros or
+        stochastic procedures.  It is also possible to fall back to
+        very shallow integration---just consume a valid utterance and
+        emit a syntax tree consisting of applying the target
+        interpreter (packaged as a stochastic procedure) to a quoted
+        string.
+
+        The VentureScript abstract syntax tree API comes in two parts.
+
+        - Bare abstract syntax trees may are constructed by methods of
+          the `venture.value.dicts` module.
+
+        - A parser is expected to emit a syntax tree annotated with
+          source code locations, using the `Located` class in the
+          `venture.parser.ast` module.
+
+        Embedded sublanguage syntaxes are only available in the
+        VentureScript surface syntax, not the abstract surface syntax.  The
+        latter parses to abstract syntax trees more directly, so just
+        calling the implementation SP(s) of the desired sublanguage is
+        more natural in that context.
+
+        """
+        if name in self._languages:
+            raise ValueError('Language already registered: %r' % (name,))
+        self._languages[name] = language
+
+    def deregister_language(self, name, language):
+        """Deregister the parser for an embedded sublanguage.
+
+        Subsequently parsed source code will not recognize that language."""
+        assert self._languages[name] is language
+        del self._languages[name]
+
+    @property
+    def languages(self):
+        return self._languages
+
     ############################################
     # Backend
     ############################################
@@ -134,35 +240,27 @@ class Ripl():
 
     def execute_instructions(self, instructions=None):
         p = self._cur_parser()
+        languages = self._languages
         try:
-            strings, _locs = self.split_program(instructions)
+            parsed = p.parse_instructions(instructions, languages)
         except VentureException as e:
             if self._do_not_annotate:
                 raise
             self._raise_annotated(e, instructions)
-        else:
-            stringable_instruction = None
-            try:
-                ret_value = None
-                for string in strings:
-                    stringable_instruction = string
-                    parsed_instruction = p.parse_instruction(string)
-                    ret_value = \
-                        self._execute_parsed_instruction(parsed_instruction,
-                            stringable_instruction)
-            except VentureException as e:
-                if self._do_not_annotate or stringable_instruction is None:
-                    raise
-                self._raise_annotated(e, stringable_instruction)
-            return ret_value
+        ret_value = None
+        for inst in parsed:
+            ret_value = self.execute_instruction(inst)
+        return ret_value
 
     def execute_instruction(self, instruction=None):
         p = self._cur_parser()
+        languages = self._languages
         try: # execute instruction, and handle possible exception
             if isinstance(instruction, basestring):
                 stringable_instruction = instruction
                 # parse instruction
-                parsed_instruction = p.parse_instruction(stringable_instruction)
+                parsed_instruction = \
+                    p.parse_instruction(stringable_instruction, languages)
             else:
                 stringable_instruction = instruction
                 parsed_instruction = self._ensure_parsed(instruction)
@@ -210,6 +308,8 @@ class Ripl():
             e.annotated = True
             return e
 
+        languages = self.languages
+
         # TODO This error reporting is broken for ripl methods,
         # because the computed text chunks refer to the synthetic
         # instruction string instead of the actual data the caller
@@ -227,7 +327,7 @@ class Ripl():
         if e.exception == 'parse':
             try:
                 text_index = p.expression_index_to_text_index_in_instruction(
-                    instruction_string, e.data['expression_index'])
+                    instruction_string, e.data['expression_index'], languages)
             except VentureException as e2:
                 if e2.exception == 'no_text_index': text_index = None
                 else: raise
@@ -237,7 +337,7 @@ class Ripl():
         # results in an exception
         if e.exception == 'text_parse':
             try:
-                p.parse_instruction(instruction_string)
+                p.parse_instruction(instruction_string, languages)
             except VentureException as e2:
                 assert e2.exception == 'text_parse'
                 e = e2
@@ -246,7 +346,7 @@ class Ripl():
         # refers to the argument's location in the string
         if e.exception == 'invalid_argument':
             # calculate the positions of the arguments
-            _, arg_ranges = p.split_instruction(instruction_string)
+            _, arg_ranges = p.split_instruction(instruction_string, languages)
             arg = e.data['argument']
             if arg in arg_ranges:
                 # Instruction unparses and reparses to structured
@@ -267,17 +367,18 @@ class Ripl():
 
     def parse_program(self, program_string):
         p = self._cur_parser()
-        instructions, positions = p.split_program(program_string)
-        return [self._ensure_parsed(i) for i in instructions], positions
+        languages = self._languages
+        instructions = p.parse_instructions(program_string, languages)
+        return [self._ensure_parsed(i) for i in instructions]
 
     def execute_program(self, program_string, type=True):
-        res = self.execute_parsed_program(*self.parse_program(program_string))
+        res = self.execute_parsed_program(self.parse_program(program_string))
         if not type:
             return u.strip_types([r["value"] for r in res])
         else:
             return res
 
-    def execute_parsed_program(self, instructions, _positions):
+    def execute_parsed_program(self, instructions):
         vals = []
         for instruction in instructions:
             if instruction['instruction'] == "load":
@@ -303,10 +404,6 @@ class Ripl():
     # Text manipulation
     ############################################
 
-    def split_program(self,program_string):
-        p = self._cur_parser()
-        return p.split_program(program_string)
-
     def get_text(self,directive_id):
         if directive_id in self.directive_id_to_mode:
             return [self.directive_id_to_mode[directive_id], self._get_raw_text(directive_id)]
@@ -319,8 +416,10 @@ class Ripl():
         return candidate
 
     def _ensure_parsed(self, partially_parsed_instruction):
+        languages = self._languages
         if isinstance(partially_parsed_instruction, basestring):
-            return self._cur_parser().parse_instruction(partially_parsed_instruction)
+            return self._cur_parser().parse_instruction(
+                partially_parsed_instruction, languages)
         elif isinstance(partially_parsed_instruction, dict):
             return self._ensure_parsed_dict(partially_parsed_instruction)
         else:
@@ -348,8 +447,9 @@ class Ripl():
         return dict([(key, by_key(key, value)) for key, value in partial_dict.iteritems()])
 
     def _ensure_parsed_expression(self, expr):
+        languages = self._languages
         if isinstance(expr, basestring):
-            answer = self._cur_parser().parse_expression(expr)
+            answer = self._cur_parser().parse_expression(expr, languages)
             if isinstance(answer, basestring):
                 # Was a symbol; wrap it in a stack dict to prevent it
                 # from being processed again.
@@ -973,7 +1073,7 @@ Open issues:
         Load the library of Venture helper functions
         '''
         if Ripl._parsed_prelude is not None:
-            self.execute_parsed_program(*Ripl._parsed_prelude)
+            self.execute_parsed_program(Ripl._parsed_prelude)
             # Keep track of the number of directives in the prelude. Only
             # works if the ripl is cleared immediately before loading the
             # prelude, but that's the implicit assumption in the

@@ -30,10 +30,10 @@ from venture.test.stats import statisticalTest
 
 @statisticalTest
 @on_inf_prim("likelihood_weight")
-def testNormalWithObserve1():
+def testNormalWithObserve1(seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
   ripl.observe("(normal a 1.0)", 14.0)
   # Posterior for a is normal with mean 12, precision 2
@@ -89,4 +89,4 @@ def testRollingResample():
   rolling_resample = "(repeat 5 (do add_particle (resample 1)))"
   predictions2 = collectSamples(ripl, "pid", infer=rolling_resample)
 
-  return reportSameContinuous(predictions1, predictions2, True)
+  return reportSameContinuous(predictions1, predictions2)

@@ -101,7 +101,9 @@ procedures for testing more effectively in these circumstances.
 
 The general pattern: annotate such a test `@statisticalTest`, and have
 it `return reportKnownSomething(...)` as appropriate from the helpers
-in the `stats` module.
+in the `stats` module.  The test function must accept a `seed`
+argument, which can be used to seed PRNGs, and should be deterministic
+given the seed.
 
 Randomized Tests
 ----------------

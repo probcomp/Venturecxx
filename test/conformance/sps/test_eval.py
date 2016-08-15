@@ -70,8 +70,8 @@ def testEvalSmoke3():
   eq_(ripl.predict("(eval expr (get_current_environment))"), 4.0)
 
 @statisticalTest
-def testEval1():
-  ripl = get_ripl()
+def testEval1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","(quote (bernoulli 0.7))")
@@ -97,8 +97,8 @@ def testEvalIf2():
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testEval2():
-  ripl = get_ripl()
+def testEval2(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("globalEnv","(get_current_environment)")
@@ -118,9 +118,9 @@ def testEval2():
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testEval3():
+def testEval3(seed):
   # testEval2 with booby traps
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("globalEnv","(get_current_environment)")
@@ -140,9 +140,9 @@ def testEval3():
 
 
 @statisticalTest
-def testApply1():
+def testApply1(seed):
   # This CSP does not handle lists and symbols correctly.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   ripl.predict("(apply mul (array (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))",
@@ -156,8 +156,8 @@ def testApply1():
 # Just like dict it could take a list of pairs.
 # It could even take a dict!
 @statisticalTest
-def testExtendEnv1():
-  ripl = get_ripl()
+def testExtendEnv1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("env1","(get_current_environment)")
 

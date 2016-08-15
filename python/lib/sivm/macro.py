@@ -54,7 +54,7 @@ class LiteralSyntax(Syntax):
 
 class ListMacro(Macro):
   def applies(self, exp):
-    return isinstance(exp, list) or v.is_stack_dict_of_type("array", exp)
+    return isinstance(exp, list) or v.is_basic_val_of_type("array", exp)
   def expand(self, exp):
     exp = self._canonicalize(exp)
     expanded = []
@@ -170,26 +170,22 @@ def DoExpand(exp):
     (_do, statement, rest) = (exp[0], exp[1], exp[2:])
     rest_vars = ["rest_%d" % i for i in range(len(rest))]
     if (type(statement) is list and len(statement) == 3 and
-        type(statement[1]) is dict and
-        statement[1]["value"] == "<-"):
+        v.basic_val_of_type_content("symbol", statement[1]) == "<-"):
       # Binding statement, regular form
       pattern = ["do", ["var", "<-", "expr"]] + rest_vars
       template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
     elif (type(statement) is list and len(statement) == 3 and
-          type(statement[0]) is dict and
-          statement[0]["value"] == "<-"):
+          v.basic_val_of_type_content("symbol", statement[0]) == "<-"):
       # Binding statement, venturescript form
       pattern = ["do", ["<-", "var", "expr"]] + rest_vars
       template = ["bind", "expr", ["lambda", ["var"], ["do"] + rest_vars]]
     elif (type(statement) is list and len(statement) == 3 and
-          type(statement[0]) is dict and
-          statement[0]["value"] == "let"):
+          v.basic_val_of_type_content("symbol", statement[0]) == "let"):
       # Let statement
       pattern = ["do", ["let", "var", "expr"]] + rest_vars
       template = ["let", [["var", "expr"]], ["do"] + rest_vars]
     elif (type(statement) is list and len(statement) == 3 and
-          type(statement[0]) is dict and
-          statement[0]["value"] == "let_values"):
+          v.basic_val_of_type_content("symbol", statement[0]) == "let_values"):
       # Let_values statement
       n = len(statement[1])
       lst_name = "__lst_%d__" % random.randint(10000, 99999)
@@ -200,14 +196,12 @@ def DoExpand(exp):
       template = ["let", [[lst_name, "lst_expr"]] + let_exps,
                   ["do"] + rest_vars]
     elif (type(statement) is list and len(statement) == 3 and
-          type(statement[0]) is dict and
-          statement[0]["value"] == "letrec"):
+          v.basic_val_of_type_content("symbol", statement[0]) == "letrec"):
       # Letrec statement
       mutrec = 0
       for next_statement in rest:
         if (type(next_statement) is list and len(next_statement) == 3 and
-            type(next_statement[0]) is dict and
-            next_statement[0]["value"] == "mutrec"):
+          v.basic_val_of_type_content("symbol", next_statement[0]) == "mutrec"):
           mutrec += 1
         else:
           break

@@ -1,0 +1,8 @@
+dist/
+cabal.sandbox.config
+.cabal-sandbox
+*.hp
+benchmark.pdf
+benchmark.prof
+normal-normal-chain
+*.iface

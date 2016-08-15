@@ -54,8 +54,8 @@ import venture.value.dicts as v
 #   - This is checkUCKernel
 #   - This exercises the LKernel
 
-def extract_sample(maker, params, index):
-  r = get_ripl()
+def extract_sample(maker, params, index, seed):
+  r = get_ripl(seed=seed)
   r.assume("maker", maker)
   expr = v.app(v.sym("list"), *[v.app(v.sym("made")) for _ in range(index+1)])
   def one_sample():
@@ -66,8 +66,8 @@ def extract_sample(maker, params, index):
   results = [one_sample() for _ in range(default_num_samples(5))]
   return results
 
-def extract_cross_sample(maker, params, index1, index2, combiner):
-  r = get_ripl()
+def extract_cross_sample(maker, params, index1, index2, combiner, seed):
+  r = get_ripl(seed=seed)
   r.assume("maker", maker)
   index = max(index1, index2)
   expr = v.app(v.sym("list"), *[v.app(v.sym("made")) for _ in range(index+1)])
@@ -80,21 +80,21 @@ def extract_cross_sample(maker, params, index1, index2, combiner):
   return results
 
 @statisticalTest
-def checkSameMarginal(name, maker2, params, index):
+def checkSameMarginal(name, maker2, params, index, seed):
   package = simulation_agreement_packages[name]
   native = package['native']
   report = package['reporter']
-  return report(extract_sample(native, params, index),
-                extract_sample(maker2, params, index))
+  return report(extract_sample(native, params, index, seed),
+                extract_sample(maker2, params, index, seed+7))
 
 @statisticalTest
-def checkSameCross(name, maker2, params, index1, index2):
+def checkSameCross(name, maker2, params, index1, index2, seed):
   package = simulation_agreement_packages[name]
   native = package['native']
   report = package['reporter']
   combiner = package['combiner']
-  one = extract_cross_sample(native, params, index1, index2, combiner)
-  other = extract_cross_sample(maker2, params, index1, index2, combiner)
+  one = extract_cross_sample(native, params, index1, index2, combiner, seed)
+  other = extract_cross_sample(maker2, params, index1, index2, combiner, seed+8)
   return report(one, other)
 
 native_nig_normal = """(lambda (m V a b)
@@ -327,7 +327,7 @@ def testPoissonSuffStatsAssessmentAgreement():
     yield c
 
 @statisticalTest
-def checkUCKernel(name, params):
+def checkUCKernel(name, params, seed):
   package = simulation_agreement_packages[name]
   maker = package['gibbs']
   def enstring(param):
@@ -337,7 +337,7 @@ def checkUCKernel(name, params):
       return str(param)
   param_str = " ".join([enstring(p) for p in params])
   report = package['reporter']
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.assume("made", "(tag 'latent 0 (%s %s))" % (maker, param_str))
   for i in range(5):
     r.predict("(tag 'data %d (made))" % i, label="datum_%d" % i)
