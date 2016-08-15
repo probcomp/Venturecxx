@@ -35,5 +35,5 @@ def check_loggamma_ks(shape, seed):
   return reportKnownContinuous(dist.cdf, samples)
 
 def test_loggamma_ks():
-  for shape in [.01, .1, 0.5, 1, 100, 1e6, 2, 10, 1e10]:
+  for shape in [.01, .1, .5, 1, 2, 10, 100, 1e6, 1e10]:
     yield check_loggamma_ks, shape
