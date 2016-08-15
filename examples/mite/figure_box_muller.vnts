@@ -1,0 +1,12 @@
+define simulate_std_normal = () ~> {
+  u1 = uniform_continuous(0, 1);
+  u2 = uniform_continuous(0, 1);
+  sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2)
+};
+
+define assess_std_normal = {
+  correction = -0.5 * log(2 * 3.14159265);
+  (x) -> {
+    correction - 0.5 * x * x
+  }
+}
