@@ -77,4 +77,6 @@ def check_loggamma_ks_quad(shape, seed):
 
 def test_loggamma_ks_quad():
   for shape in [.01, .1, .5, 1, 2, 10, 100, 1e6, 1e10]:
+    if 1e10 <= shape:
+      raise SkipTest('scipy numerical integrator is unable to cope')
     yield check_loggamma_ks_quad, shape
