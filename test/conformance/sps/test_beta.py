@@ -26,6 +26,8 @@ import scipy.integrate
 import scipy.stats
 
 from venture.lite.continuous import BetaOutputPSP
+from venture.lite.continuous import LogBetaOutputPSP
+from venture.lite.continuous import LogOddsBetaOutputPSP
 from venture.lite.sp_use import MockArgs
 from venture.lite.utils import careful_exp
 
@@ -79,18 +81,25 @@ def relerr(expected, actual):
   else:
     return abs((actual - expected)/expected)
 
-def check_beta_density_quad(a, b):
+def check_beta_density_quad(X_SP, lo, hi, a, b):
     args = MockArgs((a, b), None)
     def pdf(x):
-        return careful_exp(BetaOutputPSP().logDensity(x, args))
-    one, esterr = scipy.integrate.quad(pdf, 0, 1)
+        return careful_exp(X_SP().logDensity(x, args))
+    one, esterr = scipy.integrate.quad(pdf, lo, hi)
     assert relerr(1, one) < esterr
 
 def test_beta_density_quad():
+    inf = float('inf')
+    d = [
+        (BetaOutputPSP, 0, 1),
+        (LogBetaOutputPSP, -inf, 0),
+        (LogOddsBetaOutputPSP, -inf, +inf),
+    ]
     v = [.1, .25, .5, .75, 1, 2, 5, 10, 100]
-    for a in v:
-        for b in v:
-            yield check_beta_density_quad, a, b
+    for sp, lo, hi in d:
+        for a in v:
+            for b in v:
+                yield check_beta_density_quad, sp, lo, hi, a, b
 
 @statisticalTest
 def test_beta_tail(seed):
