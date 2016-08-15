@@ -61,3 +61,20 @@ def check_loggamma_ks(shape, seed):
 def test_loggamma_ks():
   for shape in [.01, .1, .5, 1, 2, 10, 100, 1e6, 1e10]:
     yield check_loggamma_ks, shape
+
+@statisticalTest
+def check_loggamma_ks_quad(shape, seed):
+  inf = float('inf')
+  np_rng = numpy.random.RandomState(seed)
+  nsamples = default_num_samples()
+  samples = [simulateLogGamma(shape, np_rng) for _ in xrange(nsamples)]
+  def pdf(x):
+    return careful_exp(logDensityLogGamma(x, shape))
+  def cdf(x):
+    p, e = scipy.integrate.quad(pdf, -inf, x)
+    return p
+  return reportKnownContinuous(np.vectorize(cdf), samples)
+
+def test_loggamma_ks_quad():
+  for shape in [.01, .1, .5, 1, 2, 10, 100, 1e6, 1e10]:
+    yield check_loggamma_ks_quad, shape
