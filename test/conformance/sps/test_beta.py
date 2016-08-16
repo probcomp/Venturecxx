@@ -96,6 +96,15 @@ def relerr(expected, actual):
   else:
     return abs((actual - expected)/expected)
 
+def collect_sp_samples(sp, args, seed, aux=None, nsamples=None):
+    if nsamples is None:
+        nsamples = default_num_samples()
+    np_rng = npr.RandomState(seed)
+    py_rng = random.Random(np_rng.randint(1, 2**31 - 1))
+    sp_args = MockArgs(args, aux, py_rng=py_rng, np_rng=np_rng)
+    sp0 = sp()
+    return [sp0.simulate(sp_args) for _ in xrange(nsamples)]
+
 BETA_SPACES = (
     ('beta', BetaOutputPSP, lambda x: x, 0, 1),
     ('log_beta', LogBetaOutputPSP, careful_exp, float('-inf'), 0),
@@ -103,10 +112,11 @@ BETA_SPACES = (
      float('-inf'), float('+inf')),
 )
 
-def check_beta_density_quad(X_SP, lo, hi, a, b):
+def check_beta_density_quad(sp, lo, hi, a, b):
+    sp0 = sp()
     args = MockArgs((a, b), None)
     def pdf(x):
-        return careful_exp(X_SP().logDensity(x, args))
+        return careful_exp(sp0.logDensity(x, args))
     one, esterr = scipy.integrate.quad(pdf, lo, hi)
     assert relerr(1, one) < esterr
 
@@ -119,12 +129,7 @@ def test_beta_density_quad():
 
 @statisticalTest
 def check_beta_ks(name, sp, to_direct, lo, a, b, seed):
-    nsamples = default_num_samples()
-    np_rng = npr.RandomState(seed)
-    py_rng = random.Random(np_rng.randint(1, 2**31 - 1))
-    args = MockArgs((a, b), None, py_rng=py_rng, np_rng=np_rng)
-    samples = [sp().simulate(args) for _ in xrange(nsamples)]
-
+    samples = collect_sp_samples(sp, (a, b), seed)
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, map(to_direct, samples),
         descr='(%s %r %r)' % (name, a, b))
@@ -144,15 +149,11 @@ def test_beta_ks():
 
 @statisticalTest
 def check_beta_ks_quad(name, sp, lo, a, b, seed):
-    nsamples = default_num_samples()
-    np_rng = npr.RandomState(seed)
-    py_rng = random.Random(np_rng.randint(1, 2**31 - 1))
-    args = MockArgs((a, b), None, py_rng=py_rng, np_rng=np_rng)
-    samples = [sp().simulate(args) for _ in xrange(nsamples)]
-
+    samples = collect_sp_samples(sp, (a, b), seed)
+    sp0 = sp()
     args = MockArgs((a, b), None)
     def pdf(x):
-        return careful_exp(sp().logDensity(x, args))
+        return careful_exp(sp0.logDensity(x, args))
     def cdf(x):
         p, e = scipy.integrate.quad(pdf, lo, x)
         assert p < 1 or relerr(1, p) < 100*e
@@ -182,13 +183,9 @@ def test_beta_tail(seed):
     # the middle.
     a = .1
     b = .1
-    nsamples = default_num_samples()
-    expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(BetaOutputPSP, (a, b), seed)
     dist = scipy.stats.beta(a, b)
-    return reportKnownContinuous(dist.cdf, samples, descr=expression)
+    return reportKnownContinuous(dist.cdf, samples, descr='(beta .1 .1)')
 
 @broken_in("puma", "Issue #504")
 @on_inf_prim("none")
@@ -197,12 +194,13 @@ def test_beta_thagomizer(seed):
     # Check that Beta with spiky tails yields sane samples, not NaN.
     v = (1, 1/2, 1e-5, 1e-15, 1e-20, 1e-299, 1e-301)
     nsamples = 50
+    np_rng = npr.RandomState(seed)
     for a in v:
         for b in v:
-            expression = '(beta %r %r)' % (a, b)
-            ripl = get_ripl(seed=seed)
-            for _ in xrange(nsamples):
-                sample = ripl.sample(expression)
+            seed = np_rng.randint(1, 2**31 - 1)
+            samples = collect_sp_samples(BetaOutputPSP, (a, b), seed,
+                nsamples=nsamples)
+            for sample in samples:
                 assert 0 <= sample
                 assert sample <= 1
                 if a < 1e-16 or b < 1e-16:
@@ -213,50 +211,34 @@ def test_beta_thagomizer(seed):
 def test_beta_small_small(seed):
     a = 5.5
     b = 5.5
-    nsamples = default_num_samples()
-    expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(BetaOutputPSP, (a, b), seed)
     dist = scipy.stats.beta(a, b)
-    return reportKnownContinuous(dist.cdf, samples, descr=expression)
+    return reportKnownContinuous(dist.cdf, samples, descr='(beta 5.5 5.5)')
 
 @timed(5)
 @statisticalTest
 def test_beta_small_large(seed):
     a = 5.5
     b = 1e9
-    nsamples = default_num_samples()
-    expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(BetaOutputPSP, (a, b), seed)
     dist = scipy.stats.beta(a, b)
-    return reportKnownContinuous(dist.cdf, samples, descr=expression)
+    return reportKnownContinuous(dist.cdf, samples, descr='(beta 5.5 1e9)')
 
 @timed(5)
 @statisticalTest
 def test_beta_large_small(seed):
     a = 1e9
     b = 5.5
-    nsamples = default_num_samples()
-    expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(BetaOutputPSP, (a, b), seed)
     dist = scipy.stats.beta(a, b)
-    return reportKnownContinuous(dist.cdf, samples, descr=expression)
+    return reportKnownContinuous(dist.cdf, samples, descr='(beta 1e9 5.5)')
 
 @timed(5)
 @stochasticTest
 def test_beta_large_large(seed):
     a = 1e300
     b = 1e300
-    nsamples = default_num_samples()
-    expression = '(beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(BetaOutputPSP, (a, b), seed)
     assert all(sample == 1/2 for sample in samples)
 
 @timed(5)
@@ -264,11 +246,8 @@ def test_beta_large_large(seed):
 def test_log_beta_small(seed):
     a = 0.5
     b = 0.5
-    nsamples = default_num_samples()
-    expression = '(log_beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(LogBetaOutputPSP, (a, b), seed)
+
     # A single sample overflows with probability < F(10^{-10^300}),
     # where F is the CDF of Beta(1/2, 1/2), which is hard to evaluate
     # at such a tiny input but is probably smaller than we care about.
@@ -298,11 +277,7 @@ def test_log_beta_bernoulli_small(seed):
 def test_log_beta_smaller(seed):
     a = 0.001
     b = 0.001
-    nsamples = default_num_samples()
-    expression = '(log_beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(LogBetaOutputPSP, (a, b), seed)
     # A single sample overflows with probability < F(10^{-10^300}),
     # where F is the CDF of Beta(0.001, 0.001), which is hard to
     # evaluate at such a tiny input but is probably smaller than we
@@ -336,11 +311,7 @@ def test_log_beta_bernoulli_smaller(seed):
 def test_log_odds_beta_small(seed):
     a = 0.5
     b = 0.5
-    nsamples = default_num_samples()
-    expression = '(log_odds_beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(LogOddsBetaOutputPSP, (a, b), seed)
     # A single sample overflows with probability < F(10^{-10^300}),
     # where F is the CDF of Beta(1/2, 1/2), which is hard to evaluate
     # at such a tiny input but is probably smaller than we care about.
@@ -368,11 +339,7 @@ def test_log_odds_beta_bernoulli_small(seed):
 def test_log_odds_beta_smaller(seed):
     a = 0.001
     b = 0.001
-    nsamples = default_num_samples()
-    expression = '(log_odds_beta %r %r)' % (a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    samples = collect_sp_samples(LogOddsBetaOutputPSP, (a, b), seed)
     # A single sample overflows with probability < F(10^{-10^300}),
     # where F is the CDF of Beta(0.001, 0.001), which is hard to
     # evaluate at such a tiny input but is probably smaller than we
