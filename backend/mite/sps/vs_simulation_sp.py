@@ -53,4 +53,7 @@ class MadeSimulationSP(SimulationSP):
     assert w == 0
     return value
 
+# TODO: rename to "elementary" SP everywhere
+# (including the "SimulationSP" class itself)
 registerBuiltinSP("make_simulation_sp", MakeSimulationSP())
+registerBuiltinSP("make_elementary_sp", MakeSimulationSP())

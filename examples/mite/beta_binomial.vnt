@@ -38,7 +38,7 @@
 ;;; collapsed beta binomial as a simulation procedure
 [define make_beta_binomial_s_defn
   '(lambda (a b)
-     (make_simulation_sp
+     (make_elementary_sp
       '(lambda (a b)
          (dict
           (list 'trace 'simulate 'incorporate 'unincorporate)

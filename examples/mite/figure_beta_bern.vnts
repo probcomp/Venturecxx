@@ -9,7 +9,6 @@ define extract = {
   }
 };
 
-define make_elementary_sp = make_simulation_sp;
 
 define sum = (xs) -> {
   if (is_empty(xs)) { 0 }
@@ -39,7 +38,6 @@ define example_beta_bern = (make_beta_bern, infer) -> {
     // import defs from toplevel environment -- remove this in figure
     assume pass = $pass;
     assume extract = $extract;
-    assume make_elementary_sp = make_simulation_sp;
     assume counter_set = $counter_set;
     assume counter = $counter;
     assume counter_get = $counter_get;

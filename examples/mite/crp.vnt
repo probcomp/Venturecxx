@@ -35,7 +35,7 @@
 ;;; CRP as a simulation procedure
 [define make_crp_s_defn
   '(lambda (alpha)
-     (make_simulation_sp
+     (make_elementary_sp
       '(lambda (alpha)
          (dict
           (list 'trace 'simulate 'log_density 'incorporate 'unincorporate)

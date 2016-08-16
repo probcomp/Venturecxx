@@ -1,7 +1,7 @@
 // partial translation of crp.vnt into concrete syntax
 
 define make_crp_s_defn = quote((alpha) -> {
-  make_simulation_sp(quote((alpha) -> {
+  make_elementary_sp(quote((alpha) -> {
     dict(
       list([|trace|], [|simulate|], [|log_density|], [|incorporate|], [|unincorporate|]),
       list(

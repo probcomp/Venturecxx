@@ -1,5 +1,4 @@
 // stubbed
-define make_elementary_sp = make_simulation_sp;
 
 define my_beta_1 = (a, b) -> {
   let y ~ gamma(a, 1);
