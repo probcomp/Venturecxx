@@ -67,11 +67,22 @@ def timed(seconds):
                     pipe_send.send((False, 'unknown error'))
             process = multiprocessing.Process(
                 target=f__, args=args, kwargs=kwargs)
+            import os
+            import signal
+            import time
             process.start()
+            starttime = time.time()
             ok = pipe_recv.poll(seconds)
-            process.terminate()
+            endtime = time.time()
             if not ok:
-                raise Exception('timed out')
+                os.kill(process.pid, signal.SIGINT)
+                ok = pipe_recv.poll(1)
+                if not ok:
+                    process.terminate()
+                    if not ok:
+                        duration = endtime - starttime
+                        raise Exception('timed out after %r seconds' %
+                            (duration,))
             ok, result = pipe_recv.recv()
             if not ok:
                 raise Exception(result)
