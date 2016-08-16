@@ -14,22 +14,50 @@ vnts_file = __file__.rsplit('.', 1)[0] + '.vnts'
 
 def compute_results(num_reps, stub=False):
   if stub:
-    def stub_collapsed(_steps):
+    dataset = [1, 1, 0, 1, 0]
+    alpha = 0.5
+    def stub_collapsed():
+      counts = [0, 0]
+      weight = 0
+      for x in dataset:
+        weight += np.log(alpha + counts[x]) - np.log(alpha + alpha + sum(counts))
+        counts[x] += 1
       return {'time': np.random.normal(2, 0.2),
-              'measurement': -4.4465}
+              'measurement': weight}
+    def stub_uncollapsed():
+      counts = [0, 0]
+      weight = 0
+      for x in dataset:
+        theta = np.random.dirichlet(alpha + np.array(counts))
+        weight += np.log(theta[x])
+        counts[x] += 1
+      return {'time': np.random.normal(2, 0.2),
+              'measurement': weight}
     def stub_proc(steps):
-      return {'time': np.random.normal(1 + steps, 0.2),
-              'measurement': np.log(np.random.beta(np.exp(-4.4465) * 10 * (1 + steps), 10 * (1 + steps)))}
+      counts = [0, 0]
+      weight = 0
+      theta = None
+      for x in dataset:
+        thetas = np.random.beta(alpha, alpha, size=1+steps)
+        weights = np.exp(np.dot(counts, np.log([thetas, 1-thetas])))
+        theta = np.random.choice(thetas, p=weights/weights.sum())
+        weight += np.log([theta, 1-theta][x])
+        counts[x] += 1
+      return {'time': np.random.normal(1 + steps, 0.1),
+              'measurement': weight}
 
     ret = OrderedDict()
     infer_programs = {
-      'collapsed': [(stub_collapsed, 0)],
-      'proc': [(stub_proc, steps) for steps in [0, 1, 2, 4, 8]]
+      'collapsed': [(stub_collapsed, 'pass')],
+      'uncollapsed': [(stub_uncollapsed, 'conjugate_gibbs_infer()')],
+      'proc': [((lambda steps=steps: stub_proc(steps)),
+                'repeat({}, resimulation_infer())'.format(steps))
+               for steps in [0, 1, 2, 4, 8]]
     }
-    for variant in ['collapsed', 'proc']:
-      for infer in infer_programs[variant]:
-        (f, steps) = infer
-        ret[variant, steps] = [f(steps) for _ in range(num_reps)]
+    for variant in ['proc', 'collapsed', 'uncollapsed']:
+      for package in infer_programs[variant]:
+        (f, infer) = package
+        ret[variant, infer] = [f() for _ in range(num_reps)]
     return ret
   else:
     ripl = vs.Mite().make_ripl()
