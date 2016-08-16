@@ -10,3 +10,19 @@ define assess_std_normal = {
     correction - 0.5 * x * x
   }
 }
+
+// encapsulated as an SP:
+define std_normal = make_elementary_sp([| () -> {
+  dict(
+    ['simulate', () -> {
+      u1 = uniform_continuous(0, 1);
+      u2 = uniform_continuous(0, 1);
+      return (sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2))
+    }],
+    ['log_density', {
+      correction = -0.5 * log(2 * 3.14159265);
+      (x) -> {
+	return (correction - 0.5 * x * x)
+      }
+    }])
+} |]);

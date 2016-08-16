@@ -29,3 +29,28 @@ define assess_std_gamma = (x, alpha) -> {
 };
 
 define cube = (x) -> { x * x * x }
+
+// encapsulated as an SP:
+define std_gamma = make_elementary_sp([| () -> {
+  dict(
+    ['simulate', (alpha) -> {
+      d = alpha - (1.0/3);
+      c = 1.0 / sqrt(9 * d);
+      x ~ normal(0, 1);
+      v = pow(1 + c * x, 3);
+      if (v <= 0) {
+	simulate_std_gamma(alpha)
+      } else {
+	log_bound = 0.5 * x * x + d * (1 - v + log(v));
+	u ~ uniform_continuous(0, 1);
+	if (log(u) >= log_bound) {
+	  simulate_std_gamma(alpha)
+	} else {
+	  return (d * v)
+	}
+      }
+    }],
+    ['log_density', (x, alpha) -> {
+      return ((alpha - 1) * log(x) - x - log_gamma_function(alpha))
+    }])
+} |]);
