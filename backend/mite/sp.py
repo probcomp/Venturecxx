@@ -24,7 +24,7 @@ class VentureSP(VentureValue):
   def proposal_kernel(self, trace_handle, application_id):
     return DefaultProposalKernel(self, trace_handle, application_id)
 
-  def constrained_kernel(self, _trace_handle, _application_id, _val):
+  def constraint_kernel(self, _trace_handle, _application_id, _val):
     return NotImplemented
 
   def show(self):
@@ -94,8 +94,8 @@ class SimulationSP(VentureSP):
     return output
 
   @override(VentureSP)
-  def constrained_kernel(self, trace_handle, application_id, val):
-    return SimulationConstrainedKernel(
+  def constraint_kernel(self, trace_handle, application_id, val):
+    return SimulationConstraintKernel(
       self, trace_handle, application_id, val)
 
   def simulate(self, _inputs, _prng):
@@ -107,7 +107,7 @@ class SimulationSP(VentureSP):
   def unincorporate(self, output, inputs):
     pass
 
-class SimulationConstrainedKernel(ApplicationKernel):
+class SimulationConstraintKernel(ApplicationKernel):
   def __init__(self, sp, trace_handle, application_id, val):
     self.sp = sp
     self.trace_handle = trace_handle

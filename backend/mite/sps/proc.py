@@ -46,8 +46,8 @@ class TailAssessableCompoundSP(VentureSP):
   def proposal_kernel(self, trace_handle, application_id):
     return TailAssessableProposalKernel(self, trace_handle, application_id)
 
-  def constrained_kernel(self, trace_handle, application_id, val):
-    return TailAssessableConstrainedKernel(self, trace_handle, application_id, val)
+  def constraint_kernel(self, trace_handle, application_id, val):
+    return TailAssessableConstraintKernel(self, trace_handle, application_id, val)
 
 class TailAssessableProposalKernel(ApplicationKernel):
   def __init__(self, sp, trace_handle, application_id):
@@ -129,7 +129,7 @@ class TailAssessableProposalKernel(ApplicationKernel):
 
     return output
 
-class TailAssessableConstrainedKernel(ApplicationKernel):
+class TailAssessableConstraintKernel(ApplicationKernel):
   def __init__(self, sp, trace_handle, application_id, val):
     self.params = sp.params
     self.operator_exp = sp.operator_exp
@@ -155,7 +155,7 @@ class TailAssessableConstrainedKernel(ApplicationKernel):
 
     result_addr = trace_handle.request_address(application_id)
     (weight, trace_fragment) = trace_handle.trace.extract_kernel(
-      trace_handle.trace.constrained_kernel(result_addr, operator, val),
+      trace_handle.trace.constraint_kernel(result_addr, operator, val),
       output, operands)
 
     return (weight, trace_fragment)
@@ -175,7 +175,7 @@ class TailAssessableConstrainedKernel(ApplicationKernel):
 
     result_addr = trace_handle.request_address(application_id)
     (weight, output) = trace_handle.trace.regen_kernel(
-      trace_handle.trace.constrained_kernel(result_addr, operator, val),
+      trace_handle.trace.constraint_kernel(result_addr, operator, val),
       operands, None)
 
     return (weight, output)
@@ -195,7 +195,7 @@ class TailAssessableConstrainedKernel(ApplicationKernel):
 
     result_addr = trace_handle.request_address(application_id)
     output = trace_handle.trace.restore_kernel(
-      trace_handle.trace.constrained_kernel(result_addr, operator, val),
+      trace_handle.trace.constraint_kernel(result_addr, operator, val),
       operands, trace_fragment)
 
     return output

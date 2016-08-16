@@ -19,7 +19,7 @@ def digraph(trace, scaffold, principal_nodes=None):
       color = 'red'
     elif _kernel_type(ker) == 'proposal' or _kernel_type(ker) == 'propagate_lookup':
       color = 'yellow'
-    elif _kernel_type(ker) == 'constrained':
+    elif _kernel_type(ker) == 'constraint':
       color = 'blue'
     _add_node_for(dot, trace, ad, color=color)
   brush = _compute_brush_hack(trace, scaffold)

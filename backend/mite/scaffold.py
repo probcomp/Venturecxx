@@ -16,9 +16,9 @@ class Scaffold(object):
       return None
     elif kernel['type'] == 'proposal':
       return sp.proposal_kernel(trace_handle, address)
-    elif kernel['type'] == 'constrained':
+    elif kernel['type'] == 'constraint':
       val = kernel['val']
-      return sp.constrained_kernel(trace_handle, address, val)
+      return sp.constraint_kernel(trace_handle, address, val)
 
 class DefaultAllScaffold(object):
   def kernel_at(self, sp, trace_handle, address):
@@ -69,12 +69,12 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         sp_ref = trace.value_at(addresses.subexpression(0, addr))
         sp = trace.deref_sp(sp_ref).value
         val = trace.value_at(addr)
-        kernel = sp.constrained_kernel(None, addr, val)
+        kernel = sp.constraint_kernel(None, addr, val)
         if kernel is NotImplemented or likelihood_free_lite_sp(sp):
           kernels[addr] = {'type': 'proposal'}
           affected.add(addr)
         else:
-          kernels[addr] = {'type': 'constrained', 'val': val}
+          kernels[addr] = {'type': 'constraint', 'val': val}
 
   def likelihood_free_lite_sp(sp):
     from venture.mite.sps.lite_sp import LiteSP

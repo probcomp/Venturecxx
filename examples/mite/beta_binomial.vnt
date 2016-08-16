@@ -114,8 +114,8 @@
 [define v_binomial_set
   (lambda (N K)
     (do (s <- (pyselectf "{
-  directive(1): {'type': 'constrained', 'val': N},
-  directive(2): {'type': 'constrained', 'val': K}
+  directive(1): {'type': 'constraint', 'val': N},
+  directive(2): {'type': 'constraint', 'val': K}
 }" (dict (list 'N 'K) (list N K))))
         (rev <- (extract s))
         (regen s (rest rev))))]

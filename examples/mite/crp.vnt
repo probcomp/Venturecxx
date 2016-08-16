@@ -138,10 +138,10 @@
          (observe x4 atom<2>)
          (observe x5 atom<2>)
          (s <- (pyselectf "{
-  directive(3): {'type': 'constrained', 'val': atom1},
-  directive(4): {'type': 'constrained', 'val': atom2},
-  directive(6): {'type': 'constrained', 'val': atom2},
-  directive(7): {'type': 'constrained', 'val': atom2},
+  directive(3): {'type': 'constraint', 'val': atom1},
+  directive(4): {'type': 'constraint', 'val': atom2},
+  directive(6): {'type': 'constraint', 'val': atom2},
+  directive(7): {'type': 'constraint', 'val': atom2},
 }" (dict (list 'atom1 'atom2) (list atom<1> atom<2>))))
          (weight <- (incorporate_constraint s))
          (result <- (predict (list x1 x2 x3 x4 x5)))

@@ -132,36 +132,36 @@
          (predict (debug 'result y))
 
          (s <- (pyselectf "{
-  directive(3): {'type': 'constrained', 'val': t},
-  directive(4): {'type': 'constrained', 'val': t},
+  directive(3): {'type': 'constraint', 'val': t},
+  directive(4): {'type': 'constraint', 'val': t},
 }" (dict (list 't 'f) (list true false))))
          (rev <- (extract s))
          (regen s (rest rev))
 
          (s <- (pyselectf "{
-  directive(3): {'type': 'constrained', 'val': t},
-  directive(4): {'type': 'constrained', 'val': f},
+  directive(3): {'type': 'constraint', 'val': t},
+  directive(4): {'type': 'constraint', 'val': f},
 }" (dict (list 't 'f) (list true false))))
          (rev <- (extract s))
          (regen s (rest rev))
 
          (s <- (pyselectf "{
-  directive(3): {'type': 'constrained', 'val': f},
-  directive(4): {'type': 'constrained', 'val': f},
+  directive(3): {'type': 'constraint', 'val': f},
+  directive(4): {'type': 'constraint', 'val': f},
 }" (dict (list 't 'f) (list true false))))
          (rev <- (extract s))
          (regen s (rest rev))
 
          (s <- (pyselectf "{
-  directive(3): {'type': 'constrained', 'val': t},
-  directive(4): {'type': 'constrained', 'val': f},
+  directive(3): {'type': 'constraint', 'val': t},
+  directive(4): {'type': 'constraint', 'val': f},
 }" (dict (list 't 'f) (list true false))))
          (rev <- (extract s))
          (regen s (rest rev))
 
          (s <- (pyselectf "{
-  directive(3): {'type': 'constrained', 'val': t},
-  directive(4): {'type': 'constrained', 'val': t},
+  directive(3): {'type': 'constraint', 'val': t},
+  directive(4): {'type': 'constraint', 'val': t},
 }" (dict (list 't 'f) (list true false))))
          (rev <- (extract s))
          (regen s (rest rev)))

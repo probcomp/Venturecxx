@@ -61,10 +61,10 @@ define example2c = () -> {
     assume x4 = f();
     assume x5 = f();
     s <- pyselectf("{
-  directive(3): {'type': 'constrained', 'val': atom1},
-  directive(4): {'type': 'constrained', 'val': atom2},
-  directive(6): {'type': 'constrained', 'val': atom2},
-  directive(7): {'type': 'constrained', 'val': atom2},
+  directive(3): {'type': 'constraint', 'val': atom1},
+  directive(4): {'type': 'constraint', 'val': atom2},
+  directive(6): {'type': 'constraint', 'val': atom2},
+  directive(7): {'type': 'constraint', 'val': atom2},
 }", dict(list([|atom1|], [|atom2|]), list(atom<1>, atom<2>)));
     rev <- extract(s);
     weight <- regen(s, rest(rev));

@@ -134,7 +134,7 @@ class AbstractTrace(ITrace):
     return scaffold
 
   def single_site_constraint(self, address, value):
-    kernel = {'type': 'constrained', 'val': value}
+    kernel = {'type': 'constraint', 'val': value}
     scaffold = single_site_scaffold(self, address, kernel)
     assert scaffold.kernels
     return scaffold
@@ -309,9 +309,9 @@ class FlatTrace(AbstractTrace):
     # TODO make it easier to construct trace handles.
     return {'addr': addr, 'sp_ref': sp_ref, 'type': 'proposal'}
 
-  def constrained_kernel(self, addr, sp_ref, val):
+  def constraint_kernel(self, addr, sp_ref, val):
     return {'addr': addr, 'sp_ref': sp_ref,
-            'type': 'constrained', 'val': val}
+            'type': 'constraint', 'val': val}
 
   def extract_kernel(self, kernel, output, input_values):
     addr = kernel['addr']
@@ -429,7 +429,7 @@ register_trace_type("_trace", ITrace, {
   "log_density_of_sp": trace_action("log_density_of_sp", [t.Object, t.Object, t.List(t.Object)], t.Number),
   "invoke_metaprogram_of_sp": trace_action("invoke_metaprogram_of_sp", [t.Object, t.Symbol, t.List(t.Object)], t.Object),
   "proposal_kernel_of_sp_at": trace_action("proposal_kernel", [t.Blob, t.Object], t.Blob),
-  "constrained_kernel_of_sp_at": trace_action("constrained_kernel", [t.Blob, t.Object, t.Object], t.Blob),
+  "constraint_kernel_of_sp_at": trace_action("constraint_kernel", [t.Blob, t.Object, t.Object], t.Blob),
   "extract_kernel": trace_action("extract_kernel", [t.Blob, t.Object, t.List(t.Object)], t.Pair(t.Number, t.Blob)),
   "regen_kernel": trace_action("regen_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Pair(t.Number, t.Object)),
   "restore_kernel": trace_action("restore_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Object),
