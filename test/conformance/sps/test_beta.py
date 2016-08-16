@@ -31,6 +31,7 @@ import scipy.stats
 from venture.lite.continuous import BetaOutputPSP
 from venture.lite.continuous import LogBetaOutputPSP
 from venture.lite.continuous import LogOddsBetaOutputPSP
+from venture.lite.continuous import LogOddsUniformOutputPSP
 from venture.lite.sp_use import MockArgs
 from venture.lite.utils import careful_exp
 from venture.lite.utils import logistic
@@ -126,6 +127,20 @@ def test_beta_density_quad():
         for a in v:
             for b in v:
                 yield check_beta_density_quad, sp, lo, hi, a, b
+
+@stochasticTest
+def test_log_odds_uniform_cdf(seed):
+    inf = float('inf')
+    samples = collect_sp_samples(LogOddsUniformOutputPSP, (), seed)
+    sp0 = LogOddsUniformOutputPSP()
+    args = MockArgs((), None)
+    def pdf(x):
+        return careful_exp(sp0.logDensity(x, args))
+    def cdf(x):
+        return logistic(x)
+    for x in samples:
+        p, e = scipy.integrate.quad(pdf, -inf, x)
+        assert relerr(cdf(x), p) <= e
 
 @statisticalTest
 def check_beta_ks(name, sp, to_direct, lo, a, b, seed):
