@@ -47,7 +47,12 @@ define example_beta_bern = (make_beta_bern, infer) -> {
     assume counter_decr = $counter_decr;
     // end defs
     assume coin = ${make_beta_bern}(0.5, 0.5);
-    weights <- for_each([true, true, false, true, false], (x) -> {
+    let dataset = [
+      true, true, true, true, true,
+      false, false, true, true,
+      false, true, false, true
+    ];
+    weights <- for_each(dataset, (x) -> {
       infer();
       addr <- { observe coin() = x };
       weight <- incorporate_constraint(addr, x);

@@ -14,7 +14,7 @@ vnts_file = __file__.rsplit('.', 1)[0] + '.vnts'
 
 def compute_results(num_reps, stub=False):
   if stub:
-    dataset = [1, 1, 0, 1, 0]
+    dataset = [1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1]
     alpha = 0.5
     def stub_collapsed():
       counts = [0, 0]
