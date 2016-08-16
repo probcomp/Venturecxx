@@ -1,0 +1,83 @@
+// compute p(y) = integral of p(x) p(y | x)
+define marginal_density = (prior, likelihood, n_samples) -> {
+  (y) -> {
+    estimates <- for_each(arange(n_samples), (i) -> {
+      x <~ invoke_metaprogram_of_sp(prior, 'simulate', []);
+      logp <- invoke_metaprogram_of_sp(likelihood, 'log_density', [y, x]);
+      return (logp)
+    });
+    return (sum(estimates) / n_samples)
+  }
+};
+
+// p(x|y) = p(x) p(y|x) / p(y)
+define bayes_rule = (prior, likelihood, y, n_samples) -> {
+  (x) -> {
+    logp_x <- invoke_metaprogram_of_sp(prior, 'log_density', [x]);
+    logp_y_given_x <- invoke_metaprogram_of_sp(likelihood, 'log_density', [y, x]);
+    logp_y <- marginal_density(prior, likelihood, n_samples)(y);
+    return (logp_x + logp_y_given_x - logp_y)
+  }
+};
+
+// work around the fact that it only works in a child trace...
+define actually_run_bayes_rule = (prior, likelihood, y, n_samples) -> {
+  (x) -> {
+    run_in({
+      assume prior = ${prior};
+      assume likelihood = ${likelihood};
+      prior <- value_at(toplevel(1));
+      likelihood <- value_at(toplevel(2));
+      bayes_rule(prior, likelihood, y, n_samples)(x)
+    }, flat_trace())
+  }
+};
+
+// a stupid definition of sum
+define sum = (items) -> {
+  run_in({
+    _predict(pair(add, items))
+  }, blank_trace())
+};
+
+// example on normal-normal model
+
+define std_normal = make_elementary_sp([| () -> {
+  dict(
+    // required optional method
+    ['state', nil],
+    // end required optional method
+    ['simulate', () -> {
+      u1 = uniform_continuous(0, 1);
+      u2 = uniform_continuous(0, 1);
+      return (sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2))
+    }],
+    ['log_density', {
+      correction = -0.5 * log(2 * 3.14159265);
+      (x) -> {
+	return (correction - 0.5 * x * x)
+      }
+    }])
+} |]);
+
+define unit_normal = make_elementary_sp([| () -> {
+  dict(
+    // required optional method
+    ['state', nil],
+    // end required optional method
+    ['simulate', (mean) -> {
+      u1 = uniform_continuous(0, 1);
+      u2 = uniform_continuous(0, 1);
+      z = sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2);
+      return (mean + z)
+    }],
+    ['log_density', {
+      correction = -0.5 * log(2 * 3.14159265);
+      (x, mean) -> {
+	z = x - mean;
+	return (correction - 0.5 * z * z)
+      }
+    }])
+} |]);
+
+define normal_normal_posterior_density = actually_run_bayes_rule(std_normal, unit_normal, 4.0, n_samples: 500);
