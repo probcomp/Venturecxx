@@ -80,10 +80,9 @@ def timed(seconds):
                 ok = pipe_recv.poll(1)
                 if not ok:
                     process.terminate()
-                    if not ok:
-                        duration = endtime - starttime
-                        raise Exception('timed out after %r seconds' %
-                            (duration,))
+                    duration = endtime - starttime
+                    raise Exception('timed out after %r seconds' %
+                        (duration,))
             ok, result = pipe_recv.recv()
             if not ok:
                 raise Exception(result)
