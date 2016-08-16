@@ -35,41 +35,39 @@ define actually_run_bayes_rule = (prior, likelihood, y, n_samples) -> {
 
 // example on normal-normal model
 
+define simulate_std_normal = () ~> {
+  u1 = uniform_continuous(0, 1);
+  u2 = uniform_continuous(0, 1);
+  sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2)
+};
+
+define assess_std_normal = (x) -> {
+  -0.5 * log(2 * 3.14159265) - 0.5 * x * x
+};
+
 define std_normal = make_elementary_sp([| () -> {
+  let simulate_std_normal = ${simulate_std_normal};
+  let assess_std_normal = ${assess_std_normal};
   dict(
-    // required optional method
     ['state', nil],
-    // end required optional method
     ['simulate', () -> {
-      u1 = uniform_continuous(0, 1);
-      u2 = uniform_continuous(0, 1);
-      return (sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2))
+      return (simulate_std_normal())
     }],
-    ['log_density', {
-      correction = -0.5 * log(2 * 3.14159265);
-      (x) -> {
-	return (correction - 0.5 * x * x)
-      }
+    ['log_density', (x) -> {
+      return (assess_std_normal(x))
     }])
 } |]);
 
 define unit_normal = make_elementary_sp([| () -> {
+  let simulate_std_normal = ${simulate_std_normal};
+  let assess_std_normal = ${assess_std_normal};
   dict(
-    // required optional method
     ['state', nil],
-    // end required optional method
     ['simulate', (mean) -> {
-      u1 = uniform_continuous(0, 1);
-      u2 = uniform_continuous(0, 1);
-      z = sqrt(-2 * log(u1)) * cos(2 * 3.14159265 * u2);
-      return (mean + z)
+      return (mean + simulate_std_normal())
     }],
-    ['log_density', {
-      correction = -0.5 * log(2 * 3.14159265);
-      (x, mean) -> {
-	z = x - mean;
-	return (correction - 0.5 * z * z)
-      }
+    ['log_density', (x, mean) -> {
+      return (assess_std_normal(x - mean))
     }])
 } |]);
 
