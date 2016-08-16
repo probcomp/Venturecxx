@@ -25,6 +25,7 @@ from venture.lite.sp import SPType
 from venture.lite.sp_help import binaryNum
 from venture.lite.sp_help import binaryNumInt
 from venture.lite.sp_help import deterministic_psp
+from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_help import dispatching_psp
 from venture.lite.sp_help import no_request
 from venture.lite.sp_help import unaryNum
@@ -34,6 +35,7 @@ from venture.lite.utils import T_logistic
 from venture.lite.utils import careful_exp
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
+from venture.lite.utils import logaddexp
 import venture.lite.types as t
 import venture.lite.value as v
 
@@ -221,3 +223,7 @@ registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logisitc,
 
 registerBuiltinSP("logit", unaryNum(logit,
     descr="The logit (inverse logistic) function: log(x/(1-x))"))
+
+registerBuiltinSP("logsumexp", deterministic_typed(logaddexp,
+    [t.UArray(t.Number)], t.Number,
+    descr="Equivalent to log(apply(add, mapv(exp, x)))"))

@@ -6,7 +6,7 @@ define marginal_density = (prior, likelihood, n_samples) -> {
       logp <- invoke_metaprogram_of_sp(likelihood, 'log_density', [y, x]);
       return (logp)
     });
-    return (sum(estimates) / n_samples)
+    return (logsumexp(estimates) - log(n_samples))
   }
 };
 
@@ -31,13 +31,6 @@ define actually_run_bayes_rule = (prior, likelihood, y, n_samples) -> {
       bayes_rule(prior, likelihood, y, n_samples)(x)
     }, flat_trace())
   }
-};
-
-// a stupid definition of sum
-define sum = (items) -> {
-  run_in({
-    _predict(pair(add, items))
-  }, blank_trace())
 };
 
 // example on normal-normal model
