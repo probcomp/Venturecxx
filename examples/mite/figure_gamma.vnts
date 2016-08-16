@@ -28,7 +28,7 @@ define assess_std_gamma = (x, alpha) -> {
   (alpha - 1) * log(x) - x - log_gamma(alpha) // The log of the gamma function
 };
 
-define cube = (x) -> { x * x * x }
+define cube = (x) -> { x * x * x };
 
 // encapsulated as an SP:
 define std_gamma = make_elementary_sp([| () -> {

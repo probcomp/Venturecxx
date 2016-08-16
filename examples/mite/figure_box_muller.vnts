@@ -9,7 +9,7 @@ define assess_std_normal = {
   (x) -> {
     correction - 0.5 * x * x
   }
-}
+};
 
 // encapsulated as an SP:
 define std_normal = make_elementary_sp([| () -> {
