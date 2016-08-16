@@ -434,7 +434,7 @@ register_trace_type("_trace", ITrace, {
   "regen_kernel": trace_action("regen_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Pair(t.Number, t.Object)),
   "restore_kernel": trace_action("restore_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Object),
   "get_observations": trace_action("get_observations", [], t.Dict(t.Blob, t.Object)),
-  "split_trace": trace_action("copy", [], t.Blob),
+  "clone_trace": trace_action("copy", [], t.Blob),
   "select": trace_action("select", [t.Object], t.Blob),
   "pyselect": trace_action("pyselect", [t.String], t.Blob),
   "pyselectf": trace_action("pyselect", [t.String, t.Dict(t.Symbol, t.Object)], t.Blob),

@@ -18,7 +18,7 @@
 
 [define copy
   (lambda (state)
-    (first (split_trace_func state)))]
+    (first (clone_trace_func state)))]
 
 [define run_in
   (lambda (act state)

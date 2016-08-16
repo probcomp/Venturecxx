@@ -108,7 +108,7 @@
     (run_in (do (assume N (poisson 1))
                 (assume K (poisson 1))
                 (v_binomial_set 0 0)
-                (split_trace))
+                (clone_trace))
             (flat_trace)))]
 
 [define v_binomial_set

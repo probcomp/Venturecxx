@@ -10,7 +10,7 @@
   (let ((reset_trace
          (lambda (t) (inference_action (lambda (_) (pair nil t))))))
     (lambda (prog)
-      (do (t <- (split_trace))
+      (do (t <- (clone_trace))
           (result <- prog)
           (consistent <- (check_consistent))
           (if consistent

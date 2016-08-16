@@ -186,7 +186,7 @@ define counter = (keys) -> {
       assume $key = poisson(1);
       counter_set(key, 0)
     });
-    split_trace()
+    clone_trace()
   }, flat_trace())
 };
 
