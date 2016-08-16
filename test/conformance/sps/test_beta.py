@@ -19,10 +19,12 @@ from __future__ import division
 
 import math
 import multiprocessing
+import random
 import traceback
 
 import nose.tools
 import numpy as np
+import numpy.random as npr
 import scipy.integrate
 import scipy.stats
 
@@ -105,18 +107,20 @@ def test_beta_density_quad():
                 yield check_beta_density_quad, sp, lo, hi, a, b
 
 @statisticalTest
-def check_beta_ks(name, to_direct, lo, a, b, seed):
+def check_beta_ks(name, sp, to_direct, lo, a, b, seed):
     nsamples = default_num_samples()
-    expression = '(%s %r %r)' % (name, a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    np_rng = npr.RandomState(seed)
+    py_rng = random.Random(np_rng.randint(1, 2**31 - 1))
+    args = MockArgs((a, b), None, py_rng=py_rng, np_rng=np_rng)
+    samples = [sp().simulate(args) for _ in xrange(nsamples)]
+
     dist = scipy.stats.beta(a, b)
-    return reportKnownContinuous(dist.cdf, map(to_direct, samples))
+    return reportKnownContinuous(dist.cdf, map(to_direct, samples),
+        descr='(%s %r %r)' % (name, a, b))
 
 def test_beta_ks():
     v = (.1, .25, .5, 1, 1.1, 2, 5.5, 10)
-    for name, _sp, to_direct, lo, _hi in BETA_SPACES:
+    for name, sp, to_direct, lo, _hi in BETA_SPACES:
         for a in v:
             for b in v:
                 if b < .5:
@@ -125,15 +129,16 @@ def test_beta_ks():
                         # against 1, but we can't represent that
                         # adequately in direct-space.
                         continue
-                yield check_beta_ks, name, to_direct, lo, a, b
+                yield check_beta_ks, name, sp, to_direct, lo, a, b
 
 @statisticalTest
 def check_beta_ks_quad(name, sp, lo, a, b, seed):
     nsamples = default_num_samples()
-    expression = '(%s %r %r)' % (name, a, b)
-    ripl = get_ripl(seed=seed)
-    ripl.assume('p', expression, label='p')
-    samples = collectSamples(ripl, 'p', nsamples)
+    np_rng = npr.RandomState(seed)
+    py_rng = random.Random(np_rng.randint(1, 2**31 - 1))
+    args = MockArgs((a, b), None, py_rng=py_rng, np_rng=np_rng)
+    samples = [sp().simulate(args) for _ in xrange(nsamples)]
+
     args = MockArgs((a, b), None)
     def pdf(x):
         return careful_exp(sp().logDensity(x, args))
@@ -141,7 +146,8 @@ def check_beta_ks_quad(name, sp, lo, a, b, seed):
         p, e = scipy.integrate.quad(pdf, lo, x)
         assert p < 1 or relerr(1, p) < 100*e
         return min(p, 1)
-    return reportKnownContinuous(np.vectorize(cdf), samples)
+    return reportKnownContinuous(np.vectorize(cdf), samples,
+        descr='(%s %r %r)' % (name, a, b))
 
 def test_beta_ks_quad():
     v = (.1, .25, .5, 1, 1.1, 5.5, 10)
