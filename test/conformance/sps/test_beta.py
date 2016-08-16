@@ -138,8 +138,9 @@ def check_beta_ks_quad(name, sp, lo, a, b, seed):
     def pdf(x):
         return careful_exp(sp().logDensity(x, args))
     def cdf(x):
-        p, _e = scipy.integrate.quad(pdf, lo, x)
-        return p
+        p, e = scipy.integrate.quad(pdf, lo, x)
+        assert p < 1 or relerr(1, p) < 10*e
+        return min(p, 1)
     return reportKnownContinuous(np.vectorize(cdf), samples)
 
 def test_beta_ks_quad():
