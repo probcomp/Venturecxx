@@ -22,6 +22,7 @@ import multiprocessing
 import traceback
 
 import nose.tools
+import numpy as np
 import scipy.integrate
 import scipy.stats
 
@@ -30,6 +31,7 @@ from venture.lite.continuous import LogBetaOutputPSP
 from venture.lite.continuous import LogOddsBetaOutputPSP
 from venture.lite.sp_use import MockArgs
 from venture.lite.utils import careful_exp
+from venture.lite.utils import logistic
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
@@ -81,6 +83,13 @@ def relerr(expected, actual):
   else:
     return abs((actual - expected)/expected)
 
+BETA_SPACES = (
+    ('beta', BetaOutputPSP, lambda x: x, 0, 1),
+    ('log_beta', LogBetaOutputPSP, careful_exp, float('-inf'), 0),
+    ('log_odds_beta', LogOddsBetaOutputPSP, logistic,
+     float('-inf'), float('+inf')),
+)
+
 def check_beta_density_quad(X_SP, lo, hi, a, b):
     args = MockArgs((a, b), None)
     def pdf(x):
@@ -89,17 +98,56 @@ def check_beta_density_quad(X_SP, lo, hi, a, b):
     assert relerr(1, one) < esterr
 
 def test_beta_density_quad():
-    inf = float('inf')
-    d = [
-        (BetaOutputPSP, 0, 1),
-        (LogBetaOutputPSP, -inf, 0),
-        (LogOddsBetaOutputPSP, -inf, +inf),
-    ]
-    v = [.1, .25, .5, .75, 1, 2, 5, 10, 100]
-    for sp, lo, hi in d:
+    v = (.1, .25, .5, .75, 1, 2, 5, 10, 100)
+    for _name, sp, _to_direct, lo, hi in BETA_SPACES:
         for a in v:
             for b in v:
                 yield check_beta_density_quad, sp, lo, hi, a, b
+
+@statisticalTest
+def check_beta_ks(name, to_direct, lo, a, b, seed):
+    nsamples = default_num_samples()
+    expression = '(%s %r %r)' % (name, a, b)
+    ripl = get_ripl(seed=seed)
+    ripl.assume('p', expression, label='p')
+    samples = collectSamples(ripl, 'p', nsamples)
+    dist = scipy.stats.beta(a, b)
+    return reportKnownContinuous(dist.cdf, map(to_direct, samples))
+
+def test_beta_ks():
+    v = (.1, .25, .5, 1, 1.1, 2, 5.5, 10)
+    for name, _sp, to_direct, lo, _hi in BETA_SPACES:
+        for a in v:
+            for b in v:
+                if b < .5:
+                    if 5 < a:
+                        # The vast majority of the mass is squished up
+                        # against 1, but we can't represent that
+                        # adequately in direct-space.
+                        continue
+                yield check_beta_ks, name, to_direct, lo, a, b
+
+@statisticalTest
+def check_beta_ks_quad(name, sp, lo, a, b, seed):
+    nsamples = default_num_samples()
+    expression = '(%s %r %r)' % (name, a, b)
+    ripl = get_ripl(seed=seed)
+    ripl.assume('p', expression, label='p')
+    samples = collectSamples(ripl, 'p', nsamples)
+    args = MockArgs((a, b), None)
+    def pdf(x):
+        return careful_exp(sp().logDensity(x, args))
+    def cdf(x):
+        p, _e = scipy.integrate.quad(pdf, lo, x)
+        return p
+    return reportKnownContinuous(np.vectorize(cdf), samples)
+
+def test_beta_ks_quad():
+    v = (.1, .25, .5, 1, 1.1, 5.5, 10)
+    for name, sp, _to_direct, lo, _hi in BETA_SPACES:
+        for a in v:
+            for b in v:
+                yield check_beta_ks_quad, name, sp, lo, a, b
 
 @statisticalTest
 def test_beta_tail(seed):
