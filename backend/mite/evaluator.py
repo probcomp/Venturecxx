@@ -42,8 +42,10 @@ class Evaluator(object):
         # TODO: should compounds close over the trace where they were
         # defined?
         sp = value.makerNode.value
-        assert isinstance(sp, CompoundSP)
-        sp = CompoundSP(sp.params, sp.exp, env)
+        if isinstance(sp, CompoundSP):
+          sp = CompoundSP(sp.params, sp.exp, env)
+        elif hasattr(sp, 'helper_trace'):
+          sp = sp.__class__(sp.helper_trace.copy())
         self.trace.register_constant(addr, sp)
         value = self.trace.register_made_sp(addr, sp)
       else:
