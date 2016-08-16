@@ -148,6 +148,15 @@ def test_beta_ks_quad():
     for name, sp, _to_direct, lo, _hi in BETA_SPACES:
         for a in v:
             for b in v:
+                if name in ('beta', 'log_beta'):
+                    if b < .5:
+                        if 1 <= a:
+                            # The vast majority of mass is squished up
+                            # against 1, but we can't represent that
+                            # adequately in direct-space and scipy's
+                            # quadrature isn't able to accurately
+                            # integrate such a sharp spike at 1.
+                            continue
                 yield check_beta_ks_quad, name, sp, lo, a, b
 
 @statisticalTest
