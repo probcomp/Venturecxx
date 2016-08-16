@@ -71,7 +71,7 @@ def check_loggamma_ks_quad(shape, seed):
   def pdf(x):
     return careful_exp(logDensityLogGamma(x, shape))
   def cdf(x):
-    p, e = scipy.integrate.quad(pdf, -inf, x)
+    p, _e = scipy.integrate.quad(pdf, -inf, x)
     return p
   return reportKnownContinuous(np.vectorize(cdf), samples)
 
