@@ -91,7 +91,8 @@ class DependencyGraphTrace(AbstractTrace):
 
   def add_application_child_at(self, parent_addr, child_addr):
     self.nodes[parent_addr].children.add(child_addr)
-    self.nodes[parent_addr].application_children.add(child_addr)
+    sp_node = self.deref_sp(self.value_at(parent_addr))
+    self.nodes[sp_node.address].application_children.add(child_addr)
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
@@ -142,7 +143,8 @@ class DependencyGraphTrace(AbstractTrace):
 
   def remove_application_child_at(self, parent_addr, child_addr):
     self.nodes[parent_addr].children.remove(child_addr)
-    self.nodes[parent_addr].application_children.remove(child_addr)
+    sp_node = self.deref_sp(self.value_at(parent_addr))
+    self.nodes[sp_node.address].application_children.remove(child_addr)
 
   def unregister_made_sp(self, addr):
     sp = self.made_sps[addr]
