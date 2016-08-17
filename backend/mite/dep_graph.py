@@ -262,27 +262,24 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
 
   while q:
     addr, parent = q.pop()
-    if parent is not None:
-      regen_parents.setdefault(addr, set()).add(parent)
-    if addr in drg:
-      continue
 
     node = trace.nodes[addr]
+    kernel = None
     propagate = False
 
     if isinstance(node, LookupNode):
       assert node.orig_addr == parent
-      kernels[addr] = {'type': 'propagate_lookup'}
+      kernel = {'type': 'propagate_lookup'}
       propagate = True
     else:
       # SP application
       assert isinstance(node, ApplicationNode)
       if addr == principal_address:
-        kernels[addr] = principal_kernel
+        kernel = principal_kernel
         propagate = True
       elif node.operator_addr in drg:
         # operator changed
-        kernels[addr] = {'type': 'proposal'}
+        kernel = {'type': 'proposal'}
         propagate = True
       elif any(operand in drg for operand in node.operand_addrs):
         # operands changed
@@ -291,15 +288,20 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         val = trace.value_at(addr)
         kernel = sp.constraint_kernel(None, addr, val)
         if kernel is NotImplemented or likelihood_free_lite_sp(sp):
-          kernels[addr] = {'type': 'proposal'}
+          kernel = {'type': 'proposal'}
           propagate = True
         else:
-          kernels[addr] = {'type': 'constraint', 'val': val}
+          kernel = {'type': 'constraint', 'val': val}
       elif isinstance(parent, addresses.request) and addr == parent.request_id:
-        kernels[addr] = {'type': 'propagate_request', 'parent': parent}
+        kernel = {'type': 'propagate_request', 'parent': parent}
         propagate = True
 
-    if propagate:
+    if kernel is not None:
+      kernels[addr] = kernel
+      if parent is not None:
+        regen_parents.setdefault(addr, set()).add(parent)
+
+    if propagate and addr not in drg:
       drg.add(addr)
       request_children = []
       if isinstance(addr, addresses.request):
