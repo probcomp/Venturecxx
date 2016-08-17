@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose.tools import assert_equal, assert_not_equal
+from nose import SkipTest
 
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -55,6 +56,28 @@ def testRecursion():
      (p <- (extract s))
      (regen s (rest p))
      (xy_ <- (value_at (toplevel 4)))
+     (return (list xy xy_)))
+ (graph_trace))
+""")
+  (x, y), (x_, y_) = result
+  assert_equal(x, y)
+  assert_not_equal(x, x_)
+  assert_equal(x_, y_)
+
+@on_inf_prim("none")
+def testBrush():
+  raise SkipTest("Brush needs to be cleared from the regenerated set")
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in
+ (do (assume x (normal 0 1))
+     (assume y (if (> x 0) x x))
+     (predict (list x y))
+     (xy <- (value_at (toplevel 3)))
+     (s <- (single_site_subproblem (toplevel 1)))
+     (p <- (extract s))
+     (regen s (rest p))
+     (xy_ <- (value_at (toplevel 3)))
      (return (list xy xy_)))
  (graph_trace))
 """)
