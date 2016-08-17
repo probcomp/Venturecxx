@@ -115,7 +115,8 @@ class AbstractTrace(ITrace):
 
   def eval_request(self, addr, exp, env):
     weight, value = Evaluator(self).eval_request(addr, exp, env)
-    return (weight, value)
+    assert weight == 0
+    return value
 
   def bind_global(self, symbol, addr):
     value = self.value_at(addr)

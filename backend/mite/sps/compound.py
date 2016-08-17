@@ -16,14 +16,17 @@ class CompoundSP(VentureSP):
         "compound takes exactly %d arguments, got %d." \
         % (len(self.params), len(inputs)))
     extendedEnv = VentureEnvironment(self.env, self.params, inputs)
-    result = trace_handle.new_request(
-      application_id, self.exp, extendedEnv)
-    return trace_handle.value_at(result)
+    addr = trace_handle.request_address(application_id)
+    result = trace_handle.eval_request(
+      addr, self.exp, extendedEnv)
+    return result
 
   def unapply(self, trace_handle, application_id, _output, _inputs):
-    trace_handle.free_request(application_id)
+    addr = trace_handle.request_address(application_id)
+    trace_handle.uneval_request(addr)
     return None
 
   def restore(self, trace_handle, application_id, _inputs, _frag):
-    result = trace_handle.restore_request(application_id)
-    return trace_handle.value_at(result)
+    addr = trace_handle.request_address(application_id)
+    result = trace_handle.restore_request(addr)
+    return result

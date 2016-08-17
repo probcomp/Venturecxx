@@ -28,15 +28,16 @@ class TailAssessableCompoundSP(VentureSP):
         % (len(self.params), len(inputs)))
     extendedEnv = VentureEnvironment(self.env, self.params, inputs)
 
-    operator = trace_handle.new_request(
-      pair(application_id, 0), self.operator_exp, extendedEnv)
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.eval_request(
+      addr, self.operator_exp, extendedEnv)
 
     operands = []
     for index, operand_exp in enumerate(self.operand_exps):
-      operand = trace_handle.new_request(
-        pair(application_id, index+1), operand_exp, extendedEnv)
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operand = trace_handle.eval_request(
+        addr, operand_exp, extendedEnv)
+      operands.append(operand)
 
     result_addr = trace_handle.request_address(application_id)
     output = trace_handle.trace.apply_sp(result_addr, operator, operands)
@@ -77,9 +78,11 @@ class TailAssessableProposalKernel(ApplicationKernel):
       output, operands)
 
     for index in reversed(range(len(self.operand_exps))):
-      trace_handle.free_request(pair(application_id, index+1))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      trace_handle.uneval_request(addr)
 
-    trace_handle.free_request(pair(application_id, 0))
+    addr = trace_handle.request_address(pair(application_id, 0))
+    trace_handle.uneval_request(addr)
 
     return (weight, trace_fragment)
 
@@ -93,15 +96,16 @@ class TailAssessableProposalKernel(ApplicationKernel):
         % (len(self.params), len(inputs)))
     extendedEnv = VentureEnvironment(self.env, self.params, inputs)
 
-    operator = trace_handle.new_request(
-      pair(application_id, 0), self.operator_exp, extendedEnv)
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.eval_request(
+      addr, self.operator_exp, extendedEnv)
 
     operands = []
     for index, operand_exp in enumerate(self.operand_exps):
-      operand = trace_handle.new_request(
-        pair(application_id, index+1), operand_exp, extendedEnv)
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operand = trace_handle.eval_request(
+        addr, operand_exp, extendedEnv)
+      operands.append(operand)
 
     result_addr = trace_handle.request_address(application_id)
     (weight, output) = trace_handle.trace.regen_kernel(
@@ -114,13 +118,14 @@ class TailAssessableProposalKernel(ApplicationKernel):
     trace_handle = self.trace_handle
     application_id = self.application_id
 
-    operator = trace_handle.restore_request(pair(application_id, 0))
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.restore_request(addr)
 
     operands = []
     for index in range(len(self.operand_exps)):
-      operand = trace_handle.restore_request(pair(application_id, index+1))
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operand = trace_handle.restore_request(addr)
+      operands.append(operand)
 
     result_addr = trace_handle.request_address(application_id)
     output = trace_handle.trace.restore_kernel(
@@ -145,13 +150,13 @@ class TailAssessableConstraintKernel(ApplicationKernel):
     application_id = self.application_id
     val = self.val
 
-    operator = trace_handle.get_request(pair(application_id, 0))
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.value_at(addr)
 
     operands = []
     for index in range(len(self.operand_exps)):
-      operand = trace_handle.get_request(pair(application_id, index+1))
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operands.append(trace_handle.value_at(addr))
 
     result_addr = trace_handle.request_address(application_id)
     (weight, trace_fragment) = trace_handle.trace.extract_kernel(
@@ -165,13 +170,13 @@ class TailAssessableConstraintKernel(ApplicationKernel):
     application_id = self.application_id
     val = self.val
 
-    operator = trace_handle.get_request(pair(application_id, 0))
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.value_at(addr)
 
     operands = []
     for index in range(len(self.operand_exps)):
-      operand = trace_handle.get_request(pair(application_id, index+1))
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operands.append(trace_handle.value_at(addr))
 
     result_addr = trace_handle.request_address(application_id)
     (weight, output) = trace_handle.trace.regen_kernel(
@@ -185,13 +190,14 @@ class TailAssessableConstraintKernel(ApplicationKernel):
     application_id = self.application_id
     val = self.val
 
-    operator = trace_handle.restore_request(pair(application_id, 0))
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.restore_request(addr)
 
     operands = []
     for index in range(len(self.operand_exps)):
-      operand = trace_handle.restore_request(pair(application_id, index+1))
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operand = trace_handle.restore_request(addr)
+      operands.append(operand)
 
     result_addr = trace_handle.request_address(application_id)
     output = trace_handle.trace.restore_kernel(
@@ -203,9 +209,7 @@ class TailAssessableConstraintKernel(ApplicationKernel):
 class MakeTailAssessableSP(VentureSP):
   def apply(self, trace_handle, _id, inputs):
     assert len(inputs) == 1
-    sp = trace_handle.value_at(
-      trace_handle.trace.deref_sp(
-        trace_handle.value_at(inputs[0])))
+    sp = trace_handle.trace.deref_sp(inputs[0].value).value
     assert isinstance(sp, CompoundSP)
     return TailAssessableCompoundSP(
       sp.params, sp.exp[0], sp.exp[1:], sp.env)

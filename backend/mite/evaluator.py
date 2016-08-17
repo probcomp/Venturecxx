@@ -100,21 +100,20 @@ class TraceHandle(object):
     return self.PRNG(self.trace.py_prng, self.trace.np_prng)
 
   def request_address(self, request_id):
+    # if the request_id is a foreign blob, unpack it
+    # (this happens when using the make_sp interface from Venture)
+    import venture.lite.types as t
+    if request_id in t.Blob:
+      request_id = t.Blob.asPython(request_id)
     return addresses.request(self.sp_addr, request_id)
 
-  def new_request(self, request_id, exp, env):
-    addr = self.request_address(request_id)
-    w, value = self.trace.eval_request(addr, exp, env)
-    assert w == 0
-    return Node(addr, value)
+  def eval_request(self, addr, exp, env):
+    value = self.trace.eval_request(addr, exp, env)
+    return value
 
-  def get_request(self, request_id):
-    addr = self.request_address(request_id)
+  def value_at(self, addr):
     value = self.trace.value_at(addr)
-    return Node(addr, value)
-
-  def value_at(self, node):
-    return node.value
+    return value
 
 
 class Regenerator(Evaluator):
@@ -256,16 +255,14 @@ class RegeneratingTraceHandle(TraceHandle):
       trace, sp_addr)
     self.regenerator = regenerator
 
-  def free_request(self, request_id):
-    addr = self.request_address(request_id)
+  def uneval_request(self, addr):
     w = self.regenerator.uneval_request(addr)
     assert w == 0
 
-  def restore_request(self, request_id):
-    addr = self.request_address(request_id)
+  def restore_request(self, addr):
     w, value = self.regenerator.restore_request(addr)
     assert w == 0
-    return Node(addr, value)
+    return value
 
 
 # TODO maybe move this to a separate file

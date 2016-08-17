@@ -18,7 +18,7 @@ class MakeFullSP(VentureSP):
     helper_trace = BlankTrace(seed)
     addr = helper_trace.next_base_address()
     names = ['var{}'.format(i) for i in range(len(ctor_inputs))]
-    values = [Node(None, VentureAddressed(arg, trace_handle.value_at(arg)))
+    values = [Node(None, VentureAddressed(arg, arg.value))
               for arg in ctor_inputs]
     expr = [constructor] + names
     env = VentureEnvironment(helper_trace.global_env, names, values)
@@ -67,8 +67,7 @@ class MadeFullSP(VentureSP):
               [['lookup', 'the_sp', ['quote', method]]] + names],
              ['lookup', 'the_sp', ['quote', 'state']]]]
     env = VentureEnvironment(helper_trace.global_env, names, values)
-    w, value = helper_trace.eval_request(addr, expr, env)
-    assert w == 0
+    value = helper_trace.eval_request(addr, expr, env)
     return value
 
 class ProxyKernel(ApplicationKernel):
@@ -102,8 +101,7 @@ class ProxyKernel(ApplicationKernel):
               [['lookup', 'the_kernel', ['quote', method]]] + names],
              ['lookup', 'the_sp', ['quote', 'trace']]]]
     env = VentureEnvironment(self.env, names, values)
-    w, value = helper_trace.eval_request(addr, expr, env)
-    assert w == 0
+    value = helper_trace.eval_request(addr, expr, env)
     return value
 
 registerBuiltinSP("make_full_sp", MakeFullSP())

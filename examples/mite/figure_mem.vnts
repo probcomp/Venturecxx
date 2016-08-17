@@ -42,8 +42,9 @@ define mem = (f) -> {
 	     let env = extend_environment(
 	       get_empty_environment(), 'f', address_of(f));
 	     y <- with(trace_handle, {
-	       addr <- new_request(x, exp, env);
-	       value_at(addr)
+	       addr <- request_address(x);
+	       value <- eval_request(addr, exp, env);
+	       return (value)
 	     });
 	     mem_assoc(x, y);
 	     mem_incr(x);

@@ -75,7 +75,6 @@ class DefaultProposalKernel(ApplicationKernel):
 class SimulationSP(VentureSP):
   @override(VentureSP)
   def apply(self, trace_handle, _application_id, inputs):
-    # TODO: use trace_handle.value_at to unpack the input nodes
     input_values = [node.value for node in inputs]
     output = self.simulate(input_values, trace_handle.prng())
     self.incorporate(output, input_values)
