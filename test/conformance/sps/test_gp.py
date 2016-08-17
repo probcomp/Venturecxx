@@ -161,6 +161,7 @@ def testNormalParameters():
 @in_backend('none')
 @statisticalTest
 def testOneSample(seed):
+  np_rng = npr.RandomState(seed)
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   test_input = 1.4
@@ -177,8 +178,8 @@ def testOneSample(seed):
   # mean expect_mu.
   n = default_num_samples(4)
   def sample():
-    return gp._gp_sample(mean, covariance, observations, [test_input],
-                         npr.RandomState(seed))[0]
+    s = gp._gp_sample(mean, covariance, observations, [test_input], np_rng)
+    return s[0]
   samples = np.array([sample() for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
@@ -186,6 +187,7 @@ def testOneSample(seed):
 @in_backend('none')
 @statisticalTest
 def testTwoSamples_low_covariance(seed):
+  np_rng = npr.RandomState(seed)
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   in_lo_cov = np.array([1.4, -20.0])
@@ -207,8 +209,7 @@ def testTwoSamples_low_covariance(seed):
   lo_cov_x = []
   lo_cov_y = []
   for i in range(n):
-    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov,
-                         npr.RandomState(seed))
+    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov, np_rng)
     lo_cov_x.append(x)
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)
