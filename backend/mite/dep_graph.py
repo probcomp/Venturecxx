@@ -280,7 +280,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
       if addr == principal_address:
         kernels[addr] = principal_kernel
         propagate = True
-      if node.operator_addr in drg:
+      elif node.operator_addr in drg:
         # operator changed
         kernels[addr] = {'type': 'proposal'}
         propagate = True
