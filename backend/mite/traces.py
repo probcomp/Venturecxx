@@ -129,16 +129,14 @@ class AbstractTrace(ITrace):
     selector = eval(code, vars(addresses), ctx)
     return Scaffold(selector)
 
-  def single_site_subproblem(self, address):
-    scaffold = single_site_scaffold(self, address)
+  def single_site_subproblem(self, address, kernel=None):
+    scaffold = single_site_scaffold(self, address, kernel)
     assert scaffold.kernels
     return scaffold
 
   def single_site_constraint(self, address, value):
     kernel = {'type': 'constraint', 'val': value}
-    scaffold = single_site_scaffold(self, address, kernel)
-    assert scaffold.kernels
-    return scaffold
+    return self.single_site_subproblem(address, kernel)
 
   def register_observation(self, addr, value):
     self.observations[addr] = value

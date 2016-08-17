@@ -106,8 +106,8 @@ class DependencyGraphTrace(AbstractTrace):
     self.results[addr] = sp
     return sp
 
-  def single_site_subproblem(self, address):
-    return single_site_scaffold(self, address)
+  def single_site_subproblem(self, address, kernel=None):
+    return single_site_scaffold(self, address, kernel)
 
   def extract(self, subproblem):
     x = DependencyGraphRegenerator(self, subproblem)
