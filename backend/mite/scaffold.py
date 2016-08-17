@@ -35,7 +35,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # requests it makes.
 
   kernels = OrderedDict()
-  affected = set()
+  drg = set()
 
   if principal_kernel is None:
     principal_kernel = {'type': 'proposal'}
@@ -44,9 +44,9 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
     import venture.lite.exp as e
     if e.isVariable(exp):
       result_node = env.findSymbol(exp)
-      if result_node.address in affected:
+      if result_node.address in drg:
         kernels[addr] = {'type': 'propagate_lookup'}
-        affected.add(addr)
+        drg.add(addr)
     elif (e.isSelfEvaluating(exp) or
           e.isQuotation(exp) or
           e.isLambda(exp)):
@@ -57,14 +57,14 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
       for index, subexp in enumerate(exp):
         subaddr = addresses.subexpression(index, addr)
         traverse(subaddr, subexp, env)
-        parents_affected.append(subaddr in affected)
+        parents_affected.append(subaddr in drg)
       if addr == principal_address:
         kernels[addr] = principal_kernel
-        affected.add(addr)
+        drg.add(addr)
       elif parents_affected[0]:
         # operator changed
         kernels[addr] = {'type': 'proposal'}
-        affected.add(addr)
+        drg.add(addr)
       elif any(parents_affected[1:]):
         sp_ref = trace.value_at(addresses.subexpression(0, addr))
         sp = trace.deref_sp(sp_ref).value
@@ -72,7 +72,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         kernel = sp.constraint_kernel(None, addr, val)
         if kernel is NotImplemented or likelihood_free_lite_sp(sp):
           kernels[addr] = {'type': 'proposal'}
-          affected.add(addr)
+          drg.add(addr)
         else:
           kernels[addr] = {'type': 'constraint', 'val': val}
 
