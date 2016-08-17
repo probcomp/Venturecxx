@@ -59,7 +59,6 @@ class DependencyGraphTrace(AbstractTrace):
     self.results = OrderedDict()
     self.made_sps = {}
     self.nodes = {}
-    self.children = {}
     super(DependencyGraphTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
