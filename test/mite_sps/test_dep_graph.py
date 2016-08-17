@@ -40,3 +40,25 @@ def testESREdge():
   assert_equal(x, y)
   assert_not_equal(x, x_)
   assert_equal(x_, y_)
+
+@on_inf_prim("none")
+def testRecursion():
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in
+ (do (assume x (normal 0 1))
+     (assume f (lambda (i) (if (= i 0) x (f (- i 1)))))
+     (assume y (f 2))
+     (predict (list x y))
+     (xy <- (value_at (toplevel 4)))
+     (s <- (single_site_subproblem (toplevel 1)))
+     (p <- (extract s))
+     (regen s (rest p))
+     (xy_ <- (value_at (toplevel 4)))
+     (return (list xy xy_)))
+ (graph_trace))
+""")
+  (x, y), (x_, y_) = result
+  assert_equal(x, y)
+  assert_not_equal(x, x_)
+  assert_equal(x_, y_)
