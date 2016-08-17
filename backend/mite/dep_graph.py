@@ -106,6 +106,9 @@ class DependencyGraphTrace(AbstractTrace):
     self.results[addr] = sp
     return sp
 
+  def single_site_subproblem(self, address):
+    return single_site_scaffold(self, address)
+
   def extract(self, subproblem):
     x = DependencyGraphRegenerator(self, subproblem)
     weight = x.extract_subproblem()
@@ -191,3 +194,77 @@ class DependencyGraphRegenerator(Regenerator):
 
 class DependencyGraphRestorer(DependencyGraphRegenerator, Restorer):
   pass
+
+
+def single_site_scaffold(trace, principal_address, principal_kernel=None):
+  # dependency aware implementation to find a single-site scaffold.
+  # somewhat brittle.
+
+  assert isinstance(trace, DependencyGraphTrace)
+
+  q = [(principal_address, None)]
+  drg = set()
+  kernels = {}
+  regen_parents = {principal_address: set()}
+
+  if principal_kernel is None:
+    principal_kernel = {'type': 'proposal'}
+
+  def likelihood_free_lite_sp(sp):
+    from venture.mite.sps.lite_sp import LiteSP
+    if isinstance(sp, LiteSP):
+      return not sp.wrapped_sp.outputPSP.canAbsorb(None, None, None)
+    else:
+      return False
+
+  while q:
+    addr, parent = q.pop()
+    if parent is not None:
+      regen_parents.setdefault(addr, set()).add(parent)
+    if addr in drg:
+      continue
+
+    node = trace.nodes[addr]
+    propagate = False
+
+    if isinstance(node, LookupNode):
+      assert node.orig_addr == parent
+      kernels[addr] = {'type': 'propagate_lookup'}
+      propagate = True
+    else:
+      # SP application
+      assert isinstance(node, ApplicationNode)
+      if addr == principal_address:
+        kernels[addr] = principal_kernel
+        propagate = True
+      if node.operator_addr in drg:
+        # operator changed
+        kernels[addr] = {'type': 'proposal'}
+        propagate = True
+      elif any(operand in drg for operand in node.operand_addrs):
+        # operands changed
+        sp_ref = trace.value_at(node.operator_addr)
+        sp = trace.deref_sp(sp_ref).value
+        val = trace.value_at(addr)
+        kernel = sp.constraint_kernel(None, addr, val)
+        if kernel is NotImplemented or likelihood_free_lite_sp(sp):
+          kernels[addr] = {'type': 'proposal'}
+          propagate = True
+        else:
+          kernels[addr] = {'type': 'constraint', 'val': val}
+
+    if propagate:
+      drg.add(addr)
+      for child in node.children:
+        q.append((child, addr))
+
+  from venture.mite.scaffold import Scaffold
+  from collections import OrderedDict
+  # XXX remove dependency on toposort
+  import toposort
+  assert set(kernels) == set(regen_parents)
+  kernels = OrderedDict([
+    (addr, kernels[addr])
+    for addr in toposort.toposort_flatten(regen_parents)
+  ])
+  return Scaffold(kernels)
