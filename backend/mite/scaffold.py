@@ -19,6 +19,9 @@ class Scaffold(object):
     elif kernel['type'] == 'constraint':
       val = kernel['val']
       return sp.constraint_kernel(trace_handle, address, val)
+    elif kernel['type'] == 'propagate_request':
+      parent = kernel['parent']
+      return sp.propagating_kernel(trace_handle, address, parent)
 
 class DefaultAllScaffold(object):
   def kernel_at(self, sp, trace_handle, address):

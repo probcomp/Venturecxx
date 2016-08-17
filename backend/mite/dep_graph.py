@@ -253,7 +253,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         else:
           kernels[addr] = {'type': 'constraint', 'val': val}
       elif isinstance(parent, addresses.request) and addr == parent.request_id:
-        kernels[addr] = {'type': 'propagate_request'}
+        kernels[addr] = {'type': 'propagate_request', 'parent': parent}
         propagate = True
 
     if propagate:
