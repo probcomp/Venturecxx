@@ -201,3 +201,24 @@ def testSelectRegen4(trace):
   assert_equal(y, y_)
   assert_almost_equal(weight, (scipy.stats.norm(0, 1).logpdf(2) +
                                scipy.stats.norm(2, 1).logpdf(y_)))
+
+@gen_on_inf_prim("none")
+@gen_for_each(["flat_trace", "graph_trace"])
+def testSelectRegenLambda1(trace):
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(run_in (do (assume x (normal 0 1))
+            (assume y ((lambda () (normal 0 1))))
+            (x <- (predict x))
+            (y <- (predict y))
+            (s <- (single_site_subproblem (toplevel 2)))
+            (weight_and_fragment <- (extract s))
+            (regen s (rest weight_and_fragment))
+            (x_ <- (predict x))
+            (y_ <- (predict y))
+            (return (list x x_ y y_)))
+        (%s))
+""" % trace)
+  (x, x_, y, y_) = result
+  assert_equal(x, x_)
+  assert_not_equal(y, y_)
