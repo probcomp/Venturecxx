@@ -118,7 +118,7 @@ def repeatTest(func, seed, *args, **kwargs):
     return result
   if result.pval > 0.05:
     return result
-  elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
+  elif fisherMethod([result.pval] + [1.0]*4) < globalReportingThreshold:
     # Hopeless
     return result
   else:
