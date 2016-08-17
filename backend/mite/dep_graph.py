@@ -109,6 +109,35 @@ class DependencyGraphTrace(AbstractTrace):
   def single_site_subproblem(self, address, kernel=None):
     return single_site_scaffold(self, address, kernel)
 
+  def unregister_request(self, addr):
+    del self.requests[addr]
+
+  def unregister_constant(self, addr):
+    del self.results[addr]
+    del self.nodes[addr]
+
+  def unregister_lookup(self, addr):
+    node = self.nodes[addr]
+    self.remove_child_at(node.orig_addr, addr)
+    del self.results[addr]
+    del self.nodes[addr]
+
+  def unregister_application(self, addr):
+    node = self.nodes[addr]
+    for parent_addr in node.parents():
+      self.remove_child_at(parent_addr, addr)
+    del self.nodes[addr]
+    del self.results[addr]
+
+  def remove_child_at(self, parent_addr, child_addr):
+    self.nodes[parent_addr].children.remove(child_addr)
+
+  def unregister_made_sp(self, addr):
+    sp = self.made_sps[addr]
+    del self.made_sps[addr]
+    self.results[addr] = sp
+    return sp
+
   def extract(self, subproblem):
     x = DependencyGraphRegenerator(self, subproblem)
     weight = x.extract_subproblem()
