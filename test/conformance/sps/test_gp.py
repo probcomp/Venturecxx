@@ -31,6 +31,7 @@ from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import reportPearsonIndependence
 from venture.test.stats import statisticalTest
+from venture.test.stats import stochasticTest
 import venture.lite.covariance as cov
 import venture.lite.gp as gp
 import venture.lite.value as v
@@ -213,3 +214,20 @@ def testTwoSamples_low_covariance(seed):
     lo_cov_x.append(x)
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)
+
+@stochasticTest
+def test_gradients(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('s', '(normal 0 1)')
+  ripl.assume('alpha', '(gs_expon_1)')
+  ripl.assume('cov', '(gp_cov_scale (* s s) (gp_cov_se alpha))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp 0)', '1')
+  ripl.observe('(gp 1)', '2')
+  ripl.observe('(gp 2)', '4')
+  ripl.observe('(gp 3)', '8')
+  ripl.infer('(grad_ascent default one 0.1 10 10)')

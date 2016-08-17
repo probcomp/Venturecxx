@@ -20,7 +20,12 @@ from collections import OrderedDict
 
 import numpy as np
 
+from venture.lite.exception import VentureValueError
+from venture.lite.function import ParamLeaf
+from venture.lite.function import ParamProduct
 from venture.lite.function import VentureFunction
+from venture.lite.function import VentureTangentFunction
+from venture.lite.function import parameter_nest
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -53,6 +58,22 @@ def _gp_logDensityOfData(mean, covariance, samples):
   mu = _gp_mean(mean, xs)
   sigma = _gp_covariance(covariance, xs, xs)
   return mvnormal.logpdf(np.asarray(os), mu, sigma)
+
+def _gp_gradientOfLogDensityOfData(mean, dmean, covariance, dcovariance,
+    samples):
+  if len(samples) == 0:
+    return 0
+  xs = np.asarray(samples.keys())
+  os = np.asarray(samples.values())
+  mu = mean(xs)
+  dmu = dmean(xs)
+  sigma = covariance(xs, xs)
+  dsigma = dcovariance(xs, xs)
+  d_dmu, d_dsigma = mvnormal.dlogpdf(os, mu, dmu, sigma, dsigma)
+  return [
+    v.VentureArrayUnboxed(d_dmu, t.NumberType()),
+    v.VentureArrayUnboxed(d_dsigma, t.NumberType()),
+  ]
 
 def _gp_mvnormal(mean, covariance, samples, xs):
   if len(samples) == 0:
@@ -177,6 +198,19 @@ class MakeGPOutputPSP(DeterministicMakerAAAPSP):
     (mean, covariance) = args.operandValues()
     return VentureSPRecord(GPSP(mean, covariance))
 
+  def gradientOfLogDensityOfData(self, aux, args):
+    mean, covariance = args.operandValues()
+    if not isinstance(mean, VentureTangentFunction):
+      raise VentureValueError('Non-differentiable GP mean: %r' % (mean,))
+    if not isinstance(covariance, VentureTangentFunction):
+      raise VentureValueError('Non-differentiable GP covariance kernel: %r'
+        % (covariance,))
+    dmean = mean.df
+    dcovariance = covariance.df
+    samples = aux.samples
+    return _gp_gradientOfLogDensityOfData(
+      mean, dmean, covariance, dcovariance, samples)
+
   def childrenCanAAA(self): return True
 
   def description(self, _name=None):
@@ -211,6 +245,21 @@ def _mean_maker(f, argtypes):
     meanFunctionType("mean function"),
     descr=f.__doc__)
 
+def _mean_grad_maker(f, df, s, argtypes):
+  def F(*x):
+    return VentureTangentFunction(f(*x), df(*x), s(*x), sp_type=meanType)
+  return deterministic_typed(
+    F,
+    argtypes,
+    meanFunctionType("mean function"),
+    sim_grad=_mean_gradientOfSimulate(F),
+    descr=f.__doc__)
+
+def _mean_gradientOfSimulate(F):
+  def gradientOfSimulate(args, direction):
+    return parameter_nest(F(*args).parameters, direction.getArray())
+  return gradientOfSimulate
+
 def _cov_maker(f, argtypes):
   return deterministic_typed(
     lambda *x: VentureFunction(f(*x), sp_type=covarianceType),
@@ -218,51 +267,85 @@ def _cov_maker(f, argtypes):
     covarianceFunctionType("covariance kernel"),
     descr=f.__doc__)
 
+def _cov_grad_maker(f, df, s, argtypes):
+  def F(*x):
+    return VentureTangentFunction(f(*x), df(*x), s(*x), sp_type=covarianceType)
+  return deterministic_typed(
+    F,
+    argtypes,
+    covarianceFunctionType("covariance kernel"),
+    sim_grad=_cov_gradientOfSimulate(F),
+    descr=f.__doc__)
+
+def _cov_gradientOfSimulate(F):
+  def gradientOfSimulate(args, direction):
+    return parameter_nest(F(*args).parameters, direction.getArray())
+  return gradientOfSimulate
+
+def shape_reals(*x):
+  return [ParamLeaf() for _ in x]
+def shape_scalarkernel(n, p):
+  assert isinstance(p, VentureTangentFunction)
+  return [ParamLeaf(), ParamProduct(p.parameters)]
+def shape_kernels(*ps):
+  assert all(isinstance(p, VentureTangentFunction) for p in ps)
+  return [ParamProduct(p.parameters) for p in ps]
+
 def mean_const(c):
   "Constant mean function, everywhere equal to c."
   return lambda x: c*np.ones(x.shape)
 
+def d_mean_const(c):
+  return lambda x: [np.ones(x.shape)]
+
 registerBuiltinSP("gp_mean_const",
-    _mean_maker(mean_const, [t.NumberType("c")]))
+  _mean_grad_maker(mean_const, d_mean_const, shape_reals, [t.NumberType("c")]))
 
 registerBuiltinSP("gp_cov_const",
-    _cov_maker(cov.const, [t.NumberType("c")]))
+  _cov_grad_maker(cov.const, cov.d_const, shape_reals, [t.NumberType("c")]))
 
 registerBuiltinSP("gp_cov_delta",
-    _cov_maker(cov.delta, [t.NumberType("tolerance")]))
+  _cov_maker(cov.delta, [t.NumberType("tolerance")]))
 
-registerBuiltinSP("gp_cov_se", _cov_maker(cov.se, [t.NumberType("l^2")]))
+registerBuiltinSP("gp_cov_se",
+  _cov_grad_maker(cov.se, cov.d_se, shape_reals, [t.NumberType("l^2")]))
 
 registerBuiltinSP("gp_cov_periodic",
-    _cov_maker(cov.periodic, [t.NumberType("l^2"), t.NumberType("T")]))
+  _cov_grad_maker(
+    cov.periodic, cov.d_periodic, shape_reals,
+    [t.NumberType("l^2"), t.NumberType("T")]))
 
 registerBuiltinSP("gp_cov_rq",
-    _cov_maker(cov.rq, [t.NumberType("l^2"), t.NumberType("alpha")]))
+  _cov_maker(cov.rq, [t.NumberType("l^2"), t.NumberType("alpha")]))
 
 registerBuiltinSP("gp_cov_matern",
-    _cov_maker(cov.matern, [t.NumberType("l^2"), t.NumberType("df")]))
+  _cov_maker(cov.matern, [t.NumberType("l^2"), t.NumberType("df")]))
 
 registerBuiltinSP("gp_cov_matern_32",
-    _cov_maker(cov.matern_32, [t.NumberType("l^2")]))
+  _cov_maker(cov.matern_32, [t.NumberType("l^2")]))
 
 registerBuiltinSP("gp_cov_matern_52",
-    _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
+  _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
 
 registerBuiltinSP("gp_cov_linear",
-    _cov_maker(cov.linear, [xType]))
+  _cov_maker(cov.linear, [xType]))
 
 registerBuiltinSP("gp_cov_bias",
-    _cov_maker(cov.bias, [t.NumberType("s^2"), covarianceFunctionType("k")]))
+  _cov_grad_maker(
+    cov.bias, cov.d_bias, shape_scalarkernel,
+    [t.NumberType("s^2"), covarianceFunctionType("k")]))
 
 registerBuiltinSP("gp_cov_scale",
-    _cov_maker(cov.scale, [t.NumberType("s^2"), covarianceFunctionType("k")]))
+  _cov_grad_maker(
+    cov.scale, cov.d_scale, shape_scalarkernel,
+    [t.NumberType("s^2"), covarianceFunctionType("k")]))
 
 registerBuiltinSP("gp_cov_sum",
-    _cov_maker(
-      cov.sum,
-      [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))
+  _cov_grad_maker(
+    cov.sum, cov.d_sum, shape_kernels,
+    [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))
 
 registerBuiltinSP("gp_cov_product",
-    _cov_maker(
-      cov.product,
-      [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))
+  _cov_grad_maker(
+    cov.product, cov.d_product, shape_kernels,
+    [covarianceFunctionType("k_a"), covarianceFunctionType("k_b")]))

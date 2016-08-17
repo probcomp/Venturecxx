@@ -28,6 +28,11 @@ def const(c):
     return c*np.ones((len(x_1), len(x_2)))
   return k
 
+def d_const(c):
+  def k(_x_1, _x_2):
+    return [c]
+  return k
+
 # Isotropic covariance kernels
 
 def isotropic(f):
@@ -51,15 +56,33 @@ def se(l2):
   """Squared-exponential kernel: e^(-r^2 / (2 l^2))"""
   return isotropic(lambda r2: _se(r2, l2))
 
+def _d_se_l2(r2, l2):
+  """d/d(l^2) of squared exponential kernel."""
+  return _se(r2, l2) * -0.5 * r2 / (l2*l2)
+
+def d_se(l2):
+  return isotropic(lambda r2: [_d_se_l2(r2, l2)])
+
 def periodic(l2, T):
   """Periodic kernel: e^(-(2 sin(2pi r / T))^2 / (2 l^2))"""
   sin = np.sin
   pi = np.pi
   sqrt = np.sqrt
   def f(r2):
-    r = 2.*sin(2.*pi*sqrt(r2)/T)
-    return _se(r**2, l2)
+    d = 2.*sin(2.*pi*sqrt(r2)/T)
+    return _se(d**2, l2)
   return isotropic(f)
+
+def d_periodic(l2, T):
+  cos = np.cos
+  pi = np.pi
+  sin = np.sin
+  sqrt = np.sqrt
+  def df(r2):
+    t = 2.*pi*sqrt(r2)/T
+    d2 = (2.*sin(t))**2
+    return [_d_se_l2(d2, l2), _se(d2, l2) * (4/(l2*T)) * t * sin(t) * cos(t)]
+  return isotropic(df)
 
 def rq(l2, alpha):
   """Rational quadratic kernel: (1 + r^2/(2 alpha l^2))^-alpha"""
@@ -98,6 +121,11 @@ def linear(x):
     return np.outer(x_1 - x, x_2 - x)
   return k
 
+def d_linear(x):
+  def dk(x_1, x_2):
+    return [np.ones(x.shape)]
+  return dk
+
 # Composite covariance kernels
 
 def bias(s2, k):
@@ -107,14 +135,36 @@ def bias(s2, k):
   """
   return lambda x_1, x_2: s2 + k(x_1, x_2)
 
+def d_bias(s2, k):
+  def dk(x_1, x_2):
+    return [1] + k.df(x_1, x_2)
+  return dk
+
 def scale(s2, k):
   """Kernel k scaled by squared output factor s^2."""
   return lambda x_1, x_2: s2 * k(x_1, x_2)
+
+def d_scale(s2, k):
+  def dk(x_1, x_2):
+    return [k(x_1, x_2)] + [s2*dk_i for dk_i in k.df(x_1, x_2)]
+  return dk
 
 def sum(k_a, k_b):
   """Sum of kernels k_a and k_b."""
   return lambda x_1, x_2: k_a(x_1, x_2) + k_b(x_1, x_2)
 
+def d_sum(k_a, k_b):
+  return lambda x_1, x_2: k_a.df(x_1, x_2) + k_b.df(x_1, x_2)
+
 def product(k_a, k_b):
   """Product of kernels k_a and k_b."""
   return lambda x_1, x_2: k_a(x_1, x_2) * k_b(x_1, x_2)
+
+def d_product(k_a, k_b):
+  def dk(x_1, x_2):
+    ka = k_a(x_1, x_2)
+    kb = k_b(x_1, x_2)
+    dk_a = [dk_ai*kb for dk_ai in k_a.df(x_1, x_2)]
+    dk_b = [ka*dk_bi for dk_bi in k_b.df(x_1, x_2)]
+    return dk_a + dk_b
+  return dk
