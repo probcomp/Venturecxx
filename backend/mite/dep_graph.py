@@ -252,10 +252,18 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
           propagate = True
         else:
           kernels[addr] = {'type': 'constraint', 'val': val}
+      elif isinstance(parent, addresses.request) and addr == parent.request_id:
+        kernels[addr] = {'type': 'propagate_request'}
+        propagate = True
 
     if propagate:
       drg.add(addr)
-      for child in node.children:
+      request_children = []
+      if isinstance(addr, addresses.request):
+        # XXX STUB: hack in dependencies due to requests of compound SPs
+        if isinstance(addr.request_id, addresses.Address):
+          request_children = [addr.request_id]
+      for child in list(node.children) + request_children:
         q.append((child, addr))
 
   from venture.mite.scaffold import Scaffold

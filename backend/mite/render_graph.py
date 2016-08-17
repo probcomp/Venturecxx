@@ -15,9 +15,10 @@ def digraph(trace, scaffold, principal_nodes=None):
   dot = Digraph(name="A scaffold")
   for ad in scaffold.kernels.keys():
     ker = scaffold.kernels[ad]
+    color = None
     if ad in principal_nodes:
       color = 'red'
-    elif _kernel_type(ker) == 'proposal' or _kernel_type(ker) == 'propagate_lookup':
+    elif _kernel_type(ker) == 'proposal' or _kernel_type(ker) == 'propagate_lookup' or _kernel_type(ker) == 'propagate_request':
       color = 'yellow'
     elif _kernel_type(ker) == 'constraint':
       color = 'blue'
