@@ -17,6 +17,7 @@ class DependencyNode(object):
   def __init__(self, addr):
     self.address = addr
     self.children = set()
+    self.application_children = set() # the set of applications whose operator is this node
 
   def parents(self):
     raise NotImplementedError("Cannot get the parents of an abstract node.")
@@ -77,13 +78,20 @@ class DependencyGraphTrace(AbstractTrace):
   def register_application(self, addr, arity, value):
     parents = [addresses.subexpression(index, addr)
                for index in range(arity)]
-    self.nodes[addr] = ApplicationNode(addr, parents[0], parents[1:])
+    operator = parents[0]
+    operands = parents[1:]
+    self.nodes[addr] = ApplicationNode(addr, operator, operands)
     self.results[addr] = value
-    for parent_addr in parents:
-      self.add_child_at(parent_addr, addr)
+    self.add_application_child_at(operator, addr)
+    for operand in operands:
+      self.add_child_at(operand, addr)
 
   def add_child_at(self, parent_addr, child_addr):
     self.nodes[parent_addr].children.add(child_addr)
+
+  def add_application_child_at(self, parent_addr, child_addr):
+    self.nodes[parent_addr].children.add(child_addr)
+    self.nodes[parent_addr].application_children.add(child_addr)
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
@@ -123,13 +131,18 @@ class DependencyGraphTrace(AbstractTrace):
 
   def unregister_application(self, addr):
     node = self.nodes[addr]
-    for parent_addr in node.parents():
-      self.remove_child_at(parent_addr, addr)
+    self.remove_application_child_at(node.operator_addr, addr)
+    for operand in node.operand_addrs:
+      self.remove_child_at(operand, addr)
     del self.nodes[addr]
     del self.results[addr]
 
   def remove_child_at(self, parent_addr, child_addr):
     self.nodes[parent_addr].children.remove(child_addr)
+
+  def remove_application_child_at(self, parent_addr, child_addr):
+    self.nodes[parent_addr].children.remove(child_addr)
+    self.nodes[parent_addr].application_children.remove(child_addr)
 
   def unregister_made_sp(self, addr):
     sp = self.made_sps[addr]
