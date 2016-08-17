@@ -28,14 +28,14 @@ def render_trace(view):
 
 # The minimal scaffold around the bernoulli choice
 target1 = addr.directive(1)
-render(target1, "bernoulli", view=False)
+render(target1, "trace_bernoulli", view=False)
 
 # The minimal scaffold around the beta choice
 # Doesn't work because single_site_scaffold doesn't work on nodes that
 # were created by requests.
 target2 = addr.request(addr.subexpression(2, addr.subexpression(0, addr.directive(2))),
                        addr.directive(2))
-render(target2, "beta", view=False)
+render(target2, "trace_beta", view=False)
 
 # The whole trace
 render_trace(view=False)
