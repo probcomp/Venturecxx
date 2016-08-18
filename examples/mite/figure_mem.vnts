@@ -7,7 +7,7 @@ define make_sp = make_full_sp;
 
 // example usage
 
-define example_memoized_hmm = () -> {
+define example_mem_hmm = () -> {
   run_in({
     // import defs from toplevel environment
     assume make_sp = make_full_sp;
@@ -16,15 +16,47 @@ define example_memoized_hmm = () -> {
     assume x = mem((t) -> {
       if (t == 0) { flip() }
       else {
-	flip(biplex(x(t - 1), 0.9, 0.1))
+	bernoulli(biplex(x(t - 1), 0.9, 0.1))
       }
     });
     assume y = (t) -> {
-      flip(biplex(x(t), 0.7, 0.3))
+      bernoulli(biplex(x(t), 0.7, 0.3))
     };
-    assume ys = list(y(1), y(2), y(4), y(5), y(7), y(8));
+    assume ys = vector(y(1), y(2), y(4), y(5), y(7), y(8));
     value_at(toplevel(5))
   }, blank_trace())
+};
+
+define example_mem_hmm_regen = () -> {
+  run_in({
+    // import defs from toplevel environment
+    assume make_sp = make_full_sp;
+    assume mem = $mem;
+    // end defs
+    assume x = mem((t) -> {
+      if (t == 0) { flip() }
+      else {
+	bernoulli(biplex(x(t - 1), 0.9, 0.1))
+      }
+    });
+    assume y = (t) -> {
+      bernoulli(biplex(x(t), 0.7, 0.3))
+    };
+    predict vector(x(1), x(2), x(3), y(1), y(2), y(3));
+    xy <- value_at(toplevel(5));
+    _ = debug('xy', xy);
+    sp_addr = request(toplevel(2), toplevel(3));
+    s <- single_site_subproblem(request(sp_addr, 2));
+    repeat(20, {
+      p <- extract(s);
+      w <- regen(s, rest(p));
+      _ = debug('r', first(p));
+      _ = debug('x', w);
+      xy <- value_at(toplevel(5));
+      _ = debug('xy', xy);
+    });
+    return (nil)
+  }, graph_trace())
 };
 
 define mem = (f) -> {
@@ -50,6 +82,25 @@ define mem = (f) -> {
 	     mem_incr(x);
 	     return (y)
 	   }
+	 }],
+	 ['propagating_kernel', (trace_handle, app_id, parent) -> {
+	   addr <- with(trace_handle, {
+	     x <- value_at(subexpression(1, app_id));
+	     request_address(x)
+	   });
+	   return (dict(
+	     ['extract', (output, x) -> {
+	       return (pair(0, output))
+	     }],
+	     ['regen', (x) -> {
+	       output <- with(trace_handle, {
+		 value_at(addr)
+	       });
+	       return (pair(0, output))
+	     }],
+	     ['restore', (x, output) -> {
+	       return (output)
+	     }]))
 	 }])
   } |], f)
 };
