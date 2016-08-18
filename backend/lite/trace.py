@@ -142,7 +142,7 @@ class Trace(object):
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
     if isinstance(val, VentureSymbol):
-      if val.getSymbol() in ["default", "none", "one", "all", "each", "ordered"]:
+      if val.getSymbol() in ["default", "none", "one", "all", "each", "each_reverse", "ordered"]:
         return val.getSymbol()
     elif isinstance(val, VenturePair):
       if isinstance(val.first, VentureSymbol) and \
