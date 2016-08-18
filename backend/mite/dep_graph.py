@@ -108,11 +108,39 @@ class DependencyGraphTrace(AbstractTrace):
   def value_at(self, addr):
     return self.results[addr]
 
-  def unregister_made_sp(self, addr):
-    sp = self.made_sps[addr]
-    del self.made_sps[addr]
-    self.results[addr] = sp
-    return sp
+  ## low level ops for manual inference programming
+
+  def find_symbol(self, env, symbol):
+    node = env.findSymbol(symbol)
+    return node.address
+
+  def set_value_at(self, addr, value):
+    # low level operation. may leave the trace in an inconsistent state
+    self.results[addr] = value
+
+  def apply_sp(self, addr, sp_ref, input_values):
+    # TODO for now this auto-derefs the SP; is this what we want, or
+    # should we just expose deref_sp separately?
+    sp_node = self.deref_sp(sp_ref)
+    inputs = []
+    for index, val in enumerate(input_values):
+      subaddr = addresses.subexpression(index + 1, addr)
+      inputs.append(Node(subaddr, val))
+    (weight, output) = Evaluator(self).apply_sp(addr, sp_node, inputs)
+    assert weight == 0
+    return output
+
+  def log_density_of_sp(self, sp_ref, output, input_values):
+    sp_node = self.deref_sp(sp_ref)
+    sp = sp_node.value
+    return sp.log_density(output, input_values)
+
+  def invoke_metaprogram_of_sp(self, sp_ref, key, input_values):
+    sp_node = self.deref_sp(sp_ref)
+    sp = sp_node.value
+    return sp.run_in_helper_trace(key, input_values)
+
+  ## support for regen/extract
 
   def single_site_subproblem(self, address, kernel=None):
     return single_site_scaffold(self, address, kernel)
