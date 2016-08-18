@@ -46,6 +46,19 @@ class MadeFullSP(VentureSP):
     kernel_dict = self.run_in_helper_trace('proposal_kernel', [handle, app_id])
     return ProxyKernel(self.helper_trace, kernel_dict)
 
+  def constraint_kernel(self, trace_handle, app_id, val):
+    handle = t.Blob.asVentureValue(trace_handle)
+    app_id = t.Blob.asVentureValue(app_id)
+    kernel_dict = self.run_in_helper_trace('constraint_kernel', [handle, app_id, val])
+    return ProxyKernel(self.helper_trace, kernel_dict)
+
+  def propagating_kernel(self, trace_handle, app_id, parent):
+    handle = t.Blob.asVentureValue(trace_handle)
+    app_id = t.Blob.asVentureValue(app_id)
+    parent = t.Blob.asVentureValue(parent)
+    kernel_dict = self.run_in_helper_trace('propagating_kernel', [handle, app_id, parent])
+    return ProxyKernel(self.helper_trace, kernel_dict)
+
   def run_in_helper_trace(self, method, inputs):
     helper_trace = self.helper_trace
     addr = helper_trace.next_base_address()
