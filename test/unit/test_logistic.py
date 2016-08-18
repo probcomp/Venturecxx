@@ -20,7 +20,10 @@ from __future__ import division
 import numpy as np
 
 from venture.lite.utils import T_logistic
+from venture.lite.utils import careful_exp
 from venture.lite.utils import d_log_logistic
+from venture.lite.utils import d_logistic
+from venture.lite.utils import log_d_logistic
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 
@@ -30,7 +33,7 @@ def relerr(expected, actual):
   else:
     return abs((actual - expected)/expected)
 
-def check(x, Lx, dLx, logLx, dlogLx):
+def check(x, Lx, dLx, logLx, dlogLx, logdLx):
   assert relerr(Lx, logistic(x)) < 1e-15
   if Lx < 1:
     assert relerr(1 - Lx, logistic(-x)) < 1e-15
@@ -42,7 +45,13 @@ def check(x, Lx, dLx, logLx, dlogLx):
   else:
     assert T_logistic(-x)[0] < 1e-300
   assert relerr(dLx, T_logistic(x)[1]) < 1e-15
+  assert relerr(dLx, d_logistic(x)) < 1e-15
+  assert relerr(dLx, careful_exp(log_d_logistic(x))) < 1e-15
+  assert relerr(logdLx, log_d_logistic(x)) < 1e-15
   assert relerr(dLx, T_logistic(-x)[1]) < 1e-15
+  assert relerr(dLx, d_logistic(-x)) < 1e-15
+  assert relerr(dLx, careful_exp(log_d_logistic(x))) < 1e-15
+  assert relerr(logdLx, log_d_logistic(x)) < 1e-15
   assert relerr(logLx, log_logistic(x)) < 1e-15
   if Lx < 1:
     assert relerr(np.log1p(-Lx), log_logistic(-x)) < 1e-15
@@ -53,24 +62,79 @@ def check(x, Lx, dLx, logLx, dlogLx):
     assert d_log_logistic(-x) < 1e-300
 
 def testLogistic():
-  check(0, 1/2, 1/4, np.log(1/2), 1/2)
-  check(-1, 0.2689414213699951, 0.19661193324148185, -1.3132616875182228,
-    0.7310585786300049)
-  check(+1, 0.7310585786300049, 0.19661193324148185, -0.3132616875182228,
-    0.2689414213699951)
-  check(+710, 1, 4.4762862256751298e-309, -4.4762862256751298e-309,
-    4.4762862256751298e-309)
-  check(-710, 4.4762862256751298e-309, 4.4762862256751298e-309, -710, 1)
-  check(+1000, 1, 0, 0, 0)
-  check(-1000, 0, 0, -1000, 1)
-  check(1e308, 1, 0, 0, 0)
-  check(-1e308, 0, 0, -1e308, 1)
+  check(0,
+    Lx=1/2,
+    dLx=1/4,
+    logLx=np.log(1/2),
+    dlogLx=1/2,
+    logdLx=np.log(1/4),
+  )
+  check(-1,
+    Lx=0.2689414213699951,
+    dLx=0.19661193324148185,
+    logLx=-1.3132616875182228,
+    dlogLx=0.7310585786300049,
+    logdLx=-1.6265233750364456,
+  )
+  check(+1,
+    Lx=0.7310585786300049,
+    dLx=0.19661193324148185,
+    logLx=-0.3132616875182228,
+    dlogLx=0.2689414213699951,
+    logdLx=-1.6265233750364456,
+  )
+  check(+710,
+    Lx=1,
+    dLx=4.4762862256751298e-309,
+    logLx=-4.4762862256751298e-309,
+    dlogLx=4.4762862256751298e-309,
+    logdLx=-710,
+  )
+  check(-710,
+    Lx=4.4762862256751298e-309,
+    dLx=4.4762862256751298e-309,
+    logLx=-710,
+    dlogLx=1,
+    logdLx=-710,
+  )
+  check(+1000,
+    Lx=1,
+    dLx=0,
+    logLx=0,
+    dlogLx=0,
+    logdLx=-1000,
+  )
+  check(-1000,
+    Lx=0,
+    dLx=0,
+    logLx=-1000,
+    dlogLx=1,
+    logdLx=-1000,
+  )
+  check(1e308,
+    Lx=1,
+    dLx=0,
+    logLx=0,
+    dlogLx=0,
+    logdLx=-1e308,
+  )
+  check(-1e308,
+    Lx=0,
+    dLx=0,
+    logLx=-1e308,
+    dlogLx=1,
+    logdLx=-1e308,
+  )
 
   inf = float('inf')
   assert logistic(inf) == 1
   assert logistic(-inf) == 0
   assert T_logistic(inf) == (1, 0)
   assert T_logistic(-inf) == (0, 0)
+  assert d_logistic(inf) == 0
+  assert d_logistic(-inf) == 0
+  assert log_d_logistic(inf) == -inf
+  assert log_d_logistic(-inf) == -inf
   assert log_logistic(inf) == 0
   assert log_logistic(-inf) == -inf
   assert d_log_logistic(inf) == 0
@@ -80,5 +144,7 @@ def testLogistic():
   assert np.isnan(logistic(nan))
   assert np.isnan(T_logistic(nan)[0])
   assert np.isnan(T_logistic(nan)[1])
+  assert np.isnan(d_logistic(nan))
+  assert np.isnan(log_d_logistic(nan))
   assert np.isnan(log_logistic(nan))
   assert np.isnan(d_log_logistic(nan))
