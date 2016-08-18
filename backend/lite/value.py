@@ -634,7 +634,7 @@ class VentureArray(VentureValue):
   def __init__(self, array):
     self.array = array
   def __repr__(self):
-    return "VentureArray(%s)" % self.array
+    return "VentureArray(%s)" % (self.array,)
   def getArray(self, elt_type=None):
     if elt_type is None: # No conversion
       return self.array

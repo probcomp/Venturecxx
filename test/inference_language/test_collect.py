@@ -35,8 +35,8 @@ def extract_from_dataset(result, names):
 
 @statisticalTest
 @on_inf_prim("collect") # Technically also MH, but not testing it
-def testCollectSmoke1():
-  ripl = get_ripl()
+def testCollectSmoke1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   prog = """
 (let ((d (empty)))
@@ -49,8 +49,8 @@ def testCollectSmoke1():
 
 @statisticalTest
 @on_inf_prim("collect")
-def testCollectSmoke2():
-  ripl = get_ripl()
+def testCollectSmoke2(seed):
+  ripl = get_ripl(seed=seed)
   prog = """
 (let ((d (empty)))
   (do (repeat %s (bind (collect (normal 0 1)) (curry into d)))
@@ -60,8 +60,8 @@ def testCollectSmoke2():
 
 @statisticalTest
 @on_inf_prim("collect")
-def testCollectSmoke3():
-  ripl = get_ripl()
+def testCollectSmoke3(seed):
+  ripl = get_ripl(seed=seed)
   prog = """
 (let ((d (empty)))
   (do (repeat %s (bind (collect (labelled (normal 0 1) label)) (curry into d)))
@@ -71,9 +71,9 @@ def testCollectSmoke3():
 
 @statisticalTest
 @on_inf_prim("collect") # Technically also resample and MH, but not testing them
-def testCollectSmoke4():
+def testCollectSmoke4(seed):
   # This is the example from examples/normal_plot.vnt
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.infer("(resample 10)")
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(normal x 1)")

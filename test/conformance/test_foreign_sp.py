@@ -74,10 +74,10 @@ def test_foreign_aaa_uc():
 
 @skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
-def test_foreign_aaa_infer():
+def test_foreign_aaa_infer(seed):
     # Same as test.inference_quality.micro.test_misc_aaa.testMakeBetaBernoulli1
     builtins = builtin.builtInSPs()
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.bind_foreign_sp("test_beta_bernoulli", builtins["make_uc_beta_bernoulli"])
 
     ripl.assume("a", "(normal 10.0 1.0)")
@@ -106,11 +106,11 @@ def test_foreign_latents():
 
 @skipWhenInParallel("Calling into Lite from Puma is not thread-safe. Issue: https://app.asana.com/0/11127829865276/15184529953373")
 @statisticalTest
-def test_foreign_latents_infer():
+def test_foreign_latents_infer(seed):
     # Same as test.inference_quality.micro.test_latents.testHMMSP1
 
     builtins = builtin.builtInSPs()
-    ripl = get_ripl()
+    ripl = get_ripl(seed=seed)
     ripl.bind_foreign_sp("test_lazy_hmm", builtins["make_lazy_hmm"])
 
     ripl.assume("f", """

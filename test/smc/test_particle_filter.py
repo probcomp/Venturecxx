@@ -57,8 +57,9 @@ def testIncorporateDoesNotCrash():
 
 @on_inf_prim("resample")
 @statisticalTest
-def testResampling1(P=10):
-  ripl = get_ripl()
+def testResampling1(seed):
+  P = 10
+  ripl = get_ripl(seed=seed)
   def a_sample():
     ripl.clear()
     ripl.infer("(resample %d)" % P)
@@ -72,10 +73,11 @@ def testResampling1(P=10):
 @on_inf_prim("resample")
 @statisticalTest
 @attr("slow")
-def testResampling2(P=20):
+def testResampling2(seed):
   # This differs from testResampling1 by an extra resample step, which
   # is supposed to be harmless
-  ripl = get_ripl()
+  P = 20
+  ripl = get_ripl(seed=seed)
   def a_sample():
     ripl.clear()
     ripl.infer("(resample %d)" % P)
@@ -89,8 +91,8 @@ def testResampling2(P=20):
   predictions = [a_sample() for _ in range(4*default_num_samples())]
   return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
-def initBasicPFripl1():
-  ripl = get_ripl()
+def initBasicPFripl1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (mem (lambda (i)
   (tag 0 i
@@ -108,16 +110,16 @@ def initBasicPFripl1():
 @on_inf_prim("all") # Really resample and mh
 @statisticalTest
 @attr("slow")
-def testBasicParticleFilter1(P = 10):
+def testBasicParticleFilter1(seed):
   # A sanity test for particle filtering (discrete)
-
+  P = 10
   N = default_num_samples()
   predictions = []
 
   os = zip(range(1,6),[False,False,True,False,False])
 
   for _ in range(N):
-    ripl = initBasicPFripl1()
+    ripl = initBasicPFripl1(seed)
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)
@@ -133,8 +135,8 @@ def testBasicParticleFilter1(P = 10):
 
 ##################
 
-def initBasicPFripl2():
-  ripl = get_ripl()
+def initBasicPFripl2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","""
 (mem (lambda (i)
   (tag 0 i
@@ -151,16 +153,16 @@ def initBasicPFripl2():
 @on_inf_prim("all") # Really resample and mh
 @statisticalTest
 @attr("slow")
-def testBasicParticleFilter2(P = 10):
+def testBasicParticleFilter2(seed):
   # A sanity test for particle filtering (continuous)
-
+  P = 10
   N = default_num_samples()
   predictions = []
 
   os = zip(range(0,5),[1,2,3,4,5])
 
   for _ in range(N):
-    ripl = initBasicPFripl2()
+    ripl = initBasicPFripl2(seed)
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)

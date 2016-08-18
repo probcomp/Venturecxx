@@ -217,14 +217,14 @@ def checkConstrainWithAPredict1(program):
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testConstrainWithAPredict2():
+def testConstrainWithAPredict2(seed):
   # This test will fail at first, since we previously considered a
   # program like this to be illegal and thus did not handle it
   # correctly (we let the predict go stale). So we do not continually
   # bewilder our users, I suggest that we handle this case WHEN WE
   # CAN, which means we propagate from a constrain as long as we don't
   # hit an absorbing node or a DRG node with a kernel.
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
   ripl.observe("(f)","1.0")
   ripl.predict("(* (f) 100)",label="pid")

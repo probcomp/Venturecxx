@@ -35,6 +35,10 @@ This module supplies facilities for testing in that style.  Of note:
   TestResult object, which represents the p-value.
 - The reportKnownFoo functions encapsulate standard statistical
   tests and return TestResult objects.
+- Every test annotated as a statisticalTest must accept a `seed`
+  argument which may be used to initialize PRNGs.  Every such test
+  should be deterministic given fixed seed, if possible, for better
+  reproducibility of failures.
 - This module respects the ignore_inference_quality configuration
   (which is on for the crash test suite and off for the inference
   quality test suite).
@@ -55,6 +59,7 @@ test function as @statisticalTest, not the generator.
 """
 
 import math
+import random
 import sys
 
 import nose.tools as nose
@@ -66,6 +71,7 @@ from scipy.stats.mstats import rankdata
 
 from testconfig import config
 from venture.test.config import ignore_inference_quality
+from venture.test.config import stochasticTest
 import venture.test.plots as plots
 
 def normalizeList(seq):
@@ -103,21 +109,22 @@ def fisherMethod(pvals):
     chisq = -2 * sum([math.log(p) for p in pvals])
     return stats.chi2.sf(chisq, 2*len(pvals))
 
-def repeatTest(func, *args, **kwargs):
+def repeatTest(func, seed, *args, **kwargs):
+  rng = random.Random(seed)
   globalReportingThreshold = float(config["global_reporting_threshold"])
-  result = func(*args, **kwargs)
+  result = func(*args, seed=rng.randint(1, 2**31 - 1), **kwargs)
   assert isinstance(result, TestResult)
   if ignore_inference_quality():
     return result
   if result.pval > 0.05:
     return result
-  elif fisherMethod(result.pval + [1.0]*4) < globalReportingThreshold:
+  elif fisherMethod([result.pval] + [1.0]*4) < globalReportingThreshold:
     # Hopeless
     return result
   else:
     print "Retrying suspicious test"
     def trial():
-      answer = func(*args, **kwargs)
+      answer = func(*args, seed=rng.randint(1, 2**31 - 1), **kwargs)
       sys.stdout.write(".")
       return answer
     results = [result] + [trial() for _ in range(1,5)]
@@ -140,9 +147,10 @@ def statisticalTest(f):
   repeatedly.
 
   """
+  @stochasticTest
   @nose.make_decorator(f)
-  def wrapped(*args, **kwargs):
-    reportTest(repeatTest(f, *args, **kwargs))
+  def wrapped(seed, *args, **kwargs):
+    reportTest(repeatTest(f, seed, *args, **kwargs))
   return wrapped
 
 

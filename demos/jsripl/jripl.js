@@ -124,7 +124,7 @@ function jripl() {
      * the python layer, except the user cannot receive the return values.
      */
     var supported_pripl_functions = [
-        'set_mode', 'execute_instruction', 'execute_program', 'split_program',
+        'set_mode', 'execute_instruction', 'execute_program',
         'expression_index_to_text_index', 'infer', 'clear',
         'assume', 'predict', 'observe', 'forget', 'force', 'sample',
         'start_continuous_inference', 'stop_continuous_inference',

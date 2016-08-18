@@ -176,7 +176,7 @@ function InitializeDemo() {
         ripl.set_mode("church_prime");
 
         /* Model metadata */
-        ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('demo_id', String(demo_id), 'demo_id');
         ripl.assume('model_type', '(quote simple)', 'model_type');
         ripl.assume('use_outliers', "" + model_variables.use_outliers, 'use_outliers');
         ripl.assume('infer_noise', "" + model_variables.infer_noise, 'infer_noise');
@@ -206,7 +206,7 @@ function InitializeDemo() {
         ripl.set_mode("church_prime");
 
         /* Model metadata */
-        ripl.assume('demo_id', demo_id, 'demo_id');
+        ripl.assume('demo_id', String(demo_id), 'demo_id');
         ripl.assume('model_type', '(quote advanced)', 'model_type');
 
         /* Outliers */
@@ -377,8 +377,8 @@ function InitializeDemo() {
     var ObservePoint = function(obs_id, x, y) {
         obs_str = 'points_' + obs_id;
 
-        ripl.predict(x, obs_str + '_x');
-        ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', y, obs_str + '_y');
+        ripl.predict(String(x), obs_str + '_x');
+        ripl.observe('(obs_fn ' + obs_id + ' ' + x + ')', String(y), obs_str + '_y');
         if (!model_variables.use_outliers) {
             ripl.predict('false', obs_str + '_outlier');
         } else {

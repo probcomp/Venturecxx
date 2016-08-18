@@ -25,7 +25,6 @@ from venture.test.config import gen_broken_in
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
-from venture.test.config import rejectionSampling
 from venture.test.config import skipWhenRejectionSampling
 from venture.test.config import skipWhenSubSampling
 from venture.test.stats import reportKnownDiscrete
@@ -40,9 +39,9 @@ def testMakeSymDirCat1():
     yield checkMakeSymDirCat1, maker
 
 @statisticalTest
-def checkMakeSymDirCat1(maker):
+def checkMakeSymDirCat1(maker, seed):
   # Extremely simple program, with an AAA procedure when uncollapsed
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("f", "(%s 1.0 2)" % maker)
   ripl.predict("(f)", label="pid")
   predictions = collectSamples(ripl, "pid")
@@ -55,9 +54,9 @@ def testMakeSymDirCatAAA():
     yield checkMakeSymDirCatAAA, maker
 
 @statisticalTest
-def checkMakeSymDirCatAAA(maker):
+def checkMakeSymDirCatAAA(maker, seed):
   # Simplest program with collapsed AAA
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker)
@@ -75,8 +74,8 @@ def testMakeSymDirCatFlip():
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirCatFlip(maker_1, maker_2):
-  ripl = get_ripl()
+def checkMakeSymDirCatFlip(maker_1, maker_2, seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 4)" % (maker_1, maker_2))
@@ -95,8 +94,8 @@ def testMakeSymDirCatBrushObserves():
 @skipWhenSubSampling(
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
-def checkMakeSymDirCatBrushObserves(maker_1, maker_2):
-  ripl = get_ripl()
+def checkMakeSymDirCatBrushObserves(maker_1, maker_2, seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "((if (lt a 10) %s %s) a 2)" % (maker_1, maker_2))
@@ -109,9 +108,9 @@ def checkMakeSymDirCatBrushObserves(maker_1, maker_2):
   "The current implementation of subsampling can't handle this scaffold shape")
 @statisticalTest
 @on_inf_prim("any")
-def testMakeSymDirCatNative():
+def testMakeSymDirCatNative(seed):
   # AAA where the SP flips between collapsed, uncollapsed, and native
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
 # Might be collapsed, uncollapsed, or uncollapsed in Venture
@@ -137,10 +136,10 @@ def testMakeSymDirCatAppControlsFlip():
 @skipWhenRejectionSampling(
   "Too slow.  Is the log density of data bound too conservative?")
 @statisticalTest
-def checkMakeSymDirCatAppControlsFlip(maker_1, maker_2):
+def checkMakeSymDirCatAppControlsFlip(maker_1, maker_2, seed):
   # Two AAA SPs with same parameters, where their applications control
   # which are applied
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s a 4)" % maker_1)
@@ -160,8 +159,8 @@ def testMakeDirCat1():
 @skipWhenRejectionSampling(
   "Too slow.  Tightening the rejection bound is Issue #468.")
 @statisticalTest
-def checkMakeDirCat1(maker):
-  ripl = get_ripl()
+def checkMakeDirCat1(maker, seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(%s (array a a a a))" % maker)
@@ -174,8 +173,8 @@ def testMakeSymDirCatWeakPrior():
     yield checkMakeSymDirCatWeakPrior, maker
 
 @statisticalTest
-def checkMakeSymDirCatWeakPrior(maker):
-  ripl = get_ripl()
+def checkMakeSymDirCatWeakPrior(maker, seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(%s a 2)" % maker)
@@ -217,9 +216,9 @@ def testDirCatObjectVariation():
     yield checkDirCatObjectVariation, maker
 
 @statisticalTest
-def checkDirCatObjectVariation(maker_form):
+def checkDirCatObjectVariation(maker_form, seed):
   # Testing for Issue #452.
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.assume("x1", "(flip)")
   r.assume("x2", "(flip)")
   r.assume("x", "(array x1 x2)")
@@ -243,8 +242,8 @@ def checkDirCatObjectVariation(maker_form):
 
 @on_inf_prim("any")
 @statisticalTest
-def testStaleAAA_MSP():
-  ripl = get_ripl()
+def testStaleAAA_MSP(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
@@ -256,8 +255,8 @@ def testStaleAAA_MSP():
 
 @on_inf_prim("any")
 @statisticalTest
-def testStaleAAA_CSP():
-  ripl = get_ripl()
+def testStaleAAA_CSP(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
@@ -271,8 +270,8 @@ def testStaleAAA_CSP():
 @statisticalTest
 @broken_in("puma",
            "Need to port records to Puma for references to work.  Issue #224")
-def testStaleAAA_Madness():
-  ripl = get_ripl()
+def testStaleAAA_Madness(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("a", "1.0")
   ripl.assume("f", "(make_uc_sym_dir_cat a 2)")
@@ -280,8 +279,8 @@ def testStaleAAA_Madness():
   ripl.assume("f2", "(f2_maker)")
   ripl.assume("xs", "(array (ref f) (ref f2))")
   ripl.assume("f3", "(deref (lookup xs 1))")
-  ripl.assume("ys", """(dict (array (quote aaa) (quote bbb))
-                             (array (ref f3) (ref f3)))""")
+  ripl.assume("ys", """(dict (array (quote aaa) (ref f3))
+                             (array (quote bbb) (ref f3)))""")
   ripl.assume("g", """(deref (if (flip) (lookup ys (quote aaa))
                                         (lookup ys (quote bbb))))""")
   ripl.predict("(g)", label="pid")

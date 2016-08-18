@@ -55,9 +55,9 @@ def computeRejectionBound(trace, scaffold, border):
         appNode = trace.getConstrainableNode(node)
         logBound += logBoundAt(appNode)
       except MissingEsrParentError:
-        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+        raise Exception("Can't automatically compute rejection density bound when observing resimulation of unknown code")
       except NoSPRefError:
-        raise Exception("Can't do rejection sampling when observing resimulation of unknown code")
+        raise Exception("Can't automatically compute rejection density bound when observing resimulation of unknown code")
   return logBound
 
 class RejectionOperator(InPlaceOperator):
@@ -67,23 +67,30 @@ class RejectionOperator(InPlaceOperator):
   Bayesian Statistics Without Tears: A Sampling-Resampling Perspective
   A.F.M. Smith, A.E. Gelfand The American Statistician 46(2), 1992, p 84-88
   http://faculty.chicagobooth.edu/hedibert.lopes/teaching/ccis2010/1992SmithGelfand.pdf"""
-  def __init__(self, trials):
+  def __init__(self, logBound, trials):
     super(RejectionOperator, self).__init__()
+    self.logBound = logBound
     self.trials = trials
 
   def propose(self, trace, scaffold):
     self.prepare(trace, scaffold)
-    logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    if self.logBound is None:
+      logBound = computeRejectionBound(trace, scaffold, scaffold.border[0])
+    else:
+      logBound = self.logBound
     accept = False
     attempt = 0
     while not accept and (self.trials is None or self.trials > attempt):
       xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
       assert xiWeight <= logBound, \
         "Detected regen weight %s not at most weight bound %s" % (xiWeight, logBound)
+      # print xiWeight, logBound
       accept = trace.py_rng.random() < math.exp(xiWeight - logBound)
       if not accept:
         detachAndExtract(trace, scaffold)
         attempt += 1
+      # else:
+      #   print "Accepted!"
     if not accept:
       # Ran out of attempts
       print "Warning: rejection hit attempt bound of %s" % self.trials

@@ -730,16 +730,16 @@ include python/lib/engine/trace_set.py
 include python/lib/exception.py
 include python/lib/multiprocess.py
 include python/lib/parser/__init__.py
+include python/lib/parser/ast.py
 include python/lib/parser/church_prime/__init__.py
-include python/lib/parser/church_prime/grammar.py
 include python/lib/parser/church_prime/grammar.y
 include python/lib/parser/church_prime/parse.py
 include python/lib/parser/church_prime/scan.py
 include python/lib/parser/venture_script/__init__.py
-include python/lib/parser/venture_script/grammar.py
 include python/lib/parser/venture_script/grammar.y
 include python/lib/parser/venture_script/parse.py
 include python/lib/parser/venture_script/scan.py
+include python/lib/parser/venture_script/subscanner.py
 include python/lib/ripl/__init__.py
 include python/lib/ripl/console.py
 include python/lib/ripl/plugins.py
@@ -781,6 +781,8 @@ include refman/venture.lite.sp.rst
 include refman/venture.lite.sp_help.rst
 include refman/venture.lite.types.rst
 include refman/venture.lite.value.rst
+include refman/venture.parser.api.rst
+include refman/venture.parser.venture_script.subscanner.rst
 include refman/venture.ripl.ripl.rst
 include refman/venture.shortcuts.rst
 include refman/venture.value.dicts.rst
@@ -906,6 +908,7 @@ include test/integration/test_console.py
 include test/integration/test_doc_autogen.py
 include test/integration/test_examples.py
 include test/integration/test_plugin_loading.py
+include test/integration/test_sublanguages.py
 include test/integration/test_venstan.py
 include test/lite-config.py
 include test/manual/all.sh

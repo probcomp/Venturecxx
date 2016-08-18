@@ -39,6 +39,7 @@ UnionDict = namedtuple("UnionDict", ["source"])
 Union = namedtuple("Union", ["sources"])
 FetchTag = namedtuple("FetchTag", ["name"])
 Top = namedtuple("Top", [])
+Star = namedtuple("Star", [])
 MinimalSubproblem = namedtuple("MinimalSubproblem", ["source"])
 
 def is_search_ast(thing):
@@ -118,7 +119,15 @@ def interpret(prog, trace):
     return (ans, wt + wt2)
   elif isinstance(prog, Edge):
     (thing, wt) = interpret(prog.source, trace)
-    return (follow_edge(thing, prog.edge, trace), wt)
+    if prog.edge in t.ForeignBlobType() and \
+       (isinstance(prog.edge.datum, FetchTag) or isinstance(prog.edge.datum, Lookup)):
+      (thing2, wt2) = interpret(Extent(prog.edge.datum), trace)
+      return (intersect(extent(thing, trace), thing2), wt + wt2)
+    elif prog.edge in t.ForeignBlobType() and \
+         isinstance(prog.edge.datum, Star):
+      return (extent(thing, trace), wt)
+    else:
+      return (follow_edge(thing, prog.edge, trace), wt)
   elif isinstance(prog, Extent):
     (thing, wt) = interpret(prog.source, trace)
     return (extent(thing, trace), wt)
@@ -254,16 +263,6 @@ inf.registerBuiltinInferenceSP("by_intersection",
 Intersect the selected choices.
 """))
 
-def by_slash_fun(left, right):
-  return Intersect(Extent(left), Extent(right))
-
-inf.registerBuiltinInferenceSP("by_slash", \
-    deterministic_typed(by_slash_fun, [t.ForeignBlobType(), t.ForeignBlobType()], t.ForeignBlobType(), descr="""
-This is what the / syntax does.
-
-Intersect the dynamic extents of both sets of selected choices.
-"""))
-
 inf.registerBuiltinInferenceSP("by_tag", \
     deterministic_typed(FetchTag, [t.AnyType("<tag>")], t.ForeignBlobType(), descr="""
 Select the choices tagged by the given tag.
@@ -290,6 +289,8 @@ Possible edges are
 - `source`, for the expression a variable is bound to
 - `request`, for the request node corresponding to a procedure application
 - <an integer>, for that index subexpression of an expression
+- <a tag search expression>, for choices in the dynamic extent of a node
+  that were given in that tag
 """))
 
 inf.registerBuiltinInferenceSP("by_extent", \
@@ -304,6 +305,10 @@ Union the given selections.
 
 inf.registerBuiltinInferenceSP("by_top", deterministic_typed(Top, [], t.ForeignBlobType(), descr="""
 Select the "top" of the model, whose dynamic extent is all random choices.
+"""))
+
+inf.registerBuiltinInferenceSP("by_star", deterministic_typed(Star, [], t.ForeignBlobType(), descr="""
+Walk to all the random choices in the dynamic extent of the source.
 """))
 
 inf.registerBuiltinInferenceSP("minimal_subproblem", \

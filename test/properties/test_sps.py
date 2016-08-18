@@ -39,6 +39,10 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              # TODO Appropriately construct random inputs to test
              # record constructors and accessors?
              'inference_action', 'action_func',
+             # The type signatures are too imprecise
+             'dict', 'to_dict',
+             # Can't synthesize dict arguments
+             'keys', 'values',
              'make_ref', 'ref_get']
 
 # Select particular SPs to test thus:

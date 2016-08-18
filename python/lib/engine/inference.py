@@ -402,6 +402,10 @@ def print_fun(*args):
 
 inf.registerBuiltinInferenceSP("print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
 Print the given values to the terminal.
+
+If you are trying to add a debugging print statement to a VentureScript expression
+that is not already an inference action, consider using `debug`, which does not
+require sequencing.
 """))
 
 def plot_fun(spec, dataset):

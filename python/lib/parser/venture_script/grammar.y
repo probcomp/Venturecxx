@@ -93,6 +93,7 @@ path_expression(some)	::= path_expression(more) T_DIV(slash) path_step(s).
 
 path_step(tag)		::= T_QUESTION(q) L_NAME(tag).
 path_step(tag_val)	::= T_QUESTION(q) L_NAME(tag) T_EQ(eq) primary(value).
+path_step(star)		::= T_MUL(star).
 path_step(edge)		::= primary(e).
 
 hash_tag(tag)		::= hash_tag(e) T_HASH(h) L_NAME(tag).
@@ -153,6 +154,7 @@ primary(unquote)	::= T_LDOLLAR(op) primary(e).
 primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
+primary(language)	::= L_LANGUAGE(ll).
 
 paramlist(none)		::= .
 paramlist(some)		::= params(params).
