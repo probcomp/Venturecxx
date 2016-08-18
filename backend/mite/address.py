@@ -34,25 +34,27 @@ class BuiltinAddress(Address):
   def __init__(self, name):
     self.name = name
 
+  def __repr__(self):
+    return "builtin({!r})".format(self.name)
+
 class DirectiveAddress(Address):
   """A top-level directive."""
 
   def __init__(self, directive_id):
     self.directive_id = directive_id
 
+  def __repr__(self):
+    return "toplevel({!r})".format(self.directive_id)
+
 class RequestAddress(Address):
   """An expression requested by a procedure."""
-
-  def __new__(cls, sp_addr, request_id):
-    # if the request_id is a foreign blob, unpack it
-    # (this happens when using the make_sp interface from Venture)
-    if request_id in t.Blob:
-      request_id = t.Blob.asPython(request_id)
-    return super(RequestAddress, cls).__new__(cls, sp_addr, request_id)
 
   def __init__(self, sp_addr, request_id):
     self.sp_addr = sp_addr
     self.request_id = request_id
+
+  def __repr__(self):
+    return "request({!r}, {!r})".format(self.sp_addr, self.request_id)
 
 class SubexpressionAddress(Address):
   """A subexpression of a combination."""
@@ -60,6 +62,9 @@ class SubexpressionAddress(Address):
   def __init__(self, index, parent_addr):
     self.index = index
     self.parent = parent_addr
+
+  def __repr__(self):
+    return "subexpression({!r}, {!r})".format(self.index, self.parent)
 
 builtin = BuiltinAddress
 directive = DirectiveAddress
