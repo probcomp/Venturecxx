@@ -292,9 +292,16 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
           propagate = True
         else:
           kernel = {'type': 'constraint', 'val': val}
-      elif isinstance(parent, addresses.request) and addr == parent.request_id:
-        kernel = {'type': 'propagate_request', 'parent': parent}
-        propagate = True
+      elif isinstance(parent, addresses.request):
+        sp_ref = trace.value_at(node.operator_addr)
+        sp_node = trace.deref_sp(sp_ref)
+        sp = sp_node.value
+        from venture.mite.evaluator import TraceHandle
+        handle = TraceHandle(trace, sp_node.address)
+        kernel = sp.propagating_kernel(handle, addr, parent)
+        if kernel is not None:
+          kernel = {'type': 'propagate_request', 'parent': parent}
+          propagate = True
 
     if kernel is not None:
       kernels[addr] = kernel
