@@ -17,10 +17,7 @@ def timing(trace_type, chain_sizes, num_iters):
   def time_one(string):
     trials = []
     for _ in range(3):
-      then = time.time()
-      ripl.evaluate(string)
-      now = time.time()
-      trials.append(now - then)
+      trials.append(ripl.evaluate(string))
     return min(trials)
   for (i, (low, high)) in enumerate(zip([0] + chain_sizes, chain_sizes)):
     if i == 0:
@@ -28,10 +25,11 @@ def timing(trace_type, chain_sizes, num_iters):
     else:
       ripl.define("trace_" + str(i), "extend_chain(%s, %s, trace_%s)" % (low, high, i-1))
     time_blank = time_one("go_blank(%s, %s, trace_%s)" % (num_iters, high, i))
+    assert time_blank < 0.005 * num_iters
     time_full = time_one("go(%s, %s, trace_%s)" % (num_iters, high, i))
-    ans_full.append(max(time_full - time_blank, 0))
+    ans_full.append(max(time_full, 0))
     time_select = time_one("go_select(%s, %s, trace_%s)" % (num_iters, high, i))
-    ans_select.append(max(time_select - time_blank, 0))
+    ans_select.append(max(time_select, 0))
   return (ans_full, ans_select)
 
 def compute_results(stub=False):

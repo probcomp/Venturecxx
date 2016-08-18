@@ -38,6 +38,24 @@
         (return nil)
         (do act (repeat (- n 1) act))))]
 
+[define repeat_timed
+  (lambda (n act)
+    (do (let af (action_func act))
+        (let timed_act
+            (inference_action
+             (lambda (t)
+               (let ((t1 (time))
+                     (result (af t))
+                     (t2 (time)))
+                 (pair (- t2 t1) (rest result))))))
+        (let loop
+            (lambda (loop n tt)
+              (if (<= n 0)
+                  (return tt)
+                  (do (dt <- timed_act)
+                      (loop loop (- n 1) (+ tt dt))))))
+        (loop loop n 0)))]
+
 [define accumulate
   (lambda (n address infer_act)
     (do (x <- (value_at address))

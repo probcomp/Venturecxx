@@ -18,6 +18,7 @@ import venture.mite.sps.counter_state
 import venture.mite.sps.binomial_state
 import venture.mite.sps.crp_state
 import venture.mite.sps.mem_table
+import venture.mite.sps.timing
 import venture.mite.sps.prelude
 
 def builtInValues():

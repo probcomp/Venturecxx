@@ -25,15 +25,15 @@ define extend_chain = (init, limit, trace) -> {
 };
 
 define go = (iters, timesteps, trace) -> {
-  run_in(repeat(iters, single_site_step(timesteps)), trace)
+  run_in(repeat_timed(iters, single_site_step(timesteps)), trace)
 };
 
 define go_select = (iters, timesteps, trace) -> {
-  run_in(repeat(iters, single_site(timesteps)), trace)
+  run_in(repeat_timed(iters, single_site(timesteps)), trace)
 };
 
 define go_blank = (iters, timesteps, trace) -> {
-  run_in(repeat(iters, { return(uniform_discrete(1, timesteps)) }), trace)
+  run_in(repeat_timed(iters, return(uniform_discrete(1, timesteps))), trace)
 };
 
 define run_program = (chain, iters, trace_type) -> {
