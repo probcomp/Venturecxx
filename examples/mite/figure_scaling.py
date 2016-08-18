@@ -63,33 +63,38 @@ def scale_plot(results):
   graphs_select = results["graphs_select"]
   chain_sizes = results["chain_sizes"]
   num_iters = results["num_iters"]
-  plt.figure()
-  plt.plot(chain_sizes, [float(f)/num_iters for f in flats],
-           label="Flat table (total)",
-           color="blue")
-  plt.plot(chain_sizes, [float(g)/num_iters for g in graphs],
-           label="Dep graph (total)",
-           color="green")
-  plt.plot(chain_sizes, [float(f)/num_iters for f in flats_select],
+  fig, [ax1, ax2] = plt.subplots(2, 1, sharex=True)
+  # plt.plot(chain_sizes, [float(f)/num_iters for f in flats],
+  #          label="Flat table (total)",
+  #          color="blue")
+  # plt.plot(chain_sizes, [float(g)/num_iters for g in graphs],
+  #          label="Dep graph (total)",
+  #          color="green")
+  ax1.plot(chain_sizes, [float(f)/num_iters for f in flats_select],
            label="Flat table (selection)",
            color="blue", linestyle="--", marker="s")
-  plt.plot(chain_sizes, [float(g)/num_iters for g in graphs_select],
+  ax1.plot(chain_sizes, [float(g)/num_iters for g in graphs_select],
            label="Dep graph (selection)",
            color="green", linestyle="--", marker="s")
   flats_regen = [(float(f) - float(fs))/num_iters for (f, fs) in zip(flats, flats_select)]
-  plt.plot(chain_sizes, flats_regen,
+  ax2.plot(chain_sizes, flats_regen,
            label="Flat table (regeneration)",
            color="blue", linestyle="--", marker="D")
   graphs_regen = [(float(g) - float(gs))/num_iters for (g, gs) in zip(graphs, graphs_select)]
-  plt.plot(chain_sizes, graphs_regen,
+  ax2.plot(chain_sizes, graphs_regen,
            label="Dep graph (regeneration)",
            color="green", linestyle="--", marker="D")
-  plt.xlabel("Number of timesteps")
-  plt.ylabel("Time per transition (s)")
-  plt.title("Inference speed scaling on an HMM")
-  plt.legend(fontsize=10, loc='best')
-  set_font_size(plt.gca(), 20)
-  plt.gcf().subplots_adjust(bottom=0.17, left=0.16)
+  ax2.set_xlabel("Number of timesteps")
+  ax1.set_ylim(bottom=0)
+  ax2.set_ylim(bottom=0)
+  ax1.set_ylabel("Time per transition (s)")
+  ax2.set_ylabel("Time per transition (s)")
+  fig.suptitle("Inference speed scaling on an HMM", fontsize=20)
+  # ax2.set_title("Inference speed scaling on an HMM")
+  ax1.legend(fontsize=10, loc='best')
+  ax2.legend(fontsize=10, loc='best')
+  # set_font_size(plt.gca(), 20)
+  # plt.gcf().subplots_adjust(bottom=0.17, left=0.16)
   plt.savefig("figures/scaling.pdf")
   # plt.show()
 
