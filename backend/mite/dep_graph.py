@@ -303,12 +303,12 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
 
     if propagate and addr not in drg:
       drg.add(addr)
-      request_children = []
+      request_children = set()
       if isinstance(addr, addresses.request):
-        # XXX STUB: hack in dependencies due to requests of compound SPs
-        if isinstance(addr.request_id, addresses.Address):
-          request_children = [addr.request_id]
-      for child in list(node.children) + request_children:
+        # by default, notify all applications of this SP.
+        sp_node = trace.nodes[addr.sp_addr]
+        request_children = sp_node.application_children
+      for child in node.children | request_children:
         q.append((child, addr))
 
   from venture.mite.scaffold import Scaffold
