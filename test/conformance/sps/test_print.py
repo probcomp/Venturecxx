@@ -29,14 +29,19 @@ def extract_integer(captured):
   res = search('VentureInteger\((.*)\)', captured) #pylint: disable=W1401
   return int(res.group(1))
 
-@broken_in("puma", "TODO: implement in-model debug print in puma")
+def clear_Puma_warning(ripl):
+  # Make the "using from Python" warning happen, so it's not in the
+  # captured output for subsequent uses.
+  capture_output(ripl, '(sample (debug "x" 1))')
+
 @on_inf_prim("none")
 def test_print1():
-  # Make sure that print prints the correct values by intercepting output
+  # Make sure that debug prints the correct values by intercepting output
   ripl = get_ripl()
+  clear_Puma_warning(ripl)
   x = ripl.assume('x', '(uniform_discrete 1 10)')
   y = ripl.assume('y', '(uniform_discrete 1 10)')
-  program = ('''(sample (+ (debug 'x x) (debug 'y y)))''')
+  program = ('''(sample (+ (debug "x" x) (debug "y" y)))''')
   res, captured = capture_output(ripl, program)
   res_value = res[0]['value']['value']
   captured_x, captured_y = map(extract_integer, captured.splitlines())
@@ -44,13 +49,13 @@ def test_print1():
   eq_(y, captured_y)
   eq_(res_value, captured_x + captured_y)
 
-@broken_in("puma", "TODO: implement in-model debug print in puma")
 @on_inf_prim("none")
 def test_print2():
   # Another test for consistency by intercepting output
   ripl = get_ripl()
-  program = '''(sample (+ (debug 'x (uniform_discrete 1 10))
-                          (debug 'y (uniform_discrete 1 10))))'''
+  clear_Puma_warning(ripl)
+  program = '''(sample (+ (debug "x" (uniform_discrete 1 10))
+                          (debug "y" (uniform_discrete 1 10))))'''
   res, captured = capture_output(ripl, program)
   res_value = res[0]['value']['value']
   captured_values = map(extract_integer, captured.splitlines())

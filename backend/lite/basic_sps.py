@@ -217,8 +217,8 @@ def debug_print(label, value):
   return value
 
 registerBuiltinSP("debug", deterministic_typed(debug_print,
-    [t.SymbolType(), t.AnyType("k")], t.AnyType("k"),
-    descr = "Print the given value, labeled by a Symbol. Return the value. " \
+    [t.StringType(), t.AnyType("k")], t.AnyType("k"),
+    descr = "Print the given value, labeled by a string. Return the value. " \
             "Intended for debugging or for monitoring execution."))
 
 registerBuiltinSP("value_error",
