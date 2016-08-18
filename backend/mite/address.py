@@ -68,6 +68,7 @@ class SubexpressionAddress(Address):
 
 builtin = BuiltinAddress
 directive = DirectiveAddress
+toplevel = DirectiveAddress
 request = RequestAddress
 subexpression = SubexpressionAddress
 
@@ -86,7 +87,7 @@ class AddressMakerSP(SimulationSP):
     return t.Blob.asVentureValue(self.python_maker(*inputs))
 
 registerBuiltinSP("builtin", AddressMakerSP(builtin, [t.String]))
-registerBuiltinSP("toplevel", AddressMakerSP(directive, [t.Int]))
+registerBuiltinSP("toplevel", AddressMakerSP(toplevel, [t.Int]))
 registerBuiltinSP("request", AddressMakerSP(request, [t.Blob, t.Object]))
 registerBuiltinSP("subexpression", AddressMakerSP(subexpression, [t.Int, t.Blob]))
 
