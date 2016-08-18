@@ -101,7 +101,7 @@ class ProxyKernel(ApplicationKernel):
     expr = ['first',
             [['action_func',
               [['lookup', 'the_kernel', ['quote', method]]] + names],
-             ['lookup', 'the_sp', ['quote', 'trace']]]]
+             ['lookup', 'the_sp', ['quote', 'state']]]]
     env = VentureEnvironment(self.env, names, values)
     value = helper_trace.eval_request(addr, expr, env)
     return value
