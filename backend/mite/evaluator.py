@@ -100,11 +100,6 @@ class TraceHandle(object):
     return self.PRNG(self.trace.py_prng, self.trace.np_prng)
 
   def request_address(self, request_id):
-    # if the request_id is a foreign blob, unpack it
-    # (this happens when using the make_sp interface from Venture)
-    import venture.lite.types as t
-    if request_id in t.Blob:
-      request_id = t.Blob.asPython(request_id)
     return addresses.request(self.sp_addr, request_id)
 
   def eval_request(self, addr, exp, env):
