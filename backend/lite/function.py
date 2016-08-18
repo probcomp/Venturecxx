@@ -55,25 +55,38 @@ class VentureFunction(VentureValue):
 
 registerVentureType(VentureFunction, "function")
 
-class VentureDiffableFunction(VentureFunction):
-  """Differentiable function.
+class VentureTangentFunction(VentureFunction):
+  """Tangent vector to a point in a finitely parametrized function space.
 
-  df must have the same parameters as f, and return a list of partial
-  derivatives, one for each parameter.
+  A tangent vector is a pair (f, df) where f is a function and df
+  represents a direction in the function space by a function of the
+  same arguments that returns a list of partial derivatives, one for
+  each parameter in the space.
+
+  Specifically, if for any theta = (theta_0, theta_1, ...,
+  theta_{k-1}) in a parameter space Theta, there is a function
+  F_theta: X ---> Y, such that for fixed x_0, the map
+
+        theta |---> F_theta(x_0)
+
+  is differentiable, a VentureTangentFunction object represents a
+  tuple (f, df) = (F_theta, d/dtheta F_theta), in the sense that for
+  any x, f(x) computes F_theta(x), and df(x) computes a list of k
+  partial derivatives [d/dtheta_0 F_theta(x), d/dtheta_1 F_theta(x),
+  ..., d/dtheta_{k-1} F_theta(x)] in all parameter directions.
   """
 
   def __init__(self, f, df, *args, **kwargs):
-    # df is list of partial derivatives.
-    super(VentureDiffableFunction, self).__init__(f, *args, **kwargs)
+    super(VentureTangentFunction, self).__init__(f, *args, **kwargs)
     self.df = df
 
   def gradient_type(self):
-    return VentureDiffableFunction
+    return VentureTangentFunction
 
   @staticmethod
   def fromStackDict(thing):
     derivative = thing.pop('derivative')
-    return VentureDiffableFunction(thing['value'], derivative, **thing)
+    return VentureTangentFunction(thing['value'], derivative, **thing)
 
   def asStackDict(self, _trace=None):
     val = v.val('diffable_function', self.f)
