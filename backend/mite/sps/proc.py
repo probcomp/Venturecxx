@@ -64,13 +64,13 @@ class TailAssessableProposalKernel(ApplicationKernel):
     trace_handle = self.trace_handle
     application_id = self.application_id
 
-    operator = trace_handle.get_request(pair(application_id, 0))
-    operator = trace_handle.value_at(operator)
+    addr = trace_handle.request_address(pair(application_id, 0))
+    operator = trace_handle.value_at(addr)
 
     operands = []
     for index in range(len(self.operand_exps)):
-      operand = trace_handle.get_request(pair(application_id, index+1))
-      operands.append(trace_handle.value_at(operand))
+      addr = trace_handle.request_address(pair(application_id, index+1))
+      operands.append(trace_handle.value_at(addr))
 
     result_addr = trace_handle.request_address(application_id)
     (weight, trace_fragment) = trace_handle.trace.extract_kernel(
