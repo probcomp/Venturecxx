@@ -55,8 +55,7 @@ define example_beta_bern = (make_beta_bern, infer) -> {
     ];
     weights <- for_each(dataset, (x) -> {
       infer();
-      addr <- { observe coin() = x };
-      weight <- incorporate_constraint(addr, x);
+      weight <- { observe coin() = x };
       return (weight)
     });
     return (sum(weights))

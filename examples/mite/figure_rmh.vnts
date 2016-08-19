@@ -3,7 +3,6 @@ define example_resimulation = (steps) ~> {
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
     observe y = 4.0;
-    incorporate_constraint(toplevel(2), 4.0);
     repeat(steps, {
       subproblem <- single_site_subproblem(toplevel(1));
       resimulation_step(subproblem)
@@ -17,7 +16,6 @@ define traceplot = (steps) ~> {
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
     observe y = 4.0;
-    incorporate_constraint(toplevel(2), 4.0);
     accumulate(steps, toplevel(1), {
       subproblem <- single_site_subproblem(toplevel(1));
       resimulation_step(subproblem)

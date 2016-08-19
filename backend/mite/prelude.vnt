@@ -92,10 +92,14 @@
 
 [define _observe
   (lambda (expr value)
-    (do (addr <- (next_base_address))
-        (eval_toplevel addr expr)
+    (do (addr <- (if (is_symbol expr)
+                     (do (env <- (global_env))
+                         (find_symbol env expr))
+                     (do (addr <- (next_base_address))
+                         (eval_toplevel addr expr)
+                         (return addr))))
         (register_observation addr value)
-        (return addr)))]
+        (incorporate_constraint addr value)))]
 
 [define _predict
   (lambda (expr)
@@ -134,8 +138,3 @@
         (let trace_frag (rest rev))
         (regen subproblem trace_frag)))]
 
-;;; can be used by setting "_observe = incorporating_observe"
-[define incorporating_observe
-  (lambda (expr value)
-    (do (addr <- (_observe expr value))
-        (incorporate_constraint addr value)))]

@@ -3,7 +3,6 @@ define example_drift = (steps) ~> {
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
     observe y = 4.0;
-    incorporate_constraint(toplevel(2), 4.0);
     repeat(steps, {
       custom_drift_mh_step();
     });
@@ -16,7 +15,6 @@ define traceplot = (steps) ~> {
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
     observe y = 4.0;
-    incorporate_constraint(toplevel(2), 4.0);
     accumulate(steps, toplevel(1), {
       custom_drift_mh_step();
     })
