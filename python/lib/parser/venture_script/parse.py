@@ -397,7 +397,7 @@ class Semantics(object):
     def p_primary_proc(self, k, po, params, pc, bo, body, bc):
         assert ast.isloc(body)
         return ast.locmerge(k, bc, [
-            ast.map_value(val.symbol, ast.update_value(k, 'lambda')),
+            ast.map_value(val.symbol, ast.update_value(k, 'proc')),
             ast.locmerge(po, pc, params),
             body,
         ])

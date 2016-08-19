@@ -292,6 +292,8 @@ def ObserveExpand(program):
   return SyntaxRule(pattern, template).expand(program)
 
 identityMacro = SyntaxRule(['identity', 'exp'], 'exp')
+procMacro = SyntaxRule(['proc', 'args', 'body'],
+                       ['proc_', ['lambda', 'args', 'body']])
 lambdaMacro = SyntaxRule(['lambda', 'args', 'body'],
                          ['make_csp', ['quote', 'args'], ['quote', 'body']],
                          desc="""\
@@ -779,7 +781,7 @@ For example::
 
 """)
 
-for m in [identityMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
+for m in [identityMacro, procMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
           letMacro, letrecMacro, valuesMacro,
           doMacro, beginMacro, actionMacro, qqMacro,
           callBackMacro, collectMacro,

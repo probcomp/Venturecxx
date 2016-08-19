@@ -118,9 +118,9 @@ define make_beta_bern_lambda_expanded = (a, b) -> {
 
 define make_beta_bern_proc = (a, b) -> {
   let theta ~ beta(a, b);
-  proc_(() ~> {
+  proc () {
     flip(theta)
-  })
+  }
 };
 
 define make_beta_bern_proc_expanded = (a, b) -> {
