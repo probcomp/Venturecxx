@@ -1,8 +1,6 @@
 // utility definitions
 define pass = return(nil);
 
-define make_sp = make_full_sp;
-
 // end utility defs
 
 // example usage
@@ -10,7 +8,6 @@ define make_sp = make_full_sp;
 define example_mem_hmm = () -> {
   run_in({
     // import defs from toplevel environment
-    assume make_sp = make_full_sp;
     assume mem = $mem;
     // end defs
     assume x = mem((t) -> {
@@ -23,14 +20,13 @@ define example_mem_hmm = () -> {
       bernoulli(if (x(t)) { 0.7 } else { 0.3 })
     };
     assume ys = vector(y(1), y(2), y(4), y(5), y(7), y(8));
-    value_at(toplevel(5))
+    value_at(toplevel(4))
   }, blank_trace())
 };
 
 define example_mem_hmm_regen = () -> {
   run_in({
     // import defs from toplevel environment
-    assume make_sp = make_full_sp;
     assume mem = $mem;
     // end defs
     assume x = mem((t) -> {
@@ -43,16 +39,16 @@ define example_mem_hmm_regen = () -> {
       bernoulli(if (x(t)) { 0.7 } else { 0.3 })
     };
     predict vector(x(1), x(2), x(3), y(1), y(2), y(3));
-    xy <- value_at(toplevel(5));
+    xy <- value_at(toplevel(4));
     _ = debug('xy', xy);
-    sp_addr = request(toplevel(2), toplevel(3));
+    sp_addr = request(toplevel(1), toplevel(2));
     s <- single_site_subproblem(request(sp_addr, 2));
     repeat(20, {
       p <- extract(s);
       w <- regen(s, rest(p));
       _ = debug('r', first(p));
       _ = debug('x', w);
-      xy <- value_at(toplevel(5));
+      xy <- value_at(toplevel(4));
       _ = debug('xy', xy);
     });
     return (nil)

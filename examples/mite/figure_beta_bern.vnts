@@ -1,8 +1,6 @@
 // define utility procedures
 define pass = return(nil);
 
-define make_sp = make_full_sp;
-
 define extract = {
   let old_extract = extract;
   (subproblem) -> {
@@ -39,7 +37,6 @@ define example_beta_bern = (make_beta_bern, infer) -> {
   run_in({
     // import defs from toplevel environment -- remove this in figure
     assume pass = $pass;
-    assume make_sp = $make_sp;
     assume extract = $extract;
     assume counter_set = $counter_set;
     assume counter = $counter;
@@ -190,7 +187,9 @@ define make_beta_bern_proc_expanded = (a, b) -> {
 
 define resimulation_infer = () -> {
   // hardcoding the subproblem...
-  subproblem <- single_site_subproblem(toplevel(9));
+  env <- global_env();
+  addr <- find_symbol(env, 'coin');
+  subproblem <- single_site_subproblem(addr);
   resimulation_step(subproblem)
 };
 
@@ -198,7 +197,9 @@ define resimulation_infer = () -> {
 
 define conjugate_gibbs_infer = () -> {
   // call the custom metaprogram
-  sp <- value_at(toplevel(9));
+  env <- global_env();
+  addr <- find_symbol(env, 'coin');
+  sp <- value_at(addr);
   invoke_metaprogram_of_sp(sp, 'infer_latent_conjugate_gibbs', [])
 };
 
