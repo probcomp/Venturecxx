@@ -1,7 +1,7 @@
 from venture.lite.env import VentureEnvironment
 import venture.lite.types as t
 
-from venture.mite.sp import SimulationSP
+from venture.mite.sp import VentureSP, SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 
 class ExtendEnvSP(SimulationSP):
@@ -13,3 +13,10 @@ class ExtendEnvSP(SimulationSP):
     return VentureEnvironment(env, [sym], [node])
 
 registerBuiltinSP("extend_environment", ExtendEnvSP())
+
+# TODO this is stubbed
+class GetCurrentEnvironmentSP(VentureSP):
+  def apply(self, trace_handle, _application_id, inputs):
+    return trace_handle.trace.global_env
+
+registerBuiltinSP("get_current_environment", GetCurrentEnvironmentSP())
