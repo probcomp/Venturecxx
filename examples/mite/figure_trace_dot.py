@@ -1,5 +1,6 @@
 import venture.shortcuts as v
 import venture.mite.address as addr
+import venture.mite.render as ren_json
 import venture.mite.render_graph as ren
 
 r = v.Mite().make_ripl(seed=1)
@@ -26,6 +27,26 @@ def render_trace(view):
     dot.format = 'eps'
     dot.render("trace", directory="figures", view=view)
 
+def render_extract_regen(target, name, view):
+    subp = trace.single_site_subproblem(target)
+    # extract
+    (_, f) = trace.extract(subp)
+    dot = ren.digraph(trace, subp,
+                      principal_nodes=set([target]))
+    dot.format = 'eps'
+    dot.render(name + "_extract", directory="figures", view=view)
+    print ren_json.pformat(ren_json.jsonable_fragment(f), indent=1)
+    # regen
+    _ = trace.regen(subp, f)
+    dot = ren.digraph(trace, subp,
+                      principal_nodes=set([target]))
+    dot.format = 'eps'
+    dot.render(name + "_regen", directory="figures", view=view)
+    # new trace
+    dot = ren.digraph_trace(trace)
+    dot.format = 'eps'
+    dot.render(name + "_new", directory="figures", view=view)
+
 # The minimal scaffold around the bernoulli choice
 target1 = addr.directive(1)
 render(target1, "trace_bernoulli", view=False)
@@ -39,3 +60,6 @@ render(target2, "trace_beta", view=False)
 
 # The whole trace
 render_trace(view=False)
+
+# Visualizing a whole extract/regen cycle
+render_extract_regen(target1, "trace_bernoulli", view=False)
