@@ -88,19 +88,24 @@ define mem = (f) -> {
 	     x <- value_at(subexpression(1, app_id));
 	     request_address(x)
 	   });
-	   return (dict(
-	     ['extract', (output, x) -> {
-	       return (pair(0, output))
-	     }],
-	     ['regen', (x) -> {
-	       output <- with(trace_handle, {
-		 value_at(addr)
-	       });
-	       return (pair(0, output))
-	     }],
-	     ['restore', (x, output) -> {
-	       return (output)
-	     }]))
+	   if (addr == parent) {
+	     return (dict(
+	       ['extract', (output, x) -> {
+		 return (pair(0, output))
+	       }],
+	       ['regen', (x) -> {
+		 output <- with(trace_handle, {
+		   value_at(addr)
+		 });
+		 return (pair(0, output))
+	       }],
+	       ['restore', (x, output) -> {
+		 return (output)
+	       }]))
+	   }
+	   else {
+	     return (nil)
+	   }
 	 }])
   } |], f)
 };
