@@ -19,6 +19,18 @@ def jsonable(trace):
            "observations" : _jsonable_dict(trace.observations, _jsonable_address, _jsonable_vv),
            "global_env" : _jsonable_environment(trace.global_env, True) }
 
+def jsonable_fragment(trace_fragment):
+  requests = {}
+  results = {}
+  for key, value in trace_fragment.items():
+    if isinstance(key, addr.Address):
+      results[key] = value[0]
+    elif isinstance(key, tuple):
+      requests[key[0]] = value
+  return { "requests" : _jsonable_dict(requests, _jsonable_address, _jsonable_request),
+           "results" : _jsonable_dict(results, _jsonable_address, _jsonable_vv),
+         }
+
 def identity(x): return x
 
 def _jsonable_dict(d, key_map, val_map=identity):
@@ -95,6 +107,8 @@ def _jsonable_vv(vv):
     return "a procedure"
   elif isinstance(vv, v.VentureArray):
     return [_jsonable_vv(val) for val in vv.getArray()]
+  elif vv is None:
+    return "(none)"
   else:
     raise Exception("Oops, missed venture value %s of type %s" % (vv, type(vv)))
 
