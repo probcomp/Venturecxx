@@ -66,17 +66,17 @@ define single_site = (timesteps) -> {
 define chain5 = {
   // hidden states
   assume x1 = flip();
-  assume x2 = flip(biplex(x1, 0.7, 0.3));
-  assume x3 = flip(biplex(x2, 0.7, 0.3));
-  assume x4 = flip(biplex(x3, 0.7, 0.3));
-  assume x5 = flip(biplex(x4, 0.7, 0.3));
+  assume x2 = flip(if (x1) { 0.7 } else { 0.3 });
+  assume x3 = flip(if (x2) { 0.7 } else { 0.3 });
+  assume x4 = flip(if (x3) { 0.7 } else { 0.3 });
+  assume x5 = flip(if (x4) { 0.7 } else { 0.3 });
 
   // observations
-  assume y1 = flip(biplex(x1, 0.9, 0.1));
-  assume y2 = flip(biplex(x2, 0.9, 0.1));
-  assume y3 = flip(biplex(x3, 0.9, 0.1));
-  assume y4 = flip(biplex(x4, 0.9, 0.1));
-  assume y5 = flip(biplex(x5, 0.9, 0.1));
+  assume y1 = flip(if (x1) { 0.9 } else { 0.1 });
+  assume y2 = flip(if (x2) { 0.9 } else { 0.1 });
+  assume y3 = flip(if (x3) { 0.9 } else { 0.1 });
+  assume y4 = flip(if (x4) { 0.9 } else { 0.1 });
+  assume y5 = flip(if (x5) { 0.9 } else { 0.1 });
 
   return(nil)
 };

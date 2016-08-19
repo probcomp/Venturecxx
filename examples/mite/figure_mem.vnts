@@ -16,11 +16,11 @@ define example_mem_hmm = () -> {
     assume x = mem((t) -> {
       if (t == 0) { flip() }
       else {
-	bernoulli(biplex(x(t - 1), 0.9, 0.1))
+	bernoulli(if (x(t - 1)) { 0.9 } else { 0.1 })
       }
     });
     assume y = (t) -> {
-      bernoulli(biplex(x(t), 0.7, 0.3))
+      bernoulli(if (x(t)) { 0.7 } else { 0.3 })
     };
     assume ys = vector(y(1), y(2), y(4), y(5), y(7), y(8));
     value_at(toplevel(5))
@@ -36,11 +36,11 @@ define example_mem_hmm_regen = () -> {
     assume x = mem((t) -> {
       if (t == 0) { flip() }
       else {
-	bernoulli(biplex(x(t - 1), 0.9, 0.1))
+	bernoulli(if (x(t - 1)) { 0.9 } else { 0.1 })
       }
     });
     assume y = (t) -> {
-      bernoulli(biplex(x(t), 0.7, 0.3))
+      bernoulli(if (x(t)) { 0.7 } else { 0.3 })
     };
     predict vector(x(1), x(2), x(3), y(1), y(2), y(3));
     xy <- value_at(toplevel(5));
