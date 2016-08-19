@@ -200,9 +200,9 @@ class BlankTrace(AbstractTrace):
     self.maybe_record_result(addr, value)
 
   def maybe_record_result(self, addr, value):
-    if isinstance(addr, addresses.directive):
+    if isinstance(addr, addresses.DirectiveAddress):
       self.results[addr] = value
-    elif isinstance(addr, addresses.request):
+    elif isinstance(addr, addresses.RequestAddress):
       # record the result of a request, in case the value at the same
       # id is requested again (like mem).
       # XXX except we don't want to have to store the result of every

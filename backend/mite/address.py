@@ -49,15 +49,6 @@ class DirectiveAddress(Address):
 class RequestAddress(Address):
   """An expression requested by a procedure."""
 
-  def __new__(cls, sp_addr, request_id):
-    # if the request_id is a foreign blob, unpack it
-    # (this happens when using the make_sp interface from Venture)
-    if request_id in t.Blob:
-      request_id = t.Blob.asPython(request_id)
-    elif request_id in t.Pair(t.Blob, t.Object):
-      request_id = t.Pair(t.Blob, t.Object).asPython(request_id)
-    return super(RequestAddress, cls).__new__(cls, sp_addr, request_id)
-
   def __init__(self, sp_addr, request_id):
     self.sp_addr = sp_addr
     self.request_id = request_id
@@ -78,8 +69,16 @@ class SubexpressionAddress(Address):
 builtin = BuiltinAddress
 directive = DirectiveAddress
 toplevel = DirectiveAddress
-request = RequestAddress
 subexpression = SubexpressionAddress
+
+def request(sp_addr, request_id):
+  # if the request_id is a foreign blob, unpack it
+  # (this happens when using the make_sp interface from Venture)
+  if request_id in t.Blob:
+    request_id = t.Blob.asPython(request_id)
+  elif request_id in t.Pair(t.Blob, t.Object):
+    request_id = t.Pair(t.Blob, t.Object).asPython(request_id)
+  return RequestAddress(sp_addr, request_id)
 
 
 ## VentureScript bindings for constructing addresses

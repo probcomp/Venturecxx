@@ -329,7 +329,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
           propagate = True
         else:
           kernel = {'type': 'constraint', 'val': val}
-      elif isinstance(parent, addresses.request):
+      elif isinstance(parent, addresses.RequestAddress):
         sp_ref = trace.value_at(node.operator_addr)
         sp_node = trace.deref_sp(sp_ref)
         sp = sp_node.value
@@ -348,7 +348,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
     if propagate and addr not in drg:
       drg.add(addr)
       request_children = set()
-      if isinstance(addr, addresses.request):
+      if isinstance(addr, addresses.RequestAddress):
         # by default, notify all applications of this SP.
         sp_node = trace.nodes[addr.sp_addr]
         request_children = sp_node.application_children
