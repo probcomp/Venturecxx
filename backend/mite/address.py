@@ -49,6 +49,13 @@ class DirectiveAddress(Address):
 class RequestAddress(Address):
   """An expression requested by a procedure."""
 
+  def __new__(cls, sp_addr, request_id):
+    # if the request_id is a foreign blob, unpack it
+    # (this happens when using the make_sp interface from Venture)
+    if request_id in t.Blob:
+      request_id = t.Blob.asPython(request_id)
+    return super(RequestAddress, cls).__new__(cls, sp_addr, request_id)
+
   def __init__(self, sp_addr, request_id):
     self.sp_addr = sp_addr
     self.request_id = request_id
