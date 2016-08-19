@@ -140,6 +140,15 @@ class DependencyGraphTrace(AbstractTrace):
     sp = sp_node.value
     return sp.run_in_helper_trace(key, input_values)
 
+  def proposal_kernel(self, addr, sp_ref):
+    # XXX for now just store the dicts, with extra attributes
+    # TODO make it easier to construct trace handles.
+    return {'addr': addr, 'sp_ref': sp_ref, 'type': 'proposal'}
+
+  def constraint_kernel(self, addr, sp_ref, val):
+    return {'addr': addr, 'sp_ref': sp_ref,
+            'type': 'constraint', 'val': val}
+
   ## support for regen/extract
 
   def single_site_subproblem(self, address, kernel=None):

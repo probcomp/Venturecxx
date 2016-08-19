@@ -134,10 +134,6 @@ class AbstractTrace(ITrace):
     assert scaffold.kernels
     return scaffold
 
-  def single_site_constraint(self, address, value):
-    kernel = {'type': 'constraint', 'val': value}
-    return self.single_site_subproblem(address, kernel)
-
   def register_observation(self, addr, value):
     self.observations[addr] = value
 
@@ -438,7 +434,7 @@ register_trace_type("_trace", ITrace, {
   "pyselect": trace_action("pyselect", [t.String], t.Blob),
   "pyselectf": trace_action("pyselect", [t.String, t.Dict(t.Symbol, t.Object)], t.Blob),
   "single_site_subproblem": trace_action("single_site_subproblem", [t.Blob], t.Blob),
-  "single_site_constraint": trace_action("single_site_constraint", [t.Blob, t.Object], t.Blob),
+  "single_site_subproblem_": trace_action("single_site_subproblem", [t.Blob, t.Blob], t.Blob),
   "extract": trace_action("extract", [t.Blob], t.Pair(t.Number, t.Blob)),
   "regen": trace_action("regen", [t.Blob, t.Blob], t.Number),
   "restore": trace_action("restore", [t.Blob, t.Blob], t.Nil),

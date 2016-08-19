@@ -120,6 +120,13 @@
                               (return false)))))))
         (loop loop (keys observations) (values observations))))]
 
+[define single_site_constraint
+  (lambda (addr value)
+    (do (oper <- (value_at (subexpression 0 addr)))
+	(kernel <- (constraint_kernel_of_sp_at addr oper value))
+	(subproblem <- (single_site_subproblem_ addr kernel))
+	(return subproblem)))]
+
 [define incorporate_constraint
   (lambda (addr value)
     (do (subproblem <- (single_site_constraint addr value))
