@@ -15,7 +15,7 @@ define traceplot = (steps) ~> {
     assume x ~ normal(0, 1);
     assume y ~ normal(x, 1);
     observe y = 4.0;
-    accumulate(steps, toplevel(1), {
+    accumulate(steps, /1, {
       custom_drift_mh_step();
     })
   }, flat_trace())
@@ -23,8 +23,8 @@ define traceplot = (steps) ~> {
 
 define custom_drift_mh_step = () -> {
   // read the current values of x and y from the trace
-  x <- value_at(toplevel(1));
-  y <- value_at(toplevel(2));
+  x <- value_at(/1);
+  y <- value_at(/2);
 
   // Gaussian drift proposal
   let x_proposed ~ normal(x, 0.5);
@@ -42,7 +42,7 @@ define custom_drift_mh_step = () -> {
   // accept or reject
   if (log_flip(new_weight - old_weight)) {
     // accept
-    set_value_at(toplevel(1), x_proposed);
+    set_value_at(/1, x_proposed);
   }
   else {
     // reject
