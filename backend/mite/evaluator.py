@@ -110,6 +110,9 @@ class TraceHandle(object):
     value = self.trace.value_at(addr)
     return value
 
+  # stub other methods, used by proc...
+  def __getattr__(self, name):
+    return getattr(self.trace, name)
 
 class Regenerator(Evaluator):
   """Unevaluate and regenerate according to a scaffold."""
