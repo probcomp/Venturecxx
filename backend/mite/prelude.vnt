@@ -107,6 +107,21 @@
         (eval_toplevel addr expr)
         (value_at addr)))]
 
+;; address literals
+
+[define by_top
+  (lambda () 'top)]
+
+[define by_walk
+  (lambda (parent index)
+    (if (= parent 'top)
+	(toplevel index)
+	(subexpression index parent)))]
+
+[define r
+  (lambda (sp id)
+    (request sp id))]
+
 ;; inference utilities
 
 [define check_consistent
