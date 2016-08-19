@@ -54,6 +54,8 @@ class RequestAddress(Address):
     # (this happens when using the make_sp interface from Venture)
     if request_id in t.Blob:
       request_id = t.Blob.asPython(request_id)
+    elif request_id in t.Pair(t.Blob, t.Object):
+      request_id = t.Pair(t.Blob, t.Object).asPython(request_id)
     return super(RequestAddress, cls).__new__(cls, sp_addr, request_id)
 
   def __init__(self, sp_addr, request_id):
