@@ -10,7 +10,7 @@ define trace = run_in({
   assume weight =
     if (coin_is_tricky) { beta(1.0, 1.0) }
     else { 0.5 };
-  observe bernoulli(weight) = true;
+  observe bernoulli(weight) = 1;
   clone_trace()
 }, graph_trace());""")
 trace = r.evaluate("trace")
