@@ -18,12 +18,12 @@ trace = r.evaluate("trace")
 def render(target, name, view):
     dot = ren.digraph(trace, trace.single_site_subproblem(target),
                       principal_nodes=set([target]))
-    dot.format = 'png'
+    dot.format = 'eps'
     dot.render(name, directory="figures", view=view)
 
 def render_trace(view):
     dot = ren.digraph_trace(trace)
-    dot.format = 'png'
+    dot.format = 'eps'
     dot.render("trace", directory="figures", view=view)
 
 # The minimal scaffold around the bernoulli choice
