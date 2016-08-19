@@ -326,7 +326,7 @@ class FlatTrace(AbstractTrace):
     fragment = ctx.fragment
     return (weight, fragment)
 
-  def regen_kernel(self, kernel, input_values, trace_fragment):
+  def regen_kernel(self, kernel, input_values, trace_fragment=None):
     addr = kernel['addr']
     sp_ref = kernel['sp_ref']
     subproblem = Scaffold({addr: kernel})
@@ -430,7 +430,7 @@ register_trace_type("_trace", ITrace, {
   "proposal_kernel_of_sp_at": trace_action("proposal_kernel", [t.Blob, t.Object], t.Blob),
   "constraint_kernel_of_sp_at": trace_action("constraint_kernel", [t.Blob, t.Object, t.Object], t.Blob),
   "extract_kernel": trace_action("extract_kernel", [t.Blob, t.Object, t.List(t.Object)], t.Pair(t.Number, t.Blob)),
-  "regen_kernel": trace_action("regen_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Pair(t.Number, t.Object)),
+  "regen_kernel": trace_action("regen_kernel", [t.Blob, t.List(t.Object)], t.Pair(t.Number, t.Object)),
   "restore_kernel": trace_action("restore_kernel", [t.Blob, t.List(t.Object), t.Blob], t.Object),
   "get_observations": trace_action("get_observations", [], t.Dict(t.Blob, t.Object)),
   "clone_trace": trace_action("copy", [], t.Blob),
