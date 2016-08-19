@@ -17,6 +17,6 @@ def gen_for_each(items):
 sys.path.append('examples/mite/')
 
 @gen_on_inf_prim("none")
-@gen_for_each(["figure_rejection", "figure_rmh", "figure_drift"])
+@gen_for_each(["figure_rejection", "figure_rmh", "figure_drift", "figure_beta_bern", "figure_bayes"])
 def testFigure(script_name):
   importlib.import_module(script_name).compute_results(1)
