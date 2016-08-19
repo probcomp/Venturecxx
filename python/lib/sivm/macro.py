@@ -279,6 +279,20 @@ def quasiquotation_macro(name, desc="", min_size = None, max_size = None):
     return SyntaxRule(pattern, template).expand(program)
   return Macro(arg0(name), expander, desc=desc, intended_for_inference=True)
 
+# used for make_sp and make_elementary_sp in mite
+def closure_quasiquotation_macro(name, desc=""):
+  def expander(program):
+    if len(program) > 2:
+      import pdb; pdb.set_trace()
+    assert len(program) == 2, program[2:]
+    (_lambda, params, body) = program[1]
+    pat_names = ["datum-%d" % i for i in range(len(params))]
+    pattern = [name, ["lambda", pat_names, "body"]]
+    template = ["_" + name] + [
+      ["quasiquote", ["lambda", pat_names, "body"]]] + pat_names
+    return SyntaxRule(pattern, template).expand(program)
+  return Macro(arg0(name), expander, desc=desc)
+
 def ObserveExpand(program):
   assert len(program) == 3 or len(program) == 4
   if len(program) == 4:
@@ -781,6 +795,10 @@ For example::
 
 """)
 
+# mite-specific macros
+makeSPMacro = closure_quasiquotation_macro("make_sp")
+makeElemSPMacro = closure_quasiquotation_macro("make_elementary_sp")
+
 for m in [identityMacro, procMacro, lambdaMacro, ifMacro, condMacro, andMacro, orMacro,
           letMacro, letrecMacro, valuesMacro,
           doMacro, beginMacro, actionMacro, qqMacro,
@@ -790,5 +808,6 @@ for m in [identityMacro, procMacro, lambdaMacro, ifMacro, condMacro, andMacro, o
           sampleMacro, sampleAllMacro,
           extractStatsMacro,
           refMacro, derefMacro,
+          makeSPMacro, makeElemSPMacro,
           ListMacro(), LiteralMacro()]:
   register_macro(m)

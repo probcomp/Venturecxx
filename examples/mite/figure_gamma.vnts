@@ -29,7 +29,7 @@ define assess_std_gamma = (x, alpha) -> {
 };
 
 // encapsulated as an SP:
-define std_gamma = make_elementary_sp([| () -> {
+define std_gamma = make_elementary_sp(() -> {
   let simulate_std_gamma = ${simulate_std_gamma};
   let assess_std_gamma = ${assess_std_gamma};
   dict(
@@ -39,4 +39,4 @@ define std_gamma = make_elementary_sp([| () -> {
     ['log_density', (x, alpha) -> {
       return (assess_std_gamma(alpha))
     }])
-} |]);
+});

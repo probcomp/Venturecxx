@@ -45,7 +45,7 @@ define assess_std_normal = (x) -> {
   -0.5 * log(2 * 3.14159265) - 0.5 * x * x
 };
 
-define std_normal = make_elementary_sp([| () -> {
+define std_normal = make_elementary_sp(() -> {
   let simulate_std_normal = ${simulate_std_normal};
   let assess_std_normal = ${assess_std_normal};
   dict(
@@ -56,9 +56,9 @@ define std_normal = make_elementary_sp([| () -> {
     ['log_density', (x) -> {
       return (assess_std_normal(x))
     }])
-} |]);
+});
 
-define unit_normal = make_elementary_sp([| () -> {
+define unit_normal = make_elementary_sp(() -> {
   let simulate_std_normal = ${simulate_std_normal};
   let assess_std_normal = ${assess_std_normal};
   dict(
@@ -69,6 +69,6 @@ define unit_normal = make_elementary_sp([| () -> {
     ['log_density', (x, mean) -> {
       return (assess_std_normal(x - mean))
     }])
-} |]);
+});
 
 define normal_normal_posterior_density = actually_run_bayes_rule(std_normal, unit_normal, 4.0, n_samples: 500);

@@ -55,4 +55,4 @@ class MadeSimulationSP(SimulationSP):
 # TODO: rename to "elementary" SP everywhere
 # (including the "SimulationSP" class itself)
 registerBuiltinSP("make_simulation_sp", MakeSimulationSP())
-registerBuiltinSP("make_elementary_sp", MakeSimulationSP())
+registerBuiltinSP("_make_elementary_sp", MakeSimulationSP())

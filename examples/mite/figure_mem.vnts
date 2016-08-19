@@ -56,7 +56,7 @@ define example_mem_hmm_regen = () -> {
 };
 
 define mem = (f) -> {
-  make_sp([| (f) -> {
+  make_sp((f) -> {
     dict(['state', mem_table()],
 	 ['apply', (trace_handle, app_id, x) -> {
 	   has_value <- mem_has_value(x);
@@ -103,5 +103,5 @@ define mem = (f) -> {
 	     return (nil)
 	   }
 	 }])
-  } |], f)
+  })
 };

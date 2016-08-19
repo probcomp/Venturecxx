@@ -71,7 +71,7 @@ define make_beta_bern_lambda = (a, b) -> {
 define make_beta_bern_lambda_expanded = (a, b) -> {
   let theta ~ beta(a, b);
   let env = get_current_environment();
-  make_sp([| (theta) -> {
+  make_sp((theta) -> {
     let exp = [| flip(theta) |];
     dict(['state', nil],
 	 ['apply', (trace_handle, app_id) -> {
@@ -108,7 +108,7 @@ define make_beta_bern_lambda_expanded = (a, b) -> {
 	       })
 	     }]))
 	 }])
-  } |], theta)
+  })
 };
 
 // definition as tail-assessable compound
@@ -123,7 +123,7 @@ define make_beta_bern_proc = (a, b) -> {
 define make_beta_bern_proc_expanded = (a, b) -> {
   let theta ~ beta(a, b);
   env = get_current_environment();
-  make_sp([| (theta) -> {
+  make_sp((theta) -> {
     let operator_exp = [| flip |];
     let operand_exp = [| theta |];
     dict(['state', nil],
@@ -180,7 +180,7 @@ define make_beta_bern_proc_expanded = (a, b) -> {
 	       })
 	     }]))
 	 }])
-  } |], theta)
+  })
 };
 
 // inference for the tail-assessable compound
@@ -206,7 +206,7 @@ define conjugate_gibbs_infer = () -> {
 // definition as stateful collapsed procedure
 
 define make_beta_bern_collapsed = (a, b) -> {
-  make_elementary_sp([| (a, b) -> {
+  make_elementary_sp((a, b) -> {
     // import defs from toplevel environment -- remove this in figure
     let pass = $pass;
     let old_extract = extract;
@@ -238,13 +238,13 @@ define make_beta_bern_collapsed = (a, b) -> {
            counter_decr('N');
            if (x) { counter_decr('K') } else { pass };
          }])
-  } |], a, b)
+  })
 };
 
 // definition as stateful uncollapsed procedure with Gibbs kernels
 
 define make_beta_bern_uncollapsed = (a, b) -> {
-  make_elementary_sp([| (a, b) -> {
+  make_elementary_sp((a, b) -> {
     // import defs from toplevel environment -- remove this in figure
     let pass = $pass;
     let old_extract = extract;
@@ -282,7 +282,7 @@ define make_beta_bern_uncollapsed = (a, b) -> {
            let new_theta ~ beta(a + K, b + N - K);
            counter_set('theta', new_theta);
          }])
-  } |], a, b)
+  })
 };
 
 // supporting definitions
@@ -323,7 +323,7 @@ define counter_decr = (key) -> {
 // another copy of definition, using foreign counter instead of VS
 
 define make_beta_bern_coll_foreign = (a, b) -> {
-  make_elementary_sp([| (a, b) -> {
+  make_elementary_sp((a, b) -> {
     // import defs from toplevel environment -- remove this in figure
     let pass = $pass;
     let old_extract = extract;
@@ -350,13 +350,13 @@ define make_beta_bern_coll_foreign = (a, b) -> {
            counter_decr('N');
            if (x) { counter_decr('K') } else { pass };
          }])
-  } |], a, b)
+  })
 };
 
 // definition as stateful uncollapsed procedure with Gibbs kernels
 
 define make_beta_bern_uncoll_foreign = (a, b) -> {
-  make_elementary_sp([| (a, b) -> {
+  make_elementary_sp((a, b) -> {
     // import defs from toplevel environment -- remove this in figure
     let pass = $pass;
     let old_extract = extract;
@@ -389,6 +389,6 @@ define make_beta_bern_uncoll_foreign = (a, b) -> {
            let new_theta ~ beta(a + K, b + N - K);
            counter_set('theta', new_theta);
          }])
-  } |], a, b)
+  })
 };
 

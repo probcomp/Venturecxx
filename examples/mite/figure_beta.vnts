@@ -6,7 +6,7 @@ define my_beta_1 = (a, b) -> {
   y/(y + z)
 };
 
-define my_beta_2 = make_elementary_sp([| () -> {
+define my_beta_2 = make_elementary_sp(() -> {
   dict(['simulate', (a, b) -> {
          let y ~ gamma(a, 1);
          let z ~ gamma(b, 1);
@@ -17,9 +17,9 @@ define my_beta_2 = make_elementary_sp([| () -> {
          let denominator = log_beta_function(a, b);
          return (numerator - denominator)
        }])
-} |]);
+});
 
-define my_beta_2_real = make_elementary_sp([| () -> {
+define my_beta_2_real = make_elementary_sp(() -> {
   let log_beta_function = (a, b) -> {
     if (a == 1) { 0 - log(b) }
     else { log_beta_function(a - 1, b) + log(a - 1) - log(a + b - 1) }
@@ -42,4 +42,4 @@ define my_beta_2_real = make_elementary_sp([| () -> {
        ['unincorporate', (x, a, b) -> {
          pass
        }])
-} |]);
+});

@@ -107,4 +107,4 @@ class ProxyKernel(ApplicationKernel):
     return value
 
 registerBuiltinSP("make_full_sp", MakeFullSP())
-registerBuiltinSP("make_sp", MakeFullSP())
+registerBuiltinSP("_make_sp", MakeFullSP())
