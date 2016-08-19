@@ -64,7 +64,7 @@ def _kernel_type(ker):
 def digraph_trace(trace):
   dot = Digraph(name="A trace")
   addrs = [ad for ad in trace.nodes.keys() if not isinstance(ad, addr.BuiltinAddress)]
-  for ad in addrs:
+  for ad in sorted(addrs, key=repr):
     _add_node_for(dot, trace, ad)
   _add_links(dot, trace, addrs)
   return dot
