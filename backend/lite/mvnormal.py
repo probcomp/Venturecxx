@@ -94,6 +94,9 @@ def logpdf(X, Mu, Sigma):
   assert X.shape == (n,)
   assert Mu.shape == (n,)
   assert Sigma.shape == (n, n)
+  assert np.all(np.isfinite(X))
+  assert np.all(np.isfinite(Mu))
+  assert np.all(np.isfinite(Sigma))
 
   X_ = X - Mu
   covf = _covariance_factor(Sigma)
@@ -202,6 +205,9 @@ def dlogpdf(X, Mu, dMu, Sigma, dSigma):
   assert all(dmu_i.shape == (n,) for dmu_i in dMu)
   assert Sigma.shape == (n, n)
   assert all(dsigma_i.shape == (n, n) for dsigma_i in dSigma)
+  assert np.all(np.isfinite(X))
+  assert np.all(np.isfinite(Mu))
+  assert np.all(np.isfinite(Sigma))
 
   X_ = X - Mu
   covf = _covariance_factor(Sigma)
@@ -250,6 +256,13 @@ def conditional(X2, Mu1, Mu2, Sigma11, Sigma12, Sigma21, Sigma22):
   assert Sigma12.shape == (d1, d2)
   assert Sigma21.shape == (d2, d1)
   assert Sigma22.shape == (d2, d2)
+  assert np.all(np.isfinite(X2))
+  assert np.all(np.isfinite(Mu1))
+  assert np.all(np.isfinite(Mu2))
+  assert np.all(np.isfinite(Sigma11))
+  assert np.all(np.isfinite(Sigma12))
+  assert np.all(np.isfinite(Sigma21))
+  assert np.all(np.isfinite(Sigma22))
 
   covf22 = _covariance_factor(Sigma22)
   Mu_ = Mu1 + np.dot(Sigma12, covf22.solve(X2 - Mu2))
