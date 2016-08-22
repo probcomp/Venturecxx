@@ -147,17 +147,19 @@ define mem = (f) -> {
 	   });
 	   if (addr == parent) {
 	     return (dict(
-	       ['extract', (output, x) -> {
-		 return (pair(0, output))
+	       ['extract', (y, x) -> {
+		 let trace_fragment = y;
+		 return (pair(0, trace_fragment))
 	       }],
 	       ['regen', (x) -> {
-		 output <- with(trace_handle, {
+		 y <- with(trace_handle, {
 		   value_at(addr)
 		 });
-		 return (pair(0, output))
+		 return (pair(0, y))
 	       }],
-	       ['restore', (x, output) -> {
-		 return (output)
+	       ['restore', (x, trace_fragment) -> {
+		 let y = trace_fragment;
+		 return (y)
 	       }]))
 	   }
 	   else {
