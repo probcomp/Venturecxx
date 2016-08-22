@@ -27,8 +27,8 @@ class CounterState(object):
     return ret
 
 register_trace_type("counter", CounterState, {
-  "counter_get": trace_action("get", [t.Symbol], t.Number),
-  "counter_set": trace_action("set", [t.Symbol, t.Number], t.Nil),
-  "counter_incr": trace_action("incr", [t.Symbol], t.Nil),
-  "counter_decr": trace_action("decr", [t.Symbol], t.Nil),
+  "counter_get": trace_action("get", [t.Object], t.Number),
+  "counter_set": trace_action("set", [t.Object, t.Number], t.Nil),
+  "counter_incr": trace_action("incr", [t.Object], t.Nil),
+  "counter_decr": trace_action("decr", [t.Object], t.Nil),
 })
