@@ -20,6 +20,8 @@ from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import SP
 from venture.lite.sp import SPType
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import override
+from venture.lite.value import VentureArray
 from venture.lite.value import VentureValue
 from venture.lite.value import registerVentureType
 import venture.value.dicts as v
@@ -56,12 +58,12 @@ class VentureFunction(VentureValue):
 registerVentureType(VentureFunction, "function")
 
 class VentureTangentFunction(VentureFunction):
-  """Tangent vector to a point in a finitely parametrized function space.
+  """Tangent vector to a point in a parametrized function space.
 
   A tangent vector is a pair (f, df) where f is a function and df
   represents a direction in the function space by a function of the
   same arguments that returns a list of partial derivatives, one for
-  each parameter in the space.
+  each parameter in the parameter space.
 
   Specifically, if for any theta = (theta_0, theta_1, ...,
   theta_{k-1}) in a parameter space Theta, there is a function
@@ -74,11 +76,21 @@ class VentureTangentFunction(VentureFunction):
   any x, f(x) computes F_theta(x), and df(x) computes a list of k
   partial derivatives [d/dtheta_0 F_theta(x), d/dtheta_1 F_theta(x),
   ..., d/dtheta_{k-1} F_theta(x)] in all parameter directions.
+
+  A parameter may be either \R or a cartesian product of parameters.
   """
 
-  def __init__(self, f, df, *args, **kwargs):
+  def __init__(self, f, df, parameters, *args, **kwargs):
     super(VentureTangentFunction, self).__init__(f, *args, **kwargs)
-    self.df = df
+    self._df = df
+    self._parameters = parameters
+
+  @property
+  def df(self):
+    return self._df
+  @property
+  def parameters(self):
+    return self._parameters
 
   def gradient_type(self):
     return VentureTangentFunction
@@ -94,6 +106,51 @@ class VentureTangentFunction(VentureFunction):
     val['sp_type'] = self.sp_type
     val.update(self.stuff)
     return val
+
+class Param(object):
+  def __init__(self):
+    raise NotImplementedError
+  def flat_size(self):
+    raise NotImplementedError
+
+class ParamLeaf(Param):
+  @override(Param)
+  def __init__(self):
+    pass
+
+  @override(Param)
+  def flat_size(self):
+    return 1
+
+class ParamProduct(Param):
+  @override(Param)
+  def __init__(self, factors):
+    assert isinstance(factors, list)
+    self._factors = factors
+    self._flat_size = sum(f.flat_size() for f in factors)
+
+  @override(Param)
+  def flat_size(self):
+    return self._flat_size
+
+  @property
+  def factors(self):
+    return self._factors
+
+def parameter_nest(parameters, flat_args):
+  args = []
+  i = 0
+  for p in parameters:
+    s = p.flat_size()
+    assert s <= len(flat_args)
+    if isinstance(p, ParamLeaf):
+      assert s == 1
+      args += flat_args[i : i+s]
+    else:
+      args.append(VentureArray(flat_args[i : i+s]))
+    i += s
+  assert i == len(flat_args)
+  return args
 
 class ApplyFunctionOutputPSP(DeterministicPSP):
   def simulate(self,args):
