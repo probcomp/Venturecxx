@@ -57,27 +57,23 @@ define example_mem_hmm_regen = () -> {
 
 define mem = (f) -> {
   make_sp((f) -> {
-    dict(['state', mem_table()],
+    dict(['state', counter()],
 	 ['apply', (trace_handle, app_id, x) -> {
-	   has_value <- mem_has_value(x);
-	   if (has_value) {
-	     y <- mem_lookup(x);
-	     mem_incr(x);
-	     return (y)
-	   }
-	   else {
-	     let exp = [| f($x) |];
-	     let env = extend_environment(
-	       get_empty_environment(), 'f', address_of(f));
-	     y <- with(trace_handle, {
-	       addr <- request_address(x);
-	       value <- eval_request(addr, exp, env);
-	       return (value)
-	     });
-	     mem_assoc(x, y);
-	     mem_incr(x);
-	     return (y)
-	   }
+	   ref_count <- counter_get(x);
+	   y <- with(trace_handle, {
+	     addr <- request_address(x);
+	     if (ref_count > 0) {
+	       value_at(addr)
+	     }
+	     else {
+	       let exp = [| f($x) |];
+	       let env = extend_environment(
+		 get_empty_environment(), 'f', address_of(f));
+	       eval_request(addr, exp, env)
+	     }
+	   });
+	   counter_incr(x);
+	   return (y)
 	 }],
 	 ['propagating_kernel', (trace_handle, app_id, parent) -> {
 	   addr <- with(trace_handle, {
