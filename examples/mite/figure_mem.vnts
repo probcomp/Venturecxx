@@ -24,6 +24,25 @@ define example_mem_hmm = () -> {
   }, blank_trace())
 };
 
+define example_mem_brush = () -> {
+  run_in({
+    // import defs from toplevel environment
+    assume mem = $mem;
+    // end defs
+    assume x = mem(i -> normal(0, 1));
+    assume x1 = x(true);
+    assume x2 = x(flip());
+    s <- single_site_subproblem(/4/1);
+    repeat(20, {
+      p <- extract(s);
+      w <- regen(s, rest(p));
+      x1 <- value_at(/3);
+      x2 <- value_at(/4);
+      _ = debug('x', [x1, x2]);
+    });
+  }, graph_trace())
+};
+
 define example_mem_hmm_regen = () -> {
   run_in({
     // import defs from toplevel environment
