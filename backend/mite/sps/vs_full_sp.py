@@ -49,8 +49,12 @@ class MadeFullSP(VentureSP):
   def constraint_kernel(self, trace_handle, app_id, val):
     handle = t.Blob.asVentureValue(trace_handle)
     app_id = t.Blob.asVentureValue(app_id)
-    kernel_dict = self.run_in_helper_trace('constraint_kernel', [handle, app_id, val])
-    return ProxyKernel(self.helper_trace, kernel_dict)
+    # TODO detect absence of a method definition more reliably
+    try:
+      kernel_dict = self.run_in_helper_trace('constraint_kernel', [handle, app_id, val])
+      return ProxyKernel(self.helper_trace, kernel_dict)
+    except KeyError:
+      return NotImplemented
 
   def propagating_kernel(self, trace_handle, app_id, parent):
     handle = t.Blob.asVentureValue(trace_handle)
