@@ -7,16 +7,71 @@ define my_beta_1 = (a, b) -> {
 };
 
 define my_beta_2 = make_elementary_sp(() -> {
-  dict(['simulate', (a, b) -> {
-         let y ~ gamma(a, 1);
-         let z ~ gamma(b, 1);
-         return (y/(y + z))
-       }],
-       ['log_density', (x, a, b) -> {
-         let numerator = (a - 1) * log(x) + (b - 1) * log(1 - x);
-         let denominator = log_beta_function(a, b);
-         return (numerator - denominator)
-       }])
+  dict(
+    ['simulate', (a, b) -> {
+      let y ~ gamma(a, 1);
+      let z ~ gamma(b, 1);
+      return (y/(y + z))
+    }],
+    ['log_density', (x, a, b) -> {
+      let numerator = (a - 1) * log(x) + (b - 1) * log(1 - x);
+      let denominator = log_beta_function(a, b);
+      return (numerator - denominator)
+    }])
+});
+
+define my_beta_2_expanded = make_sp(() -> {
+  let log_beta_function = (a, b) -> {
+    if (a == 1) { 0 - log(b) }
+    else { log_beta_function(a - 1, b) + log(a - 1) - log(a + b - 1) }
+  };
+  dict(
+    ['state', nil],
+    ['apply', (trace_handle, app_id, a, b) -> {
+      let y ~ gamma(a, 1);
+      let z ~ gamma(b, 1);
+      return (y/(y + z))
+    }],
+    ['proposal_kernel', (trace_handle, app_id) -> {
+      return (dict(
+	['extract', (x, a, b) -> {
+	  let trace_fragment = x;
+	  return (pair(0, trace_fragment))
+	}],
+	['regen', (a, b) -> {
+	  let y ~ gamma(a, 1);
+	  let z ~ gamma(b, 1);
+	  return (pair(0, y/(y + z)))
+	}],
+	['restore', (a, b, trace_fragment) -> {
+	  let x = trace_fragment;
+	  return (x)
+	}]))
+    }],
+    ['constraint_kernel', (trace_handle, app_id, val) -> {
+      return (dict(
+	['extract', (x, a, b) -> {
+	  let numerator = (a - 1) * log(x) + (b - 1) * log(1 - x);
+	  let denominator = log_beta_function(a, b);
+	  let weight =
+	    if (x == val) {
+	      (numerator - denominator)
+	    } else { log(0) };
+	  let trace_fragment = x;
+	  return (pair(weight, trace_fragment))
+	}],
+	['regen', (a, b) -> {
+	  let x = val;
+	  let numerator = (a - 1) * log(x) + (b - 1) * log(1 - x);
+	  let denominator = log_beta_function(a, b);
+	  let weight = (numerator - denominator);
+	  return (pair(weight, x))
+	}],
+	['restore', (a, b, trace_fragment) -> {
+	  let x = trace_fragment;
+	  return (x)
+	}]))
+    }])
 });
 
 define my_beta_2_real = make_elementary_sp(() -> {
