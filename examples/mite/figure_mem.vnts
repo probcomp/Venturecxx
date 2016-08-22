@@ -76,6 +76,7 @@ define example_mem_hmm_regen = () -> {
 
 define mem = (f) -> {
   make_sp((f) -> {
+    let pass = return(nil);
     dict(['state', counter()],
 	 ['apply', (trace_handle, app_id, x) -> {
 	   ref_count <- counter_get(x);
@@ -93,6 +94,51 @@ define mem = (f) -> {
 	   });
 	   counter_incr(x);
 	   return (y)
+	 }],
+	 ['proposal_kernel', (trace_handle, app_id) -> {
+	   return (dict(
+	     ['extract', (y, x) -> {
+	       counter_decr(x);
+	       ref_count <- counter_get(x);
+	       with(trace_handle, {
+		 if (ref_count == 0) {
+		   addr <- request_address(x);
+		   uneval_request(addr);
+		 } else { pass };
+		 return (pair(0, nil))
+	       })
+	     }],
+	     ['regen', (x) -> {
+	       ref_count <- counter_get(x);
+	       y <- with(trace_handle, {
+		 addr <- request_address(x);
+		 if (ref_count > 0) {
+		   value_at(addr)
+		 }
+		 else {
+		   let exp = [| f($x) |];
+		   let env = extend_environment(
+		     get_empty_environment(), 'f', address_of(f));
+		   eval_request(addr, exp, env)
+		 }
+	       });
+	       counter_incr(x);
+	       return (pair(0, y))
+	     }],
+	     ['restore', (x, trace_fragment) -> {
+	       ref_count <- counter_get(x);
+	       y <- with(trace_handle, {
+		 addr <- request_address(x);
+		 if (ref_count > 0) {
+		   value_at(addr)
+		 }
+		 else {
+		   restore_request(addr)
+		 }
+	       });
+	       counter_incr(x);
+	       return (pair(0, y))
+	     }]))
 	 }],
 	 ['propagating_kernel', (trace_handle, app_id, parent) -> {
 	   addr <- with(trace_handle, {
