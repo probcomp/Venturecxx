@@ -231,3 +231,17 @@ def test_gradients(seed):
   ripl.observe('(gp 2)', '4')
   ripl.observe('(gp 3)', '8')
   ripl.infer('(grad_ascent default one 0.1 10 10)')
+
+@stochasticTest
+def test_2d(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s', '(expon 1)')
+  ripl.assume('l', '(expon 1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '(gp_cov_scale (* s s) (gp_cov_se (* l l)))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
+  ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
+  ripl.infer('(mh default one 1)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')

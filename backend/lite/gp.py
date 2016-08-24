@@ -122,13 +122,13 @@ class GPOutputPSP(RandomPSP):
     xs = args.operandValues()[0]
 
     for x, o in zip(xs, os):
-      samples[x] = o
+      samples[tuple(x) if isinstance(x, np.ndarray) else x] = o
 
   def unincorporate(self, _os, args):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
     for x in xs:
-      del samples[x]
+      del samples[tuple(x) if isinstance(x, np.ndarray) else x]
 
 class GPOutputPSP1(GPOutputPSP):
   # version of GPOutputPSP that accepts and returns scalars.
@@ -155,7 +155,7 @@ class GPOutputPSP1(GPOutputPSP):
     del samples[x]
 
 gpType = SPType(
-  [t.ArrayUnboxedType(t.NumberType())],
+  [t.ArrayUnboxedType(t.NumericArrayType())],
   t.ArrayUnboxedType(t.NumberType()))
 
 gp1Type = SPType([t.NumberType()], t.NumberType())
@@ -228,8 +228,8 @@ makeGPSP = SP(NullRequestPSP(), TypedPSP(MakeGPOutputPSP(), makeGPType))
 
 registerBuiltinSP("make_gp", makeGPSP)
 
-xType = t.NumberType("x")
-oType = t.NumberType("o")
+xType = t.NumericArrayType("x")
+oType = t.NumericArrayType("o")
 xsType = t.HomogeneousArrayType(xType)
 osType = t.HomogeneousArrayType(oType)
 
@@ -293,10 +293,10 @@ def shape_kernels(*ps):
 
 def mean_const(c):
   "Constant mean function, everywhere equal to c."
-  return lambda x: c*np.ones(x.shape)
+  return lambda x: c*np.ones(x.shape[0])
 
 def d_mean_const(c):
-  return lambda x: [np.ones(x.shape)]
+  return lambda x: [np.ones(x.shape[0])]
 
 registerBuiltinSP("gp_mean_const",
   _mean_grad_maker(mean_const, d_mean_const, shape_reals, [t.NumberType("c")]))
