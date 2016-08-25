@@ -32,41 +32,59 @@ import os
 import subprocess
 import sys
 
-with open('VERSION', 'rU') as f:
-    version = f.readline().strip()
+def get_version():
+    with open('VERSION', 'rb') as f:
+        version = f.read().strip()
 
-# Append the Git commit id if this is a development version.
-if version.endswith('+'):
-    prefix = 'release-'
-    tag = prefix + version[:-1]
-    try:
+    # Append the Git commit id if this is a development version.
+    if version.endswith('+'):
+        import re
+        import subprocess
+        version = version[:-1]
+        tag = 'release-' + version
         # The --tags option includes non-annotated tags in the search.
         desc = subprocess.check_output([
-            'git', 'describe', '--dirty', '--match', tag, '--tags'
+            'git', 'describe', '--dirty', '--long', '--match', tag, '--tags',
         ])
-    except Exception:
-        version += 'unknown'
+        match = re.match(r'^release-([^-]*)-([0-9]+)-(.*)$', desc)
+        assert match is not None
+        verpart, revpart, localpart = match.groups()
+        assert verpart == version
+        # Local part may be g0123abcd or g0123abcd-dirty.  Hyphens are
+        # not kosher here, so replace by dots.
+        localpart = localpart.replace('-', '.')
+        full_version = '%s.post%s+%s' % (verpart, revpart, localpart)
     else:
-        assert desc.startswith(tag)
-        import re
-        match = re.match(prefix + r'([^-]*)-([0-9]+)-(.*)$', desc)
-        if match is None:       # paranoia
-            version += 'unknown'
-        else:
-            ver, rev, local = match.groups()
-            version = '%s.post%s+%s' % (ver, rev, local.replace('-', '.'))
-            assert '-' not in version
+        full_version = version
 
-# XXX Mega-kludge.  See below about grammars for details.
-try:
-    with open('python/lib/version.py', 'rU') as f:
-        version_old = f.readlines()
-except IOError:
-    version_old = None
-version_new = ['__version__ = %s\n' % (repr(version),)]
-if version_old != version_new:
-    with open('python/lib/version.py', 'w') as f:
-        f.writelines(version_new)
+    # Strip the local part if there is one, to appease pkg_resources,
+    # which handles only PEP 386, not PEP 440.
+    if '+' in full_version:
+        pkg_version = full_version[:full_version.find('+')]
+    else:
+        pkg_version = full_version
+
+    # Sanity-check the result.  XXX Consider checking the full PEP 386
+    # and PEP 440 regular expressions here?
+    assert '-' not in full_version, '%r' % (full_version,)
+    assert '-' not in pkg_version, '%r' % (pkg_version,)
+    assert '+' not in pkg_version, '%r' % (pkg_version,)
+
+    return pkg_version, full_version
+
+pkg_version, full_version = get_version()
+
+def write_version_py(path):
+    try:
+        with open(path, 'rb') as f:
+            version_old = f.read()
+    except IOError:
+        version_old = None
+    version_new = '__version__ = %r\n' % (full_version,)
+    if version_old != version_new:
+        print 'writing %s' % (path,)
+        with open(path, 'wb') as f:
+            f.write(version_new)
 
 ON_LINUX = 'linux' in sys.platform
 ON_MAC = 'darwin' in sys.platform
@@ -283,6 +301,7 @@ def generate_parser(lemonade, path_y):
 
 class local_build_py(build_py):
     def run(self):
+        write_version_py(version_py)
         for grammar in grammars:
             generate_parser(lemonade, grammar)
         build_py.run(self)
@@ -350,22 +369,32 @@ tests_require = [
     # TODO Is markdown2 a real dependency?
 ]
 
-# XXX For inexplicable reasons, during sdist.run, setuptools quietly
-# modifies self.distribution.metadata.version to replace plus signs by
-# hyphens -- even where they are explicitly allowed by PEP 440.
-# distutils does not do this -- only setuptools.
+# Make sure the VERSION file in the sdist is exactly specified, even
+# if it is a development version, so that we do not need to run git to
+# discover it -- which won't work because there's no .git directory in
+# the sdist.
 class local_sdist(sdist):
-    # This is not really a subcommand -- it's actually a predicate to
-    # determine whether to run a subcommand.  So modifying anything in
-    # it is a little evil.  But it'll do.
-    def fixidioticegginfomess(self):
-        self.distribution.metadata.version = version
-        return False
-    sub_commands = [('sdist_fixidioticegginfomess', fixidioticegginfomess)]
+    def make_release_tree(self, base_dir, files):
+        import os
+        sdist.make_release_tree(self, base_dir, files)
+        version_file = os.path.join(base_dir, 'VERSION')
+        print('updating %s' % (version_file,))
+        # Write to temporary file first and rename over permanent not
+        # just to avoid atomicity issues (not likely an issue since if
+        # interrupted the whole sdist directory is only partially
+        # written) but because the upstream sdist may have made a hard
+        # link, so overwriting in place will edit the source tree.
+        with open(version_file + '.tmp', 'wb') as f:
+            f.write('%s\n' % (pkg_version,))
+        os.rename(version_file + '.tmp', version_file)
+
+# XXX These should be attributes of `setup', but helpful distutils
+# doesn't pass them through when it doesn't know about them a priori.
+version_py = 'python/lib/version.py'
 
 setup (
     name = 'venture',
-    version = version,
+    version = pkg_version,
     author = 'MIT Probabilistic Computing Project',
     author_email = 'venture-dev@lists.csail.mit.edu',
     url = 'http://probcomp.csail.mit.edu/venture/',
