@@ -56,8 +56,8 @@ def testHMMParticleAsymptotics1():
 
 @attr('slow')
 @on_inf_prim("resample")
-@broken_in("puma", "Puma still freezes shallowly")
-@broken_in("lite", "Lite still freezes shallowly")
+@broken_in("puma", "Puma still freezes shallowly.  Issue #626")
+@broken_in("lite", "Lite still freezes shallowly.  Issue #626")
 def testHMMParticleAsymptoticsMem():
   num_particles = 5
   def freeze_exp(ripl, exp):
