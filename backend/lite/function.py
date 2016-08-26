@@ -26,10 +26,10 @@ from venture.lite.value import VentureValue
 from venture.lite.value import registerVentureType
 import venture.value.dicts as v
 
-"""This doesn't subclass VentureSPRecord, as if it did, then
-the trace would turn it into an SPRef. While this would make it
-a first-class function in Venture, it would prevent other SPs
-(like a GP) from using it as a function without requests."""
+# This doesn't subclass VentureSPRecord, as if it did, then
+# the trace would turn it into an SPRef. While this would make it
+# a first-class function in Venture, it would prevent other SPs
+# (like a GP) from using it as a function without requests.
 class VentureFunction(VentureValue):
   def __init__(self, f, args_types=None, return_type=None, sp_type=None, **kwargs):
     if sp_type is not None:
