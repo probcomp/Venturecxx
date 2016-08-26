@@ -58,7 +58,7 @@ class VentureFunction(VentureValue):
 registerVentureType(VentureFunction, "function")
 
 class VentureTangentFunction(VentureFunction):
-  """Tangent vector to a point in a parametrized function space.
+  r"""Tangent vector to a point in a parametrized function space.
 
   A tangent vector is a pair (f, df) where f is a function and df
   represents a direction in the function space by a function of the
