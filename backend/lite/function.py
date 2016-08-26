@@ -75,7 +75,8 @@ class VentureTangentFunction(VentureFunction):
   tuple (f, df) = (F_theta, d/dtheta F_theta), in the sense that for
   any x, f(x) computes F_theta(x), and df(x) computes a list of k
   partial derivatives [d/dtheta_0 F_theta(x), d/dtheta_1 F_theta(x),
-  ..., d/dtheta_{k-1} F_theta(x)] in all parameter directions.
+  ..., d/dtheta_{k-1} F_theta(x)] along the unit vectors in parameter
+  space.
 
   A parameter may be either \R or a cartesian product of parameters.
   """
