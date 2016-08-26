@@ -49,6 +49,27 @@ def delta(tolerance):
     return 1.*(r2 <= tolerance)
   return isotropic(f)
 
+def bump(tolerance, steepness):
+  """Bump kernel: e^{-t/r^s}"""
+  def f(r2):
+    t = tolerance
+    s = steepness
+    return np.exp(-t/(r2**(s/2.)))
+  return isotropic(f)
+
+def d_bump(tolerance, steepness):
+  def df(r2):
+    # d/dt e^{-t/r^s} = -e^{-t/r^s}/r^s
+    # d/ds e^{-t/r^s} = e^{-t/r^s} (-t) d/ds r^{-s}
+    #   = e^{-t/r^s} (-t) (-log r) r^{-s}
+    #   = e^{-t/r^s} t r^{-s} log r
+    t = tolerance
+    s = steepness
+    r_s = r2**(-s/2.)
+    k = np.exp(-t*r_s)
+    return [-k*r_s, k*t*r_s*np.log(r2)/2.]
+  return isotropic(df)
+
 def _se(r2, l2):
   return np.exp(-0.5 * r2 / l2)
 
