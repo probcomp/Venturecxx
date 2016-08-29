@@ -65,14 +65,16 @@ def _gp_gradientOfLogDensityOfData(mean, dmean, covariance, dcovariance,
     return 0
   xs = np.asarray(samples.keys())
   os = np.asarray(samples.values())
+  dos = np.zeros(os.shape)
   mu = mean(xs)
   dmu = dmean(xs)
   sigma = covariance(xs, xs)
   dsigma = dcovariance(xs, xs)
-  d_dmu, d_dsigma = mvnormal.dlogpdf(os, mu, dmu, sigma, dsigma)
+  _dlogp_dos_i, dlogp_dmu_j, dlogp_dsigma_k = \
+    mvnormal.dlogpdf(os, dos, mu, dmu, sigma, dsigma)
   return [
-    v.VentureArrayUnboxed(d_dmu, t.NumberType()),
-    v.VentureArrayUnboxed(d_dsigma, t.NumberType()),
+    v.VentureArrayUnboxed(dlogp_dmu_j, t.NumberType()),
+    v.VentureArrayUnboxed(dlogp_dsigma_k, t.NumberType()),
   ]
 
 def _gp_mvnormal(mean, covariance, samples, xs):
