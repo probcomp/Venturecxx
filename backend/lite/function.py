@@ -60,25 +60,30 @@ registerVentureType(VentureFunction, "function")
 class VentureTangentFunction(VentureFunction):
   r"""Tangent vector to a point in a parametrized function space.
 
-  A tangent vector is a pair (f, df) where f is a function and df
-  represents a direction in the function space by a function of the
-  same arguments that returns a list of partial derivatives, one for
-  each parameter in the parameter space.
+  Fix a parametric family of functions F_theta: X ---> Y for some
+  theta = (theta^0, theta^1, ..., theta^{n-1}) in a linear parameter
+  space Theta = Theta_0 x Theta_1 x ... x Theta_{n-1}, where for any
+  fixed x_0 in X, the map
 
-  Specifically, if for any theta = (theta_0, theta_1, ...,
-  theta_{k-1}) in a parameter space Theta, there is a function
-  F_theta: X ---> Y, such that for fixed x_0, the map
+    theta |---> F_theta(x_0)
 
-        theta |---> F_theta(x_0)
+  is differentiable.
 
-  is differentiable, a VentureTangentFunction object represents a
-  tuple (f, df) = (F_theta, d/dtheta F_theta), in the sense that for
-  any x, f(x) computes F_theta(x), and df(x) computes a list of k
-  partial derivatives [d/dtheta_0 F_theta(x), d/dtheta_1 F_theta(x),
-  ..., d/dtheta_{k-1} F_theta(x)] along the unit vectors in parameter
-  space.
+  This object contains a pair of Python functions (f, df), with an
+  implicit fixed value of theta_0, so that for any x in X, f(x)
+  computes F_{theta_0}(x), and df(x) computes an array of the partial
+  derivatives of F_theta(x) with respect to theta^0, theta^1, ...,
+  theta^{n-1}, at the point theta_0.
 
-  A parameter may be either \R or a cartesian product of parameters.
+  Specifically, for x in X, f(x) = y is an element of Y, and df(x) =
+  [t_0, t_1, ..., t_{n-1}] is an array of multipliers t_i to
+  increments in theta^i giving increments in y, so that, in glib
+  differential form,
+
+    dy = t_0 dtheta^0 + t_1 dtheta^1 + ... + t_{n-1} dtheta^{n-1}.
+
+  The parameter spaces Theta_i may be scalar or product spaces
+  themselves.
   """
 
   def __init__(self, f, df, parameters, *args, **kwargs):
