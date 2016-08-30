@@ -75,7 +75,12 @@ def d_const(c):
 # Isotropic covariance kernels
 
 def isotropic(f):
-  """Isotropic kernel: k(x_1, x_2) = f(||x_1 - x_2||^2)."""
+  """Isotropic kernel: k(x_1, x_2) = f(||x_1 - x_2||^2).
+
+  Given a function f(r) on a matrix of all pairwise distances between
+  two sets of input points, yields a covariance kernel k(x_1, x_2) on
+  two sets of input points.
+  """
   def k(x_1, x_2):
     x_1 = x_1.reshape(len(x_1), -1)
     x_2 = x_2.reshape(len(x_2), -1)
