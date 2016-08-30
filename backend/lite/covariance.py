@@ -17,6 +17,45 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+r"""Gaussian process covariance kernels.
+
+A covariance kernel on an input space A is a symmetric
+positive-definite function k: A^2 ---> \R.  We currently handle A = \R
+and A = \R^n for some n.  The computational representation of a
+covariance kernel is a function that takes two arrays of elements of
+A, X_1 = (x_11, x_12, ..., x_1m) and X_2 = (x_21, x_22, ..., x_2l),
+and returns a matrix
+
+    [k(x_11, x_21), k(x_11, x_22), ..., k(x_11, x_2l);
+     k(x_12, x_21), k(x_12, x_22), ..., k(x_12, x_2l);
+           :              :        .          :
+           :              :         .         :
+     k(x_1m, x_21), k(x_1m, x_22), ..., k(x_1m, x_2l)]
+
+of all covariances between all pairwise elements in X_1 and X_2.
+
+For a covariance kernel k_theta parametrized by some theta = (theta^1,
+theta^2, ..., theta^h), the derivative of the covariance kernel with
+respect to theta is computationally represented by a function that
+takes two arrays X_1 and X_2 in A and returns an array of the h
+partial derivatives of k_theta(X_1, X_2) with respect to theta -- that
+is, returns an array of h matrices [t_1, t_2, ..., t_h], so that t_i
+maps an increment in theta^i to an increment in the covariance matrix
+between X_1 and X_2:
+
+    d k_theta(X_1, X_2) = t_1 dtheta^1 + t_2 dtheta^2 + ... + t_h dtheta^h.
+
+Note that because we explicitly represent the matrices t_i, the
+parameters theta^i must be scalars; there is no other matrix
+representation of a linear map from a rank-n tensor into matrices for
+n > 0.
+
+XXX Replace the computational representation of the derivatives by a
+function that computes the increment in the covariance matrix, rather
+than a function that returns a matrix whose product with an increment
+in theta is an increment in the covariance matrix.
+"""
+
 import numpy as np
 import scipy.spatial.distance
 
