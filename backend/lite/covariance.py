@@ -184,7 +184,7 @@ def linear(x):
   """Linear covariance kernel: k(x_1, x_2) = (x_1 - x) (x_2 - x)."""
   def k(x_1, x_2):
     if len(x_1.shape)>1:
-        m = np.inner(x_1.T - x, x_2.T - x)
+        m = np.inner(x_1 - x, x_2 - x)
     else: 
         m = np.outer(x_1 - x, x_2 - x)
     return m

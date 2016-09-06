@@ -338,7 +338,7 @@ registerBuiltinSP("gp_cov_matern_52",
 registerBuiltinSP("gp_cov_linear",
   _cov_grad_maker(
     cov.linear, cov.d_linear, shape_reals,
-    [t.NumberType("x")]))
+    [t.ArrayUnboxedType(t.NumberType())]))
 
 #registerBuiltinSP("gp_cov_linear",
 #  _cov_grad_maker(
