@@ -98,9 +98,6 @@ class VentureTangentFunction(VentureFunction):
   def parameters(self):
     return self._parameters
 
-  def gradient_type(self):
-    return VentureTangentFunction
-
   @staticmethod
   def fromStackDict(thing):
     derivative = thing.pop('derivative')
