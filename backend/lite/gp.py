@@ -332,9 +332,18 @@ registerBuiltinSP("gp_cov_matern_32",
 registerBuiltinSP("gp_cov_matern_52",
   _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
 
-registerBuiltinSP("gp_cov_linear",
-  _cov_maker(cov.linear, [xType]))
+#registerBuiltinSP("gp_cov_linear",
+#    _cov_maker(cov.linear, [xType]))
 
+registerBuiltinSP("gp_cov_linear",
+  _cov_grad_maker(
+    cov.linear, cov.d_linear, shape_reals,
+    [t.ArrayUnboxedType(t.NumberType())]))
+
+#registerBuiltinSP("gp_cov_linear",
+#  _cov_grad_maker(
+#    cov.linear, cov.d_linear, shape_scalarkernel,
+#    [t.NumberType("x"), covarianceFunctionType("k")]))
 registerBuiltinSP("gp_cov_bias",
   _cov_grad_maker(
     cov.bias, cov.d_bias, shape_scalarkernel,
