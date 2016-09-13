@@ -18,13 +18,10 @@
 import scipy.stats
 from nose.plugins.attrib import attr
 
+from venture.test.config import broken_in
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 import venture.test.timing as timing
-
-# TODO Rewrite this to use mem like one normally would.  Right now
-# it's metaprogrammed because freeze is only known to work on
-# directives.
 
 @attr('slow')
 @on_inf_prim("resample")
@@ -47,6 +44,43 @@ def testHMMParticleAsymptotics1():
           ripl.forget("obs%d" % (m-1))
         if m > 1:
           ripl.forget("st%s" % (m-2))
+        ripl.infer("(resample %s)" % num_particles)
+
+    return do_filter
+
+  timing.assertLinearTime(particulate, verbose=True, acceptable_duration=300, desired_sample_ct=40)
+
+# TODO This is the version that uses mem like one normally would.
+# Right now it's broken because freeze is only known to work on
+# directives.
+
+@attr('slow')
+@on_inf_prim("resample")
+@broken_in("puma", "Puma still freezes shallowly.  Issue #626")
+@broken_in("lite", "Lite still freezes shallowly.  Issue #626")
+def testHMMParticleAsymptoticsMem():
+  num_particles = 5
+  def freeze_exp(ripl, exp):
+    ripl.predict(exp, label="do not clash with me")
+    ripl.freeze("do not clash with me")
+    ripl.forget("do not clash with me")
+
+  def particulate(num_steps):
+    ripl = get_ripl()
+    ripl.infer("(resample %s)" % num_particles)
+    ripl.execute_program("""
+[assume state (mem (lambda (t)
+  (if (<= t 0)
+      (normal 0.0 1.0)
+      (normal (state (- t 1)) 1.0))))]
+""")
+    def do_filter():
+      for m in range(num_steps):
+        newValue = scipy.stats.norm.rvs(0,1.0)
+        ripl.observe("(normal (state %d) 1.0)" % m, newValue, label="obs%d" % m)
+        if m > 0:
+          freeze_exp(ripl, "(state %s)" % (m-1))
+          ripl.forget("obs%d" % (m-1))
         ripl.infer("(resample %s)" % num_particles)
 
     return do_filter
