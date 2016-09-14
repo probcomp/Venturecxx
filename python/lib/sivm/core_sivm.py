@@ -249,7 +249,7 @@ def _modify_expression(expression):
     return expression
 
 def _modify_value(ob):
-    if ob['type'] == 'symbol':
+    if ob['type'] in ['symbol', 'string']:
         # Unicode hack for the same reason as in _modify_symbol
         ans = copy.copy(ob)
         ans['value'] = str(ob['value'])
