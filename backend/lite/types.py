@@ -307,7 +307,11 @@ class NumericArrayType(VentureType):
   def name(self):
     return self._name or "<numarray>"
   def distribution(self, base, **kwargs):
-    # XXX ???
+    # XXX There is no obvious implementation of this that will
+    # reliably work for all use cases.  For example, a Gaussian
+    # process over R^3 takes NumericArrayType inputs -- but they must
+    # all have shape (3), while there are other possible shapes for
+    # values of NumericArrayType.
     raise NotImplementedError
     return base("array_unboxed", elt_type=ArrayUnboxedType(NumberType()),
                 **kwargs)
