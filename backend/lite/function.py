@@ -141,6 +141,13 @@ class ParamProduct(Param):
     return self._factors
 
 def parameter_nest(parameters, flat_args):
+  """Apply one level of nested parametrization to a flat array.
+
+  A tree of real parameters, e.g. (R^3 x R^2) x R x R^4, may be
+  flattened by the natural isomorphism to R^10.  Given the shape (R^3
+  x R^2) x R x R^4 and an element of R^7, this function undoes one
+  level of that tree, yielding an element of R^5 x R x R^4.
+  """
   args = []
   i = 0
   for p in parameters:
