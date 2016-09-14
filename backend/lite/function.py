@@ -57,55 +57,76 @@ class VentureFunction(VentureValue):
 
 registerVentureType(VentureFunction, "function")
 
-class VentureTangentFunction(VentureFunction):
-  r"""Tangent vector to a point in a parametrized function space.
+class VenturePartialDiffableFunction(VentureFunction):
+  r"""Differentiable function family closed over differentiable parameters.
 
-  Fix a parametric family of functions F_theta: X ---> Y for some
-  theta = (theta^0, theta^1, ..., theta^{n-1}) in a linear parameter
-  space Theta = Theta_0 x Theta_1 x ... x Theta_{n-1}, where for any
-  fixed x_0 in X, the map
+  Fix a parametric family of functions F_theta: X x Y ---> Z for some
+  theta = (theta^0, theta^1, ..., theta^{n-1}) in a parameter space
+  Theta = Theta_0 x Theta_1 x ... x Theta_{n-1}, where for any fixed
+  x_0 in X and y_0 in Y, the map
 
-    theta |---> F_theta(x_0)
+    theta |---> F_theta(x_0, y_0),
+
+  is differentiable, and for any fixed theta_0 in Theta and y_0 in Y,
+  the map
+
+    x |---> F_{theta_0}(x, y_0)
 
   is differentiable.
 
-  This object contains a pair of Python functions (f, df), with an
-  implicit fixed value of theta_0, so that for any x in X, f(x)
-  computes F_{theta_0}(x), and df(x) computes an array of the partial
-  derivatives of F_theta(x) with respect to theta^0, theta^1, ...,
-  theta^{n-1}, at the point theta_0.
+  This object contains a triple of Python functions (f, g, h) closed
+  over an implicit fixed value of theta_0, so that for any x in X and
+  y in Y,
 
-  Specifically, for x in X, f(x) = y is an element of Y, and df(x) =
-  [t_0, t_1, ..., t_{n-1}] is an array of multipliers t_i to
-  increments in theta^i giving increments in y, so that, in glib
-  differential form,
+    f(x, y) computes F_{theta_0}(x, y);
+    g(x, y) computes F_{theta_0}(x, y) and the array of partial
+      derivatives d/dtheta^i F_{theta_0}(x, y); and
+    h(x, y) computes F_{theta_0}(x, y) and the partial derivative
+      d/dx F_{theta_0}(x, y).
 
-    dy = t_0 dtheta^0 + t_1 dtheta^1 + ... + t_{n-1} dtheta^{n-1}.
+  Specifically, for x in X and y in Y,
 
-  The parameter spaces Theta_i may be scalar or product spaces
+    f(x, y) = z is an element of Z;
+    g(x, y) = (z, [t_0, t_1, ..., t_{n-1}]) gives z and an array of
+      multipliers t_i to increments in theta^i giving increments in z; and
+    h(x, y) = (z, u) gives z and a multiplier to an increment in x giving
+      an increment in z.
+
+  In glib differential form,
+
+    dz = t_0 dtheta^0 + t_1 dtheta^1 + ... + t_{n-1} dtheta^{n-1} + u dx.
+
+  The parameter spaces Theta_i and X may be scalar or product spaces
   themselves.
   """
 
-  def __init__(self, f, df, parameters, *args, **kwargs):
-    super(VentureTangentFunction, self).__init__(f, *args, **kwargs)
-    self._df = df
+  def __init__(self, f, df_theta, df_x, parameters, *args, **kwargs):
+    super(VenturePartialDiffableFunction, self).__init__(f, *args, **kwargs)
+    self._df_theta = df_theta
+    self._df_x = df_x
     self._parameters = parameters
 
   @property
-  def df(self):
-    return self._df
+  def df_theta(self):
+    return self._df_theta
+  @property
+  def df_x(self):
+    return self._df_x
   @property
   def parameters(self):
     return self._parameters
 
   @staticmethod
   def fromStackDict(thing):
-    derivative = thing.pop('derivative')
-    return VentureTangentFunction(thing['value'], derivative, **thing)
+    df_theta = thing.pop('parameter_derivative')
+    df_x = thing.pop('partial_derivative')
+    return VenturePartialDifableFunction(thing['value'], df_theta, df_x,
+      **thing)
 
   def asStackDict(self, _trace=None):
     val = v.val('diffable_function', self.f)
-    val['derivative'] = self.df
+    val['parameter_derivative'] = self.df_theta
+    val['partial_derivative'] = self.df_x
     val['sp_type'] = self.sp_type
     val.update(self.stuff)
     return val
