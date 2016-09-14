@@ -147,6 +147,10 @@ def parameter_nest(parameters, flat_args):
   flattened by the natural isomorphism to R^10.  Given the shape (R^3
   x R^2) x R x R^4 and an element of R^7, this function undoes one
   level of that tree, yielding an element of R^5 x R x R^4.
+
+  The caller can then apply it again to the shape R^3 x R^2 and the
+  resulting element of R^5 to get an element of R^3 x R^2, and thereby
+  recover an element of the completely nested (R^3 x R^2) x R x R^4.
   """
   args = []
   i = 0
