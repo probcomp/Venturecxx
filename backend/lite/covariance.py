@@ -63,14 +63,21 @@ import scipy.spatial.distance
 
 def const(c):
   """Constant kernel, everywhere equal to c."""
-  def k(x_1, x_2):
-    return c*np.ones((len(x_1), len(x_2)))
+  def k(X_1, X_2):
+    return c*np.ones((len(X_1), len(X_2)))
   return k
 
-def d_const(c):
-  def k(_x_1, _x_2):
-    return [c]
-  return k
+def ddtheta_const(c):
+  k = const(c)
+  def dk(X_1, X_2):
+    return (k(X_1, X_2), [c])
+  return dk
+
+def ddx_const(c):
+  k = const(c)
+  def dk(x_1, X_2):
+    return (k(np.array([x_1]), X_2), np.zeros(x_1.shape[0]))
+  return dk
 
 # Isotropic covariance kernels
 
@@ -78,14 +85,45 @@ def isotropic(f):
   """Isotropic kernel: k(x_1, x_2) = f(||x_1 - x_2||^2).
 
   Given a function f(r) on a matrix of all pairwise distances between
-  two sets of input points, yields a covariance kernel k(x_1, x_2) on
-  two sets of input points.
+  two sets of input points, yields a covariance kernel k(X_1, X_2) on
+  two arrays of input points.
   """
-  def k(x_1, x_2):
-    x_1 = x_1.reshape(len(x_1), -1)
-    x_2 = x_2.reshape(len(x_2), -1)
-    return f(scipy.spatial.distance.cdist(x_1, x_2, 'sqeuclidean'))
+  def k(X_1, X_2):
+    X_1 = X_1.reshape(len(X_1), -1)
+    X_2 = X_2.reshape(len(X_2), -1)
+    return f(scipy.spatial.distance.cdist(X_1, X_2, 'sqeuclidean'))
   return k
+
+def ddtheta_isotropic(df_theta):
+  """Isotropic kernel derivative with respect to parameters.
+
+  Given a function df_theta(r^2) that maps a matrix of squared
+  distances between every pair of points in two arrays of inputs to a
+  matrix of d/dtheta kappa({r_ij}^2) covariance derivatives, yields a
+  covariance kernel derivative dk_theta(X_1, X_2) that maps two arrays
+  of input points to a matrix of d/dtheta k(x_1, x_2) covariance
+  derivatives.
+  """
+  return isotropic(df_theta)
+
+def ddx_isotropic(df):
+  """Isotropic kernel partial derivative with respect to input point.
+
+  Given a function df_r2(r2) that maps a vector of squared distances
+  to a vector of derivatives with respect to squared distance, yields
+  a covariance kernel partial derivative dk_x(x_1, X_2) that maps a
+  point x_1 and an array of points X_2 to a vector of partial
+  derivatives with respect to x_1 at each of the pairs (x_1, x_2i).
+  """
+  def ddx_k(x_1, X_2):
+    X_1 = np.array([x_1])
+    X_1 = X_1.reshape(len(X_1), -1)
+    X_2 = X_2.reshape(len(X_2), -1)
+    r2 = scipy.spatial.distance.cdist(X_1, X_2, 'sqeuclidean')
+    dr2 = 2*(x_1 - X_2).T       # row of increments in r^2
+    k, f_ = df(r2)              # matrix and increment in matrix
+    return (k, [f_*dr2_k for dr2_k in dr2])
+  return ddx_k
 
 def delta(tolerance):
   """Delta kernel: 1, if r^2 is at most tolerance; else 0."""
@@ -93,16 +131,17 @@ def delta(tolerance):
     return 1.*(r2 <= tolerance)
   return isotropic(f)
 
+def _bump(r2, t, s):
+  return np.exp(-t/(r2**(s/2.)))
+
 def bump(tolerance, steepness):
   """Bump kernel: e^{-t/r^s}"""
   def f(r2):
-    t = tolerance
-    s = steepness
-    return np.exp(-t/(r2**(s/2.)))
+    return _bump(r2, tolerance, steepness)
   return isotropic(f)
 
-def d_bump(tolerance, steepness):
-  def df(r2):
+def ddtheta_bump(tolerance, steepness):
+  def df_theta(r2):
     # d/dt e^{-t/r^s} = -e^{-t/r^s}/r^s
     # d/ds e^{-t/r^s} = e^{-t/r^s} (-t) d/ds r^{-s}
     #   = e^{-t/r^s} (-t) (-log r) r^{-s}
@@ -111,8 +150,19 @@ def d_bump(tolerance, steepness):
     s = steepness
     r_s = r2**(-s/2.)
     k = np.exp(-t*r_s)
-    return [-k*r_s, k*t*r_s*np.log(r2)/2.]
-  return isotropic(df)
+    return (k, [-k*r_s, k*t*r_s*np.log(r2)/2.])
+  return ddtheta_isotropic(df_theta)
+
+def ddx_bump(tolerance, steepness):
+  def df_r2(r2):
+    # d/d{r^2} e^{-t/r^s} = e^{-t/r^s} s t / [2 (r^2)^{s/2 + 1}]
+    #   = e^{-t/r^s} s t r^{-s} / [2 r^2]
+    t = tolerance
+    s = steepness
+    r_s = r2**(-s/2.)
+    k = np.exp(-t*r_s)
+    return (k, -k*s*t*r_s/(2*r2))
+  return ddx_isotropic(df_r2)
 
 def _se(r2, l2):
   return np.exp(-0.5 * r2 / l2)
@@ -123,10 +173,25 @@ def se(l2):
 
 def _d_se_l2(r2, l2):
   """d/d(l^2) of squared exponential kernel."""
-  return _se(r2, l2) * -0.5 * r2 / (l2*l2)
+  k = _se(r2, l2)
+  return (k, k * 0.5 * r2 / (l2*l2))
 
-def d_se(l2):
-  return isotropic(lambda r2: [_d_se_l2(r2, l2)])
+def _d_se_r2(r2, l2):
+  """d/d(r^2) of squared exponential kernel."""
+  k = _se(l2, r2)
+  return (k, k * -0.5 / l2)
+
+def ddtheta_se(l2):
+  def df_theta(r2):
+    k, dk = _d_se_l2(r2, l2)
+    return (k, [dk])
+  return ddtheta_isotropic(df_theta)
+
+def ddx_se(l2):
+  def df_r2(r2):
+    k, dk = _d_se_r2(r2, l2)
+    return (k, dk)
+  return ddx_isotropic(df_r2)
 
 def periodic(l2, T):
   """Periodic kernel: e^(-(2 sin(2pi r / T))^2 / (2 l^2))"""
@@ -138,16 +203,29 @@ def periodic(l2, T):
     return _se(d**2, l2)
   return isotropic(f)
 
-def d_periodic(l2, T):
+def ddtheta_periodic(l2, T):
   cos = np.cos
   pi = np.pi
   sin = np.sin
   sqrt = np.sqrt
-  def df(r2):
+  def df_theta(r2):
     t = 2.*pi*sqrt(r2)/T
     d2 = (2.*sin(t))**2
-    return [_d_se_l2(d2, l2), _se(d2, l2) * (4/(l2*T)) * t * sin(t) * cos(t)]
-  return isotropic(df)
+    k, dk_l2 = _d_se_l2(d2, l2)
+    return (k, [dk_l2, k * (4/(l2*T)) * t * sin(t) * cos(t)])
+  return ddtheta_isotropic(df)
+
+def ddx_periodic(l2, T):
+  cos = np.cos
+  pi = np.pi
+  sin = np.sin
+  sqrt = np.sqrt
+  def df_r2(r2):
+    t = 2.*pi*sqrt(r2)/T
+    d2 = (2.*sin(t))**2
+    k, dk_r2 = _d_se_r2(d2, l2)
+    return (k, k * (8*pi/(l2*d)) * sin(t) * cos(t))
+  return ddx_isotropic(df_r2)
 
 def rq(l2, alpha):
   """Rational quadratic kernel: (1 + r^2/(2 alpha l^2))^-alpha"""
@@ -182,12 +260,12 @@ def matern_52(l2):
 
 def linear(x):
   """Linear covariance kernel: k(x_1, x_2) = (x_1 - x) (x_2 - x)."""
-  def k(x_1, x_2):
-    return np.outer(x_1 - x, x_2 - x)
+  def k(X_1, X_2):
+    return np.outer(X_1 - x, X_2 - x)
   return k
 
 def d_linear(x):
-  def dk(x_1, x_2):
+  def dk(_X_1, _X_2):
     return [np.ones(x.shape)]
   return dk
 
@@ -198,38 +276,68 @@ def bias(s2, k):
 
   Every covariance, including variance/self-covariance, has s^2 added.
   """
-  return lambda x_1, x_2: s2 + k(x_1, x_2)
+  return lambda X_1, X_2: s2 + k(X_1, X_2)
 
-def d_bias(s2, k):
-  def dk(x_1, x_2):
-    return [1] + k.df(x_1, x_2)
+def ddtheta_bias(s2, k):
+  def dk(X_1, X_2):
+    k12, dk12 = k.df_theta(X_1, X_2)
+    return (s2 + k12, [1] + dk12)
+  return dk
+
+def ddx_bias(s2, k):
+  def dk(x_1, X_2):
+    k12, dk12 = k.df_x(x_1, X_2)
+    return (s2 + k12, dk12)
   return dk
 
 def scale(s2, k):
   """Kernel k scaled by squared output factor s^2."""
-  return lambda x_1, x_2: s2 * k(x_1, x_2)
+  return lambda X_1, X_2: s2 * k(X_1, X_2)
 
-def d_scale(s2, k):
-  def dk(x_1, x_2):
-    return [k(x_1, x_2)] + [s2*dk_i for dk_i in k.df(x_1, x_2)]
+def ddtheta_scale(s2, k):
+  def dk(X_1, X_2):
+    k12, dk12 = k.df_theta(X_1, X_2)
+    return (s2 * k12, [k12] + [s2*dk_i for dk_i in dk12])
+  return dk
+
+def ddx_scale(s2, k):
+  def dk(x_1, X_2):
+    k12, dk12 = k.df_x(x_1, X_2)
+    return (s2 * k12, [s2*dk_i for dk_i in dk12])
   return dk
 
 def sum(k_a, k_b):
   """Sum of kernels k_a and k_b."""
-  return lambda x_1, x_2: k_a(x_1, x_2) + k_b(x_1, x_2)
+  return lambda X_1, X_2: k_a(X_1, X_2) + k_b(X_1, X_2)
 
-def d_sum(k_a, k_b):
-  return lambda x_1, x_2: k_a.df(x_1, x_2) + k_b.df(x_1, x_2)
+def ddtheta_sum(k_a, k_b):
+  def dk(X_1, X_2):
+    ka, dka = k_a.df_theta(X_1, X_2)
+    kb, dkb = k_a.df_theta(X_1, X_2)
+    return (ka + kb, dka + dkb)
+  return dk
+
+def ddx_sum(k_a, k_b):
+  def dk(x_1, X_2):
+    ka, dka = k_a.df_x(x_1, X_2)
+    kb, dkb = k_a.df_x(x_1, X_2)
+    return (ka + kb, dka + dkb)
+  return dk
 
 def product(k_a, k_b):
   """Product of kernels k_a and k_b."""
-  return lambda x_1, x_2: k_a(x_1, x_2) * k_b(x_1, x_2)
+  return lambda X_1, X_2: k_a(X_1, X_2) * k_b(X_1, X_2)
 
-def d_product(k_a, k_b):
-  def dk(x_1, x_2):
-    ka = k_a(x_1, x_2)
-    kb = k_b(x_1, x_2)
-    dk_a = [dk_ai*kb for dk_ai in k_a.df(x_1, x_2)]
-    dk_b = [ka*dk_bi for dk_bi in k_b.df(x_1, x_2)]
-    return dk_a + dk_b
+def ddtheta_product(k_a, k_b):
+  def dk(X_1, X_2):
+    ka, dka = k_a.df_theta(X_1, X_2)
+    kb, dkb = k_b.df_theta(X_1, X_2)
+    return (ka*kb, [dk_ai*kb for dk_ai in dka] + [ka*dk_bi for dk_bi in dkb])
+  return dk
+
+def ddx_product(k_a, k_b):
+  def dk(x_1, X_2):
+    ka, dka = k_a.df_x(x_1, X_2)
+    kb, dkb = k_b.df_x(x_1, X_2)
+    return (ka*kb, [dk_ai*kb + ka*dk_bi for dk_ai, dk_bi in zip(dka, dkb)])
   return dk
