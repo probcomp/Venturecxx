@@ -216,7 +216,8 @@ def dlogpdf(X, dX, Mu, dMu, Sigma, dSigma):
   # XXX It is ~10 times faster to compute Sigma^-1 and do a single
   # multiplication per partial derivative than to solve a linear
   # system per partial derivative.  But is it numerically safe?  I
-  # doubt it.
+  # doubt it.  For now, we'll do the fast-and-loose thing because too
+  # much time is spent in solving linear systems otherwise.
   alpha = covf.solve(X_)
 
   # Compute Q = alpha alpha^T - Sigma^-1.
