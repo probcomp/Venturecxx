@@ -20,14 +20,16 @@ from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import SP
 from venture.lite.sp import SPType
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import override
+from venture.lite.value import VentureArray
 from venture.lite.value import VentureValue
 from venture.lite.value import registerVentureType
 import venture.value.dicts as v
 
-"""This doesn't subclass VentureSPRecord, as if it did, then
-the trace would turn it into an SPRef. While this would make it
-a first-class function in Venture, it would prevent other SPs
-(like a GP) from using it as a function without requests."""
+# This doesn't subclass VentureSPRecord, as if it did, then
+# the trace would turn it into an SPRef. While this would make it
+# a first-class function in Venture, it would prevent other SPs
+# (like a GP) from using it as a function without requests.
 class VentureFunction(VentureValue):
   def __init__(self, f, args_types=None, return_type=None, sp_type=None, **kwargs):
     if sp_type is not None:
@@ -54,6 +56,115 @@ class VentureFunction(VentureValue):
     return self.f(*args)
 
 registerVentureType(VentureFunction, "function")
+
+class VentureTangentFunction(VentureFunction):
+  r"""Tangent vector to a point in a parametrized function space.
+
+  Fix a parametric family of functions F_theta: X ---> Y for some
+  theta = (theta^0, theta^1, ..., theta^{n-1}) in a linear parameter
+  space Theta = Theta_0 x Theta_1 x ... x Theta_{n-1}, where for any
+  fixed x_0 in X, the map
+
+    theta |---> F_theta(x_0)
+
+  is differentiable.
+
+  This object contains a pair of Python functions (f, df), with an
+  implicit fixed value of theta_0, so that for any x in X, f(x)
+  computes F_{theta_0}(x), and df(x) computes an array of the partial
+  derivatives of F_theta(x) with respect to theta^0, theta^1, ...,
+  theta^{n-1}, at the point theta_0.
+
+  Specifically, for x in X, f(x) = y is an element of Y, and df(x) =
+  [t_0, t_1, ..., t_{n-1}] is an array of multipliers t_i to
+  increments in theta^i giving increments in y, so that, in glib
+  differential form,
+
+    dy = t_0 dtheta^0 + t_1 dtheta^1 + ... + t_{n-1} dtheta^{n-1}.
+
+  The parameter spaces Theta_i may be scalar or product spaces
+  themselves.
+  """
+
+  def __init__(self, f, df, parameters, *args, **kwargs):
+    super(VentureTangentFunction, self).__init__(f, *args, **kwargs)
+    self._df = df
+    self._parameters = parameters
+
+  @property
+  def df(self):
+    return self._df
+  @property
+  def parameters(self):
+    return self._parameters
+
+  @staticmethod
+  def fromStackDict(thing):
+    derivative = thing.pop('derivative')
+    return VentureTangentFunction(thing['value'], derivative, **thing)
+
+  def asStackDict(self, _trace=None):
+    val = v.val('diffable_function', self.f)
+    val['derivative'] = self.df
+    val['sp_type'] = self.sp_type
+    val.update(self.stuff)
+    return val
+
+class Param(object):
+  def __init__(self):
+    raise NotImplementedError
+  def flat_size(self):
+    raise NotImplementedError
+
+class ParamLeaf(Param):
+  @override(Param)
+  def __init__(self):
+    pass
+
+  @override(Param)
+  def flat_size(self):
+    return 1
+
+class ParamProduct(Param):
+  @override(Param)
+  def __init__(self, factors):
+    assert isinstance(factors, list)
+    self._factors = factors
+    self._flat_size = sum(f.flat_size() for f in factors)
+
+  @override(Param)
+  def flat_size(self):
+    return self._flat_size
+
+  @property
+  def factors(self):
+    return self._factors
+
+def parameter_nest(parameters, flat_args):
+  """Apply one level of nested parametrization to a flat array.
+
+  A tree of real parameters, e.g. (R^3 x R^2) x R x R^4, may be
+  flattened by the natural isomorphism to R^10.  Given the shape (R^3
+  x R^2) x R x R^4 and an element of R^7, this function undoes one
+  level of that tree, yielding an element of R^5 x R x R^4.
+
+  The caller can then apply it again to the shape R^3 x R^2 and the
+  resulting element of R^5 to get an element of R^3 x R^2, and thereby
+  recover an element of the completely nested (R^3 x R^2) x R x R^4.
+  """
+  args = []
+  i = 0
+  for p in parameters:
+    s = p.flat_size()
+    assert s <= len(flat_args)
+    if isinstance(p, ParamLeaf):
+      assert s == 1
+      args += flat_args[i : i+s]
+    else:
+      args.append(VentureArray(flat_args[i : i+s]))
+    i += s
+  assert i == len(flat_args)
+  return args
 
 class ApplyFunctionOutputPSP(DeterministicPSP):
   def simulate(self,args):
