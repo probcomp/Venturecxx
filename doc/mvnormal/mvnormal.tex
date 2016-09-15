@@ -1,0 +1,305 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[osf]{mathpazo}
+\usepackage{nicefrac}
+
+\newcommand{\Mu}{M}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\T}{\intercal}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\given}{\mathrel{|}}
+\newcommand{\mapping}{\colon}
+\newcommand{\normlx}[1]{#1\lVert}
+\newcommand{\norml}{\left\lVert}
+\newcommand{\normrx}[1]{#1\rVert}
+\newcommand{\normr}{\right\rVert}
+\newcommand{\normx}[2][]{\normlx{#1}#2\normrx{#1}}
+\newcommand{\norm}[1]{\norml#1\normr}
+\newcommand{\sfrac}[2]{\nicefrac{#1}{#2}}
+\newcommand{\smallfrac}[2]{{\textstyle\frac{#1}{#2}}}
+
+\newcommand{\n}[1]{\text{\rm #1}}
+\newcommand{\zero}{\n0}
+\newcommand{\one}{\n1}
+\newcommand{\two}{\n2}
+
+\DeclareMathOperator{\tr}{tr}
+
+\newcommand{\fixincommand}[1]
+{
+  \let\elem\in
+  \let\mele\ni
+
+  \newcommand{\scriptify}[1]{\mathrel{\mathchoice
+    {\raise.2ex\hbox{$\scriptstyle##1$}}
+    {\raise.2ex\hbox{$\scriptstyle##1$}}
+    {\raise.1ex\hbox{$\scriptscriptstyle##1$}}
+    {\raise.1ex\hbox{$\scriptscriptstyle##1$}}}}
+
+  \renewcommand{\in}{\scriptify{#1{\elem}}}
+  \renewcommand{\ni}{\scriptify{#1{\elem}}}
+
+  % We have to futz with a local resurrection of the original \in
+  % command, because the built-in \notin command wants to use it.
+
+  \let\nelem\notin
+
+  \renewcommand{\notin}{\mathrel{\mathchoice
+    {\raise.2ex\hbox{$\let\in\elem\scriptstyle#1{\nelem}$}}
+    {\raise.2ex\hbox{$\let\in\elem\scriptstyle#1{\nelem}$}}
+    {\let\in\elem\scriptscriptstyle#1{\nelem}}
+    {\let\in\elem\scriptscriptstyle#1{\nelem}}}}
+}
+\fixincommand{\boldsymbol}
+
+\begin{document}
+\paragraph{Multivariate normal differential}
+Let $Y$ be a multivariate normal variable with mean $\Mu$ and
+ symmetric positive-definite covariance $\Sigma$, which has density
+%
+\begin{equation}
+  \log P(Y \given \Mu, \Sigma)
+    = -\smallfrac{\one}{\two}
+        (Y - \Mu)^\T \Sigma^{-\one} (Y - \Mu)
+      - \smallfrac{n}{\two} \log \two\pi
+      - \smallfrac{\one}{\two} \log \det(\Sigma).
+\end{equation}
+%
+Let $A = Y - \Mu$ and $\alpha = \Sigma^{-\one} A = \Sigma^{-\one} (Y -
+ \Mu) = (A^\T \Sigma^{-\one})^\T$.
+Then the differential of the density is
+%
+\begin{align}
+  d \log P(Y \given \Mu, \Sigma)
+   &= -\smallfrac{\one}{\two} \, d \bigl(
+        A^\T \Sigma^{-\one} A
+        + n \log \two\pi
+        + \log \det(\Sigma)
+      \bigr) \\
+   &= -\smallfrac{\one}{\two} \bigl(
+        d(A^\T \Sigma^{-\one} A)
+        + d(n \log \two\pi)
+        + d \log \det(\Sigma)
+      \bigr).
+\end{align}
+%
+Using the matrix calculus identities
+%
+\begin{align}
+  d (U^\T) &= (dU)^\T, \\
+  d (U V W) &= dU\,V W + U\,dV\,W + U V\,dW, \quad\text{and} \\
+  d (U^{-\one}) &= -U^{-\one}\,dU\,U^{-\one};
+\end{align}
+%
+ the vector inner/outer product identity
+%
+\begin{equation}
+  u^\T v = \langle u, v \rangle = \tr(u \otimes v) = \tr(u v^\T);
+\end{equation}
+%
+ and the fact that $\alpha^\T\,dA= (dA^\T\,\alpha)^\T = dA^\T\,\alpha$
+ is a scalar, we have
+%
+\begin{align}
+  d (A^\T \Sigma^{-\one} A)
+   &= dA^\T\,\Sigma^{-\one} A
+      + A^\T\,d(\Sigma^{-\one})\,A
+      + A^\T \Sigma^{-\one}\,dA \\
+   &= dA^\T\,\alpha
+      - A^\T \Sigma^{-\one}\,d\Sigma\,\Sigma^{-\one} A
+      + \alpha^\T\,dA \\
+   &= \alpha^\T\,dA
+      - \alpha^\T\,d\Sigma\,\alpha
+      + \alpha^\T\,dA \\
+   &= \two \alpha^\T\,dA
+      - \tr(\alpha \alpha^\T \,d\Sigma).
+\end{align}
+%
+Note that $d \log x = dx/x$ and $d \det(X) = \det(X) \tr(X^{-\one}\,dX)$, so
+ that
+%
+\begin{equation}
+  d \log \det(\Sigma)
+    = \frac{d \det(\Sigma)}{\det(\Sigma)}
+    = \frac{\det(\Sigma) \tr(\Sigma^{-\one}\,d\Sigma)}{\det(\Sigma)}
+    = \tr(\Sigma^{-\one}\,d\Sigma).
+\end{equation}
+%
+Thus, the density differential is
+%
+\begin{align}
+  d \log P(Y \given \Mu, \Sigma)
+   &= -\smallfrac{\one}{\two}
+      \bigl[
+        \two \alpha^\T\,d(Y - \Mu)
+        - \tr(\alpha \alpha^\T\,d\Sigma)
+        + \tr(\Sigma^{-\one}\,d\Sigma)
+      \bigr] \\
+   &= -\alpha^\T\,dY
+      + \alpha^\T\,d\Mu
+      - \smallfrac{\one}{\two}
+        \tr\bigl((\alpha \alpha^\T - \Sigma^{-\one}) \,d\Sigma\bigr).
+\end{align}
+
+For a Gaussian process with mean function $m_\theta(X)$ and covariance
+ kernel $k_\eta(X, X')$, the \code{make\_gp} SP's
+ \code{gradientOfLogDensityOfData} method treats $X$ and $Y$ as fixed,
+ and $\theta$ and $\eta$ as variable, with $\Mu = m_\theta(X)$ and
+ $\Sigma = k_\eta(X, X)$, so that
+%
+\begin{equation}
+  dY = \zero,
+  \quad
+  d\Mu = \frac{\partial\,m_\theta(X)}{\partial\theta}\,d\theta,
+  \quad\text{and}\quad
+  d\Sigma = \frac{\partial\,k_\eta(X, X)}{\partial\eta}\,d\eta;
+\end{equation}
+%
+ then it computes the $d\theta$ and $d\eta$ components of the
+ density differential, \textit{i.e.}~the gradient of $\log P(Y \given
+ \Mu, \Sigma)$ with respect to the parameters $\theta$ and $\eta$ of
+ the mean function and covariance kernel.
+
+\paragraph{Conditional multivariate normal differential}
+Let $Y = (Y_\one, Y_\two)$ be a multivariate normal variable with mean
+ $\Mu = (\Mu_\one, \Mu_\two)$ and covariance
+%
+\begin{equation}
+  \Sigma
+    = \begin{pmatrix}
+        \Sigma_{\one\one} & \Sigma_{\one\two} \\
+        \Sigma_{\two\one} & \Sigma_{\two\two}
+      \end{pmatrix}.
+\end{equation}
+%
+The conditional distribution on $Y_\one$ given $Y_\two$ is another
+ multivariate normal, with density
+%
+\begin{equation}
+  \log P(Y_\one \given \Mu, \Sigma, Y_\two)
+    = \log P(Y_\one \given \Mu_*, \Sigma_*),
+\end{equation}
+%
+ where the conditional mean $\Mu_*$ and covariance $\Sigma_*$ are
+\begin{align}
+  \Mu_*
+   &= \Mu_\one + \Sigma_{\one\two} \Sigma_{\two\two}^{-\one} (Y_\two - \Mu_\two), \\
+  \Sigma_*
+   &= \Sigma_{\one\one}
+      - \Sigma_{\one\two} \Sigma_{\two\two}^{-\one} \Sigma_{\two\one}.
+\end{align}
+%
+ and have differentials
+%
+\begin{align}
+  d\Mu_*
+   &= d\Mu_\one
+      + d\Sigma_{\one\two}\,\Sigma_{\two\two}^{-\one} (Y_\two - \Mu_\two)
+ \\&\quad\quad
+      - \Sigma_{\one\two}
+        \Sigma_{\two\two}^{-\one}\,d\Sigma_{\two\two}\,\Sigma_{\two\two}^{-\one}
+        (Y_\two - \Mu_\two)
+      + \Sigma_{\one\two} \Sigma_{\two\two}^{-\one}\,d(Y_\two - \Mu_\two),
+    \nonumber\\
+  d\Sigma_*
+   &= d\Sigma_{\one\one}
+      - d\Sigma_{\one\two}\,\Sigma_{\two\two}^{-\one} \Sigma_{\two\one}
+ \\&\quad\quad
+      + \Sigma_{\one\two}
+        \Sigma_{\two\two}^{-\one}\,d\Sigma_{\two\two}\,\Sigma_{\two\two}^{-\one}
+        \Sigma_{\two\one}
+      - \Sigma_{\one\two} \Sigma_{\two\two}^{-\one}\,d\Sigma_{\two\one}.
+    \nonumber
+\end{align}
+
+For a Gaussian process with mean function $m_\theta(X)$ and covariance
+ kernel $k_\eta(X, X')$, with previously observed outputs $Y_\two$ for
+ inputs $X_\two$ and unobserved outputs $Y_\one$ for inputs $X_\one$,
+ the GP SP's \code{gradientOfLogDensity} method treats $\theta$,
+ $\eta$, $X_\two$, and $Y_\two$ as fixed, and $X_\one$ and $Y_\one$ as
+ variable.
+In this case we have $dX_\two = dY_\two = d\Mu_\two =
+ d\Sigma_{\two\two} = \zero$, and the remaining nonzero marginal mean
+ and covariance differentials are
+%
+\begin{align}
+  d\Mu_\one
+   &= d\bigl(m_\theta(X_\one)\bigr) = m_\theta'(X_\one)\,dX_\one, \\
+  d\Sigma_{\one\one}
+   &= d\bigl(k_\eta(X_\one, X_\one)\bigr)
+    = \partial_\one k_\eta(X_\one, X_\one)\,dX_\one
+      + \partial_\two k_\eta(X_\one, X_\one)\,dX_\one \\
+   &= \two\,\partial_\one k_\eta(X_\one, X_\one)\,dX_\one, \\
+  d\Sigma_{\one\two}
+   &= d\bigl(k_\eta(X_\one, X_\two)\bigr)
+    = \partial_\one k_\eta(X_\one, X_\two)\,dX_\one,
+      \quad\text{and} \\
+  d\Sigma_{\two\one}
+   &= d(\Sigma_{\one\two}^\T)
+    = (d\Sigma_{\one\two})^\T.
+\end{align}
+%
+From this, the conditional mean and covariance differentials reduce to
+%
+\begin{align}
+  d\Mu_*
+   &= d\Mu_\one
+      + d\Sigma_{\one\two}\,\Sigma_{\two\two}^{-\one} (Y_\two - \Mu_\two) \\
+   &= m_\theta'(X_\one)\,dX_\one
+      + \partial_\one k_\eta(X_\one, X_\two)\,dX_\one
+        \,\Sigma_{\two\two}^{-\one} (Y_\two - \Mu_\two), \\
+  d\Sigma_*
+   &= d\Sigma_{\one\one}
+      - d\Sigma_{\one\two}\,\Sigma_{\two\two}^{-\one} \Sigma_{\two\one}
+      - \Sigma_{\one\two} \Sigma_{\two\two}^{-\one}\,d\Sigma_{\two\one} \\
+   &= d\Sigma_{\one\one}
+      - \two\,d\Sigma_{\one\two}\,\Sigma_{\two\two}^{-\one} \Sigma_{\two\one} \\
+   &= \two\,\partial_\one k_\eta(X_\one, X_\one)\,dX_\one
+      - \two\,\partial_\one k_\eta(X_\one, X_\two)\,dX_\one
+        \,\Sigma_{\two\two}^{-\one} \Sigma_{\two\one}.
+\end{align}
+%
+Thus, if $\alpha = \Sigma_*^{-\one}(Y_\one - \Mu_*)$, the differential
+ of the density is
+%
+\begin{align}
+  d \log P&(Y_\one \given \Mu, \Sigma, Y_\two)
+    = d \log P(Y_\one \given \Mu_*, \Sigma_*) \nonumber\\
+   &= -\alpha^\T\,dY_\one
+      + \alpha^\T \bigl[
+          m_\theta'(X_\one)\,dX_\one \\
+   &\quad\quad\quad\quad\quad\quad\quad\quad
+          + \partial_\one k_\eta(X_\one, X_\two)\,dX_\one
+            \,\Sigma_{\two\two}^{-\one} (Y_\two - \Mu_\two)
+        \bigr] \nonumber\\
+   &\quad\quad
+      - \tr\bigl[
+          (\alpha \alpha^\T - \Sigma_*^{-\one})
+          \bigl(
+            \partial_\one k_\eta(X_\one, X_\one)\,dX_\one \nonumber\\
+   &\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
+            - \partial_\one k_\eta(X_\one, X_\two)\,dX_\one
+              \,\Sigma_{\two\two}^{-\one} \Sigma_{\two\one}
+          \bigr)
+        \bigr]. \nonumber
+\end{align}
+%
+The \code{gradientOfLogDensity} method computes the $dY_\one$ and
+ $dX_\one$ components of this linear map from increments in $Y_\one$
+ and $X_\one$ to increments in density.
+
+Since the output space of the Gaussian process is $\R$, the array of
+ output values is a vector in $\R^n$ and thus so is the $dY_\one$
+ component of this differential.
+If the input space of the Gaussian process is $\R$, the same goes for
+ the $dX_\one$ component.
+However, if the input space of the Gaussian process is $\R^k$ for some
+ $k > \one$, the $dX_\one$ component of this differential is a linear
+ map from an increment in a tuple $X_\one \in (\R^k)^n$ to an increment
+ in a density in $\R$---and there is no numpy array representation of
+ such a linear map.
+Pooh.
+
+\end{document}
