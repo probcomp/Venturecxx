@@ -11,7 +11,8 @@ class LiteSP(SimulationSP):
     self.wrapped_sp = wrapped_sp
     self.wrapped_aux = wrapped_aux
     assert isinstance(self.wrapped_sp.requestPSP, NullRequestPSP), \
-      "Cannot wrap requesting SPs"
+      "Cannot wrap requesting SP %s of type %s" % \
+      (wrapped_sp.requestPSP.description(None), type(wrapped_sp.requestPSP))
 
   def wrap_args(self, inputs, prng=None):
     if prng is not None:
