@@ -3,10 +3,8 @@
      (make_full_sp
       '(lambda (f)
          (dict
-          (list 'trace 'apply 'proposal_kernel)
-          (list
-           trace: (mem_table)
-           apply:
+          (array 'state (mem_table))
+          (array 'apply
            (lambda (handle app_id x)
              (do (has_value <- (mem_has_value x))
                  (if has_value
@@ -20,13 +18,11 @@
                                (value_at addr))))
                          (mem_assoc x y)
                          (mem_incr x)
-                         (return y)))))
-           proposal_kernel:
+                         (return y))))))
+          (array 'proposal_kernel
            (lambda (handle app_id)
              (dict
-              (list 'extract 'regen 'restore)
-              (list
-               extract:
+              (array 'extract
                (lambda (y x)
                  (do (mem_decr x)
                      (count <- (mem_count x))
@@ -34,8 +30,8 @@
                          (do (mem_dissoc x)
                              (with handle (free_request x)))
                          (return nil))
-                     (return (pair 0 nil))))
-               regen:
+                     (return (pair 0 nil)))))
+              (array 'regen
                (lambda (x)
                  (do (has_value <- (mem_has_value x))
                      (if has_value
@@ -51,12 +47,12 @@
                              ;; will see earlier applications in the
                              ;; mem table but not vice versa.
                              (y <- (with handle
-                               (do (addr <- (new_request x exp env))
-                                   (value_at addr))))
+                                         (do (addr <- (new_request x exp env))
+                                             (value_at addr))))
                              (mem_assoc x y)
                              (mem_incr x)
-                             (return (pair 0 y))))))
-               restore:
+                             (return (pair 0 y)))))))
+              (array 'restore
                (lambda (x _)
                  (do (has_value <- (mem_has_value x))
                      (if has_value
@@ -64,8 +60,8 @@
                              (mem_incr x)
                              (return y))
                          (do (y <- (with handle
-                               (do (addr <- (restore_request x))
-                                   (value_at addr))))
+                                         (do (addr <- (restore_request x))
+                                             (value_at addr))))
                              (mem_assoc x y)
                              (mem_incr x)
                              (return y)))))))))))
