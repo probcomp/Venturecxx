@@ -28,10 +28,14 @@ from venture.lite.sp_registry import registerBuiltinSP
 import venture.lite.env as env
 import venture.lite.types as t
 
-registerBuiltinSP("get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
-                                                        descr="get_current_environment returns the lexical environment of its invocation site"))
-registerBuiltinSP("get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
-                                                      descr="get_empty_environment returns the empty environment"))
+registerBuiltinSP("get_current_environment",
+  typed_func(lambda args: args.env, [], env.EnvironmentType(),
+             descr="get_current_environment returns the lexical environment of its invocation site"))
+
+registerBuiltinSP("get_empty_environment",
+  typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
+             descr="get_empty_environment returns the empty environment"))
+
 registerBuiltinSP("is_environment", type_test(env.EnvironmentType()))
 
 class ExtendEnvOutputPSP(DeterministicPSP):
@@ -42,9 +46,10 @@ class ExtendEnvOutputPSP(DeterministicPSP):
   def description(self,name):
     return "%s returns an extension of the given environment where the given symbol is bound to the given object" % name
 
-registerBuiltinSP("extend_environment", typed_nr(ExtendEnvOutputPSP(),
-                                                 [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
-                                                 env.EnvironmentType()))
+registerBuiltinSP("extend_environment",
+  typed_nr(ExtendEnvOutputPSP(),
+           [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
+           env.EnvironmentType()))
 
 class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
@@ -55,6 +60,7 @@ class EvalRequestPSP(DeterministicPSP):
   def description(self,name):
     return "%s evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name
 
-registerBuiltinSP("eval",esr_output(TypedPSP(EvalRequestPSP(),
-                                             SPType([t.ExpressionType(), env.EnvironmentType()],
-                                                    t.RequestType("<object>")))))
+registerBuiltinSP("eval",
+  esr_output(TypedPSP(EvalRequestPSP(),
+                      SPType([t.ExpressionType(), env.EnvironmentType()],
+                             t.RequestType("<object>")))))
