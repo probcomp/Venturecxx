@@ -18,18 +18,16 @@
 import random
 import numpy.random as npr
 
-from ..lite import exp as e
-from ..lite.exception import VentureError
 from venture.exception import VentureException
+from venture.lite import exp as e
+from venture.lite import value as vv
+from venture.lite.exception import VentureError
+from venture.lite.exception import VentureNestedRiplMethodError
+from venture.lite.psp import IArgs
+from venture.lite.psp import PSP
+from venture.lite.sp import VentureSPRecord
 import venture.lite.address as addr
-from ..lite.exception import VentureNestedRiplMethodError
-from ..lite import value as vv
-
-from ..lite.sp import VentureSPRecord
-from ..lite.psp import PSP
-from ..lite.psp import IArgs
-
-import node
+import venture.untraced.node as node
 
 # We still have a notion of nodes.  A node is a thing that knows its
 # address, and its value if it has one.
