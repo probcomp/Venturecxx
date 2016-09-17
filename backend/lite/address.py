@@ -114,3 +114,6 @@ class Address(List):
     return hash(self.asFrozenList())
 
 emptyAddress = Address(emptyList)
+
+def directive_address(did):
+  return Address(List(did))
