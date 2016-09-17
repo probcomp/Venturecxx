@@ -51,9 +51,10 @@ class CSPRequestPSP(DeterministicPSP):
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (ids, exp) = args.operandValues()
-    # point to the desugared source code location of lambda body
-    addr = args.operandNodes[1].address.last.append(1)
-    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,addr,args.env),ESRRefOutputPSP()))
+    # Point to the desugared source code location of lambda body.
+    # This is not a full address, because the call stack is gone.
+    source_loc = args.operandNodes[1].address.last.append(1)
+    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,source_loc,args.env),ESRRefOutputPSP()))
 
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,
