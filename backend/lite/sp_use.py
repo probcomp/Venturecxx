@@ -178,6 +178,8 @@ class RemappingArgs(IArgs):
     self.node = args.node
     self.operandNodes = args.operandNodes
     self.env = args.env
+    if hasattr(args, 'trace'):
+      self.trace = args.trace
     assert isinstance(args, IArgs)
 
   def operandValues(self):

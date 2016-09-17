@@ -66,3 +66,14 @@ registerBuiltinSP("eval",
   esr_output(TypedPSP(EvalRequestPSP(),
                       SPType([t.ExpressionType(), env.EnvironmentType()],
                              t.RequestType("<object>")))))
+
+class AddressOfOutputPSP(DeterministicPSP):
+  def simulate(self,args):
+    place = args.operandNodes[0]
+    node = args.trace.getOutermostNonReferenceNode(place)
+    return str(node.address)
+  def description(self,name):
+    return "%s returns a string representing the address of the top nontrivial node of its argument" % name
+
+registerBuiltinSP("address_of",
+  typed_nr(AddressOfOutputPSP(), [t.AnyType()], t.StringType()))
