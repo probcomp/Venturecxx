@@ -117,3 +117,9 @@ emptyAddress = Address(emptyList)
 
 def directive_address(did):
   return Address(List(did))
+
+def request(addr, index):
+  return addr.request(index)
+
+def extend(addr, index):
+  return addr.extend(index)

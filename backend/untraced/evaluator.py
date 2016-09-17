@@ -21,6 +21,7 @@ import numpy.random as npr
 from ..lite import exp as e
 from ..lite.exception import VentureError
 from venture.exception import VentureException
+import venture.lite.address as addr
 from ..lite.exception import VentureNestedRiplMethodError
 from ..lite import value as vv
 
@@ -50,9 +51,9 @@ def eval(address, exp, env, rng):
   else:
     nodes = []
     for index, subexp in enumerate(exp):
-      addr = address.extend(index)
-      v = eval(addr,subexp,env,rng)
-      nodes.append(node.Node(addr, v))
+      addr2 = addr.extend(address, index)
+      v = eval(addr2,subexp,env,rng)
+      nodes.append(node.Node(addr2, v))
 
     try:
       val = apply(address, nodes, env, rng)
@@ -127,7 +128,7 @@ def evalRequest(req_args, spr, r, rng):
   if families.containsFamily(r.id):
     return families.getFamily(r.id)
   else:
-    new_addr = req_args.node.address.request(r.addr)
+    new_addr = addr.request(req_args.node.address, r.addr)
     ans = node.Node(new_addr, eval(new_addr, r.exp, r.env, rng))
     if nonRepeatableRequestID(req_args, r.id):
       pass
