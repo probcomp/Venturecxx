@@ -71,7 +71,7 @@ class AddressOfOutputPSP(DeterministicPSP):
   def simulate(self,args):
     place = args.operandNodes[0]
     node = args.trace.getOutermostNonReferenceNode(place)
-    return str(node.address)
+    return addr.jsonable_address(node.address)
   def description(self,name):
     return "%s returns a string representing the address of the top nontrivial node of its argument" % name
 

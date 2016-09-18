@@ -196,3 +196,15 @@ def top_frame(addr):
     # Relies on convention that compound procedures use their body
     # locations as request ids
     return addr.req_id
+
+def jsonable_address(addr):
+  assert _is_address(addr)
+  if isinstance(addr, DirectiveAddress):
+    return "/" + str(addr.did)
+  if isinstance(addr, RequestAddress):
+    # XXX This is not the same addressing convention as Mite.  There
+    # the requests are identified by the maker node of the requesting
+    # SP, not the application node that made the request.
+    return jsonable_address(addr.app_addr) + "/request"
+  if isinstance(addr, SubexpressionAddress):
+    return jsonable_address(addr.sup_exp) + "/" + str(addr.index)
