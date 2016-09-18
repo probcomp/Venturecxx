@@ -18,17 +18,16 @@
 import random
 import numpy.random as npr
 
-from ..lite.exception import VentureError
 from venture.exception import VentureException
-from ..lite import types as t
-from ..lite import value as vv
-from ..lite import env
-from ..lite import address as addr
-from ..lite.sp import VentureSPRecord
-from ..lite import builtin
-
-import node
-import evaluator
+from venture.lite import address as addr
+from venture.lite import builtin
+from venture.lite import env
+from venture.lite import types as t
+from venture.lite import value as vv
+from venture.lite.exception import VentureError
+from venture.lite.sp import VentureSPRecord
+import venture.untraced.evaluator as evaluator
+import venture.untraced.node as node
 
 class Trace(object):
 
