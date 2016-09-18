@@ -58,7 +58,7 @@ class Trace(object):
     assert id not in self.results
     py_exp = t.ExpressionType().asPython(vv.VentureValue.fromStackDict(exp))
     rng = self.py_rng
-    val = evaluator.eval(addr.Address(addr.List(id)), py_exp, self.env, rng)
+    val = evaluator.eval(addr.directive_address(id), py_exp, self.env, rng)
     assert isinstance(val, vv.VentureValue)
     self.results[id] = val
 
