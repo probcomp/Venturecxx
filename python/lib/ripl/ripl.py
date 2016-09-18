@@ -60,6 +60,7 @@ import numpy as np
 from venture.exception import VentureException
 from venture.lite.value import VentureForeignBlob
 from venture.lite.value import VentureValue
+import venture.lite.address as addr
 import venture.value.dicts as v
 import plugins
 import utils as u
@@ -516,7 +517,7 @@ class Ripl():
         """Takes an address and gives the corresponding (unparsed)
         source code and expression index."""
 
-        return self.sivm._resugar(list(address.last))
+        return self.sivm._resugar(list(addr.top_frame(address).asList()))
 
     def humanReadable(self, exp=None, did=None, index=None, **kwargs):
         """Take a parsed expression and index and turn it into
