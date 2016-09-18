@@ -141,21 +141,21 @@ empty_address = EmptyAddress
 
 class DirectiveAddress(namedtuple('DirectiveAddress', ["did"])):
   def asList(self):
-    self.asAddress().asList()
+    return self.asAddress().asList()
   def asAddress(self):
     return Address(List(self.did))
 directive_address = DirectiveAddress
 
 class RequestAddress(namedtuple('RequestAddress', ["app_addr", "req_id"])):
   def asList(self):
-    self.asAddress().asList()
+    return self.asAddress().asList()
   def asAddress(self):
     return self.app_addr.asAddress().request(self.req_id.asList())
 request = RequestAddress
 
 class SubexpressionAddress(namedtuple('SubexpressionAddress', ["sup_exp", "index"])):
   def asList(self):
-    self.asAddress().asList()
+    return self.asAddress().asList()
   def asAddress(self):
     return self.sup_exp.asAddress().extend(self.index)
 extend = SubexpressionAddress
