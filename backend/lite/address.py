@@ -205,6 +205,6 @@ def jsonable_address(addr):
     # XXX This is not the same addressing convention as Mite.  There
     # the requests are identified by the maker node of the requesting
     # SP, not the application node that made the request.
-    return jsonable_address(addr.app_addr) + "/request"
+    return jsonable_address(addr.app_addr) + "/(esr(0))"
   if isinstance(addr, SubexpressionAddress):
     return jsonable_address(addr.sup_exp) + "/" + str(addr.index)
