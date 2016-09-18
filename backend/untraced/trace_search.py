@@ -42,6 +42,8 @@ Top = namedtuple("Top", [])
 Star = namedtuple("Star", [])
 MinimalSubproblem = namedtuple("MinimalSubproblem", ["source"])
 
+EsrEdge = namedtuple("EsrEdge", ["index"])
+
 def is_search_ast(thing):
   return (isinstance(thing, Intersect) or
           isinstance(thing, Lookup) or
@@ -201,6 +203,13 @@ def follow_func(edge, trace):
       return doit
     else:
       raise Exception("Unknown named edge type %s" % (name,))
+  elif edge in t.ForeignBlobType() and isinstance(edge.datum, EsrEdge):
+    def doit(node):
+      if n.isApplicationNode(node):
+        return OrderedFrozenSet([trace.esrParentsAt(node)[int(edge.datum.index)]])
+      else:
+        return OrderedFrozenSet([])
+    return doit
   else:
     raise Exception("Unknown edge type %s" % (edge,))
 
@@ -331,3 +340,7 @@ A "component" may be a single random choice, if the current selection
 is a set, or a set, if the current selection is a dictionary of tag
 values to sets of variables.
 """))
+
+inf.registerBuiltinInferenceSP("esr", \
+    deterministic_typed(EsrEdge, [t.IntegerType()], t.ForeignBlobType(),
+                        descr="""Walk to the given requested result."""))
