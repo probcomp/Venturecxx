@@ -25,6 +25,7 @@ from venture.lite.sp import SP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.address as addr
 import venture.lite.types as t
 
 class CSPRequestPSP(DeterministicPSP):
@@ -53,7 +54,7 @@ class MakeCSPOutputPSP(DeterministicPSP):
     (ids, exp) = args.operandValues()
     # Point to the desugared source code location of lambda body.
     # This is not a full address, because the call stack is gone.
-    source_loc = args.operandNodes[1].address.last.append(1)
+    source_loc = addr.append(addr.top_frame(args.operandNodes[1].address), 1)
     return VentureSPRecord(SP(CSPRequestPSP(ids,exp,source_loc,args.env),ESRRefOutputPSP()))
 
   def gradientOfSimulate(self, args, _value, _direction):

@@ -123,3 +123,9 @@ def request(addr, index):
 
 def extend(addr, index):
   return addr.extend(index)
+
+def top_frame(addr):
+  return addr.last
+
+def append(loc, index):
+  return loc.append(index)
