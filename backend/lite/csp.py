@@ -28,17 +28,17 @@ from venture.lite.sp_registry import registerBuiltinSP
 import venture.lite.types as t
 
 class CSPRequestPSP(DeterministicPSP):
-  def __init__(self,ids,exp,addr,env):
+  def __init__(self,ids,exp,loc,env):
     self.ids = ids
     self.exp = exp
-    self.addr = addr
+    self.loc = loc
     self.env = env
 
   def simulate(self,args):
     if len(self.ids) != len(args.operandNodes):
       raise VentureError("Wrong number of arguments: compound takes exactly %d arguments, got %d." % (len(self.ids), len(args.operandNodes)))
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
-    return Request([ESR(args.node,self.exp,self.addr,extendedEnv)])
+    return Request([ESR(args.node,self.exp,self.loc,extendedEnv)])
 
   def gradientOfSimulate(self, args, _value, _direction):
     # TODO Collect derivatives with respect to constants in the body
