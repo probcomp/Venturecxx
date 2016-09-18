@@ -25,20 +25,21 @@ from venture.lite.sp import SP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.address as addr
 import venture.lite.types as t
 
 class CSPRequestPSP(DeterministicPSP):
-  def __init__(self,ids,exp,addr,env):
+  def __init__(self,ids,exp,loc,env):
     self.ids = ids
     self.exp = exp
-    self.addr = addr
+    self.loc = loc
     self.env = env
 
   def simulate(self,args):
     if len(self.ids) != len(args.operandNodes):
       raise VentureError("Wrong number of arguments: compound takes exactly %d arguments, got %d." % (len(self.ids), len(args.operandNodes)))
     extendedEnv = VentureEnvironment(self.env,self.ids,args.operandNodes)
-    return Request([ESR(args.node,self.exp,self.addr,extendedEnv)])
+    return Request([ESR(args.node,self.exp,self.loc,extendedEnv)])
 
   def gradientOfSimulate(self, args, _value, _direction):
     # TODO Collect derivatives with respect to constants in the body
@@ -51,9 +52,10 @@ class CSPRequestPSP(DeterministicPSP):
 class MakeCSPOutputPSP(DeterministicPSP):
   def simulate(self,args):
     (ids, exp) = args.operandValues()
-    # point to the desugared source code location of lambda body
-    addr = args.operandNodes[1].address.last.append(1)
-    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,addr,args.env),ESRRefOutputPSP()))
+    # Point to the desugared source code location of lambda body.
+    # This is not a full address, because the call stack is gone.
+    source_loc = addr.append(addr.top_frame(args.operandNodes[1].address), 1)
+    return VentureSPRecord(SP(CSPRequestPSP(ids,exp,source_loc,args.env),ESRRefOutputPSP()))
 
   def gradientOfSimulate(self, args, _value, _direction):
     # A lambda is a constant.  I may need to do some plumbing here,

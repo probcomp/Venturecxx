@@ -32,6 +32,7 @@ from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.sp_use import ReplacingArgs
 from venture.lite.value import SPRef
 from venture.lite.value import VentureArray
+import venture.lite.address as addr
 import venture.lite.exp as e
 import venture.lite.types as t
 
@@ -126,11 +127,11 @@ class FixRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (ids, exps) = args.operandValues()
         # point to the desugared source code location of expression list
-        addr = args.operandNodes[1].address.last.append(1)
+        loc = addr.append(addr.top_frame(args.operandNodes[1].address), 1)
         # extend current environment with empty bindings for ids
         # (will be initialized in the output PSP)
         env = VentureEnvironment(args.env, ids, [None for _ in ids])
-        request = Request([ESR((args.node, i), exp, addr.append(i), env)
+        request = Request([ESR((args.node, i), exp, addr.append(loc, i), env)
                            for i, exp in enumerate(exps)])
         return request
 

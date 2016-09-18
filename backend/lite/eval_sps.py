@@ -25,6 +25,7 @@ from venture.lite.sp_help import type_test
 from venture.lite.sp_help import typed_func
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.address as addr
 import venture.lite.env as env
 import venture.lite.types as t
 
@@ -54,9 +55,10 @@ registerBuiltinSP("extend_environment",
 class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
     (exp, en) = args.operandValues()
-    # point to the desugared source code location of lambda body
-    addr = args.operandNodes[0].address.last.append(1)
-    return Request([ESR(args.node,exp,addr,en)])
+    # Point to the desugared source code location of expression.
+    # This is not a full address, because the call stack is gone.
+    source_loc = addr.append(addr.top_frame(args.operandNodes[0].address), 1)
+    return Request([ESR(args.node,exp,source_loc,en)])
   def description(self,name):
     return "%s evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name
 
