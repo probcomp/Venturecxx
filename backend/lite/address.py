@@ -147,6 +147,9 @@ class DirectiveAddress(namedtuple('DirectiveAddress', ["did"])):
 directive_address = DirectiveAddress
 
 class RequestAddress(namedtuple('RequestAddress', ["app_addr", "req_id"])):
+  def __init__(self, app_addr, req_id):
+    assert _is_address(app_addr)
+    super(RequestAddress, self).__init__(app_addr, req_id)
   def asList(self):
     return self.asAddress().asList()
   def asAddress(self):
@@ -154,11 +157,20 @@ class RequestAddress(namedtuple('RequestAddress', ["app_addr", "req_id"])):
 request = RequestAddress
 
 class SubexpressionAddress(namedtuple('SubexpressionAddress', ["sup_exp", "index"])):
+  def __init__(self, sup_exp, index):
+    assert _is_address(sup_exp)
+    super(SubexpressionAddress, self).__init__(sup_exp, index)
   def asList(self):
     return self.asAddress().asList()
   def asAddress(self):
     return self.sup_exp.asAddress().extend(self.index)
 extend = SubexpressionAddress
+
+def _is_address(thing):
+  return isinstance(thing, EmptyAddress) or \
+    isinstance(thing, DirectiveAddress) or \
+    isinstance(thing, RequestAddress) or \
+    isinstance(thing, SubexpressionAddress)
 
 class ReqLoc(namedtuple('ReqLoc', ["req_id"])):
   # Used by mem
