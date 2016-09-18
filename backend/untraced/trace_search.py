@@ -240,7 +240,7 @@ def set_bind(thing, f):
       ans[k] = set_bind(v, f)
     return ans
   elif isinstance(thing, OrderedFrozenSet):
-    return OrderedFrozenSet.union(*[f(v) for v in thing])
+    return OrderedFrozenSet([]).union(*[f(v) for v in thing])
   else:
     return f(thing)
 
