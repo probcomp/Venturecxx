@@ -512,11 +512,11 @@ class Ripl():
     def directive_id_for_label(self, label):
         return self.sivm.core_sivm.engine.get_directive_id(label)
 
-    def addr2Source(self, addr):
+    def addr2Source(self, address):
         """Takes an address and gives the corresponding (unparsed)
         source code and expression index."""
 
-        return self.sivm._resugar(list(addr.last))
+        return self.sivm._resugar(list(address.last))
 
     def humanReadable(self, exp=None, did=None, index=None, **kwargs):
         """Take a parsed expression and index and turn it into
@@ -1035,8 +1035,8 @@ Open issues:
             if name in d:
                 d[name] = f(d[name])
 
-        def resugar(addr):
-            stuff = self.addr2Source(addr)
+        def resugar(address):
+            stuff = self.addr2Source(address)
             return (stuff['did'], tuple(stuff['index']))
 
         def getaddr((did, index)):
