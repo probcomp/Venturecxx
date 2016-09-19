@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.node import jsonable_address
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import TypedPSP
 from venture.lite.request import ESR
@@ -71,7 +72,7 @@ class AddressOfOutputPSP(DeterministicPSP):
   def simulate(self,args):
     place = args.operandNodes[0]
     node = args.trace.getOutermostNonReferenceNode(place)
-    return addr.jsonable_address(node.address)
+    return jsonable_address(node)
   def description(self,name):
     return "%s returns a string representing the address of the top nontrivial node of its argument" % name
 

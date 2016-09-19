@@ -20,6 +20,7 @@ from venture.lite.psp import IArgs
 from venture.lite.request import Request
 from venture.lite.types import ExpressionType
 from venture.lite.value import VentureValue
+import venture.lite.address as addr
 
 class Node(object):
   def __init__(self, address):
@@ -117,6 +118,12 @@ def isRequestNode(thing):
   return isinstance(thing, RequestNode) and not thing.isFrozen
 def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
+
+def jsonable_address(node):
+  address = addr.jsonable_address(node.address)
+  if isRequestNode(node):
+    address = address + "/request"
+  return address
 
 class TraceNodeArgs(IArgs):
   def __init__(self, trace, node):
