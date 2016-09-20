@@ -13,8 +13,7 @@
   <script src="common-scripts.js"></script>
 
   <script type="text/javascript">
-  var venture__venture_ec2_demo_instance_host = "54.235.201.199";
-  var venture__venture_ec2_demo_instance_port = 80;
+  var ec2_demo_host = "54.84.247.121";
 
   function SelectVentureServer(host, port) {
     $.cookie("venture__ripl_host", host, { expires: 21 });
@@ -22,16 +21,8 @@
     window.location = $.cookie('venture__demo_page');
   }
 
-  function SelectMainDemoServer() {
-    SelectVentureServer(venture__venture_ec2_demo_instance_host,
-                        venture__venture_ec2_demo_instance_port);
-  }
   function SelectMyOwnServer() {
     SelectVentureServer($("#my_host").val(), $("#my_port").val());
-  }
-  function SelectMainVentureEC2InstanceAndMyPort() {
-    SelectVentureServer(venture__venture_ec2_demo_instance_host,
-                        $("#mainventureec2_port").val());
   }
   </script>
 </head>
@@ -48,13 +39,17 @@
       Port: <input id="my_port" type="text" value="8082">
       <i>The PORT on which venture is running ($ venture server -p PORT.)</i><br>
       <input type="button" value="Run" onClick="SelectMyOwnServer();"><br>
-    </li></ol>
-<!--      <b>3. "Venture demo" EC2 Instance (if you have access)</b><br>
-      Host: <i>54.235.201.199</i><br>
-      Port: <input type="text" id="mainventureec2_port" value="">
-      <i>The PORT on which venture is running ($ venture server -p PORT.)</i><br>
-      <input type="button" value="Run" onClick="SelectMainVentureEC2InstanceAndMyPort();"><br>
-    <br><br> -->
+    </li>
+    <li><b>Hs-Venture on EC2</b> (fastest)
+      <input type="button" value="Run" onClick="SelectVentureServer(ec2_demo_host, 3000);">
+    </li>
+    <li><b>Puma on EC2</b> (intermediate)
+      <input type="button" value="Run" onClick="SelectVentureServer(ec2_demo_host, 3001);">
+    </li>
+    <li><b>Lite on EC2</b> (most demo elements work)
+      <input type="button" value="Run" onClick="SelectVentureServer(ec2_demo_host, 3002);">
+    </li>
+    </ol>
     <i>If you have already been to this page, please check that
     cookies are enabled in your browser.  If this does not help,
     please <a href="mailto:venture-dev@lists.csail.mit.edu">contact
