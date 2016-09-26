@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numbers
+from collections import OrderedDict
 
 from venture.exception import VentureException
 from venture.lite.consistency import assertTorus
@@ -32,6 +33,7 @@ from venture.lite.psp import PSP
 from venture.lite.scope import isTagOutputPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.value import SPRef
+import venture.lite.address as addr
 import venture.lite.exp as e
 
 def regenAndAttach(trace, scaffold, shouldRestore, omegaDB, gradients):
@@ -45,7 +47,7 @@ def regenAndAttach(trace, scaffold, shouldRestore, omegaDB, gradients):
 def regenAndAttachAtBorder(trace, border, scaffold,
                            shouldRestore, omegaDB, gradients):
   weight = 0
-  constraintsToPropagate = {}
+  constraintsToPropagate = OrderedDict()
   for node in border:
 #    print "regenAndAttach...", node
     if scaffold.isAbsorbing(node):
@@ -190,8 +192,8 @@ def evalFamily(trace, address, exp, env, scaffold,
     weight = 0
     nodes = []
     for index, subexp in enumerate(exp):
-      addr = address.extend(index)
-      w, n = evalFamily(trace, addr, subexp, env, scaffold,
+      new_address = addr.extend(address, index)
+      w, n = evalFamily(trace, new_address, subexp, env, scaffold,
                         shouldRestore, omegaDB, gradients)
       weight += w
       nodes.append(n)
@@ -289,7 +291,7 @@ def evalRequests(trace, node, scaffold, shouldRestore, omegaDB, gradients):
         esrParent = omegaDB.getESRParent(trace.spAt(node), esr.id)
         weight += restore(trace, esrParent, scaffold, omegaDB, gradients)
       else:
-        address = node.address.request(esr.addr)
+        address = addr.request(node.address, esr.addr)
         (w, esrParent) = evalFamily(trace, address, esr.exp, esr.env, scaffold,
                                     shouldRestore, omegaDB, gradients)
         weight += w

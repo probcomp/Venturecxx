@@ -39,48 +39,60 @@ struct ConcreteTrace : Trace
   /* Registering metadata */
   void registerAEKernel(Node * node);
   void registerUnconstrainedChoice(Node * node);
-  void registerUnconstrainedChoiceInScope(ScopeID scope, BlockID block, Node * node);
+  void registerUnconstrainedChoiceInScope(
+      const ScopeID & scope, const BlockID & block, Node * node);
   void registerConstrainedChoice(Node * node);
 
   /* Unregistering metadata */
   void unregisterAEKernel(Node * node);
   void unregisterUnconstrainedChoice(Node * node);
-  void unregisterUnconstrainedChoiceInScope(ScopeID scope, BlockID block, Node * node);
+  void unregisterUnconstrainedChoiceInScope(
+      const ScopeID & scope, const BlockID & block, Node * node);
   void unregisterConstrainedChoice(Node * node);
 
   /* Regen mutations */
-  void addESREdge(RootOfFamily esrRoot, OutputNode * outputNode);
+  void addESREdge(const RootOfFamily & esrRoot, OutputNode * outputNode);
   void reconnectLookup(LookupNode * lookupNode);
-  void incNumRequests(RootOfFamily root);
-  void incRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node);
+  void incNumRequests(const RootOfFamily & root);
+  void incRegenCount(
+      const boost::shared_ptr<Scaffold> & scaffold, Node * node);
 
-  bool hasLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node);
-  void registerLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node, boost::shared_ptr<LKernel> lkernel);
-  boost::shared_ptr<LKernel> getLKernel(boost::shared_ptr<Scaffold> scaffold, Node * node);
+  bool hasLKernel(const boost::shared_ptr<Scaffold> & scaffold, Node * node);
+  void registerLKernel(
+      const boost::shared_ptr<Scaffold> & scaffold,
+      Node * node,
+      const boost::shared_ptr<LKernel> & lkernel);
+  boost::shared_ptr<LKernel> getLKernel(
+      const boost::shared_ptr<Scaffold> & scaffold, Node * node);
 
   void addChild(Node * node, Node * child);
 
   /* Detach mutations */
   RootOfFamily popLastESRParent(OutputNode * outputNode);
   void disconnectLookup(LookupNode * lookupNode);
-  void decNumRequests(RootOfFamily root);
-  void decRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node);
+  void decNumRequests(const RootOfFamily & root);
+  void decRegenCount(
+      const boost::shared_ptr<Scaffold> & scaffold, Node * node);
   void removeChild(Node * node, Node * child);
 
   /* Primitive getters */
   gsl_rng * getRNG();
   const gsl_rng * getRNG() const;
-  VentureValuePtr getValue(Node * node);
+  const VentureValuePtr & getValue(Node * node) {
+    const VentureValuePtr & answer = values[node];
+    assert(answer);
+    return answer;
+  };
   vector<RootOfFamily> getESRParents(Node * node);
   set<Node*> getChildren(Node * node);
-  int getNumRequests(RootOfFamily root);
-  int getRegenCount(boost::shared_ptr<Scaffold> scaffold, Node * node);
+  int getNumRequests(const RootOfFamily & root);
+  int getRegenCount(const boost::shared_ptr<Scaffold> & scaffold, Node * node);
   VentureValuePtr getObservedValue(Node * node);
   boost::shared_ptr<SP> getMadeSP(Node * makerNode);
   boost::shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
 
   boost::shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
-  boost::shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode); // not in particle
+  boost::shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode);
 
 
   bool isMakerNode(Node * node);
@@ -88,72 +100,84 @@ struct ConcreteTrace : Trace
   bool isObservation(Node * node);
 
   /* Primitive Setters */
-  void setValue(Node * node, VentureValuePtr value);
+  void setValue(Node * node, const VentureValuePtr & value);
   void clearValue(Node * node);
 
   void unobserveNode(Node * node);
-  void observeNode(Node * node, VentureValuePtr value);
+  void observeNode(Node * node, const VentureValuePtr & value);
 
 
-  void setMadeSPRecord(Node * makerNode, boost::shared_ptr<VentureSPRecord> spRecord);
+  void setMadeSPRecord(
+      Node * makerNode,
+      const boost::shared_ptr<VentureSPRecord> & spRecord);
   void destroyMadeSPRecord(Node * makerNode);
 
 
   void clearMadeSPFamilies(Node * node);
 
 
-  void setMadeSP(Node * node, boost::shared_ptr<SP> sp);
-  void setMadeSPAux(Node * node, boost::shared_ptr<SPAux> spaux);
+  void setMadeSP(Node * node, const boost::shared_ptr<SP> & sp);
+  void setMadeSPAux(Node * node, const boost::shared_ptr<SPAux> & spaux);
 
-  void setChildren(Node * node, set<Node*> children);
+  void setChildren(Node * node, const set<Node*> & children);
   void setESRParents(Node * node, const vector<RootOfFamily> & esrRoots);
 
-  void setNumRequests(RootOfFamily node, int num);
+  void setNumRequests(const RootOfFamily & node, int num);
 
   /* SPFamily operations */
-  void registerMadeSPFamily(Node * makerNode, FamilyID id, RootOfFamily esrRoot);
-  void unregisterMadeSPFamily(Node * makerNode, FamilyID id);
+  void registerMadeSPFamily(
+      Node * makerNode, const FamilyID & id, const RootOfFamily & esrRoot);
+  void unregisterMadeSPFamily(Node * makerNode, const FamilyID & id);
 
-  bool containsMadeSPFamily(Node * makerNode, FamilyID id);
-  RootOfFamily getMadeSPFamilyRoot(Node * makerNode, FamilyID id);
+  bool containsMadeSPFamily(Node * makerNode, const FamilyID & id);
+  RootOfFamily getMadeSPFamilyRoot(Node * makerNode, const FamilyID & id);
 
   void freezeDirectiveID(DirectiveID did);
   void freezeOutputNode(OutputNode * outputNode);
 
   /* New in ConcreteTrace */
 
-  BlockID sampleBlock(ScopeID scope);
-  vector<BlockID> blocksInScope(ScopeID scope); // TODO this should be an iterator
-  int numBlocksInScope(ScopeID scope);
-  set<Node*> getAllNodesInScope(ScopeID scope);
+  BlockID sampleBlock(const ScopeID & scope);
+  vector<BlockID> blocksInScope(const ScopeID & scope); // TODO should be an iterator
+  int numBlocksInScope(const ScopeID & scope);
+  set<Node*> getAllNodesInScope(const ScopeID & scope);
 
-  vector<set<Node*> > getOrderedSetsInScopeAndRange(ScopeID scope, BlockID minBlock, BlockID maxBlock);
-  vector<set<Node*> > getOrderedSetsInScope(ScopeID scope);
+  vector<set<Node*> > getOrderedSetsInScopeAndRange(
+      const ScopeID & scope,
+      const BlockID & minBlock,
+      const BlockID & maxBlock);
+  vector<set<Node*> > getOrderedSetsInScope(const ScopeID & scope);
 
-  // TODO Vlad: read this carefully. The default scope is handled differently than the other scopes.
-  // For default, the nodes are the actual principal nodes.
-  // For every other scope, they are only the roots w.r.t. the dynamic scoping rules.
-  set<Node*> getNodesInBlock(ScopeID scope, BlockID block);
+  // The default scope is handled differently than the other scopes.
+  // For default, the nodes returned are the actual principal nodes.
+  // For every other scope, they are only the roots w.r.t. the dynamic
+  // scoping rules.
+  set<Node*> getNodesInBlock(const ScopeID & scope, const BlockID & block);
 
   // Helper function for dynamic scoping
-  void addUnconstrainedChoicesInBlock(ScopeID scope, BlockID block, set<Node*> & pnodes, Node * node);
+  void addUnconstrainedChoicesInBlock(
+      const ScopeID & scope,
+      const BlockID & block,
+      set<Node*> & pnodes,
+      Node * node);
 
-  bool scopeHasEntropy(ScopeID scope);
+  bool scopeHasEntropy(const ScopeID & scope);
   double makeConsistent();
   void registerConstraints();
 
   int numUnconstrainedChoices();
 
-  double logLikelihoodAt(ScopeID pyscope, BlockID pyblock);
-  double logJointAt(ScopeID pyscope, BlockID pyblock);
+  double logLikelihoodAt(const ScopeID & pyscope, const BlockID & pyblock);
+  double logJointAt(const ScopeID & pyscope, const BlockID & pyblock);
   double likelihoodWeight();
 
   int getSeed();
-  double getGlobalLogScore();
 
   bool hasAAAMadeSPAux(OutputNode * makerNode);
   void discardAAAMadeSPAux(OutputNode * makerNode);
-  void registerAAAMadeSPAux(OutputNode * makerNode, boost::shared_ptr<SPAux> spAux);
+  void registerAAAMadeSPAux(
+      OutputNode * makerNode,
+      const boost::shared_ptr<SPAux> & spAux);
   boost::shared_ptr<SPAux> getAAAMadeSPAux(OutputNode * makerNode);
 
   boost::shared_ptr<ConcreteTrace> stop_and_copy() const;

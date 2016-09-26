@@ -52,16 +52,16 @@ def testMonadicSmoke():
 
 @on_inf_prim("sample")
 def testMonadicSmoke2():
-  """Same as above, but in venture script"""
+  # Same as above, but in venture script
   ripl = get_ripl(persistent_inference_trace=True)
   ripl.set_mode("venture_script")
   ripl.execute_program("""
 define foo = proc() {
   do(x <- sample(flip()),
      if (x) {
-       assume(y, true)
+       assume y = true
      } else {
-       assume(y, false)
+       assume y = false
      })}
 """)
   ripl.infer("foo()")
@@ -112,8 +112,8 @@ def testMonadicObserve():
 
 @on_inf_prim("in_model")
 @statisticalTest
-def testModelSwitchingSmoke():
-  ripl = get_ripl(persistent_inference_trace=True)
+def testModelSwitchingSmoke(seed):
+  ripl = get_ripl(seed=seed, persistent_inference_trace=True)
   ripl.execute_program("""
 [define normal_through_model
   (lambda (mu sigma)
@@ -128,6 +128,76 @@ def testModelSwitchingSmoke():
   """ % default_num_transitions_per_sample())
   predictions = [ripl.infer("(normal_through_model 0 1)") for _ in range(default_num_samples())]
   return reportKnownGaussian(0.0, 1.0, predictions)
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceSmoke():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (observe (normal 0 1) 3 foo)
+    (in_model (run (new_model))
+      (do (observe (gamma 1 1) 2 foo))))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForget():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (observe (normal 0 1) 3 foo)
+    (m <- (new_model))
+    (in_model m
+      (observe (gamma 1 1) 2 foo))
+    (forget 'foo)
+    (in_model m
+      (forget 'foo)))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetVS():
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  ripl.execute_program("""
+{ foo: observe normal(0, 1) = 3;
+  m <- new_model();
+  in_model(m, { foo: observe gamma(1, 1) = 2; });
+  forget(quote(foo));
+  in_model(m, forget(quote(foo)))
+}
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetAssume():
+  ripl = get_ripl()
+  ripl.execute_program("""
+(do (assume foo (normal 0 1))
+    (m <- (new_model))
+    (in_model m
+      (assume foo (gamma 1 1)))
+    (forget 'foo)
+    (in_model m
+      (forget 'foo)))
+""")
+
+@on_inf_prim("in_model")
+def testPerModelLabelNamespaceForgetAssume2():
+  # The example Marco provided for Issue #540
+  ripl = get_ripl()
+  ripl.set_mode("venture_script")
+  ripl.execute_program("""
+define env = run(new_model());
+
+infer in_model(env, {
+    assume foo = normal(0, 1);
+    foo_obs: observe foo = 1.123;
+    assume bar = normal(0, 1);
+    bar_obs: observe bar = 4.24;
+});
+
+infer in_model(env, do(
+    forget(quote(bar_obs)),
+    forget(quote(bar)),
+    forget(quote(foo_obs)),
+    forget(quote(foo))));
+""")
 
 @on_inf_prim("return")
 @on_inf_prim("action")
@@ -153,6 +223,29 @@ def testEagerReturn():
       (return (= r1 r2))))
 """)
 
+@on_inf_prim("none")
+def testDoLet():
+  assert get_ripl().evaluate("""\
+(do (let x 1)
+    (let y x)
+    (= x y))
+""")
+
+@on_inf_prim("none")
+def testDoLetrec():
+  assert get_ripl().evaluate("""\
+(do (letrec x (lambda () (y)))
+    (mutrec y (lambda () 1))
+    (= (x) (y)))
+""")
+
+@on_inf_prim("none")
+def testDoLetValues():
+  assert get_ripl().evaluate("""\
+(do (let_values (x y) (values_list 1 2))
+    (= 3 (+ x y)))
+""")
+
 @needs_backend("lite")
 @needs_backend("puma")
 @on_inf_prim("new_model")
@@ -174,8 +267,8 @@ def testBackendSwitchingSmoke():
 
 @on_inf_prim("fork_model")
 @statisticalTest
-def testModelForkingSmoke():
-  ripl = get_ripl(persistent_inference_trace=True)
+def testModelForkingSmoke(seed):
+  ripl = get_ripl(seed=seed, persistent_inference_trace=True)
   ripl.execute_program("""
 [assume p (beta 1 1)]
 
@@ -225,6 +318,45 @@ foo : [assume x (+ 1 2)]
 """)
   eq_([3.0, 3.0], u.strip_types([v['value'] for v in vals]))
 
+@on_inf_prim("report")
+def testReportObserveActionSmoke():
+  vals = get_ripl().execute_program("""\
+foo : [observe (normal 0 1) 0.2]
+(report 'foo)
+""")
+  eq_(0.2, u.strip_types(vals[1]['value']))
+
+@on_inf_prim("report")
+def testReportObserveListActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume m (array 0. 0.)]
+[assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
+foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
+(report 'foo)
+""")
+  eq_([0.1, -0.1], u.strip_types(vals[3]['value']))
+
+@on_inf_prim("report")
+def testReportObserveInferActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume x (normal 0 1)]
+foo : [observe (normal x 1) 0.2]
+[infer (mh default one 1)]
+(report 'foo)
+""")
+  eq_(0.2, u.strip_types(vals[3]['value']))
+
+@on_inf_prim("report")
+def testReportObserveListInferActionSmoke():
+  vals = get_ripl().execute_program("""\
+[assume m (array 0. 0.)]
+[assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
+foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
+[infer (mh default one 1)]
+(report 'foo)
+""")
+  eq_([0.1, -0.1], u.strip_types(vals[4]['value']))
+
 @on_inf_prim("force")
 def testForceSugar():
   r = get_ripl()
@@ -251,3 +383,74 @@ def testInferenceWorkCounting():
   eq_([1], r.infer("(mh default one 1)"))
   r.observe("(normal x 1)", 2)
   eq_([2], r.infer("(mh default one 1)"))
+
+def testLetrecSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  eq_(True, r.evaluate(""" {
+      letrec even = (n) -> { if (n == 0) { true  } else {  odd(n - 1) } };
+         and odd  = (n) -> { if (n == 0) { false } else { even(n - 1) } };
+      odd(5) }
+"""))
+
+def testRandomSugar():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { assume x = normal(0, 1);
+      frob: observe normal(x, 1) = 5;
+      default_markov_chain(10);
+      y <- sample x;
+      let (y1, y2) = list(ref(y), ref(y));
+      return(y1 + y2) }""")
+
+def testTilde():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { assume my_g = (mu) ~> { normal(mu, 1) };
+      assume x ~ my_g(0);
+      default_markov_chain(10);
+      y <~ sample my_g(x);
+      return(y)
+    }""")
+
+def testInventName():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { name = quote(foo);
+      assume $name ~ normal(0, 1);
+      sample foo;
+    }""")
+
+def testInventLabel():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { label = quote(foo);
+      $label : assume bar ~ normal(0, 1);
+      sample bar;
+    }""")
+  r.report('foo')
+
+def testInventLabel2():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.infer("""
+    { label = quote(foo);
+      val <- $label : assume bar ~ normal(0, 1);
+      return(val);
+    }""")
+  r.report('foo')
+
+def testForgettingAcrossModels():
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.execute_program("""
+define env = run(new_model());
+infer in_model(env, { assume mu = normal(0, 1); });
+define env2 = first(run(in_model(env, fork_model())));
+infer in_model(env, forget(quote(mu)));
+infer in_model(env2, forget(quote(mu)));
+""")

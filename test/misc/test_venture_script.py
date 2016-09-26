@@ -24,14 +24,14 @@ from venture.test.stats import statisticalTest
 
 @on_inf_prim("assume")
 def testVentureScriptProgram():
-  """At one point execute_program crashed with VentureScript."""
+  # At one point execute_program crashed with VentureScript.
   ripl = get_ripl()
   ripl.set_mode("venture_script")
   ripl.execute_program("assume a = proc() {1}")
 
 @on_inf_prim("none")
 def testVentureScriptUnparseExpException():
-  """At one point execute_program crashed with VentureScript."""
+  # At one point execute_program crashed with VentureScript.
   ripl = get_ripl()
   ripl.set_mode("venture_script")
   try:
@@ -42,8 +42,8 @@ def testVentureScriptUnparseExpException():
     assert False, "lambda is illegal in VentureScript and should raise a text_parse exception."
 
 @statisticalTest
-def testVentureScriptLongerProgram():
-  ripl = get_ripl()
+def testVentureScriptLongerProgram(seed):
+  ripl = get_ripl(seed=seed)
   ripl.set_mode("venture_script")
   ripl.execute_program("assume is_tricky = flip(0.25); // end of line comments work\nassume coin_weight = if (is_tricky)\n{ uniform_continuous(0, 1) } \nelse {0.5};")
   ripl.predict("flip(coin_weight)", label="pid")

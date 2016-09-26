@@ -15,19 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from ..lite import exp as e
-from ..lite.exception import VentureError
-from venture.exception import VentureException
-from ..lite.exception import VentureNestedRiplMethodError
-from ..lite import value as vv
-
-from ..lite.sp import VentureSPRecord
-from ..lite.psp import PSP
-
-import node
-
 import random
 import numpy.random as npr
+
+from venture.exception import VentureException
+from venture.lite import exp as e
+from venture.lite import value as vv
+from venture.lite.exception import VentureError
+from venture.lite.exception import VentureNestedRiplMethodError
+from venture.lite.psp import IArgs
+from venture.lite.psp import PSP
+from venture.lite.sp import VentureSPRecord
+import venture.lite.address as addr
+import venture.untraced.node as node
 
 # We still have a notion of nodes.  A node is a thing that knows its
 # address, and its value if it has one.
@@ -49,9 +49,9 @@ def eval(address, exp, env, rng):
   else:
     nodes = []
     for index, subexp in enumerate(exp):
-      addr = address.extend(index)
-      v = eval(addr,subexp,env,rng)
-      nodes.append(node.Node(addr, v))
+      addr2 = addr.extend(address, index)
+      v = eval(addr2,subexp,env,rng)
+      nodes.append(node.Node(addr2, v))
 
     try:
       val = apply(address, nodes, env, rng)
@@ -82,12 +82,14 @@ def apply(address, nodes, env, rng):
   assert not requests.lsrs, "The untraced evaluator does not yet support LSRs."
   return applyPSP(spr.sp.outputPSP, OutputArgs(address, nodes[1:], env, rng.randint(1, 2**31 - 1), req_nodes, requests))
 
-class RequestArgs(object):
+class RequestArgs(IArgs):
   "A package containing all the evaluation context information that a RequestPSP might need, parallel to venture.lite.node.Args"
   def __init__(self, address, nodes, env, seed):
+    super(RequestArgs, self).__init__()
     self.node = node.Node(address)
     self.operandNodes = nodes
     self.env = env
+    assert seed is not None
     rng = random.Random(seed)
     self._py_rng = random.Random(rng.randint(1, 2**31 - 1))
     self._np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
@@ -124,7 +126,7 @@ def evalRequest(req_args, spr, r, rng):
   if families.containsFamily(r.id):
     return families.getFamily(r.id)
   else:
-    new_addr = req_args.node.address.request(r.addr)
+    new_addr = addr.request(req_args.node.address, r.addr)
     ans = node.Node(new_addr, eval(new_addr, r.exp, r.env, rng))
     if nonRepeatableRequestID(req_args, r.id):
       pass

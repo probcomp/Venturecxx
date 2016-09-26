@@ -22,11 +22,14 @@
 #include "concrete_trace.h"
 
 // TODO add assert from lite
-ScaffoldIndexer::ScaffoldIndexer(ScopeID scope, BlockID block):
+ScaffoldIndexer::ScaffoldIndexer(const ScopeID & scope, const BlockID & block):
   scope(scope), block(block) {}
 
-ScaffoldIndexer::ScaffoldIndexer(ScopeID scope, BlockID block,
-                                 BlockID minBlock, BlockID maxBlock):
+ScaffoldIndexer::ScaffoldIndexer(
+    const ScopeID & scope,
+    const BlockID & block,
+    const BlockID & minBlock,
+    const BlockID & maxBlock):
   scope(scope), block(block), minBlock(minBlock), maxBlock(maxBlock) {}
 
 boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(
@@ -59,7 +62,7 @@ boost::shared_ptr<Scaffold> ScaffoldIndexer::sampleIndex(
 
 
 double ScaffoldIndexer::logDensityOfIndex(
-    Trace * trace, boost::shared_ptr<Scaffold> scaffold) const
+    Trace * trace, const boost::shared_ptr<Scaffold> & scaffold) const
 {
   if (dynamic_pointer_cast<VentureSymbol>(block) &&
       block->getSymbol() == "one") {

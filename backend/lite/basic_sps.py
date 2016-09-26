@@ -79,6 +79,14 @@ registerBuiltinSP("xor", deterministic_typed(lambda x, y: x != y,
     [t.BoolType(), t.BoolType()], t.BoolType(),
     descr="xor(x,y) returns true if exactly one of x and y is true"))
 
+registerBuiltinSP("all_p", deterministic_typed(all,
+    [t.HomogeneousListType(t.BoolType())], t.BoolType(),
+    descr="all returns true if all of the elements in the input are true"))
+
+registerBuiltinSP("any_p", deterministic_typed(any,
+    [t.HomogeneousListType(t.BoolType())], t.BoolType(),
+    descr="any returns true if any of the elements in the input are true"))
+
 registerBuiltinSP("is_number", type_test(t.NumberType()))
 registerBuiltinSP("is_integer", type_test(t.IntegerType()))
 registerBuiltinSP("is_probability", type_test(t.ProbabilityType()))
@@ -136,15 +144,37 @@ registerBuiltinSP("zip", deterministic_typed(zip,
     descr="zip returns a list of lists, where the i-th nested list " \
           "contains the i-th element from each of the input arguments"))
 
+def mk_dict(*entries):
+  return dict([(e.lookup(v.VentureNumber(0)), e.lookup(v.VentureNumber(1)))
+               for e in entries])
+
 registerBuiltinSP("dict",
-  deterministic_typed(lambda keys, vals: dict(zip(keys, vals)),
-    [t.HomogeneousListType(t.AnyType("k")),
-     t.HomogeneousListType(t.AnyType("v"))],
+    deterministic_typed(mk_dict,
+    [t.AnyType("2-tuple(k, v)")],
     t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v")),
-    descr="dict returns the dictionary mapping the given keys to their " \
-          "respective given values.  It is an error if the given lists " \
-          "are not the same length."))
+    descr="dict returns the dictionary mapping each of the given keys to their " \
+          "respective given values.",
+    variadic=True))
 registerBuiltinSP("is_dict", type_test(t.DictType()))
+
+registerBuiltinSP("to_dict",
+  deterministic_typed(lambda entries: mk_dict(*entries),
+    [t.HomogeneousListType(t.AnyType("2-tuple(k, v)"))],
+     t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v")),
+     descr="to_dict returns the dictionary mapping each of the given keys to their " \
+           "respective given values."))
+
+registerBuiltinSP("keys",
+  deterministic_typed(lambda d: d.keys(),
+    [t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v"))],
+    t.HomogeneousListType(t.AnyType("k")),
+    descr="keys returns a list of keys of the given dictionary."))
+
+registerBuiltinSP("values",
+  deterministic_typed(lambda d: d.values(),
+    [t.HomogeneousDictType(t.AnyType("k"), t.AnyType("v"))],
+    t.HomogeneousListType(t.AnyType("v")),
+    descr="values returns a list of values of the given dictionary."))
 
 registerBuiltinSP("lookup", deterministic_typed(lambda xs, x: xs.lookup(x),
     [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v")), t.AnyType("k")],
@@ -165,7 +195,7 @@ registerBuiltinSP("contains", deterministic_typed(lambda xs, x: xs.contains(x),
 
 registerBuiltinSP("size", deterministic_typed(lambda xs: xs.size(),
     [t.HomogeneousMappingType(t.AnyType("k"), t.AnyType("v"))],
-    t.NumberType(),
+    t.IntegerType(),
     descr="size returns the number of elements in the given collection " \
           "(lists and arrays work too)"))
 
@@ -187,10 +217,18 @@ def debug_print(label, value):
   return value
 
 registerBuiltinSP("debug", deterministic_typed(debug_print,
-    [t.SymbolType(), t.AnyType("k")], t.AnyType("k"),
-    descr = "Print the given value, labeled by a Symbol. Return the value. " \
+    [t.StringType(), t.AnyType("k")], t.AnyType("k"),
+    descr = "Print the given value, labeled by a string. Return the value. " \
             "Intended for debugging or for monitoring execution."))
 
 registerBuiltinSP("value_error",
   deterministic_typed(lambda s: raise_(VentureValueError(str(s))),
     [t.AnyType()], t.AnyType()))
+
+def make_name(sym, index):
+  return sym + "_" + str(int(index))
+
+registerBuiltinSP("name", deterministic_typed(make_name,
+    [t.SymbolType(), t.NumberType()], t.SymbolType(),
+    descr = "Programmatically synthesize a variable name. " \
+            "The name is determined by the given prefix and index."))

@@ -21,12 +21,10 @@ from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testESRRefAbsorb1():
-  """
-  This test ensures that an ESRRefOutputPSP does not absorb when its RequestPSP
-  might change.
-  """
-  ripl = get_ripl()
+def testESRRefAbsorb1(seed):
+  # This test ensures that an ESRRefOutputPSP does not absorb when its
+  # RequestPSP might change.
+  ripl = get_ripl(seed=seed)
   ripl.predict("(if (flip 0.7) 1 0)",label="pid")
   predictions = collectSamples(ripl,"pid")
   ans = [(1, .7), (0, .3)]

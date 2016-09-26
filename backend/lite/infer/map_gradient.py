@@ -60,7 +60,7 @@ class GradientAscentOperator(InPlaceOperator):
 
 class NesterovAcceleratedGradientAscentOperator(GradientAscentOperator):
   def step_lam(self, lam):
-    return (1 + math.sqrt(1 + 4 * lam * lam))/2
+    return (1 + math.sqrt(1 + 4 * lam * lam)) / 2.
   def gamma(self, lam):
     return (1 - lam) / self.step_lam(lam)
   def evolve(self, grad, values, start_grad):

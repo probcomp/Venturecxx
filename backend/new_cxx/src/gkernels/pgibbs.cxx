@@ -60,8 +60,8 @@ struct PGibbsWorker
 };
 
 
-pair<Trace*, double> PGibbsGKernel::propose(ConcreteTrace * trace,
-                                           boost::shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> PGibbsGKernel::propose(
+    ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold)
 {
   // assertTrace(self.trace, self.scaffold)
   this->scaffold = scaffold;

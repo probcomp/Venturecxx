@@ -22,8 +22,11 @@ Also independent of the global randomness.
 """
 
 import numbers
+import numpy as np
 
 from nose.tools import eq_
+
+import venture.value.dicts as vd
 
 from venture.lite.sp_registry import builtInSPs
 from venture.test.config import broken_in
@@ -192,3 +195,212 @@ def testFuturesDiverge2():
   assert x2 != x3
   assert x2 != x4
   assert x3 != x4
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_sample_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_ll_determinism1():
+  r = pablo(3)
+  assert np.allclose(
+    r.infer("global_log_likelihood"), r.infer("global_log_likelihood"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_lj_determinism1():
+  r = pablo(3)
+  assert np.allclose(
+    r.infer("global_log_joint"), r.infer("global_log_joint"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_ll_determinism2():
+  r = pablo(3)
+  s = pablo(3)
+  assert np.array_equal(
+    r.infer("global_log_likelihood"), s.infer("global_log_likelihood"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_lj_determinism2():
+  r = pablo(3)
+  s = pablo(3)
+  assert np.array_equal(
+    r.infer("global_log_joint"), s.infer("global_log_joint"))
+
+@on_inf_prim("none")
+@broken_in("lite", "Lite's global_log_likelihood has side effects.  Issue #584.")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_ll_effects():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer("global_log_likelihood")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("lite", "Lite's global_log_joint has side effects.  Issue #584.")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_lj_effects():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer("global_log_joint")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_ll_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer("global_log_likelihood")
+  s.infer("global_log_likelihood")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_lj_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer("global_log_joint")
+  s.infer("global_log_joint")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_sample_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_ll_determinism1():
+  r = pablo(3)
+  r.infer('default_markov_chain(10)')
+  assert np.allclose(
+    r.infer("global_log_likelihood"), r.infer("global_log_likelihood"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_lj_determinism1():
+  r = pablo(3)
+  r.infer('default_markov_chain(10)')
+  assert np.allclose(
+    r.infer("global_log_joint"), r.infer("global_log_joint"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_ll_determinism2():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  assert np.array_equal(
+    r.infer("global_log_likelihood"), s.infer("global_log_likelihood"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_lj_determinism2():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  assert np.array_equal(
+    r.infer("global_log_joint"), s.infer("global_log_joint"))
+
+@on_inf_prim("none")
+@broken_in("lite", "Lite's global_log_likelihood has side effects.  Issue #584.")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_ll_effects():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  r.infer("global_log_likelihood")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("lite", "Lite's global_log_joint has side effects.  Issue #584.")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_lj_effects():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  r.infer("global_log_joint")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_ll_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  r.infer("global_log_likelihood")
+  s.infer("global_log_likelihood")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+@on_inf_prim("none")
+@broken_in("puma", "Puma is nondeterministic.  Issue #571.")
+def test_infer_lj_effects_determinism():
+  r = pablo(3)
+  s = pablo(3)
+  r.infer('default_markov_chain(10)')
+  s.infer('default_markov_chain(10)')
+  r.infer("global_log_joint")
+  s.infer("global_log_joint")
+  assert np.array_equal(
+    r.sample_all("get_datapoint(11)"), s.sample_all("get_datapoint(11)"))
+
+def pablo(nparticles):
+  # Example program from Github issue #571.
+  r = get_ripl(seed=1)
+  r.set_mode("venture_script")
+  r.execute_program("""
+    // Collapsed Dirichlet Process Mixture model using
+    // a Chinese Restaurant Process
+
+    // CRP and cluster
+    assume crp = make_crp(10);
+    assume get_cluster = mem(proc(id){
+      tag(quote(clustering), id, crp())
+    });
+
+    // Components
+    assume cmvn =  mem(proc(cluster){
+      make_niw_normal(array(1, 1),1,2 + 1,matrix(array(array(1,0),array(0,1))))
+    });
+
+    // Sample data
+    assume get_datapoint = mem(proc(id){
+      cmvn(get_cluster(id))()
+    });
+  """)
+  r.observe("get_datapoint(1)",vd.list([vd.real(12.4299342152),vd.real(11.0243723622)]))
+  r.observe("get_datapoint(2)",vd.list([vd.real(0.0876588636563),vd.real(0.46296506961)]))
+  r.observe("get_datapoint(3)",vd.list([vd.real(-7.99964564506),vd.real(-8.98731353208)]))
+  r.observe("get_datapoint(4)",vd.list([vd.real(8.23541122165),vd.real(7.79102768844)]))
+  r.observe("get_datapoint(5)",vd.list([vd.real(0.974810779937),vd.real(1.38726814618)]))
+  r.observe("get_datapoint(6)",vd.list([vd.real(9.01950900535),vd.real(9.30739440906)]))
+  r.observe("get_datapoint(7)",vd.list([vd.real(-10.5666520344),vd.real(-9.79815099761)]))
+  r.observe("get_datapoint(8)",vd.list([vd.real(-0.298512623055),vd.real(-0.893928070534)]))
+  r.observe("get_datapoint(9)",vd.list([vd.real(12.0800451026),vd.real(7.67721242372)]))
+  r.observe("get_datapoint(10)",vd.list([vd.real(8.77103714879),vd.real(9.60268348563)]))
+  r.infer("resample(%d)" % (nparticles,))
+  return r

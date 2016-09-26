@@ -15,11 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from nose.tools import eq_
 from testconfig import config
 import numpy as np
 import scipy.stats
 
+from venture.lite.utils import logaddexp
+from venture.lite.sp_registry import builtInSPs
+from venture.lite.sp_use import logDensity
 from venture.test.config import SkipTest
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
@@ -41,13 +46,14 @@ def testWishartSmoke():
   assert np.all(m2 != 0)
 
 @statisticalTest
-def testWishartPrior1():
-  """Confirm that the diagonal elements of a Wishart are a chi-squared distribution."""
+def testWishartPrior1(seed):
+  # Confirm that the diagonal elements of a Wishart are a chi-squared
+  # distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(wishart s 5)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -57,13 +63,14 @@ def testWishartPrior1():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testWishartPrior2():
-  """Confirm that the diagonal elements of a Wishart are a chi-squared distribution."""
+def testWishartPrior2(seed):
+  # Confirm that the diagonal elements of a Wishart are a chi-squared
+  # distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(wishart s 4.2)")
   ripl.predict("(lookup m (pair 1 1))", label="prediction")
@@ -73,13 +80,14 @@ def testWishartPrior2():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testInvWishartPrior1():
-  """Confirm that the diagonal elements of an inverse Wishart are an inverse Gamma distribution."""
+def testInvWishartPrior1(seed):
+  # Confirm that the diagonal elements of an inverse Wishart are an
+  # inverse Gamma distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(inv_wishart s 5)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -89,13 +97,14 @@ def testInvWishartPrior1():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testInvWishartPrior2():
-  """Confirm that the diagonal elements of an inverse Wishart are an inverse Gamma distribution."""
+def testInvWishartPrior2(seed):
+  # Confirm that the diagonal elements of an inverse Wishart are an
+  # inverse Gamma distribution.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(matrix (array (array 2 -1) (array -1 3)))")
   ripl.assume("m", "(inv_wishart s 4.2)")
   ripl.predict("(lookup m (pair 1 1))", label="prediction")
@@ -105,13 +114,14 @@ def testInvWishartPrior2():
   return reportKnownContinuous(cdf, predictions)
 
 @statisticalTest
-def testWishartPrior3():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+def testWishartPrior3(seed):
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(id_matrix 3)")
   ripl.assume("m", "(wishart s 10000)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -120,13 +130,14 @@ def testWishartPrior3():
   return reportKnownGaussian(10000, 141, predictions)
 
 @statisticalTest
-def testWishartPrior4():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+def testWishartPrior4(seed):
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(id_matrix 3)")
   ripl.assume("m", "(wishart s 10000)")
   ripl.predict("(lookup m (pair 0 1))", label="prediction")
@@ -136,13 +147,14 @@ def testWishartPrior4():
 
 
 @statisticalTest
-def testInvWishartPrior3():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+def testInvWishartPrior3(seed):
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(scale_matrix 10000 (id_matrix 3))")
   ripl.assume("m", "(inv_wishart s 10000)")
   ripl.predict("(lookup m (pair 0 0))", label="prediction")
@@ -151,16 +163,36 @@ def testInvWishartPrior3():
   return reportKnownGaussian(1, 0.0141, predictions)
 
 @statisticalTest
-def testInvWishartPrior4():
-  """Confirm that as dof increases, the elements of a Wishart obey the central limit theorem."""
+def testInvWishartPrior4(seed):
+  # Confirm that as dof increases, the elements of a Wishart obey the
+  # central limit theorem.
 
   if inParallel() and config["get_ripl"] == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and wishart comes from Lite.")
 
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.assume("s", "(scale_matrix 10000 (id_matrix 3))")
   ripl.assume("m", "(inv_wishart s 10000)")
   ripl.predict("(lookup m (pair 0 1))", label="prediction")
 
   predictions = collectSamples(ripl, "prediction")
   return reportKnownGaussian(0, 0.01, predictions)
+
+def testInvWishartAssess():
+  psi = 3 # Parameterization from https://en.wikipedia.org/wiki/Inverse-Wishart_distribution
+  dof = 5
+  n = 3000
+  low = 0.00001
+  high = 500
+  get_ripl() # Make sure the SP registry is built (!)
+  inv_wishart_sp = builtInSPs()["inv_wishart"]
+  scale_matrix = [[psi]]
+  def inv_wishart(x):
+    return logDensity(inv_wishart_sp, no_wrapper=True)([[x]], [scale_matrix, dof])
+  inv_wisharts = np.vectorize(inv_wishart)(np.linspace(low, high, n))
+  inv_gamma = scipy.stats.invgamma(dof*0.5, scale=psi*0.5).logpdf
+  inv_gammas = np.vectorize(inv_gamma)(np.linspace(low, high, n))
+  cum_w = math.exp(logaddexp(inv_wisharts)) * (high - low) / n
+  cum_g = math.exp(logaddexp(inv_gammas)) * (high - low) / n
+  np.testing.assert_allclose([1, 1], [cum_w, cum_g], rtol=1e-2)
+  np.testing.assert_allclose(inv_wisharts, inv_gammas)

@@ -34,21 +34,28 @@ struct SuffBernoulliSPAux : SPAux
   int tails;
 };
 
-struct MakeBetaBernoulliOutputPSP : PSP
+struct MakeBetaBernoulliOutputPSP : virtual PSP
+  , DeterministicMakerAAAPSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
   bool childrenCanAAA() const { return true; }
 };
 
 
-struct BetaBernoulliOutputPSP : RandomPSP
+struct BetaBernoulliOutputPSP : virtual RandomPSP
 {
   BetaBernoulliOutputPSP(double alpha, double beta) : alpha(alpha), beta(beta) {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
   double logDensityOfData(shared_ptr<SPAux> spAux) const;
 
@@ -67,10 +74,13 @@ struct USuffBernoulliSPAux : SuffBernoulliSPAux
 };
 
 // Uncollapsed
-struct MakeUBetaBernoulliOutputPSP : RandomPSP
+struct MakeUBetaBernoulliOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
 {
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 };
 
 struct UBetaBernoulliSP : SP
@@ -82,14 +92,20 @@ struct UBetaBernoulliSP : SP
   UBetaBernoulliSP* copy_help(ForwardingMap* m) const;
 };
 
-struct SuffBernoulliOutputPSP : RandomPSP
+struct SuffBernoulliOutputPSP : virtual RandomPSP
 {
   SuffBernoulliOutputPSP() {}
 
-  VentureValuePtr simulate(shared_ptr<Args> args, gsl_rng * rng) const;
-  double logDensity(VentureValuePtr value, shared_ptr<Args> args) const;
-  void incorporate(VentureValuePtr value, shared_ptr<Args> args) const;
-  void unincorporate(VentureValuePtr value, shared_ptr<Args> args) const;
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void incorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  void unincorporate(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
 
 };
 

@@ -17,6 +17,7 @@
 
 import math
 import time
+from collections import OrderedDict
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
@@ -25,10 +26,13 @@ from ..lkernel import DeterministicLKernel
 def getCurrentValues(trace, pnodes):
   return [trace.valueAt(pnode) for pnode in pnodes]
 
-def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues):
+def registerDeterministicLKernels(trace, scaffold, pnodes, currentValues,
+    unconditional=None):
+  if unconditional is None:
+    unconditional = False
   for (pnode, currentValue) in zip(pnodes, currentValues):
     assert not isinstance(currentValue, list)
-    if pnode in scaffold.brush:
+    if not unconditional and pnode in scaffold.brush:
       raise Exception("Cannot deterministically propose values for nodes " \
                       "whose existence is conditional")
     scaffold.lkernels[pnode] = \
@@ -93,7 +97,6 @@ def mixMH(trace, indexer, operator):
       operator = operator.name(),
       indexer = indexer.name(),
       time = time.time() - start,
-      logscore = trace.getGlobalLogScore(),
       current = current,
       proposed = proposed,
       accepted = accepted,
@@ -129,7 +132,7 @@ class BlockScaffoldIndexer(object):
     elif self.block == "all":
       setsOfPNodes = [trace.getAllNodesInScope(self.scope)]
     elif self.block == "none":
-      setsOfPNodes = [set()]
+      setsOfPNodes = [OrderedSet()]
     elif self.block == "ordered":
       setsOfPNodes = trace.getOrderedSetsInScope(self.scope)
     elif self.block == "ordered_range":
@@ -172,7 +175,7 @@ class InPlaceOperator(object):
 
   def reject(self):
     detachAndExtract(self.trace, self.scaffold)
-    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, {})
+    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, OrderedDict())
     return self.scaffold.numAffectedNodes()
 
 #### Resampling from the prior
@@ -180,7 +183,7 @@ class InPlaceOperator(object):
 class MHOperator(InPlaceOperator):
   def propose(self, trace, scaffold):
     rhoWeight = self.prepare(trace, scaffold)
-    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, {})
+    xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
     return trace, xiWeight - rhoWeight
 
   def name(self): return "resimulation MH"
@@ -193,7 +196,7 @@ class FuncMHOperator(object):
     from ..particle import Particle
     rhoWeight, self.rhoDB = detachAndExtract(trace, scaffold)
     self.particle = Particle(trace)
-    xiWeight = regenAndAttach(self.particle, scaffold, False, self.rhoDB, {})
+    xiWeight = regenAndAttach(self.particle, scaffold, False, self.rhoDB, OrderedDict())
     return self.particle, xiWeight - rhoWeight
 
   def accept(self):
@@ -201,7 +204,7 @@ class FuncMHOperator(object):
     return self.scaffold.numAffectedNodes()
 
   def reject(self):
-    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, {})
+    regenAndAttach(self.trace, self.scaffold, True, self.rhoDB, OrderedDict())
     return self.scaffold.numAffectedNodes()
 
   def name(self):

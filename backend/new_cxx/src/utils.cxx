@@ -106,7 +106,8 @@ Simplex normalizeVector(const vector<double> & xs)
   return ps;
 }
 
-size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
+size_t findVVPtr(
+    const VentureValuePtr & val, const vector<VentureValuePtr>& vec)
 {
   for (size_t i = 0; i < vec.size(); ++i) {
     if (vec[i]->equals(val)) { return i; }
@@ -114,9 +115,8 @@ size_t findVVPtr(VentureValuePtr val, const vector<VentureValuePtr>& vec)
   return vec.size();
 }
 
-VentureValuePtr simulateCategorical(const Simplex & xs,
-                                    const vector<VentureValuePtr> & os,
-                                    gsl_rng * rng)
+VentureValuePtr simulateCategorical(
+    const Simplex & xs, const vector<VentureValuePtr> & os, gsl_rng * rng)
 {
   Simplex ps = normalizeVector(xs);
   vector<unsigned int> ns(ps.size());
@@ -127,7 +127,7 @@ VentureValuePtr simulateCategorical(const Simplex & xs,
   assert(false);
 }
 
-double logDensityCategorical(VentureValuePtr val, const Simplex & xs)
+double logDensityCategorical(const VentureValuePtr & val, const Simplex & xs)
 {
   if (val->hasInt()) {
     Simplex ps = normalizeVector(xs);
@@ -135,8 +135,10 @@ double logDensityCategorical(VentureValuePtr val, const Simplex & xs)
   } else { return log(0.0); }
 }
 
-double logDensityCategorical(VentureValuePtr val, const Simplex & xs,
-                             const vector<VentureValuePtr> & os)
+double logDensityCategorical(
+    const VentureValuePtr & val,
+    const Simplex & xs,
+    const vector<VentureValuePtr> & os)
 {
   Simplex ps = normalizeVector(xs);
   double answer = 0.0;
@@ -175,8 +177,10 @@ boost::python::object toPython<double>(Trace * trace, const double& st)
 
 using boost::lexical_cast;
 
-void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args,
-                     size_t expected)
+void checkArgsLength(
+    const string & sp,
+    const boost::shared_ptr<Args> & args,
+    size_t expected)
 {
   size_t length = args->operandValues.size();
   if (length != expected) {
@@ -185,8 +189,11 @@ void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args,
   }
 }
 
-void checkArgsLength(const string& sp, const boost::shared_ptr<Args> args,
-                     size_t lower, size_t upper)
+void checkArgsLength(
+    const string & sp,
+    const boost::shared_ptr<Args> & args,
+    size_t lower,
+    size_t upper)
 {
   size_t length = args->operandValues.size();
   if (length < lower || length > upper) {

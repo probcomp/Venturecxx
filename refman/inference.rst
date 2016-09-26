@@ -15,28 +15,162 @@ VentureScript inference programs are effectively evaluated in a context
 where the underlying model trace is available as a reified object, on
 which built-in inference procedures can operate. [#]_
 
-Scopes, Blocks, and the Local Posterior
----------------------------------------
+Block Structure
+---------------
 
-VentureScript defines the notion of `inference scope` to allow the
-programmer to control the parts of their model on which to apply
-various inference procedures.  The idea is that a `scope` is some
-collection of related random choices (for example, the states of a
-hidden Markov model could be one scope, and the hyperparameters could
-be another); and each scope is further subdivided into `block` s,
-which are choices that ought to be reproposed together (the name is
-meant to evoke the idea of block proposals).
+Like JavaScript, the organizing syntactic element of VentureScript is
+the *block*: a list of *statements* surrounded by curly braces and
+separated by parentheses.  VentureScript has the following kinds of
+statements:
 
-Any given random choice in an execution history can exist in an
-arbitrary number of scopes; but for each scope it is in it must be in
-a unique block.  As such, a scope-block pair denotes a set of random
-choices.
+.. _let_binding:
+.. object:: let <var> = <expression>;
 
-Any set of random choices defines a `local posterior`, which is the
-posterior on those choices, conditioned on keeping the rest of the
-execution history fixed.  Every inference method accepts a scope id
-and a block id as its first two arguments, and operates only on those
-random choices, with respect to that local posterior.
+  Bind the variable on the left hand side to the value of the
+  expression on the right hand side for the remainder of the block.
+
+  Note 1: This is not assignment: if the variable was already in
+  scope, it is shadowed, not mutated; at the end of the block, the old
+  value will be visible again.
+
+  Note 2: If the expression produces an inference action, that action
+  is not performed, but stored in the variable for later use.  See
+  `<-`.
+
+.. _monad_binding:
+.. object:: <var> <- <action>;
+
+  Perform the inference action on the right hand side and bind the
+  returned value to the variable on the left hand side.
+
+  Note 1: This is not assignment: if the variable was already in
+  scope, it is shadowed, not mutated; at the end of the block, the old
+  value will be visible again.
+
+  Note 2: It is an error for the expression to produce a value that is
+  not an inference action.  For binding the results of pure
+  computations, see `let`.
+
+.. _mv_binding:
+.. object:: let (<var1>, <var2>, ...) = <expression>;
+
+  Multiple value bind.  The expression must return a list of `ref` s
+  of the same length as the number of variables.  See also `values_list`.
+
+.. _letrec_binding:
+.. object:: letrec <var1> = <expression1>;
+               and <var2> = <expression2>;
+               ...
+
+  Mutually recursive binding.  The contiguous chain of `and`
+  statements are grouped together with the `letrec` statement at the
+  beginning, and all the variables are in scope in all the defining
+  expressions and the rest of the block, analogously to the same
+  construct in Scheme.  The name stands for "let, recursively".  This
+  is useful for defining mutually recursive procedures::
+
+      letrec even = (n) -> { if (n == 0) { true  } else {  odd(n - 1) } };
+         and odd  = (n) -> { if (n == 0) { false } else { even(n - 1) } };
+
+.. _effect:
+.. object:: <action>
+
+  Just evaluate the expression.  If this is the last statement of the
+  block, the return value of the whole block is the result of
+  evaluating the expression.
+
+Note that all of these affordances appear as expressions as well.  In
+fact, the block structure in VentureScript is just syntactic sugar for
+nested binding expressions of various kinds.
+
+Inference control with tags and subproblems
+-------------------------------------------
+
+VentureScript permits the user to control the strategy and focus of
+inference activity with the notion of the *subproblem*.  Any set of
+random choices in a VentureScript model defines a `local subproblem`,
+which is the problem of sampling from the posterior on those choices,
+conditioned on keeping the rest of the execution history fixed.
+Subproblem decomposition is useful because progress in distribution on
+a subproblem constitutes progress on the overall problem as well.
+
+It is typical to prepare a model for inference control by tagging some
+expressions with tags that can later be referenced when selecting a
+subproblem to operate on.  VentureScript provides syntactic sugar
+for tagging model expressions::
+
+    something #tag1
+    something_else #tag2:value
+
+The first form just associates the `something` expression with the tag
+named `tag1`.  The second form associates the `something_else`
+expression with the tag named `tag2` with the value computed by the
+`value` expression.
+
+For example, a typical simple Dirichlet process mixture model (over
+Bernoulli vectors) might be implemented and tagged like this::
+
+    assume assign   = make_crp(1);
+    assume z        = mem((i) ~> { assign() #clustering });     // The partition induced by the DP
+    assume pct      = mem((d) ~> { gamma(1.0, 1.0) #hyper:d }); // Per-dimension hyper prior
+    assume theta    = mem((z, d) ~> { beta(pct(d), pct(d)) #compt:d });   // Per-component latent
+    assume datum    = mem((i, d) ~> {{
+      cmpt ~ z(i);
+      weight ~ theta(cmpt, d);
+      flip(weight)} #row:i #col:d });   // Per-datapoint random choices
+
+VentureScript provides a path-like syntax for identifying random
+choices in a model on which inference might then be applied.  The `/`
+(forward slash) operator is analogous to a UNIX directory separator:
+it means "apply the pattern on the right to subchoices of the choices
+selected on the left" (and a leading `/` means "search for the
+choices on right in the whole model").  By "subchoices" I mean the choices
+made in the dynamic extent of evaluating that one.  For example::
+
+    /?hyper               // select all choices tagged with the "hyper" tag
+    /?row==3              // select all choices involved in the third row
+    /?row==3/?clustering  // select only the cluster assignment for the third row
+
+Random choice selections can also be computed programmatically with
+the procedures beginning with `by_`, below.
+
+A complete subproblem definition includes not only the random choices
+of interest, but also additional information, such as how to treat
+which of their consequences (likelihood-free choices have to be
+resampled, choices that can report likelihoods may be resampled or may
+be kept, contributing to the acceptance ratio, etc).  VentureScript
+currently provides one operation to convert a selection of random
+choices into a subproblem, namely `minimal_subproblem`.  That
+subproblem may then be passed to an inference operation like `mh` to
+actually operate on those choices.
+
+Randomized proposal targets may be obtained with the
+`random_singleton` procedure, which correctly accounts for the
+acceptance correction due to the probability of selecting that
+particular subproblem to work on.
+
+Putting it all together, the inference tactic `default_markov_chain`
+might be defined as::
+
+    define default_markov_chain = (n) -> {
+      repeat(n, mh(minimal_subproblem(random_singleton(by_extent(by_top())))))}
+
+For compatibility with previous versions of VentureScript, all the
+inference operators will also accept a tag and a tag value as two
+separate arguments, and treat them as `minimal_subproblem(/?<tag>==<value>)`.
+
+**Note**: The argument lists of the inference operators below
+come out of Sphinx a bit weird.  The intent is that the "tag_value"
+argument is required if and only if the "subproblem" argument is
+actually a raw tag, and immediately follows it.
+
+**Note 2**: The subproblem selection subsystem is not (yet)
+implemented in the Puma backend.  If using Puma, use the tag/value
+invocation form.
+
+Any given random choice in an execution history can be tagged by an
+arbitrary number of tags; but for each tag it has, it must be given a
+unique value (if any).  The most locally assigned value wins.
 
 Built-in Procedures for Inference
 ---------------------------------

@@ -26,6 +26,9 @@ import numpy.linalg as npla
 import scipy.special as spsp
 import scipy.stats
 
+from scipy.special import betaln
+from scipy.special import digamma
+
 from venture.lite.exception import GradientWarning
 from venture.lite.exception import VentureValueError
 from venture.lite.lkernel import DeltaLKernel
@@ -42,9 +45,19 @@ from venture.lite.sp_help import dispatching_psp
 from venture.lite.sp_help import no_request
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import careful_exp
+from venture.lite.utils import expm1
+from venture.lite.utils import extendedLog
+from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logDensityMVNormal
+from venture.lite.utils import log_d_logistic
+from venture.lite.utils import log_logistic
+from venture.lite.utils import logistic
+from venture.lite.utils import logit
+from venture.lite.utils import logsumexp
 from venture.lite.utils import numpy_force_number
 from venture.lite.utils import override
+from venture.lite.utils import simulateLogGamma
 import venture.lite.types as t
 
 
@@ -120,7 +133,7 @@ class MVNormalOutputPSP(RandomPSP):
       raise Exception('TODO: Find an analytical form for the maximum of the '\
         'log density of MVNormal for fixed x, mu, but varying sigma')
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
 
   def description(self,name):
     return '  %s(mean, covariance) samples a vector according to the '\
@@ -139,6 +152,10 @@ registerBuiltinSP("multivariate_normal", typed_nr(MVNormalOutputPSP(),
 
 
 class InverseWishartOutputPSP(RandomPSP):
+  # Parameterization follows Wikipedia
+  # https://en.wikipedia.org/wiki/Inverse-Wishart_distribution, namely
+  # - lmbda is a p by p positive definite scale matrix
+  # - dof > p - 1 is the degrees of freedom
   def simulate(self, args):
     (lmbda, dof) = self.__parse_args__(args)
     p = len(lmbda)
@@ -168,13 +185,26 @@ class InverseWishartOutputPSP(RandomPSP):
     T = scipy.linalg.solve_triangular(R.T, chol.T, lower=True)
     return np.dot(T.T, T)
 
+  # PDF formula from Wikipedia cross-checked against Murphy [1, Sec
+  # 4.5.1, p.127].  They agree with the following translation
+  # dictionary:
+  # Murphy | Wiki
+  # S^-1   | Psi
+  # Sigma  | X
+  # D      | p
+  # nu     | nu
+  # and the published erratum to eq. 4.166 in [1] "In the
+  # normalization of inverse Wishart, the exponent of |S| shouldn't be
+  # negated."  See derivation of logarithm in sp-math.tex.
   def logDensity(self, x, args):
-    (lmbda, dof) = self.__parse_args__(args)
-    p = len(lmbda)
-    log_density =  dof/2*(np.log(npla.det(lmbda)) - p*np.log(2)) \
-      - spsp.multigammaln(dof*.5, p) \
-      + (-.5*(dof+p+1))*np.log(npla.det(x)) \
-      - .5*np.trace(np.dot(lmbda, npla.inv(x)))
+    def logdet(m):
+      return np.log(npla.det(m))
+    (psi, dof) = self.__parse_args__(args)
+    p = len(psi)
+    log_density = 0.5 * dof * (logdet(psi) - p * np.log(2)) \
+      - spsp.multigammaln(0.5 * dof, p) \
+      - 0.5 * (dof + p + 1) * logdet(x) \
+      - 0.5 * np.trace(np.dot(psi, npla.inv(x)))
     return log_density
 
   def gradientOfLogDensity(self, X, args):
@@ -300,7 +330,7 @@ class NormalOutputPSP(RandomPSP):
       # (x-mu)^2 = sigma^2
       return self.logDensityNumeric(x, [mu, abs(x-mu)])
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
 
   def simulate(self, args):
     return self.simulateNumeric(args.operandValues(), args.np_prng())
@@ -421,7 +451,7 @@ class VonMisesOutputPSP(RandomPSP):
     elif x is not None and mu is not None:
       raise Exception("TODO What is the bound for a vonmises varying kappa?")
     else:
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
 
   def gradientOfLogDensity(self, x, args):
     (mu, kappa) = args.operandValues()
@@ -452,7 +482,7 @@ class UniformOutputPSP(RandomPSP):
   def logDensityBoundNumeric(self, _, low, high):
     if low is None or high is None:
       # Unbounded
-      raise Exception("Cannot rejection sample psp with unbounded likelihood")
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
     else:
       return -math.log(high - low)
 
@@ -482,11 +512,188 @@ registerBuiltinSP("uniform_continuous",typed_nr(UniformOutputPSP(),
   [t.NumberType(), t.NumberType()], t.NumberType()))
 
 
+class LogOddsUniformOutputPSP(RandomPSP):
+  def simulate(self, args):
+    return logit(args.np_prng().uniform())
+
+  def logDensity(self, x, _args):
+    # If Y ~ U[0,1] and X = logit(Y), then Y = logistic(X), so that
+    # since P_Y(y) = 1, we have the change of variables density
+    #
+    #   P_X(x) = P_Y(logistic(x))*logistic'(x) = 1*logistic'(x)
+    #          = logistic'(x).
+    #
+    # Hence log P(x) = log logistic'(x).
+    #
+    return log_d_logistic(x)
+
+  def gradientOfLogDensity(self, x, _args):
+    # Let L(x) = logistic(x).  We need
+    #
+    #   d/dx log P(x) = d/dx log L'(x)
+    #     = (log o L')'(x) = log'(L'(x)) L''(x)
+    #     = L''(x)/L'(x).
+    #
+    # Note that L' = L*(1 - L), so
+    #
+    #   L'' = (L*(1 - L))' = L'*(1 - L) + L*(1 - L)'
+    #     = L'*(1 - L) - L*L';
+    #
+    # hence L''/L' = (1 - L) - L = 1 - 2 L.
+    #
+    return 1 - 2*logistic(x), []
+
+  def logDensityBound(self, _x, _args):
+    # Any maximum of log P(x) is a zero of d/dx log P(x) = 1 - 2 L(x),
+    # where L(x) is the logistic function; hence if x is maximum then
+    # L(x) = 1/(1 + e^{-x}) = 1/2, so that x = 0.  The maximum value
+    # is
+    #
+    #   log P(0) = log L'(0) = log (1 - L(0)) L(0)
+    #     = log (1 - 1/2)*(1/2) = log (1/4)
+    #     = -log 4.
+    #
+    return -extendedLog(4)
+
+  def description(self, name):
+    return "  %s() samples a log-odds representation of a uniform real number"\
+      " between 0 and 1.  This is also called the `logistic distribution',"\
+      " named differently to avoid confusion with the logistic function."\
+      % (name,)
+
+
+registerBuiltinSP("log_odds_uniform", typed_nr(LogOddsUniformOutputPSP(),
+  [], t.NumberType()))
+
+
 class BetaOutputPSP(RandomPSP):
   # TODO don't need to be class methods
   def simulateNumeric(self, params, np_rng):
     alpha, beta = params
-    return np_rng.beta(a=alpha, b=beta)
+
+    # Beta(0, 0) is a pair of Dirac deltas at 0 and 1.  Beta(0, b) is
+    # a Dirac delta at 1; Beta(a, 0) is a Dirac delta at 0.  For any a
+    # or b rounded to zero, this is the best we can do.
+    if alpha == 0 and beta == 0:
+      return float(np_rng.randint(2))
+    elif alpha == 0:
+      return 1.
+    elif beta == 0:
+      return 0.
+    elif min(alpha, beta) < 1e-300:
+      # Not a delta -- but close enough to it at 0 that no matter what
+      # beta is, the spike near 1 would always be rounded to 1 in
+      # practice.
+      #
+      # XXX This is probably true for alpha < 1e-300.  I am not so
+      # sure that for beta < 1e-300, the spike near 0 would always be
+      # rounded to 0 in practice -- there are many more floating-point
+      # numbers near 0 than there are near 1.  But if you really care
+      # about the accuracy of the *distribution* in this case, maybe
+      # you should rethink your model.  We do this case to avoid the
+      # much more significant problem of giving NaN in some cases,
+      # described below.
+      return 0. if np_rng.uniform() < alpha/(alpha + beta) else 1.
+
+    if 1 < alpha or 1 < beta:
+      # Easy case: at least one of the pseudocounts exceeds 1.  Use
+      # the well-known relation to independent Gamma distributions:
+      # for independent G ~ Gamma(alpha) and H ~ Gamma(beta), we have
+      # G/(G + H) ~ Beta(alpha, beta).
+      G = np_rng.gamma(shape=alpha)
+      H = np_rng.gamma(shape=beta)
+      return G/(G + H)
+
+    # Johnk's algorithm: Given u, v uniform on [0, 1], let x =
+    # u^(1/alpha) and y = v^(1/beta); if x + y <= 1, yield x/(x + y),
+    # as described in
+    #
+    #   Luc Devroye, _Nonuniform Random Variate Generation_,
+    #   Springer-Verlag, 1986, Ch. IX `Continuous univariate
+    #   densities', Sec. 3.5 'Johnk's theorem and its implications',
+    #   p. 416.
+    #
+    # (Original paper by M.D. Johnk, cited by Devroye, is in German.)
+    while True:
+      u = np_rng.uniform()
+      v = np_rng.uniform()
+      x = u**(1/alpha)
+      y = v**(1/beta)
+      if 1 < x + y:
+          continue            # reject
+
+      # If u, v, alpha, and beta are far enough from zero that x and
+      # y are not rounded to zero, do the division in direct space.
+      if 0 < x + y:
+        return x/(x + y)
+
+      # Otherwise, do the division in log space:
+      #
+      #       x/(x + y) = exp log x/(x + y)
+      #       = exp [log x - log (x + y)]
+      #       = exp [log x - log m*(x/m + y/m)]
+      #       = exp [log x - log m - log (x/m + y/m)]
+      #       = exp [log x - log m - log (exp log x/m + exp log y/m)]
+      #       = exp [log x - log m
+      #               - log (exp (log x - log m) + exp (log y - log m))]
+      #       = exp [log x' - log (exp log x' + exp log y')]
+      #
+      # where m = max(x, y), x' = x/m, and y' = y/m, in order to
+      # avoid overflow in the intermediate exp.
+      #
+      # Should we worry about zero u or v?
+      #
+      # Numbers from 0 to the smallest positive floating-point
+      # number, or the slightly larger smallest positive /normal/
+      # floating-point number if the CPU is in the nonstandard but
+      # common faster flush-to-zero mode, will be rounded to zero.
+      # The smallest positive normal floating-point number is
+      # 2^-1022.  Hence
+      #
+      #       Pr[u = 0 or v = 0]
+      #         = Pr[u = 0] + Pr[v = 0] - Pr[u = 0 and v = 0]
+      #        <= 2^-1022 + 2^-1022 - 2^-2044
+      #         = 2^-1021 - 2^-2044
+      #         < 2^-1021 <<< 2^-256.
+      #
+      # This will never happen unless the PRNG is broken.
+      #
+      # XXX Is numpy's PRNG broken?  Unclear: many alleged `uniform
+      # [0, 1]' samplers actually give probability 2^-64 or 2^-53 of
+      # yielding zero, e.g. by drawing an integer in {0, 1, 2, ...,
+      # 2^53 - 1} and dividing by 2^53.  This is not what numpy's PRNG
+      # does but it's not too far off either.
+
+      assert 0 < u
+      assert 0 < v
+      log_x = np.log(u)/alpha
+      log_y = np.log(v)/beta
+
+      # Should we worry about floating-point overflow of log_x (and
+      # respectively log_y) to -infinity when alpha (resp. beta) is
+      # very small so that 1/alpha or (resp. 1/beta) is very large?
+      # That would cause the log-sum-exp calculation to yield NaN
+      # instead of a real number in [0, 1], which would be bad.
+      #
+      # The least value attained by log(u) is just over -745, when u
+      # is the smallest nonnegative floating-point number 2^-1074.  In
+      # this case, there is no overflow for any alpha above 1e-305:
+      # log(u)/alpha <= -745/1e-305 = -8e2 * 1e305 = -8e307, which
+      # does not overflow since the largest finite floating-point
+      # magnitude is a little over 1e308.
+      #
+      # Since we round the Beta(alpha, beta) distribution to
+      # Bernoulli-weighted spikes at 0 and 1 when alpha or beta is
+      # below 1e-300, this does not concern us for any possible values
+      # of u and v.
+
+      assert not np.isinf(log_x)
+      assert not np.isinf(log_y)
+
+      log_m = max(log_x, log_y)
+      log_x -= log_m
+      log_y -= log_m
+      return np.exp(log_x - np.log(np.exp(log_x) + np.exp(log_y)))
 
   def logDensityNumeric(self, x, params):
     return scipy.stats.beta.logpdf(x,*params)
@@ -501,7 +708,7 @@ class BetaOutputPSP(RandomPSP):
     (alpha, beta) = args.operandValues()
     gradX = ((float(alpha) - 1) / x) - ((float(beta) - 1) / (1 - x))
     gradAlpha = spsp.digamma(alpha + beta) - spsp.digamma(alpha) + math.log(x)
-    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log(1 - x)
+    gradBeta = spsp.digamma(alpha + beta) - spsp.digamma(beta) + math.log1p(-x)
     return (gradX,[gradAlpha,gradBeta])
 
   def description(self, name):
@@ -513,6 +720,253 @@ class BetaOutputPSP(RandomPSP):
 
 registerBuiltinSP("beta", typed_nr(BetaOutputPSP(),
   [t.PositiveType(), t.PositiveType()], t.ProbabilityType()))
+
+
+class LogBetaOutputPSP(RandomPSP):
+  def simulate(self, args):
+    np_rng = args.np_prng()
+    alpha, beta = args.operandValues()
+
+    # . log Beta(0, 0) is a pair of Dirac deltas at -inf and 0.
+    # . log Beta(0, b) is a Dirac delta at -inf.
+    # . log Beta(a, 0) is a Dirac delta at 0.
+    #
+    # For any a or b rounded to zero, this is the best we can do.
+    #
+    inf = float('inf')
+    if alpha == 0 and beta == 0:
+      return -inf if np_rng.randint(2) else 0
+    elif alpha == 0:
+      return -inf
+    elif beta == 0:
+      return 0
+    elif min(alpha, beta) < 1e-300:
+      # Avoid NaNs due to duelling infinities from log Gamma samples
+      # with shape below 1e-300.  If alpha and beta both exceed
+      # 1e-300, the log Gamma sampler never overflows.
+      #
+      return 0 if np_rng.uniform() < alpha/(alpha + beta) else -inf
+
+    # Given independent G ~ Gamma(alpha) and H ~ Gamma(beta), the
+    # well-known identity G/(G + H) ~ Beta(alpha, beta) lets us sample
+    # from the Beta distribution.  We want log G/(G + H).  If alpha or
+    # beta is small, G and H may be rounded to zero, whereas we can
+    # sample log G and log H without overflowing to -infinity,
+    # provided alpha and beta are at least 1e-300, and then we can
+    # compute log G - log (e^{log G} + e^{log H}).
+    #
+    log_G = simulateLogGamma(alpha, np_rng)
+    log_H = simulateLogGamma(beta, np_rng)
+    assert not math.isinf(log_G)
+    assert not math.isinf(log_H)
+    return log_G - logsumexp([log_G, log_H])
+
+  def logDensity(self, x, args):
+    # x = log y for a beta sample y, so its density is the beta
+    # density of y = e^x with the Jacobian dy/dx = e^x:
+    #
+    #   log p(x | a, b) = log [p(y | a, b) dy/dx]
+    #   = (a - 1) log y + (b - 1) log (1 - y) - log Beta(a, b) + log dy/dx
+    #   = (a - 1) log e^x + (b - 1) log (1 - e^x) - log B(a, b) + log e^x
+    #   = (a - 1) x + (b - 1) log (1 - e^x) - log B(a, b) + x
+    #   = a x + (b - 1) log (1 - e^x) - log B(a, b).
+    #
+    a, b = args.operandValues()
+    return a*x + (b - 1)*extendedLog1p(-careful_exp(x)) \
+      - scipy.special.betaln(a, b)
+
+  def gradientOfLogDensity(self, x, args):
+    # We seek the derivative of
+    #
+    #   L = log p(x | a, b) = a x + (b - 1) log (1 - e^x) - log B(a, b).
+    #
+    # Note that log1p'(x) = 1/(1 + x), so that
+    #
+    #   d/dx log (1 - e^x) = d/dx log1p(-e^x)
+    #     = (log1p o (-exp))'(x)
+    #     = log1p'(-exp(x)) * (-exp'(x))
+    #     = (1/(1 - e^x)) * (-e^x)
+    #     = -e^x/(1 - e^x)
+    #     = -[e^x e^-x]/[(1 - e^x) e^-x]
+    #     = -1/(e^-x - 1).
+    #
+    # Hence we have:
+    #
+    #   dL/dx = a - (b - 1)/(e^-x - 1)
+    #   dL/da = x - d/da log B(a, b)
+    #   dL/db = log (1 - e^x) - d/db log B(a, b).
+    #
+    # For the last terms, note that B(a, b) is symmetric in a, b; that
+    # B(a, b) = Gamma(a) Gamma(b) / Gamma(a + b); and that the digamma
+    # function F(x) = d/dx log Gamma(x).  Hence
+    #
+    #   d/da log B(a, b) = d/da log Gamma(a) Gamma(b) / Gamma(a + b)
+    #     = d/da [log Gamma(a) + log Gamma(b) - log Gamma(a + b)]
+    #     = d/da log Gamma(a) + d/da log Gamma(b) - d/da log Gamma(a + b)
+    #     = d/da log Gamma(a) - d/da log Gamma(a + b)
+    #     = F(a) - F(a + b),
+    #
+    # and likewise, by symmetry, d/db log B(a, b) = F(b) - F(a + b).
+    #
+    a, b = args.operandValues()
+    d_x = a - (b - 1)/expm1(-x)
+    d_a = x + spsp.digamma(a + b) - spsp.digamma(a)
+    d_b = extendedLog(-expm1(x)) + spsp.digamma(a + b) - spsp.digamma(b)
+    return (d_x, [d_a, d_b])
+
+  def description(self, name):
+    return "  %s(alpha, beta) returns the log-space representation of a" \
+      " sample from a Beta distribution" \
+      " with shape parameters alpha and beta." \
+      % (name,)
+
+
+registerBuiltinSP("log_beta", typed_nr(LogBetaOutputPSP(),
+  [t.PositiveType(), t.PositiveType()], t.NumberType()))
+
+
+class LogOddsBetaOutputPSP(RandomPSP):
+  def simulate(self, args):
+    np_rng = args.np_prng()
+    alpha, beta = args.operandValues()
+
+    # logit Beta(0, 0) is a pair of Dirac deltas at -inf and +inf.
+    # logit Beta(0, b) is a Dirac delta at -inf; logit Beta(a, 0) is a
+    # Dirac delta at +inf.  For any a or b rounded to zero, this is
+    # the best we can do.
+    #
+    inf = float('inf')
+    if alpha == 0 and beta == 0:
+      return -inf if np_rng.randint(2) else +inf
+    elif alpha == 0:
+      return -inf
+    elif beta == 0:
+      return +inf
+    elif min(alpha, beta) < 1e-300:
+      # Avoid NaNs due to duelling infinities from log Gamma samples
+      # with shape below 1e-300.  If alpha and beta both exceed
+      # 1e-300, the log Gamma sampler never overflows.
+      return +inf if np_rng.random() < alpha/(alpha + beta) else -inf
+
+    # For independent G ~ Gamma(alpha) and H ~ Gamma(beta), we have
+    # the well-known identity G/(G + H) ~ Beta(alpha, beta).  To
+    # compute the logit of this, note that
+    #
+    #                             G/(G + H)
+    #   logit(G/(G + H)) = log ---------------
+    #                           1 - G/(G + H)
+    #
+    #                     G
+    #   = log -------------------------
+    #          (G + H)*[1 - G/(G + H)]
+    #
+    #                    G
+    #   = log ---------------------------
+    #          G + H - G*(G + H)/(G + H)
+    #
+    #              G
+    #   = log ----------- = log (G/H) = log G - log H.
+    #          G + H - G
+    #
+    if min(alpha, beta) < 1:
+      # We can't sample Gamma(shape) accurately because samples will
+      # be rounded to zero, but we can sample log Gamma(shape) without
+      # overflowing to -infinity.  So yield the difference of log
+      # Gamma samples.
+      #
+      # The danger of catastrophic cancellation is small even if
+      # alpha = beta because for Gamma(shape), the mean is shape and
+      # the standard deviation is sqrt(shape), so that the spread is
+      # very wide relative to the magnitude of the mean.
+      #
+      log_G = simulateLogGamma(alpha, np_rng)
+      log_H = simulateLogGamma(beta, np_rng)
+      assert not math.isinf(log_G)
+      assert not math.isinf(log_H)
+      return log_G - log_H
+
+    else:       # 1 <= min(alpha, beta)
+      # If alpha and beta are large and close to one another, then
+      # log G and log H will also usually be close, so that their
+      # difference will exhibit catastrophic cancellation.
+      #
+      # Fortunately, they will never be rounded to zero -- the CDF
+      # of Gamma(shape=1) at 1e-300 is about 1e-300 <<< 2^-256, and
+      # larger shapes give even smaller probabilities for small
+      # values.  So we can always divide and log.
+      #
+      G = np_rng.gamma(alpha)
+      H = np_rng.gamma(beta)
+      assert G != 0
+      assert H != 0
+      return extendedLog(G/H)
+
+  def logDensity(self, x, args):
+    # x = logit(y) for a beta sample y, so its density is the beta
+    # density of y = logistic(x) with the Jacobian dy/dx =
+    # logistic'(x) = logistic(x) logistic(-x):
+    #
+    #   log p(x | a, b) = log [p(y | a, b) dy/dx]
+    #   = (a - 1) log y + (b - 1) log (1 - y) - log Beta(a, b) + log dy/dx
+    #   = (a - 1) log logistic(x)
+    #       + (b - 1) log (1 - logistic(x))
+    #       - log Beta(a, b)
+    #       + log logistic'(x)
+    #   = (a - 1) log logistic(x) + (b - 1) log logistic(-x)
+    #       - log Beta(a, b)
+    #       + log [logistic(x) logistic(-x)]
+    #   = a log logistic(x) - log logistic(x)
+    #       + b log logistic(-x) - log logistic(-x)
+    #       - log Beta(a, b)
+    #       + log logistic(x) + log logistic(-x)
+    #   = a log logistic(x) + b log logistic(-x) - log Beta(a, b).
+    #
+    a, b = args.operandValues()
+    return a*log_logistic(x) + b*log_logistic(-x) - betaln(a, b)
+
+  def gradientOfLogDensity(self, x, args):
+    # We seek the derivative of
+    #
+    #   L = log p(x | a, b)
+    #     = a log logistic(x) + b log logistic(-x) - log Beta(a, b)
+    #
+    # with respect to x, and b.  Note that
+    #
+    #   d/dx log logistic(x) = logistic(-x).
+    #
+    # Hence
+    #
+    #   dL/dx = a logistic(-x) - b logistic(x),
+    #   dL/da = log logistic(x) - d/da log B(a, b), and
+    #   dL/db = log logistic(-x) - d/db log B(a, b).
+    #
+    # For the last terms, note that B(a, b) is symmetric in a, b; that
+    # B(a, b) = Gamma(a) Gamma(b) / Gamma(a + b); and that the digamma
+    # function F(x) = d/dx log Gamma(x).  Hence
+    #
+    #   d/da log B(a, b) = d/da log Gamma(a) Gamma(b) / Gamma(a + b)
+    #     = d/da [log Gamma(a) + log Gamma(b) - log Gamma(a + b)]
+    #     = d/da log Gamma(a) + d/da log Gamma(b) - d/da log Gamma(a + b)
+    #     = d/da log Gamma(a) - d/da log Gamma(a + b)
+    #     = F(a) - F(a + b),
+    #
+    # and likewise, by symmetry, d/db log B(a, b) = F(b) - F(a + b).
+    #
+    a, b = args.operandValues()
+    d_x = a*logistic(-x) - b*logistic(x)
+    d_a = log_logistic(x) + digamma(a + b) - digamma(a)
+    d_b = log_logistic(-x) + digamma(a + b) - digamma(b)
+    return (d_x, [d_a, d_b])
+
+  def description(self, name):
+    return "  %s(alpha, beta) returns the log-odds representation" \
+      " of a sample from a Beta distribution" \
+      " with shape parameters alpha and beta." \
+      % (name,)
+
+
+registerBuiltinSP("log_odds_beta", typed_nr(LogOddsBetaOutputPSP(),
+  [t.PositiveType(), t.PositiveType()], t.NumberType()))
 
 
 class ExponOutputPSP(RandomPSP):
@@ -558,8 +1012,10 @@ class GammaOutputPSP(RandomPSP):
                                   [args.np_prng()]))
 
   def gradientOfSimulate(self, args, value, direction):
-    # These gradients were computed by Sympy; the script to get them is
-    # in doc/gradients.py
+    # These gradients were computed by Sympy; the script to get them
+    # is in doc/gradients.py.  Subsequently modified to convert
+    # math.log(math.exp(foo)) to (foo), because apparently Sympy's
+    # simplifier is not up to that.
     alpha, beta = args.operandValues()
     if alpha == 1:
       warnstr = ('Gradient of simulate is discontinuous at alpha = 1.\n'
@@ -569,9 +1025,9 @@ class GammaOutputPSP(RandomPSP):
       gradBeta = -value / math.pow(beta, 2.0)
     elif alpha > 1:
       x0 = value / (3.0 * alpha - 1)
-      gradAlpha = (-3.0 * x0 / 2 + 3 * 3 ** (2.0 / 3) *
-                   (beta * x0) ** (2.0 / 3) / (2.0 * beta))
-      gradBeta = -value/beta
+      gradAlpha = (-3. * x0 / 2. + 3. * 3. ** (2. / 3.) *
+                   (beta * x0) ** (2. / 3.) / (2. * beta))
+      gradBeta = -value / beta
     else:
       if value <= (1.0 / beta) * math.pow(1 - alpha, 1.0 / alpha):
         x0 = (beta * value) ** alpha
@@ -580,14 +1036,14 @@ class GammaOutputPSP(RandomPSP):
       else:
         x0 = -alpha + 1
         x1 = 1.0 / alpha
-        x2 = alpha * math.log(math.exp(x1 * (x0 - (beta * value) ** alpha)))
+        x2 = alpha * (x1 * (x0 - (beta * value) ** alpha))
         x3 = -x2
         x4 = x0 + x3
         gradAlpha = (x4 ** (x0 * x1) * (x3 + (alpha + x2 - 1) *
                      math.log(x4)) / (alpha ** 2.0 * beta))
         x0 = 1.0 / alpha
-        gradBeta = ( -(-alpha * math.log(math.exp(-x0 * (alpha +
-          (beta * value) ** alpha - 1))) - alpha + 1) ** x0 / beta ** 2.0 )
+        gradBeta = ( -(-alpha * (-x0 * (alpha +
+          (beta * value) ** alpha - 1)) - alpha + 1) ** x0 / beta ** 2.0 )
     return [direction * gradAlpha, direction * gradBeta]
 
   def logDensity(self, x, args):
@@ -645,7 +1101,7 @@ class StudentTOutputPSP(RandomPSP):
     x4 = x2 + x3
     x5 = nu / 2.0
     gradNu = (x0 * (nu * x4 * (-math.log(x0 * x4 / x1) - spsp.digamma(x5)
-              + spsp.digamma(x5 + 1.0 / 2)) - x2
+                               + spsp.digamma(x5 + 1. / 2.)) - x2
               + x3 * (nu + 1) - x3) / (2.0 * x4))
     if len(vals) == 1:
       return (gradX,[gradNu])
@@ -993,3 +1449,9 @@ class MakerSuffNormalOutputPSP(DeterministicMakerAAAPSP):
 
 registerBuiltinSP("make_suff_stat_normal", typed_nr(MakerSuffNormalOutputPSP(),
   [t.NumberType(), t.PositiveType()], SPType([], t.NumberType())))
+
+### References
+
+# [1] Murphy, Kevin P. "Machine Learning, A Probabilistic
+# Perspective", MIT Press, 2012. Third printing. ISBN
+# 978-0-262-01802-9

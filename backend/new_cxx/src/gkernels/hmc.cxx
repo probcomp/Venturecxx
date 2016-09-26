@@ -23,7 +23,8 @@
 #include "detach.h"
 #include "consistency.h"
 
-pair<Trace*, double> HMCGKernel::propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold)
+pair<Trace*, double> HMCGKernel::propose(
+    ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold)
 {
   this->trace = trace;
   this->scaffold = scaffold;

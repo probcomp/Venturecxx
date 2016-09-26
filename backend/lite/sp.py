@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from venture.lite.exception import VentureError
 from venture.lite.types import VentureType
 from venture.lite.value import VentureNil
@@ -28,7 +30,7 @@ class SPFamilies(object):
       assert type(families) is dict
       self.families = families
     else:
-      self.families = {} # id => node
+      self.families = OrderedDict() # id => node
 
   def containsFamily(self, id):
     return id in self.families
@@ -127,38 +129,6 @@ class VentureSPRecord(VentureValue):
 
 registerVentureType(VentureSPRecord)
 
-class UnwrappingArgs(object):
-  def __init__(self, f_type, args):
-    self.f_type = f_type
-    self.args = args
-    self.node = args.node
-    self.operandNodes = args.operandNodes
-    self.env = args.env
-
-  def operandValues(self):
-    return self.f_type.unwrap_arg_list(self.args.operandValues())
-
-  def spaux(self): return self.args.spaux()
-
-  # These four are only used on output nodes
-  def requestValue(self):
-    return self.args.requestValue()
-
-  def esrNodes(self):
-    return self.args.esrNodes()
-
-  def esrValues(self):
-    return self.args.esrValues()
-
-  def madeSPAux(self):
-    return self.args.madeSPAux()
-
-  def py_prng(self): return self.args.py_prng()
-  def np_prng(self): return self.args.np_prng()
-
-  def __repr__(self):
-    return "%s(%r)" % (self.__class__, self.__dict__)
-
 class SPType(VentureType):
   """An object representing a Venture function type.  It knows
   the types expected for the arguments and the return, and thus knows
@@ -202,7 +172,10 @@ class SPType(VentureType):
     return self.return_type.asPythonNoneable(value)
 
   def unwrap_args(self, args):
-    return UnwrappingArgs(self, args)
+    from venture.lite.sp_use import RemappingArgs
+    def remap(values):
+      return self.unwrap_arg_list(values)
+    return RemappingArgs(remap, args)
 
   def args_match(self, args):
     vals = args.operandValues()

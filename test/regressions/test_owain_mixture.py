@@ -20,7 +20,9 @@ from venture.test.config import on_inf_prim
 
 @on_inf_prim("mh")
 def testOwainMixture():
-  """Owain got <Exception: Cannot make random choices downstream of a node that gets constrained during regen> and thinks this is a mistake. DHS cannot reproduce the error."""
+  # Owain got <Exception: Cannot make random choices downstream of a
+  # node that gets constrained during regen> and thinks this is a
+  # mistake. DHS cannot reproduce the error.
   ripl = get_ripl()
   ripl.assume("alpha","(uniform_continuous .01 1)")
   ripl.assume("crp","(make_crp alpha)")

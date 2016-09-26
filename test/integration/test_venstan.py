@@ -24,12 +24,14 @@ import scipy.stats as stats
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
+from venture.test.config import needs_pystan
 from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
 cache_dir = os.path.join(this_dir, "models")
 
+@needs_pystan
 @broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 def testSmoke():
   program = """
@@ -61,6 +63,7 @@ infer mh(default, one, 3);
   r.set_mode("venture_script")
   r.execute_program(program)
 
+@needs_pystan
 @broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 def testSmokeChurchPrime():
   program = """
@@ -115,16 +118,18 @@ generated quantities {
 (assume stan_normal (make_ven_stan stan_prog inputs c_outputs "%s"))""" % \
   (cache_dir,)
 
+@needs_pystan
 @broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 def testReportedPosterior():
   r = get_ripl()
   r.execute_program(normal_in_stan_snippet)
   eq_(stats.norm.logpdf(1, loc=0, scale=1), r.observe("(stan_normal 0 1)", 1))
 
+@needs_pystan
 @broken_in('puma', "https://github.com/probcomp/Venturecxx/issues/329")
 @statisticalTest
-def testInference():
-  r = get_ripl()
+def testInference(seed):
+  r = get_ripl(seed=seed)
   r.execute_program(normal_in_stan_snippet)
   r.execute_program("""
 (assume x (normal 0 1))

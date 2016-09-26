@@ -19,7 +19,6 @@ import tempfile
 
 from nose import SkipTest
 from nose.tools import eq_
-from testconfig import config
 
 from venture.lite import builtin
 from venture.test.config import collectStateSequence
@@ -31,7 +30,6 @@ from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportSameDiscrete
 from venture.test.stats import statisticalTest
 
-@statisticalTest
 def _test_serialize_program(v, label, action):
     engine = v.sivm.core_sivm.engine
 
@@ -63,12 +61,12 @@ def _test_serialize_program(v, label, action):
         except ImportError:
             raise SkipTest("Puma backend does not appear to be installed")
         trace1 = engine.getDistinguishedTrace()
-        engine = engine.to_puma()
+        engine.to_puma()
         trace2 = engine.getDistinguishedTrace()
         assert 'venture.puma' in trace2.trace.__module__
     elif action == 'convert_lite':
         trace1 = engine.getDistinguishedTrace()
-        engine = engine.to_lite()
+        engine.to_lite()
         trace2 = engine.getDistinguishedTrace()
         assert 'venture.lite' in trace2.trace.__module__
     else:
@@ -85,61 +83,66 @@ def _test_serialize_program(v, label, action):
 
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_basic():
-    def check(action):
-        v = get_ripl()
+    @statisticalTest
+    def check(action, seed):
+        v = get_ripl(seed=seed)
         v.assume('is_tricky', '(flip 0.2)')
         v.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
         v.assume('flip_coin', '(lambda () (flip theta))')
         v.observe('(flip_coin)', 'true')
         v.predict('is_tricky', label='pid')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_mem():
-    def check(action):
-        v = get_ripl()
+    @statisticalTest
+    def check(action, seed):
+        v = get_ripl(seed=seed)
         v.assume('coin', '(mem (lambda (x) (beta 1.0 1.0)))')
         v.assume('flip_coin', '(lambda (x) (flip (coin x)))')
         for _ in range(10):
             v.observe('(flip_coin 0)', 'true')
         v.predict('(flip_coin 0)', label='pid')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_closure():
-    def check(action):
-        v = get_ripl()
+    @statisticalTest
+    def check(action, seed):
+        v = get_ripl(seed=seed)
         v.assume('make_coin', '(lambda (p) (lambda () (flip p)))')
         v.assume('flip_coin', '(make_coin (beta 1.0 1.0))')
         for _ in range(10):
             v.observe('(flip_coin)', 'true')
         v.predict('(flip_coin)', label='pid')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_aaa():
-    def check_beta_bernoulli(maker, action):
+    @statisticalTest
+    def check_beta_bernoulli(maker, action, seed):
         if maker == "make_uc_beta_bernoulli" and action in ['serialize', 'convert_lite', 'convert_puma']:
             raise SkipTest("Cannot convert BetaBernoulliSP to a stack dictionary. Issue: https://app.asana.com/0/9277420529946/16149214487233")
-        v = get_ripl()
+        v = get_ripl(seed=seed)
         v.assume('a', '(normal 10.0 1.0)')
         v.assume('f', '({0} a a)'.format(maker))
         v.predict('(f)', label='pid')
         for _ in range(20):
             v.observe('(f)', 'true')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for maker in ["make_beta_bernoulli","make_uc_beta_bernoulli"]:
         for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_beta_bernoulli, maker, action
 
-    def check_crp(maker, action):
-        v = get_ripl()
+    @statisticalTest
+    def check_crp(maker, action, seed):
+        v = get_ripl(seed=seed)
         v.assume('a', '(gamma 1.0 1.0)')
         v.assume('f', '({0} a)'.format(maker))
         v.predict('(f)', label='pid')
@@ -147,30 +150,32 @@ def test_serialize_aaa():
             v.observe('(f)', 'atom<1>')
             v.observe('(f)', 'atom<2>')
             v.observe('(f)', 'atom<3>')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for maker in ["make_crp"]:
         for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_crp, maker, action
 
-    def check_cmvn(maker, action):
+    @statisticalTest
+    def check_cmvn(maker, action, seed):
         raise SkipTest("reportSameDiscrete doesn't work with numpy.ndarray")
-        v = get_ripl()
+        v = get_ripl(seed=seed)
         v.assume('m0','(array 5.0 5.0)')
         v.assume('k0','7.0')
         v.assume('v0','11.0')
         v.assume('S0','(matrix (array (array 13.0 0.0) (array 0.0 13.0)))')
         v.assume('f','({0} m0 k0 v0 S0)'.format(maker))
         v.predict('(f)', label='pid')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for maker in ["make_niw_normal"]:
         for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
             yield check_cmvn, maker, action
 
 @gen_on_inf_prim("mh") # Easy to generalize but little testing value
 def test_serialize_latents():
-    def check(action):
+    @statisticalTest
+    def check(action, seed):
         raise SkipTest("Cannot serialize latents https://github.com/probcomp/Venturecxx/issues/342")
-        v = get_ripl()
+        v = get_ripl(seed=seed)
         v.assume('f','''\
     (make_lazy_hmm
      (simplex 0.5 0.5)
@@ -185,7 +190,7 @@ def test_serialize_latents():
         v.observe('(f 4)', 'integer<0>')
         v.observe('(f 5)', 'integer<0>')
         v.predict('(f 6)', label='pid')
-        _test_serialize_program(v, 'pid', action)
+        return _test_serialize_program(v, 'pid', action)
     for action in ['copy', 'serialize', 'convert_puma', 'convert_lite']:
         yield check, action
 
@@ -227,9 +232,9 @@ def test_serialize_ripl():
 
 @on_inf_prim("mh") # Easy to generalize but little testing value
 @statisticalTest
-def test_serialize_forget():
+def test_serialize_forget(seed):
     with tempfile.NamedTemporaryFile(prefix='serialized.ripl') as f:
-        v1 = get_ripl()
+        v1 = get_ripl(seed=seed)
         v1.assume('is_tricky', '(flip 0.2)')
         v1.assume('theta', '(if is_tricky (beta 1.0 1.0) 0.5)')
         v1.assume('flip_coin', '(lambda () (flip theta))')

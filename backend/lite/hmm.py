@@ -16,11 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+from collections import OrderedDict
 from copy import copy
 
 import numpy as np
 
 from venture.lite.exception import VentureValueError
+from venture.lite.lkernel import SimulationAAALKernel
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import RandomPSP
 from venture.lite.psp import TypedPSP
@@ -45,20 +47,34 @@ class HMMSPAux(SPAux):
   def __init__(self):
     super(HMMSPAux, self).__init__()
     self.xs = [] # [ x_n ],
-    self.os = {} #  { n => [o_n1, ... ,o_nK] }
+    self.os = OrderedDict() #  { n => [o_n1, ... ,o_nK] }
 
   def copy(self):
     ans = HMMSPAux()
     ans.xs = copy(self.xs)
-    ans.os = {k:copy(v) for k, v in self.os.iteritems()}
+    ans.os = OrderedDict((k, copy(v)) for k, v in self.os.iteritems())
     return ans
 
-class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
+class MakeUncollapsedHMMOutputPSP(RandomPSP):
+  def childrenCanAAA(self):
+    return True
+
+  def getAAALKernel(self):
+    return UncollapsedHMMAAALKernel()
+
   def simulate(self, args):
     (p0, T, O) = args.operandValues()
     # Transposition for compatibility with Puma
     sp = UncollapsedHMMSP(p0, np.transpose(T), np.transpose(O))
     return VentureSPRecord(sp)
+
+  def canAbsorb(self, _trace, _appNode, _parentNode):
+    # always resample (and marginalize over) the state sequence
+    # when reproposing parameters.
+    # TODO: define a logDensity for the parameters given the state
+    # sequence, so that the user can choose whether to block propose the
+    # state sequence or not.
+    return False
 
   def description(self, _name):
     return "  Discrete-state HMM of unbounded length with discrete " \
@@ -68,6 +84,23 @@ class MakeUncollapsedHMMOutputPSP(DeterministicPSP):
       "Returns observations from the HMM encoded as a stochastic " \
       "procedure that takes the time step and samples a new observation " \
       "at that time step."
+
+class UncollapsedHMMAAALKernel(SimulationAAALKernel):
+  def simulate(self, _trace, args):
+    madeaux = args.madeSPAux()
+    (p0, T, O) = args.operandValues()
+    sp = UncollapsedHMMSP(p0, np.transpose(T), np.transpose(O))
+    sp.forwardBackwardSample(madeaux, args.np_prng())
+    return VentureSPRecord(sp, madeaux)
+
+  def weight(self, _trace, newValue, args):
+    madeaux = args.madeSPAux()
+    sp = newValue.sp
+    return sp.forwardMarginalWeight(madeaux)
+
+  def weightBound(self, _trace, _oldValue, _args):
+    # Assume all outputs are discrete
+    return 0
 
 class UncollapsedHMMSP(SP):
   def __init__(self, p0, T, O):
@@ -81,7 +114,7 @@ class UncollapsedHMMSP(SP):
     self.O = O
 
   def constructSPAux(self): return HMMSPAux()
-  def constructLatentDB(self): return {} # { n => x_n }
+  def constructLatentDB(self): return OrderedDict() # { n => x_n }
   def show(self, spaux): return spaux.xs, spaux.os
 
   # lsr: the index of the observation needed
@@ -112,15 +145,17 @@ class UncollapsedHMMSP(SP):
         assert len(aux.xs) == maxObservation + 1
     return 0
 
-  def hasAEKernel(self): return True
-
-  def AEInfer(self, aux, np_rng):
+  def forwardBackwardSample(self, aux, np_rng):
+    # called by UncollapsedHMMAAALKernel.simulate
     if not aux.os: return
 
-    # forward sampling
-    fs = [self.p0]
-    for i in range(1, len(aux.xs)):
-      f = np.dot(fs[i-1], self.T)
+    # forward filtering
+    fs = []
+    for i in range(len(aux.xs)):
+      if i == 0:
+        f = self.p0
+      else:
+        f = np.dot(fs[i-1], self.T)
       if i in aux.os:
         for o in aux.os[i]:
           f = np.dot(f, npMakeDiag(self.O[:, o]))
@@ -135,6 +170,27 @@ class UncollapsedHMMSP(SP):
       gamma = npNormalizeVector(np.dot(fs[i], T_i))
       aux.xs[i] = npSampleVector(gamma, np_rng)
 
+  def forwardMarginalWeight(self, aux):
+    # called by UncollapsedHMMAAALKernel.weight
+    # TODO: cache redundant work between this and forwardBackwardSample?
+
+    if not aux.os: return 0
+
+    weight = 0
+    fs = []
+    for i in range(len(aux.xs)):
+      if i == 0:
+        f = self.p0
+      else:
+        f = np.dot(fs[i-1], self.T)
+      if i in aux.os:
+        for o in aux.os[i]:
+          f = np.dot(f, npMakeDiag(self.O[:, o]))
+
+      weight += np.log(np.sum(f))
+      fs.append(npNormalizeVector(f))
+
+    return weight
 
 class UncollapsedHMMOutputPSP(RandomPSP):
 

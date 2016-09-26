@@ -16,6 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import random
+
 from numpy.testing import assert_allclose
 from flaky import flaky
 
@@ -26,6 +28,9 @@ from venture.test.config import get_ripl
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.mlens import real_lenses
+from venture.lite.sp_use import MockArgs
+from venture.lite.sp_use import gradientOfLogDensity
+from venture.lite.sp_use import logDensity
 import venture.lite.value as vv
 import venture.lite.types as t
 from venture.lite.utils import FixedRandomness
@@ -50,14 +55,13 @@ def propGradientOfLogDensity(rnd, name, sp):
   (value, args_lists) = rnd
   if not len(args_lists) == 1:
     raise SkipTest("TODO: Write the code for measuring log density of curried SPs")
-  args = BogusArgs(args_lists[0], sp.constructSPAux())
-  answer = carefully(sp.outputPSP.logDensity, value, args)
+  answer = carefully(logDensity(sp), value, args_lists[0])
   if math.isnan(answer) or math.isinf(answer):
     raise ArgumentsNotAppropriate("Log density turned out not to be finite")
 
   expected_grad_type = sp.venture_type().gradient_type().args_types
   try:
-    computed_gradient = sp.outputPSP.gradientOfLogDensity(value, args)
+    computed_gradient = gradientOfLogDensity(sp)(value, args_lists[0])
     (dvalue, dargs) = computed_gradient
     for (g, tp) in [(dvalue, sp.venture_type().gradient_type().return_type)] + zip(dargs, expected_grad_type):
       if g == 0:
@@ -68,7 +72,7 @@ def propGradientOfLogDensity(rnd, name, sp):
     raise SkipTest("%s does not support computing gradient of log density :(" % name)
 
   def log_d_displacement_func():
-    return sp.outputPSP.logDensity(value, args)
+    return logDensity(sp)(value, args_lists[0])
   numerical_gradient = carefully(num.gradient_from_lenses, log_d_displacement_func, real_lenses([value, args_lists[0]]))
   assert_gradients_close(numerical_gradient, computed_gradient)
 
@@ -136,7 +140,7 @@ def propGradientOfSimulate(args_lists, name, sp):
     raise ArgumentsNotAppropriate("TODO mul only has a gradient in its binary form")
   py_rng = random.Random()
   np_rng = npr.RandomState()
-  args = BogusArgs(args_lists[0], sp.constructSPAux(), py_rng, np_rng)
+  args = MockArgs(args_lists[0], sp.constructSPAux(), py_rng, np_rng)
   randomness = FixedRandomness(py_rng, np_rng)
   with randomness:
     value = carefully(sp.outputPSP.simulate, args)

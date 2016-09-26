@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from venture.lite.infer.mh import MHOperator
 from ..omegadb import OmegaDB
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
-from ..node import isApplicationNode, Args
+from ..node import isApplicationNode
+from ..node import TraceNodeArgs
 from ..lkernel import VariationalLKernel
 
 def registerVariationalLKernels(trace,scaffold):
@@ -29,7 +32,8 @@ def registerVariationalLKernels(trace,scaffold):
        not trace.isConstrainedAt(node) and \
        trace.pspAt(node).hasVariationalLKernel() and \
        not scaffold.isResampling(node.operatorNode):
-      scaffold.lkernels[node] = trace.pspAt(node).getVariationalLKernel(Args(trace,node))
+      scaffold.lkernels[node] = \
+          trace.pspAt(node).getVariationalLKernel(TraceNodeArgs(trace,node))
       hasVariational = True
   return hasVariational
 
@@ -48,7 +52,7 @@ class MeanfieldOperator(object):
     _,self.rhoDB = detachAndExtract(trace,scaffold)
 
     for _ in range(self.numIters):
-      gradients = {}
+      gradients = OrderedDict()
       gain = regenAndAttach(trace,scaffold,False,OmegaDB(),gradients)
       detachAndExtract(trace,scaffold)
       for node,lkernel in scaffold.lkernels.iteritems():
@@ -56,10 +60,10 @@ class MeanfieldOperator(object):
           assert node in gradients
           lkernel.updateParameters(gradients[node],gain,self.stepSize)
 
-    rhoWeight = regenAndAttach(trace,scaffold,True,self.rhoDB,{})
+    rhoWeight = regenAndAttach(trace,scaffold,True,self.rhoDB,OrderedDict())
     detachAndExtract(trace,scaffold)
 
-    xiWeight = regenAndAttach(trace,scaffold,False,OmegaDB(),{})
+    xiWeight = regenAndAttach(trace,scaffold,False,OmegaDB(),OrderedDict())
     return trace,xiWeight - rhoWeight
 
   def accept(self):
@@ -73,7 +77,7 @@ class MeanfieldOperator(object):
     # delegation thing -- abstract
     if self.delegate is None:
       detachAndExtract(self.trace,self.scaffold)
-      regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,{})
+      regenAndAttach(self.trace,self.scaffold,True,self.rhoDB,OrderedDict())
       return self.scaffold.numAffectedNodes()
     else:
       return self.delegate.reject()

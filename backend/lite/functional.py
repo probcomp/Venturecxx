@@ -19,7 +19,6 @@ from venture.lite.address import emptyAddress
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureValueError
-from venture.lite.node import FixedValueArgs
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
@@ -30,8 +29,10 @@ from venture.lite.sp import SPType
 from venture.lite.sp_help import esr_output
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.sp_use import ReplacingArgs
 from venture.lite.value import SPRef
 from venture.lite.value import VentureArray
+import venture.lite.address as addr
 import venture.lite.exp as e
 import venture.lite.types as t
 
@@ -78,6 +79,28 @@ registerBuiltinSP(
                        t.RequestType("<array b>"))),
        ESRArrayOutputPSP()))
 
+class ArrayMap2RequestPSP(DeterministicPSP):
+    def simulate(self, args):
+        (operator, operands1, operands2) = args.operandValues()
+        exps = [[operator, e.quote(operand1), e.quote(operand2)]
+                for operand1, operand2 in zip(operands1, operands2)]
+        env = VentureEnvironment()
+        return Request([ESR((args.node, i), exp, emptyAddress, env)
+                        for i, exp in enumerate(exps)])
+
+    def description(self, name):
+        return "%s(func, vals1, vals2) returns the results of applying" \
+            " a binary function to each pair of values in the given two arrays" % name
+
+registerBuiltinSP(
+    "mapv2",
+    SP(TypedPSP(ArrayMap2RequestPSP(),
+                SPType([SPType([t.AnyType("a"), t.AnyType("b")], t.AnyType("c")),
+                        t.HomogeneousArrayType(t.AnyType("a")),
+                        t.HomogeneousArrayType(t.AnyType("b"))],
+                       t.RequestType("<array c>"))),
+       ESRArrayOutputPSP()))
+
 class IndexedArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (operator, operands) = args.operandValues()
@@ -104,11 +127,11 @@ class FixRequestPSP(DeterministicPSP):
     def simulate(self, args):
         (ids, exps) = args.operandValues()
         # point to the desugared source code location of expression list
-        addr = args.operandNodes[1].address.last.append(1)
+        loc = addr.append(addr.top_frame(args.operandNodes[1].address), 1)
         # extend current environment with empty bindings for ids
         # (will be initialized in the output PSP)
         env = VentureEnvironment(args.env, ids, [None for _ in ids])
-        request = Request([ESR((args.node, i), exp, addr.append(i), env)
+        request = Request([ESR((args.node, i), exp, addr.append(loc, i), env)
                            for i, exp in enumerate(exps)])
         return request
 
@@ -157,7 +180,7 @@ class AssessOutputPSP(DeterministicPSP):
         if not operator.sp.outputPSP.isRandom():
             raise VentureValueError("Cannot assess a deterministic SP.")
 
-        assessedArgs = FixedValueArgs(
+        assessedArgs = ReplacingArgs(
             args, vals[2:], operandNodes=args.operandNodes[2:],
             spaux=operator.spAux)
         return operator.sp.outputPSP.logDensity(value, assessedArgs)

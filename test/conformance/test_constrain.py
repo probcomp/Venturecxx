@@ -102,7 +102,7 @@ def testConstrainAVar3b():
   eq_(ripl.report("pid"), 3)
 
 def checkConstrainAVar4a(program):
-  """We allow downstream processing with no requests and no randomness."""
+  # We allow downstream processing with no requests and no randomness.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -140,12 +140,11 @@ def checkConstrainAVar4c(program):
 
 @raises(Exception)
 def checkConstrainAVar5a(program):
-  """
-    This program is illegal, because when proposing to f, we may end up constraining x,
-    which needs to be propagated but the propagation reaches a random choice. This could
-    in principle be allowed because there is no exchangeable couping, but for now we have
-    decided to forbid all non-identity downstream edges.
-  """
+  # This program is illegal, because when proposing to f, we may end
+  # up constraining x, which needs to be propagated but the
+  # propagation reaches a random choice. This could in principle be
+  # allowed because there is no exchangeable couping, but for now we
+  # have decided to forbid all non-identity downstream edges.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -156,10 +155,9 @@ def checkConstrainAVar5a(program):
 
 @raises(Exception)
 def checkConstrainAVar5b(program):
-  """
-    This program is illegal, because when proposing to f, we may end up constraining x,
-    and x has a child in A (it is in the (new)brush itself).
-  """
+  # This program is illegal, because when proposing to f, we may end
+  # up constraining x, and x has a child in A (it is in the (new)brush
+  # itself).
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -170,10 +168,8 @@ def checkConstrainAVar5b(program):
 
 @raises(Exception)
 def checkConstrainAVar6a(program):
-  """
-    This program is illegal, because when proposing to f, we may end up constraining x,
-    and x has a child that makes requests.
-  """
+  # This program is illegal, because when proposing to f, we may end
+  # up constraining x, and x has a child that makes requests.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -184,10 +180,8 @@ def checkConstrainAVar6a(program):
 
 @raises(Exception)
 def checkConstrainAVar6b(program):
-  """
-    This program is illegal, because when proposing to f, we may end up constraining x,
-    and x has a child that makes requests.
-  """
+  # This program is illegal, because when proposing to f, we may end
+  # up constraining x, and x has a child that makes requests.
   ripl = get_ripl()
   ripl.assume("x","(normal 0.0 1.0)")
   ripl.assume("y","(normal 0.0 1.0)")
@@ -209,10 +203,8 @@ def testConstrainWithAPredict1():
 
 @raises(Exception)
 def checkConstrainWithAPredict1(program):
-  """
-  We may constrain the (flip) in f, and this has a child that makes requests. Therefore this
-  should (currently) throw an exception.
-  """
+  # We may constrain the (flip) in f, and this has a child that makes
+  # requests. Therefore this should (currently) throw an exception.
   ripl = get_ripl()
   ripl.assume("f","(mem (lambda () (flip)))")
   ripl.assume("op1","(if (flip) flip (lambda () (f)))")
@@ -225,12 +217,14 @@ def checkConstrainWithAPredict1(program):
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testConstrainWithAPredict2():
-  """This test will fail at first, since we previously considered a program like this to be illegal
-     and thus did not handle it correctly (we let the predict go stale). So we do not continually
-     bewilder our users, I suggest that we handle this case WHEN WE CAN, which means we propagate
-     from a constrain as long as we don't hit an absorbing node or a DRG node with a kernel."""
-  ripl = get_ripl()
+def testConstrainWithAPredict2(seed):
+  # This test will fail at first, since we previously considered a
+  # program like this to be illegal and thus did not handle it
+  # correctly (we let the predict go stale). So we do not continually
+  # bewilder our users, I suggest that we handle this case WHEN WE
+  # CAN, which means we propagate from a constrain as long as we don't
+  # hit an absorbing node or a DRG node with a kernel.
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(if (flip) (lambda () (normal 0.0 1.0)) (mem (lambda () (normal 0.0 1.0))))")
   ripl.observe("(f)","1.0")
   ripl.predict("(* (f) 100)",label="pid")
@@ -239,7 +233,8 @@ def testConstrainWithAPredict2():
 
 @on_inf_prim("mh")
 def testConstrainInAScope1():
-  """At some point, constrain did not remove choices from scopes besides the default scope"""
+  # At some point, constrain did not remove choices from scopes
+  # besides the default scope
   ripl = get_ripl()
 
   ripl.assume("x","(tag 0 0 (normal 0 1))")
@@ -250,7 +245,7 @@ def testConstrainInAScope1():
 
 @on_inf_prim("mh")
 def testConstrainInAScope2brush():
-  """Particles need to override some of the relevant methods as well"""
+  # Particles need to override some of the relevant methods as well
   ripl = get_ripl()
 
   ripl.assume("x","(tag 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
@@ -261,7 +256,7 @@ def testConstrainInAScope2brush():
 
 @on_inf_prim("pgibbs")
 def testConstrainInAScope2particles():
-  """Particles need to override some of the relevant methods as well"""
+  # Particles need to override some of the relevant methods as well
   ripl = get_ripl()
 
   ripl.assume("x","(tag 0 0 (if (flip) (normal 0 1) (normal 0 1)))")
@@ -311,7 +306,8 @@ def testGibbsConstrains():
 
 @gen_on_inf_prim("rejection")
 def testRejectionConstrains():
-  # Rejection sampling doesn't work when resimulations of unknown code are observed
+  # Rejection sampling doesn't work when resimulations of unknown code
+  # are observed
   for t in [checkConstrainAVar5a, checkConstrainAVar5b,
             checkConstrainAVar6a, checkConstrainAVar6b]:
     yield t, "(rejection 0 0 50)"

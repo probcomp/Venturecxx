@@ -21,11 +21,11 @@ from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testReferences1():
-  """Checks that the program runs without crashing. At some point, this
-program caused the old CXX backend to fire an assert.  When the (flip)
-had a 0.0 or 1.0 it didn't fail."""
-  ripl = get_ripl()
+def testReferences1(seed):
+  # Checks that the program runs without crashing. At some point, this
+  # program caused the old CXX backend to fire an assert.  When the
+  # (flip) had a 0.0 or 1.0 it didn't fail.
+  ripl = get_ripl(seed=seed)
   ripl.assume("draw_type0", "(make_crp 1.0)")
   ripl.assume("draw_type1", "(if (flip) draw_type0 (lambda () atom<1>))")
   ripl.assume("draw_type2", "(make_dir_cat (array 1.0 1.0))")
@@ -39,9 +39,9 @@ had a 0.0 or 1.0 it didn't fail."""
 
 
 @statisticalTest
-def testReferences2():
-  "Simpler version of the old bug testReferences1() tries to trigger"
-  ripl = get_ripl()
+def testReferences2(seed):
+  # Simpler version of the old bug testReferences1() tries to trigger
+  ripl = get_ripl(seed=seed)
   ripl.assume("f", "(if (flip 0.5) (make_dir_cat (array 1.0 1.0)) (lambda () atom<1>))")
   ripl.predict("(f)", label="pid")
 

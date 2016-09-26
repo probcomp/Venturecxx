@@ -15,11 +15,28 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+r"""
+Implements the two-parameter Chinese Restaurant Process CRP(alpha, d=0) where
+alpha is the concentration parameter and d is the discount parameter (which
+defaults to zero, recovering the one parameter CRP). The parameters must satisfy
+
+either
+  -- d \in [0,1] and alpha > -d
+or
+  -- d = -k (k > 0) and alpha = Ld for L \in {1,2,...}
+
+The current implementation does not ensure either of these conditions, and
+failing to either enter valid hyperparameters directly or assign hyperpriors
+with valid domains will result in dangerous behavior.
+"""
+
+from collections import OrderedDict
 from copy import deepcopy
 import math
 
 from scipy.special import digamma, gammaln
 
+from venture.lite.orderedset import OrderedSet
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -33,26 +50,11 @@ from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import simulateCategorical
 import venture.lite.types as t
 
-"""
-Implements the two-parameter Chinese Restaurant Process CRP(alpha, d=0) where
-alpha is the concentration parameter and d is the discount parameter (which
-defaults to zero, recovering the one parameter CRP). The parameters must satisfy
-
-either
-  -- d \in [0,1] and alpha > -d
-or
-  -- d = -k (k > 0) and alpha = Ld for L \in {1,2,...}
-
-The current implementation does not ensure that either of these conditions, and
-failing to either enter valid hyperparameters directly or assign hyperpriors
-with the valid domains will results in dangerous behavior.
-"""
-
 class CRPSPAux(SPAux):
   def __init__(self):
-    self.tableCounts = {}
+    self.tableCounts = OrderedDict()
     self.nextTable = 1
-    self.freeTables = set()
+    self.freeTables = OrderedSet()
     self.numTables = 0
     self.numCustomers = 0
 
@@ -74,10 +76,10 @@ class CRPSP(SP):
     return CRPSPAux()
 
   def show(self, spaux):
-    return {
-      'type' : 'crp',
-      'counts': spaux.tableCounts,
-    }
+    return OrderedDict([
+      ('type', 'crp'),
+      ('counts', spaux.tableCounts),
+    ])
 
 class MakeCRPOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):

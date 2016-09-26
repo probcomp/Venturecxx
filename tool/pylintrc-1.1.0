@@ -1,0 +1,122 @@
+# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+#
+# This file is part of Venture.
+#
+# Venture is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Venture is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Venture.  If not, see <http://www.gnu.org/licenses/>.
+
+# For lack of a better place, rationales are collected below.
+
+[MESSAGES CONTROL]
+# Disabled messages:
+# Name violates convention
+disable=invalid-name,
+ missing-docstring,
+ multiple-statements,
+ too-few-public-methods,
+ too-many-public-methods,
+# W0142: Used * or ** magic
+ W0142,
+ fixme,
+ logging-not-lazy,
+ redefined-builtin,
+# Messages disabled pending normalization of our codebase:
+ no-name-in-module,
+ no-member,
+ bad-indentation,
+ line-too-long,
+ too-many-lines,
+ trailing-whitespace,
+# C0324: Comma not followed by a space
+ C0324,
+ no-self-use,
+ too-many-instance-attributes,
+ too-many-return-statements,
+ too-many-branches,
+ too-many-arguments,
+ too-many-locals,
+ too-many-statements,
+# R0921: Abstract class not used
+ R0921,
+# R0922: Abstract class little used
+ R0922,
+ attribute-defined-outside-init
+
+# Rationale: Suppressing no-member and no-name-in-module errors
+#   Pylint does not understand metaprogramming.  Sadly, much of
+#   visible interface of numpy and scipy appears to be metaprogrammed
+#   (for instance, by structured re-import from submodules), so every
+#   attempt to use those tools produces huge numbers of Pylint
+#   problems.
+
+# Rationale: Wildcard imports
+#   Turns out wildcard imports in Python import every name visible in
+#   the imported module, including ones it itself imported.  Import
+#   chains like that are confusing disasters waiting to happen.
+
+# Rationale: Permit defining attributes outside init
+#   We just have too much code that relies upon being able to store
+#   arbitrary stuff in an object.
+
+# Rationale: Permit redefining builtin names
+#   id especially is just too useful a name to surrender to the
+#   useless builtin it names.
+
+# Rationale: Suppressing design-nanny warnings
+#   Yes, methods with too many arguments, local variables, and
+#   branches are poor design; but that is something that should bother
+#   people even without Pylint getting in their face about it; and
+#   doing the refactorings to clean that up requires more taste than
+#   can be produced under pressure.
+#   TODO Perhaps turn C0302, R0902, R0911, R0912, R0913, R0914, R0915 back on
+#   for the code-review-mode style check
+
+# Rationale: Suppressing misplaced-comparison-constant
+#   0.05 < pvalue is judged to be sometimes clearer than pvalue >
+#   0.05, because the objects are listed in ascending order, even
+#   though the object of interest is not first.
+
+[FORMAT]
+indent-string='  '
+
+[BASIC]
+# List of builtins function names that should not be used, separated by a comma
+# map and filter are suggested here, presumably in favor of list comprehensions
+bad-functions=apply,input
+
+# Regular expression which should only match correct function names
+function-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct method names
+method-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct instance attribute names
+attr-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct argument names
+argument-rgx=[a-z_][a-z0-9_]{0,30}$
+
+# Regular expression which should only match correct variable names
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
+
+[VARIABLES]
+# Regular expression which should match exactly the names that are OK
+# to define but not use.  TODO Here I use the underscore convention from
+# Haskell despite its conflict with the Python convention of treating
+# underscored names as semi-private.
+dummy-variables-rgx=_|dummy|unused_.*
+
+[TYPECHECK]
+
+ignored-modules = numpy
+# Rationale: http://stackoverflow.com/questions/20553551/how-do-i-get-pylint-to-recognize-numpy-members

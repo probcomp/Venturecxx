@@ -77,16 +77,17 @@ boost::python::dict foreignArgsToPython(shared_ptr<Args> args)
   return foreignArgs;
 }
 
-VentureValuePtr ForeignLitePSP::simulate(shared_ptr<Args> args,
-                                         gsl_rng * rng) const
+VentureValuePtr ForeignLitePSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   boost::python::object foreignResult = psp.attr("simulate")(foreignArgs);
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLitePSP::logDensity(VentureValuePtr value,
-                                  shared_ptr<Args> args) const
+double ForeignLitePSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -94,14 +95,18 @@ double ForeignLitePSP::logDensity(VentureValuePtr value,
   return boost::python::extract<double>(foreignLogDensity);
 }
 
-void ForeignLitePSP::incorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void ForeignLitePSP::incorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
   psp.attr("incorporate")(foreignValue, foreignArgs);
 }
 
-void ForeignLitePSP::unincorporate(VentureValuePtr value, shared_ptr<Args> args) const
+void ForeignLitePSP::unincorporate(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   boost::python::dict foreignValue = value->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -164,10 +169,11 @@ ForeignLiteSPAux* ForeignLiteSPAux::copy_help(ForwardingMap* m) const
   return answer;
 }
 
-VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
-                                                    VentureValuePtr oldValue,
-                                                    shared_ptr<Args> args,
-                                                    gsl_rng * rng)
+VentureValuePtr ForeignLiteLKernel::forwardSimulate(
+    Trace * trace,
+    const VentureValuePtr & oldValue,
+    const shared_ptr<Args> & args,
+    gsl_rng * rng)
 {
   boost::python::object foreignOldValue;
   if (oldValue) {
@@ -178,10 +184,11 @@ VentureValuePtr ForeignLiteLKernel::forwardSimulate(Trace * trace,
   return foreignFromPython(foreignResult);
 }
 
-double ForeignLiteLKernel::forwardWeight(Trace * trace,
-                                         VentureValuePtr newValue,
-                                         VentureValuePtr oldValue,
-                                         shared_ptr<Args> args)
+double ForeignLiteLKernel::forwardWeight(
+    Trace * trace,
+    const VentureValuePtr & newValue,
+    const VentureValuePtr & oldValue,
+    const shared_ptr<Args> & args)
 {
   boost::python::dict foreignNewValue = newValue->toPython(args->_trace);
   boost::python::object foreignOldValue;
@@ -193,7 +200,10 @@ double ForeignLiteLKernel::forwardWeight(Trace * trace,
   return boost::python::extract<double>(foreignWeight);
 }
 
-double ForeignLiteLKernel::reverseWeight(Trace * trace, VentureValuePtr oldValue, shared_ptr<Args> args)
+double ForeignLiteLKernel::reverseWeight(
+    Trace * trace,
+    const VentureValuePtr & oldValue,
+    const shared_ptr<Args> & args)
 {
   boost::python::dict foreignOldValue = oldValue->toPython(args->_trace);
   boost::python::dict foreignArgs = foreignArgsToPython(args);
@@ -288,7 +298,7 @@ boost::python::dict ForeignLiteSP::toPython(Trace * trace,
   return stackDict;
 }
 
-void PyTrace::bindPythonSP(const string& sym, boost::python::object sp)
+void PyTrace::bindPythonSP(const string& sym, const boost::python::object & sp)
 {
   Node* node = trace->bindPrimitiveSP(sym, new ForeignLiteSP(sp));
   trace->boundForeignSPNodes.insert(shared_ptr<Node>(node));

@@ -26,8 +26,8 @@ from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testVentureNormalHMM1():
-  ripl = get_ripl()
+def testVentureNormalHMM1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("f","""
 (mem (lambda (i)
@@ -68,8 +68,8 @@ def testVentureNormalHMM1():
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
-def testVentureBinaryHMM1():
-  ripl = get_ripl()
+def testVentureBinaryHMM1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("f","""
 (mem (lambda (i)

@@ -15,15 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.orderedset import OrderedSet
+from venture.lite.psp import IArgs
 from venture.lite.request import Request
 from venture.lite.types import ExpressionType
 from venture.lite.value import VentureValue
+import venture.lite.address as addr
 
 class Node(object):
   def __init__(self, address):
+    assert address is not None
     self.address = address
     self.value = None
-    self.children = set()
+    self.children = OrderedSet()
     self.isObservation = False
     self.madeSPRecord = None
     self.aaaMadeSPAux = None
@@ -115,8 +119,15 @@ def isRequestNode(thing):
 def isOutputNode(thing):
   return isinstance(thing, OutputNode) and not thing.isFrozen
 
-class Args(object):
+def jsonable_address(node):
+  address = addr.jsonable_address(node.address)
+  if isRequestNode(node):
+    address = address + "/request"
+  return address
+
+class TraceNodeArgs(IArgs):
   def __init__(self, trace, node):
+    super(TraceNodeArgs, self).__init__()
     self.trace = trace
     self.node = node
     self.operandNodes = node.operandNodes
@@ -145,38 +156,6 @@ class Args(object):
     return self.trace.py_rng
   def np_prng(self):
     return self.trace.np_rng
-
-  def __repr__(self):
-    return "%s(%r)" % (self.__class__, self.__dict__)
-
-class FixedValueArgs(object):
-  def __init__(self, args, operandValues, operandNodes = None,
-               spaux = None):
-    self.args = args
-    self._operandValues = operandValues
-    self.node = args.node
-    if operandNodes is None:
-      self.operandNodes = args.operandNodes
-    else:
-      self.operandNodes = operandNodes
-    self._spaux = spaux
-    self.env = args.env
-
-  def operandValues(self): return self._operandValues
-  def spaux(self):
-    if self._spaux is None:
-      return self.args.spaux()
-    else:
-      return self._spaux
-
-  # These four are only used on output nodes
-  def requestValue(self): return self.args.requestValue()
-  def esrNodes(self): return self.args.esrNodes()
-  def esrValues(self): return self.args.esrValues()
-  def madeSPAux(self): return self.args.madeSPAux()
-
-  def py_prng(self): return self.args.py_prng()
-  def np_prng(self): return self.args.np_prng()
 
   def __repr__(self):
     return "%s(%r)" % (self.__class__, self.__dict__)

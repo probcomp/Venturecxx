@@ -50,6 +50,7 @@
 # something -- see the top-level function `expand`.
 
 from venture.exception import VentureException
+import venture.value.dicts as v
 
 class Macro(object):
   def __init__(self, predicate=None, expander=None, desc=None, intended_for_inference=False):
@@ -97,10 +98,20 @@ def register_macro(m):
   macros.append(m)
 
 def expand(exp):
+  if v.is_basic_val_of_type("array", exp):
+    exp = _canonicalize(exp)
   for macro in macros:
     if macro.applies(exp):
       return macro.expand(exp)
   raise VentureException('parse', "Unrecognizable expression " + str(exp), expression_index=[])
+
+def _canonicalize(exp):
+  if v.is_basic_val_of_type("array", exp):
+    exp = exp["value"]
+  if isinstance(exp, list):
+    return [_canonicalize(e) for e in exp]
+  else:
+    return exp
 
 def desugar_expression(exp):
   return expand(exp).desugared()

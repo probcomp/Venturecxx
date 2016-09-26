@@ -15,7 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 from ..omegadb import OmegaDB
+from ..orderedset import OrderedSet
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
@@ -57,7 +60,7 @@ class GradientOfRegen(object):
     kernels around."""
     # TODO Assert that no delta kernels are requested?
     self.fixed_regen(values)
-    new_scaffold = constructScaffold(self.trace, [set(self.pnodes)])
+    new_scaffold = constructScaffold(self.trace, [OrderedSet(self.pnodes)])
     registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
     (_, rhoDB) = detachAndExtract(self.trace, new_scaffold, True)
     self.scaffold = new_scaffold
@@ -70,7 +73,7 @@ class GradientOfRegen(object):
 
   def regen(self, values):
     registerDeterministicLKernels(self.trace, self.scaffold, self.pnodes, values)
-    return regenAndAttach(self.trace, self.scaffold, False, OmegaDB(), {})
+    return regenAndAttach(self.trace, self.scaffold, False, OmegaDB(), OrderedDict())
 
 
 class HamiltonianMonteCarloOperator(InPlaceOperator):
@@ -83,7 +86,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
   # given by this function:
   #   def potential(values):
   #     registerDeterministicLKernels(trace,scaffold,pnodes,values)
-  #     return -regenAndAttach(trace, scaffold, False, OmegaDB(), {})
+  #     return -regenAndAttach(trace, scaffold, False, OmegaDB(), OrderedDict())
   #
   # The trouble, of course, is that I need the gradient of this to
   # actually do HMC.

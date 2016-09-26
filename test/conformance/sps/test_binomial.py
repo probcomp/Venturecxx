@@ -27,9 +27,10 @@ from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testBinomial1():
-  "A simple test that checks the interface of binomial and its simulate method"
-  ripl = get_ripl()
+def testBinomial1(seed):
+  # A simple test that checks the interface of binomial and its
+  # simulate method
+  ripl = get_ripl(seed=seed)
 
   p = 0.3
   n = 4
@@ -42,9 +43,9 @@ def testBinomial1():
   return reportKnownDiscrete(ans, predictions)
 
 @statisticalTest
-def testBinomial2():
-  "A simple test that checks the binomial logdensity"
-  ripl = get_ripl()
+def testBinomial2(seed):
+  # A simple test that checks the binomial logdensity
+  ripl = get_ripl(seed=seed)
 
   b = 0.7
   p1 = 0.3
@@ -61,9 +62,9 @@ def testBinomial2():
 @statisticalTest
 @broken_in("puma", "Puma is missing an enumerate method here")
 @on_inf_prim("gibbs") # Also MH, but really testing gibbs
-def testBinomial3():
-  "A simple test that checks the binomial enumerate method"
-  ripl = get_ripl()
+def testBinomial3(seed):
+  # A simple test that checks the binomial enumerate method
+  ripl = get_ripl(seed=seed)
 
   b = 0.7
   p1 = 0.3

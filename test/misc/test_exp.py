@@ -23,6 +23,6 @@ import venture.value.dicts as v
 
 @on_inf_prim("none")
 def testVector():
-  """Test that array-like objects don't get interpreted as expressions."""
+  # Test that array-like objects don't get interpreted as expressions.
   ripl = get_ripl()
   ripl.predict(v.vector(numpy.array([1, 2])))

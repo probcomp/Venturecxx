@@ -16,11 +16,14 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import numbers
+from collections import OrderedDict
 
 import numpy as np
 
 import venture.lite.value as vv
 import venture.lite.request as req
+
+from venture.lite.exception import VentureTypeError
 
 # No, pylint, I really do mean to check whether two objects have the
 # same type.
@@ -63,7 +66,7 @@ class AnyType(VentureType):
   def __init__(self, type_name=None):
     self.type_name = type_name
   def asVentureValue(self, thing):
-    assert isinstance(thing, vv.VentureValue)
+    assert isinstance(thing, vv.VentureValue), '%r' % (thing,)
     return thing
   def asPython(self, thing):
     # TODO Make symbolic zeroes a venture value!
@@ -271,6 +274,50 @@ class HomogeneousListType(VentureType):
     return base("list", elt_dist=self.subtype.distribution(base, **kwargs),
                 **kwargs)
 
+class NumericArrayType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
+  def asVentureValue(self, thing):
+    thing = np.asarray(thing)
+    if len(thing.shape) == 0:
+      return vv.VentureNumber(float(thing))
+    elif len(thing.shape) == 1:
+      subtype = NumberType(thing.dtype.name)
+    else:
+      subtype = self
+    return vv.VentureArrayUnboxed(thing, subtype)
+  def asPython(self, vthing):
+    try:
+      thing = vthing.getNumber()
+    except VentureTypeError:
+      thing = vthing.getArray(self)
+    thing = np.array(thing)
+    if len(thing.shape) == 0:
+      thing = float(thing)
+    return thing
+  def __contains__(self, vthing):
+    if isinstance(vthing, vv.VentureArrayUnboxed) and vthing.elt_type == self:
+      return True
+    if isinstance(vthing, vv.VentureArray):
+      if all(v in self for v in vthing.getArray()):
+        return True
+    return False
+  def __eq__(self, other):
+    return type(self) == type(other)
+  def name(self):
+    return self._name or "<numarray>"
+  def distribution(self, base, **kwargs):
+    # XXX There is no obvious implementation of this that will
+    # reliably work for all use cases.  For example, a Gaussian
+    # process over R^3 takes NumericArrayType inputs -- but they must
+    # all have shape (3), while there are other possible shapes for
+    # values of NumericArrayType.
+    raise NotImplementedError
+    return base("array_unboxed", elt_type=ArrayUnboxedType(NumberType()),
+                **kwargs)
+  def gradient_type(self):
+    return self
+
 class ArrayUnboxedType(VentureType):
   """Type objects for arrays of unboxed values.  Perforce homogeneous."""
   def __init__(self, subtype, name = None):
@@ -410,11 +457,11 @@ class HomogeneousDictType(VentureType):
     self.valtype = valtype
     self._name = name
   def asVentureValue(self, thing):
-    return vv.VentureDict(dict([(self.keytype.asVentureValue(key),
+    return vv.VentureDict(OrderedDict([(self.keytype.asVentureValue(key),
                                  self.valtype.asVentureValue(val))
                                 for (key, val) in thing.iteritems()]))
   def asPython(self, vthing):
-    return dict([(self.keytype.asPython(key),
+    return OrderedDict([(self.keytype.asPython(key),
                   self.valtype.asPython(val))
                  for (key, val) in vthing.getDict().iteritems()])
   def __contains__(self, vthing):

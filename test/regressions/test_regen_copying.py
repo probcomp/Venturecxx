@@ -22,15 +22,14 @@ from venture.test.config import on_inf_prim
 
 @on_inf_prim("none")
 def testCopyingChoiceAfterObservation():
-  """Conjecture: makeConsistent may actually be stochastic, if there are
-random choices downstream from nodes that get constrained.
-
-Conjecture: in this case, Lite-style copying may change both the
-source and target trace, perhaps differently.
-
-We use registerConstraints instead of makeConsistent during copying
-in order to avoid this problem.
-"""
+  # Conjecture: makeConsistent may actually be stochastic, if there
+  # are random choices downstream from nodes that get constrained.
+  #
+  # Conjecture: in this case, Lite-style copying may change both the
+  # source and target trace, perhaps differently.
+  #
+  # We use registerConstraints instead of makeConsistent during
+  # copying in order to avoid this problem.
   ripl = get_ripl()
   ripl.execute_program('''
 [assume c (flip)]

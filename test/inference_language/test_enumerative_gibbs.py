@@ -34,9 +34,9 @@ def testEnumerativeGibbsBasic1():
   yield checkEnumerativeGibbsBasic1, "true"
 
 @statisticalTest
-def checkEnumerativeGibbsBasic1(in_parallel):
-  """Basic sanity test"""
-  ripl = get_ripl()
+def checkEnumerativeGibbsBasic1(in_parallel, seed):
+  # Basic sanity test
+  ripl = get_ripl(seed=seed)
   ripl.predict("(bernoulli)", label="pid")
   infer = "(gibbs default one %s %s)" % \
       (default_num_transitions_per_sample(), in_parallel)
@@ -51,9 +51,9 @@ def testEnumerativeGibbsBasic2():
   yield checkEnumerativeGibbsBasic2, "true"
 
 @statisticalTest
-def checkEnumerativeGibbsBasic2(in_parallel):
-  """Basic sanity test"""
-  ripl = get_ripl()
+def checkEnumerativeGibbsBasic2(in_parallel, seed):
+  # Basic sanity test
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(flip 0.1)", label="pid")
   infer = "(gibbs default one %s %s)" % \
       (default_num_transitions_per_sample(), in_parallel)
@@ -67,8 +67,8 @@ def testEnumerativeGibbsGotcha():
   yield checkEnumerativeGibbsGotcha, "true"
 
 def checkEnumerativeGibbsGotcha(in_parallel):
-  """Enumeration should not break on things that look like they're in
-the support but aren't."""
+  # Enumeration should not break on things that look like they're in
+  # the support but aren't.
   ripl = get_ripl()
   ripl.predict("(bernoulli 1)")
   ripl.predict("(bernoulli 0)")
@@ -77,10 +77,10 @@ the support but aren't."""
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testEnumerativeGibbsBoostThrashExact():
-  """Enumerating two choices with the same posterior probability should
-not thrash."""
-  ripl = get_ripl()
+def testEnumerativeGibbsBoostThrashExact(seed):
+  # Enumerating two choices with the same posterior probability should
+  # not thrash.
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(flip 0.1)", label="pid")
   ripl.observe("(flip (if x .9 .1))", "true")
   predictions = collectSamples(ripl, "pid", infer="(gibbs default one 1)")
@@ -93,10 +93,10 @@ def testEnumerativeGibbsBoostThrashClose():
   yield checkEnumerativeGibbsBoostThrashClose, "true"
 
 @statisticalTest
-def checkEnumerativeGibbsBoostThrashClose(in_parallel):
-  """Enumerating two choices with almost the same posterior probability
-should mix well."""
-  ripl = get_ripl()
+def checkEnumerativeGibbsBoostThrashClose(in_parallel, seed):
+  # Enumerating two choices with almost the same posterior probability
+  # should mix well.
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(flip 0.1)", label="pid")
   ripl.observe("(flip (if x .91 .09))", "true")
   infer = "(gibbs default one %s %s)" % \
@@ -107,9 +107,9 @@ should mix well."""
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testEnumerativeGibbsCategorical1():
-  """Tests mixing when the prior is far from the posterior."""
-  ripl = get_ripl()
+def testEnumerativeGibbsCategorical1(seed):
+  # Tests mixing when the prior is far from the posterior.
+  ripl = get_ripl(seed=seed)
   ripl.assume('x', '(categorical (simplex 0.1 0.9) (array 0 1))', label="pid")
   ripl.observe('(flip (if (= x 0) 0.9 0.1))', "true")
 
@@ -123,11 +123,11 @@ def testEnumerativeGibbsXOR1():
   yield checkEnumerativeGibbsXOR1, "true"
 
 @statisticalTest
-def checkEnumerativeGibbsXOR1(in_parallel):
-  """Tests that an XOR chain mixes with enumerative gibbs.
-     Note that with RESET=True, this will seem to mix with MH.
-     The next test accounts for that."""
-  ripl = get_ripl()
+def checkEnumerativeGibbsXOR1(in_parallel, seed):
+  # Tests that an XOR chain mixes with enumerative gibbs.
+  # Note that with RESET=True, this will seem to mix with MH.
+  # The next test accounts for that."""
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.001))", label="pid")
   ripl.assume("y", "(tag 0 0 (bernoulli 0.001))")
@@ -145,9 +145,9 @@ def testEnumerativeGibbsXOR2():
   yield checkEnumerativeGibbsXOR2, "true"
 
 @statisticalTest
-def checkEnumerativeGibbsXOR2(in_parallel):
-  """Tests that an XOR chain mixes with enumerative gibbs."""
-  ripl = get_ripl()
+def checkEnumerativeGibbsXOR2(in_parallel, seed):
+  # Tests that an XOR chain mixes with enumerative gibbs.
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.0015))", label="pid")
   ripl.assume("y", "(tag 0 0 (bernoulli 0.0005))")
@@ -165,9 +165,9 @@ def testEnumerativeGibbsXOR3():
   yield checkEnumerativeGibbsXOR3, "true"
 
 @statisticalTest
-def checkEnumerativeGibbsXOR3(in_parallel):
-  """A regression catching a mysterious math domain error."""
-  ripl = get_ripl()
+def checkEnumerativeGibbsXOR3(in_parallel, seed):
+  # A regression catching a mysterious math domain error.
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("x", "(tag 0 0 (bernoulli 0.0015))", label="pid")
   ripl.assume("y", "(tag 0 0 (bernoulli 0.0005))")
@@ -187,12 +187,11 @@ def checkEnumerativeGibbsXOR3(in_parallel):
 
 @statisticalTest
 @on_inf_prim("gibbs") # Also rejection, but really testing Gibbs
-def testEnumerativeGibbsBrushRandomness():
-    """Test that Gibbs targets the correct stationary distribution, even
-    when there may be random choices downstream of variables being
-    enumerated.
-    """
-    ripl = get_ripl()
+def testEnumerativeGibbsBrushRandomness(seed):
+    # Test that Gibbs targets the correct stationary distribution,
+    # even when there may be random choices downstream of variables
+    # being enumerated.
+    ripl = get_ripl(seed=seed)
     ripl.assume("z", "(tag 'z 0 (flip))")
     ripl.assume("x", "(if z 0 (normal 0 10))")
     ripl.observe("(normal x 1)", "4")
@@ -213,7 +212,7 @@ def testEnumerativeGibbsBrushRandomness():
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testEnumerateCoupledChoices1():
+def testEnumerateCoupledChoices1(seed):
   # A test case for the first problem identified in Issue #462.
   #
   # If enumaration collects the candidate value sets all at once at
@@ -229,7 +228,7 @@ def testEnumerateCoupledChoices1():
   # consider 8 options, in none of which will all three nodes be
   # assigned to distinct tables.
   raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.assume("crp", "(make_crp 1)")
   r.assume("result1", "(crp)")
   r.assume("result2", "(crp)")
@@ -252,7 +251,7 @@ def testEnumerateCoupledChoices1():
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testEnumerateCoupledChoices2():
+def testEnumerateCoupledChoices2(seed):
   # A second illustration of Issue #462 (second manifestation).
   #
   # If enumeration computes the set of candidate values before
@@ -269,7 +268,7 @@ def testEnumerateCoupledChoices2():
   # They cannot, therefore, be overrepresented evenly, and this leads
   # to the wrong posterior.
   raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.assume("crp", "(make_crp 1)")
   r.assume("result1", "(crp)")
   r.assume("result2", "(crp)")
@@ -292,7 +291,7 @@ def testEnumerateCoupledChoices2():
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testEnumerateCoupledChoices3():
+def testEnumerateCoupledChoices3(seed):
   # A third illustration of Issue #462 (second manifestation).
   #
   # Enumerating a single choice should not depend on the initial value
@@ -304,7 +303,7 @@ def testEnumerateCoupledChoices3():
   # will cause it to overweight the state where the choices are
   # distinct by 2:1.
   raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.assume("crp", "(make_crp 1)")
   r.assume("result1", "(crp)")
   r.assume("result2", "(crp)")
@@ -328,9 +327,9 @@ def testEnumerateCoupledChoices3():
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testOccasionalRejection():
+def testOccasionalRejection(seed):
   # The mem is relevant: without it, the test passes even in Puma.
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.execute_program("""
 (assume cluster_id (flip))
 (assume cluster (mem (lambda (id) (normal 0 1))))
@@ -341,15 +340,16 @@ def testOccasionalRejection():
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@statisticalTest
 @on_inf_prim("gibbs")
-def testOccasionalRejectionScope():
+def testOccasionalRejectionScope(seed):
   # Like the previous test but in a custom scope, because Lite
   # special-cases the default scope when computing the
   # number-of-blocks correction.
   # Note: The "frob" scope registers as always having two blocks, even
   # though one of them will, at runtime, end up having no
   # unconstrained random choices.
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.execute_program("""
 (assume cluster_id (tag "frob" 0 (flip)))
 (assume cluster (mem (lambda (id) (tag "frob" 1 (normal 0 1)))))
@@ -360,10 +360,11 @@ def testOccasionalRejectionScope():
   ans = [(True, 0.5), (False, 0.5)]
   return reportKnownDiscrete(ans, predictions)
 
+@statisticalTest
 @on_inf_prim("gibbs")
-def testOccasionalRejectionScope2():
+def testOccasionalRejectionScope2(seed):
   # Variant of the previous (changing block id).
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.execute_program("""
 (assume cluster_id (tag "frob" 0 (flip)))
 (assume cluster (mem (lambda (id) (tag "frob" id (normal 0 1)))))
@@ -376,7 +377,7 @@ def testOccasionalRejectionScope2():
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testOccasionalRejectionBrush():
+def testOccasionalRejectionBrush(seed):
   # Another version, this time with explicit brush creating the mix mh
   # correction.
 
@@ -410,7 +411,7 @@ def testOccasionalRejectionBrush():
   # - The former will induce a 50/50 stationary distribution on the
   #   value of flip1, whereas the right answer is 2:1 odds in favor of
   #   True.
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.execute_program("""
 (assume flip1 (flip))
 (assume flip1_or_flip2
@@ -427,7 +428,7 @@ def testOccasionalRejectionBrush():
 
 @statisticalTest
 @on_inf_prim("gibbs")
-def testOccasionalRejectionBrushScope():
+def testOccasionalRejectionBrushScope(seed):
   # Another version, this time requiring correct computation of the
   # correction on a custom scope (which is carefully arranged to avoid
   # creating blocks where some principal node might be in the brush).
@@ -440,7 +441,7 @@ def testOccasionalRejectionBrushScope():
   # wrong if a block that is not empty in the pre-proposal trace gains
   # a new node due to the proposal, which is what happens here, when
   # `flip2` proposes to move from True to False.
-  r = get_ripl()
+  r = get_ripl(seed=seed)
   r.execute_program("""
 (assume flip1 (tag "frob" 1 (flip)))
 (assume flip2 (tag "frob" 2 (flip)))

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
 from numbers import Number
 
 from venture.lite.exception import VentureTypeError
@@ -51,7 +52,11 @@ class VentureRecord(vv.VentureValue):
     self.fields = fields
 
   def asStackDict(self, _trace=None):
-    return {"type":"record", "tag":self.tag, "fields":self.fields}
+    return OrderedDict([
+      ("type", "record"),
+      ("tag", self.tag),
+      ("fields", self.fields),
+    ])
 
   @staticmethod
   def fromStackDict(thing):
@@ -112,6 +117,9 @@ class VentureRecord(vv.VentureValue):
   def map_real(self, f):
     return VentureRecord(self.tag, [x.map_real(f) for x in self.fields])
 
+  def __str__(self):
+    return "A Venture record of type %s at address 0x%x" % (self.tag, id(self))
+
 def record(tag, arity):
   typ = RecordType(tag)
   tester = sp_help.type_test(typ)
@@ -136,6 +144,8 @@ def register_record(name, *fields):
   registerBuiltinSP("is_" + name, tester)
   for (f, a) in zip(fields, accessors):
     registerBuiltinSP(f, a)
+
+vv.registerVentureType(VentureRecord)
 
 register_record("inference_action", "action_func")
 register_record("make_ref", "ref_get")

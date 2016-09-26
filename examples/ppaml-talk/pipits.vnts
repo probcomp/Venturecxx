@@ -20,6 +20,9 @@
 
 // Data obtained from: https://github.com/cran/Flury/blob/master/data/
 
+// Run me with, for example,
+// venture puma -f pipits.vnts -e '{ resample(5); plotf("p0d1d", run(do_sweeps(5))) }'
+
 // Female average
 assume mu_f = tag("param", "mu_f", normal(86, 1));
 
@@ -55,7 +58,8 @@ run(pyexec("ripl.define('num_birds', sum(counts.values()))"));
 
 // Inference program
 define do_sweeps = proc(n) {
-  accumulate_dataset(n, do(gibbs("z", one, num_birds),
-                           mh("param", one, 10),
-                           collect(mu_m, mu_f, sigma_m, sigma_f, phi)))
+  accumulate_dataset(n, {
+    gibbs("z", one, num_birds);
+    mh("param", one, 10);
+    collect(mu_m, mu_f, sigma_m, sigma_f, phi)})
 }

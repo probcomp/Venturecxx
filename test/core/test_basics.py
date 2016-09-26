@@ -66,8 +66,8 @@ def testFlip1():
   assert isinstance(get_ripl().predict("(bernoulli 0.5)"), Number)
 
 @statisticalTest
-def testFlip2():
-  ripl = get_ripl()
+def testFlip2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict("(bernoulli 0.5)",label="pid")
   predictions = collectSamples(ripl, "pid")
   return reportKnownDiscrete([[True, 0.5], [False, 0.5]], predictions)

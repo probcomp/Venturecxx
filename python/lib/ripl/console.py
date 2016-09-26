@@ -79,7 +79,7 @@ class RiplCmd(Cmd, object):
       from venture.parser.church_prime.parse import string_complete_p
     else:
       from venture.parser.venture_script.parse import string_complete_p
-    if force_complete or string_complete_p(s):
+    if force_complete or string_complete_p(s, self.ripl.languages):
       return self.ripl.execute_instructions(s)
     else:
       self.pending_instruction_string = s

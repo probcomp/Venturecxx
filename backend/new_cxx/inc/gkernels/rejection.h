@@ -27,7 +27,8 @@ struct DB;
 struct BogoPossibilizeGKernel : GKernel
 {
 
-  pair<Trace*, double> propose(ConcreteTrace * trace, boost::shared_ptr<Scaffold> scaffold);
+  pair<Trace*, double>
+  propose(ConcreteTrace * trace, const boost::shared_ptr<Scaffold> & scaffold);
   int accept();
   int reject();
 

@@ -64,14 +64,14 @@ def testEvalSmoke2():
 
 @on_inf_prim("none")
 def testEvalSmoke3():
-  "Eval should work on programmatically constructed expressions."
+  # Eval should work on programmatically constructed expressions.
   ripl = get_ripl()
   ripl.assume("expr", "(array (quote add) 2 2)")
   eq_(ripl.predict("(eval expr (get_current_environment))"), 4.0)
 
 @statisticalTest
-def testEval1():
-  ripl = get_ripl()
+def testEval1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("globalEnv","(get_current_environment)")
   ripl.assume("expr","(quote (bernoulli 0.7))")
@@ -83,21 +83,22 @@ def testEval1():
 
 @on_inf_prim("none")
 def testEvalIf1():
-  "Eval should work on expressions that require macro expansion"
+  # Eval should work on expressions that require macro expansion
   eq_(get_ripl().predict("(eval (quote (if true 1 2)) (get_current_environment))"), 1)
 
 @on_inf_prim("none")
 def testEvalIf2():
-  "Eval should work on programmatically constructed expressions that require macro expansion"
-  raise SkipTest("This fails because the stack's \"desugaring\" is not applied by eval itself to the expressions being evaluated.  Oops.  Issue: https://app.asana.com/0/9277419963067/10249544822511")
+  # Eval should work on programmatically constructed expressions that
+  # require macro expansion
+  raise SkipTest("This fails because the stack's \"desugaring\" is not applied by eval itself to the expressions being evaluated.  Oops.  Issue: #556")
   ripl = get_ripl()
   ripl.assume("expr", "(array (quote if) true 1 2)")
   eq_(ripl.predict("(eval expr (get_current_environment))"), 1)
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testEval2():
-  ripl = get_ripl()
+def testEval2(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("globalEnv","(get_current_environment)")
@@ -117,9 +118,9 @@ def testEval2():
 
 @skipWhenRejectionSampling("Rejection sampling doesn't work when resimulations of unknown code are observed")
 @statisticalTest
-def testEval3():
-  "testEval2 with booby traps"
-  ripl = get_ripl()
+def testEval3(seed):
+  # testEval2 with booby traps
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("p","(uniform_continuous 0.0 1.0)",label="pid")
   ripl.assume("globalEnv","(get_current_environment)")
@@ -139,9 +140,9 @@ def testEval3():
 
 
 @statisticalTest
-def testApply1():
-  "This CSP does not handle lists and symbols correctly."
-  ripl = get_ripl()
+def testApply1(seed):
+  # This CSP does not handle lists and symbols correctly.
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("apply","(lambda (op args) (eval (pair op args) (get_empty_environment)))")
   ripl.predict("(apply mul (array (normal 10.0 1.0) (normal 10.0 1.0) (normal 10.0 1.0)))",
@@ -155,8 +156,8 @@ def testApply1():
 # Just like dict it could take a list of pairs.
 # It could even take a dict!
 @statisticalTest
-def testExtendEnv1():
-  ripl = get_ripl()
+def testExtendEnv1(seed):
+  ripl = get_ripl(seed=seed)
 
   ripl.assume("env1","(get_current_environment)")
 

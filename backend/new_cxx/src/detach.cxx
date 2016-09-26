@@ -29,7 +29,11 @@
 using std::cout;
 using std::endl;
 
-pair<double, boost::shared_ptr<DB> > detachAndExtract(ConcreteTrace * trace, const vector<Node*> & border, boost::shared_ptr<Scaffold> scaffold)
+pair<double, boost::shared_ptr<DB> >
+detachAndExtract(
+    ConcreteTrace * trace,
+    const vector<Node*> & border,
+    const boost::shared_ptr<Scaffold> & scaffold)
 {
   double weight = 0;
   boost::shared_ptr<DB> db(new DB());
@@ -65,7 +69,11 @@ double unconstrain(ConcreteTrace * trace, OutputNode * node)
   return weight;
 }
 
-double detach(ConcreteTrace * trace, ApplicationNode * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double detach(
+    ConcreteTrace * trace,
+    ApplicationNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   //cout << "detach(" << node << ")" << endl;
 
@@ -73,7 +81,7 @@ double detach(ConcreteTrace * trace, ApplicationNode * node, boost::shared_ptr<S
   boost::shared_ptr<Args> args = trace->getArgs(node);
   VentureValuePtr groundValue = trace->getGroundValue(node);
 
-  if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];
@@ -87,7 +95,11 @@ double detach(ConcreteTrace * trace, ApplicationNode * node, boost::shared_ptr<S
 }
 
 
-double extractParents(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double extractParents(
+    ConcreteTrace * trace,
+    Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   double weight = extractESRParents(trace, node, scaffold, db);
   vector<Node*> definiteParents = node->getDefiniteParents();
@@ -99,7 +111,11 @@ double extractParents(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaf
   return weight;
 }
 
-double extractESRParents(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double extractESRParents(
+    ConcreteTrace * trace,
+    Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   double weight = 0;
   vector<RootOfFamily> esrParents = trace->getESRParents(node);
@@ -111,7 +127,11 @@ double extractESRParents(ConcreteTrace * trace, Node * node, boost::shared_ptr<S
   return weight;
 }
 
-double extract(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double extract(
+    ConcreteTrace * trace,
+    Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   //cout << "extractOuter(" << node << ")" << endl;
   double weight = 0;
@@ -144,7 +164,11 @@ double extract(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaffold> s
   return weight;
 }
 
-double unevalFamily(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double unevalFamily(
+    ConcreteTrace * trace,
+    Node * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   //cout << "unevalFamily(" << node << ")" << endl;
   double weight = 0;
@@ -172,7 +196,11 @@ double unevalFamily(ConcreteTrace * trace, Node * node, boost::shared_ptr<Scaffo
   return weight;
 }
 
-double unapply(ConcreteTrace * trace, OutputNode * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double unapply(
+    ConcreteTrace * trace,
+    OutputNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   double weight = unapplyPSP(trace, node, scaffold, db);
   weight += extractESRParents(trace, node, scaffold, db);
@@ -181,7 +209,11 @@ double unapply(ConcreteTrace * trace, OutputNode * node, boost::shared_ptr<Scaff
   return weight;
 }
 
-void teardownMadeSP(ConcreteTrace * trace, Node * makerNode, bool isAAA, boost::shared_ptr<DB> db)
+void teardownMadeSP(
+    ConcreteTrace * trace,
+    Node * makerNode,
+    bool isAAA,
+    const boost::shared_ptr<DB> & db)
 {
   boost::shared_ptr<VentureSPRecord> spRecord = trace->getMadeSPRecord(makerNode);
   assert(spRecord);
@@ -198,7 +230,11 @@ void teardownMadeSP(ConcreteTrace * trace, Node * makerNode, bool isAAA, boost::
   trace->destroyMadeSPRecord(makerNode);
 }
 
-double unapplyPSP(ConcreteTrace * trace, ApplicationNode * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double unapplyPSP(
+    ConcreteTrace * trace,
+    ApplicationNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   //cout << "unapplyPSP(" << node << ")" << endl;
   boost::shared_ptr<PSP> psp = trace->getMadeSP(trace->getOperatorSPMakerNode(node))->getPSP(node);
@@ -206,7 +242,7 @@ double unapplyPSP(ConcreteTrace * trace, ApplicationNode * node, boost::shared_p
 
 
   // TODO Tag
-  if (dynamic_pointer_cast<TagOutputPSP>(psp)) {
+  if (dynamic_cast<TagOutputPSP *>(psp.get())) {
     ScopeID scope = trace->getValue(node->operandNodes[0]);
     BlockID block = trace->getValue(node->operandNodes[1]);
     Node * blockNode = node->operandNodes[2];
@@ -229,7 +265,11 @@ double unapplyPSP(ConcreteTrace * trace, ApplicationNode * node, boost::shared_p
   return weight;
 }
 
-double unevalRequests(ConcreteTrace * trace, RequestNode * node, boost::shared_ptr<Scaffold> scaffold, boost::shared_ptr<DB> db)
+double unevalRequests(
+    ConcreteTrace * trace,
+    RequestNode * node,
+    const boost::shared_ptr<Scaffold> & scaffold,
+    const boost::shared_ptr<DB> & db)
 {
   //cout << "unevalRequests(" << node << ")" << endl;
 

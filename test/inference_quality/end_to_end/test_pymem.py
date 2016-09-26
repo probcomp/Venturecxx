@@ -75,8 +75,8 @@ def loadHPYModel1(ripl,topCollapsed,botCollapsed):
   if botCollapsed: ripl.assume("f","(pymem alpha d intermediate_dist)")
   else: ripl.assume("f","(uc_pymem alpha d intermediate_dist)")
 
-def predictHPY(topCollapsed,botCollapsed):
-  ripl = get_ripl()
+def predictHPY(topCollapsed, botCollapsed, seed):
+  ripl = get_ripl(seed=seed)
   loadHPYModel1(ripl,topCollapsed,botCollapsed)
   ripl.predict("(f)",label="pid")
   observeCategories(ripl,[2,2,5,1,0])
@@ -85,23 +85,23 @@ def predictHPY(topCollapsed,botCollapsed):
 @attr("slow")
 def testHPYMem1():
   raise SkipTest("Crashes occasionally because flip gets asked to evaluate how likely it is to return False when p is 1.0.  Issue: https://app.asana.com/0/9277419963067/10386828313646")
-  baseline = predictHPY(True, True)
+  baseline = predictHPY(True, True, 0)
   for topC in [True,False]:
     for botC in [True,False]:
       yield checkHPYMem1, baseline, topC, botC
 
 @statisticalTest
-def checkHPYMem1(baseline, topC, botC):
-  data = predictHPY(topC, botC)
+def checkHPYMem1(baseline, topC, botC, seed):
+  data = predictHPY(topC, botC, seed)
   return reportSameDiscrete(baseline, data)
 
 ####
 
 @statisticalTest
-def testHPYLanguageModel1():
-  """Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
-     Checks that it learns that 1 follows 0"""
-  ripl = get_ripl()
+def testHPYLanguageModel1(seed):
+  # Nice model from http://www.cs.berkeley.edu/~jordan/papers/teh-jordan-bnp.pdf.
+  # Checks that it learns that 1 follows 0
+  ripl = get_ripl(seed=seed)
 
   loadPYMem(ripl)
 

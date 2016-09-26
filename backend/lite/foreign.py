@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy.random
+from collections import OrderedDict
 import random
+
+import numpy.random as npr
 
 from venture.lite.request import Request
 from venture.lite.sp import VentureSPRecord
+from venture.lite.sp_use import MockArgs
 from venture.lite.value import VentureValue
 
 # Part of a mechanism for allowing Lite SPs to be called from
@@ -43,34 +46,31 @@ def fromStackDict(thing):
 def asStackDict(thing):
     # proxy for VentureValue.asStackDict that handles SPs by wrapping them
     if isinstance(thing, VentureSPRecord):
-        return {"type": "foreign_sp", "value": thing.show(),
-                "sp": ForeignLiteSP(thing.sp), "aux": thing.spAux}
+        return OrderedDict([
+            ("type", "foreign_sp"),
+            ("value", thing.show()),
+            ("sp", ForeignLiteSP(thing.sp)),
+            ("aux", thing.spAux),
+        ])
     elif isinstance(thing, Request):
-        return {"type": "request", "value": {"esrs": thing.esrs, "lsrs": thing.lsrs}}
+        return OrderedDict([
+            ("type", "request"),
+            ("value",
+             OrderedDict([("esrs", thing.esrs), ("lsrs", thing.lsrs)])),
+        ])
     else:
         return thing.asStackDict()
 
-class ForeignArgs(object):
-    """A mock Args object used to call a Lite SP from other backends."""
-
-    def __init__(self, args, _output=True):
-        self.node = None
-        self.args = args
-        prng = random.Random(args['seed'])
-        self._py_rng = random.Random(prng.randint(1, 2**31 - 1))
-        self._np_rng = numpy.random.RandomState(prng.randint(1, 2**31 - 1))
-        self._operandValues = map(fromStackDict, args.get('operandValues'))
-        self.operandNodes = [None for _ in self._operandValues]
-        self.env = None
-
-    def operandValues(self): return self._operandValues
-    def spaux(self): return self.args.get('spaux')
-    def requestValue(self): return None
-    def esrNodes(self): return []
-    def estValues(self): return []
-    def madeSPAux(self): return self.args.get('madeSPAux')
-    def py_prng(self): return self._py_rng
-    def np_prng(self): return self._np_rng
+def asArgsObject(args):
+    seed = args['seed']
+    assert seed is not None
+    prng = random.Random(seed)
+    return MockArgs(
+        map(fromStackDict, args.get('operandValues')),
+        args.get('spaux'),
+        py_rng=random.Random(prng.randint(1, 2**31 - 1)),
+        np_rng=npr.RandomState(prng.randint(1, 2**31 - 1)),
+        madeSPAux=args.get('madeSPAux'))
 
 class ForeignLitePSP(object):
     """A wrapper around a Lite PSP that can be called by other backends."""
@@ -79,24 +79,24 @@ class ForeignLitePSP(object):
         self.psp = psp
 
     def simulate(self, args):
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         result = self.psp.simulate(args)
         return asStackDict(result)
 
     def logDensity(self, value, args):
         value = fromStackDict(value)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         result = self.psp.logDensity(value, args)
         return result
 
     def incorporate(self, value, args):
         value = fromStackDict(value)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         self.psp.incorporate(value, args)
 
     def unincorporate(self, value, args):
         value = fromStackDict(value)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         self.psp.unincorporate(value, args)
 
     def logDensityOfData(self, aux):
@@ -124,7 +124,7 @@ class ForeignLitePSP(object):
         return self.psp.canEnumerate()
 
     def enumerateValues(self, args):
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         result = self.psp.enumerateValues(args)
         return [asStackDict(value) for value in result]
 
@@ -136,7 +136,7 @@ class ForeignLiteLKernel(object):
 
     def forwardSimulate(self, oldValue, args):
         oldValue = fromStackDict(oldValue)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
         result = self.lkernel.forwardSimulate(None, oldValue, args)
@@ -145,7 +145,7 @@ class ForeignLiteLKernel(object):
     def forwardWeight(self, newValue, oldValue, args):
         newValue = fromStackDict(newValue)
         oldValue = fromStackDict(oldValue)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
         result = self.lkernel.forwardWeight(None, newValue, oldValue, args)
@@ -153,7 +153,7 @@ class ForeignLiteLKernel(object):
 
     def reverseWeight(self, oldValue, args):
         oldValue = fromStackDict(oldValue)
-        args = ForeignArgs(args)
+        args = asArgsObject(args)
         # stub the trace
         # TODO: do any lkernels actually use the trace argument?
         result = self.lkernel.reverseWeight(None, oldValue, args)
@@ -173,15 +173,16 @@ class ForeignLiteSP(object):
     def constructLatentDB(self):
         return self.sp.constructLatentDB()
     def simulateLatents(self, args, lsr, shouldRestore, latentDB):
-        return self.sp.simulateLatents(ForeignArgs(args), lsr,
+        return self.sp.simulateLatents(asArgsObject(args), lsr,
                                        shouldRestore, latentDB)
     def detachLatents(self, args, lsr, latentDB):
-        return self.sp.detachLatents(ForeignArgs(args), lsr, latentDB)
+        return self.sp.detachLatents(asArgsObject(args), lsr, latentDB)
 
     def hasAEKernel(self):
         return self.sp.hasAEKernel()
     def AEInfer(self, aux, seed):
-        np_rng = numpy.random.RandomState(seed)
+        assert seed is not None
+        np_rng = npr.RandomState(seed)
         return self.sp.AEInfer(aux, np_rng)
 
     def show(self, spaux):

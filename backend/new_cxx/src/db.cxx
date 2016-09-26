@@ -25,7 +25,7 @@ VentureValuePtr DB::getValue(Node * node)
   return values[node];
 }
 
-void DB::registerValue(Node * node, VentureValuePtr value)
+void DB::registerValue(Node * node, const VentureValuePtr & value)
 {
   assert(!values.count(node));
   values[node] = value;
@@ -42,24 +42,29 @@ boost::shared_ptr<LatentDB> DB::getLatentDB(Node * makerNode)
   return latentDBs[makerNode];
 }
 
-void DB::registerLatentDB(Node * makerNode, boost::shared_ptr<LatentDB> latentDB)
+void DB::registerLatentDB(
+    Node * makerNode, const boost::shared_ptr<LatentDB> & latentDB)
 {
   assert(!latentDBs.count(makerNode));
   latentDBs[makerNode] = latentDB;
 }
 
-bool DB::hasESRParent(boost::shared_ptr<SP> sp, FamilyID id)
+bool DB::hasESRParent(const boost::shared_ptr<SP> & sp, const FamilyID & id)
 {
   return spFamilyDBs[sp].count(id);
 }
 
-RootOfFamily DB::getESRParent(boost::shared_ptr<SP> sp, FamilyID id)
+RootOfFamily DB::getESRParent(
+    const boost::shared_ptr<SP> & sp, const FamilyID & id)
 {
   assert(spFamilyDBs[sp].count(id));
   return spFamilyDBs[sp][id];
 }
 
-void DB::registerSPFamily(boost::shared_ptr<SP> sp, FamilyID id, RootOfFamily esrParent)
+void DB::registerSPFamily(
+    const boost::shared_ptr<SP> & sp,
+    const FamilyID & id,
+    const RootOfFamily & esrParent)
 {
   assert(!spFamilyDBs[sp].count(id));
   spFamilyDBs[sp][id] = esrParent;
@@ -73,7 +78,8 @@ boost::shared_ptr<SPAux> DB::getMadeSPAux(Node * makerNode)
   return spAuxs[makerNode];
 }
 
-void DB::registerMadeSPAux(Node * makerNode, boost::shared_ptr<SPAux> spAux)
+void DB::registerMadeSPAux(
+    Node * makerNode, const boost::shared_ptr<SPAux> & spAux)
 {
   assert(!spAuxs.count(makerNode));
   spAuxs[makerNode] = spAux;

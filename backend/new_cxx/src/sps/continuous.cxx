@@ -31,7 +31,8 @@ using std::isfinite;
 
 
 /* Normal */
-VentureValuePtr NormalPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr NormalPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("normal", args, 2);
 
@@ -53,7 +54,9 @@ double NormalPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) co
   return x;
 }
 
-double NormalPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double NormalPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double mu = args->operandValues[0]->getDouble();
   double sigma = args->operandValues[1]->getDouble();
@@ -100,7 +103,8 @@ vector<double> NormalPSP::gradientOfLogDensity(double output,
 }
 
 /* Gamma */
-VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr GammaPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("gamma", args, 2);
 
@@ -111,7 +115,9 @@ VentureValuePtr GammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double GammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double GammaPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -120,7 +126,8 @@ double GammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
 }
 
 /* Inv Gamma */
-VentureValuePtr InvGammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr InvGammaPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("inv_gamma", args, 2);
 
@@ -131,7 +138,9 @@ VentureValuePtr InvGammaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  con
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double InvGammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double InvGammaPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -140,7 +149,8 @@ double InvGammaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
 }
 
 /* Exponential */
-VentureValuePtr ExponentialPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ExponentialPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("expon", args, 1);
 
@@ -150,7 +160,9 @@ VentureValuePtr ExponentialPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) c
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double ExponentialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ExponentialPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double theta = args->operandValues[0]->getDouble();
   double x = value->getDouble();
@@ -158,7 +170,8 @@ double ExponentialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) 
 }
 
 /* UniformContinuous */
-VentureValuePtr UniformContinuousPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr UniformContinuousPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("uniform_continuous", args, 2);
 
@@ -169,7 +182,9 @@ VentureValuePtr UniformContinuousPSP::simulate(shared_ptr<Args> args, gsl_rng * 
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double UniformContinuousPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double UniformContinuousPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -178,7 +193,8 @@ double UniformContinuousPSP::logDensity(VentureValuePtr value, shared_ptr<Args> 
 }
 
 /* Beta */
-VentureValuePtr BetaPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr BetaPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("beta", args, 2);
 
@@ -199,7 +215,9 @@ double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) cons
   return x;
 }
 
-double BetaPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double BetaPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double a = args->operandValues[0]->getDouble();
   double b = args->operandValues[1]->getDouble();
@@ -251,7 +269,8 @@ vector<double> BetaPSP::gradientOfLogDensity(double output,
 }
 
 /* Student-t */
-VentureValuePtr StudentTPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  const
+VentureValuePtr StudentTPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
 //  checkArgsLength("student_t", args, 1);
 
@@ -263,7 +282,9 @@ VentureValuePtr StudentTPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)  con
   return VentureValuePtr(new VentureNumber((shape * x) + loc));
 }
 
-double StudentTPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  const
+double StudentTPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double nu = args->operandValues[0]->getDouble();
   double loc = 0; if (args->operandValues.size() > 1) { loc = args->operandValues[1]->getDouble(); }
@@ -275,7 +296,8 @@ double StudentTPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args)  co
   return log(gsl_ran_tdist_pdf(y, nu) / shape);
 }
 
-VentureValuePtr ChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ChiSquaredPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("chi_sq", args, 1);
 
@@ -285,14 +307,17 @@ VentureValuePtr ChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) co
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double ChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ChiSquaredPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double nu = args->operandValues[0]->getDouble();
   double x = value->getDouble();
   return ChiSquaredDistributionLogLikelihood(x, nu);
 }
 
-VentureValuePtr InvChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr InvChiSquaredPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("inv_chi_sq", args, 1);
 
@@ -302,14 +327,17 @@ VentureValuePtr InvChiSquaredPSP::simulate(shared_ptr<Args> args, gsl_rng * rng)
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double InvChiSquaredPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double InvChiSquaredPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double nu = args->operandValues[0]->getDouble();
   double x = value->getDouble();
   return InvChiSquaredDistributionLogLikelihood(x, nu);
 }
 
-VentureValuePtr ApproximateBinomialPSP::simulate(shared_ptr<Args> args, gsl_rng * rng) const
+VentureValuePtr ApproximateBinomialPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
 {
   checkArgsLength("approx_binomial", args, 2);
 
@@ -327,7 +355,9 @@ VentureValuePtr ApproximateBinomialPSP::simulate(shared_ptr<Args> args, gsl_rng 
   return VentureValuePtr(new VentureNumber(x));
 }
 
-double ApproximateBinomialPSP::logDensity(VentureValuePtr value, shared_ptr<Args> args) const
+double ApproximateBinomialPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
 {
   double n = args->operandValues[0]->getDouble();
   double p = args->operandValues[1]->getDouble();

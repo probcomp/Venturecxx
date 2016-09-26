@@ -24,7 +24,7 @@ config["num_data"] = 20
 config["should_reset"] = True
 config["get_ripl"] = "lite"
 
-
+config["seed"] = None
 config["global_reporting_threshold"] = 0.00001
 #config["infer"] = "(pgibbs default ordered 2 5)"
 config["infer"] = "(mh default one 100)"

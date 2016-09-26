@@ -23,31 +23,31 @@ from venture.test.stats import reportKnownGaussian
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testNormal1():
-  ripl = get_ripl()
+def testNormal1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.predict("(normal 0 1)", label="pid")
   predictions = collectSamples(ripl,"pid")
   return reportKnownGaussian(0, 1, predictions)
 
 @statisticalTest
-def testNormal2():
-  ripl = get_ripl()
+def testNormal2(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x","(normal 0 1)")
   ripl.predict("(normal x 1)")
   predictions = collectSamples(ripl,"x")
   return reportKnownGaussian(0, 1, predictions)
 
 @statisticalTest
-def testNormal3():
-  ripl = get_ripl()
+def testNormal3(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(lambda (mu) (normal mu 1))")
   ripl.predict("(f (normal 0 1))", label="pid")
   predictions = collectSamples(ripl,"pid")
   return reportKnownGaussian(0, math.sqrt(2), predictions)
 
 @statisticalTest
-def testNormal4():
-  ripl = get_ripl()
+def testNormal4(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("f","(lambda (mu) (normal mu 1))")
   ripl.assume("g","(lambda (x y z) ((lambda () f)))")
   ripl.predict("((g (f (normal 0 1)) (f 5) (f (f 1))) 5)", label="pid")

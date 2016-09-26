@@ -31,6 +31,7 @@ from venture.test.stats import reportKnownGaussian
 from venture.test.stats import reportKnownMean
 from venture.test.stats import reportPearsonIndependence
 from venture.test.stats import statisticalTest
+from venture.test.stats import stochasticTest
 import venture.lite.covariance as cov
 import venture.lite.gp as gp
 import venture.lite.value as v
@@ -55,8 +56,8 @@ def testGP1():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
-def testGPMean1():
-  ripl = get_ripl()
+def testGPMean1(seed):
+  ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
 
   ripl.assume('gp', '(make_gp zero sq_exp)')
@@ -69,8 +70,8 @@ def testGPMean1():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
-def testGPMean2():
-  ripl = get_ripl()
+def testGPMean2(seed):
+  ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
 
   ripl.assume('gp', '(make_gp zero sq_exp)')
@@ -101,10 +102,10 @@ def testHyperparameterInferenceSmoke():
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
 def testGPLogscore1():
-  """Is this actually a valid test? The real solution to this problem
-  (and to the corresponding bug with unincorporate) is to wrap the gp
-  in a mem. This could be done automatically I suppose, or better
-  through a library function."""
+  # Is this actually a valid test? The real solution to this problem
+  # (and to the corresponding bug with unincorporate) is to wrap the
+  # gp in a mem. This could be done automatically I suppose, or better
+  # through a library function.
 
   raise SkipTest("GP logDensity is broken for multiple samples of the same input.")
 
@@ -118,9 +119,9 @@ def testGPLogscore1():
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
 def testGPAux():
-  """Make sure the GP's aux is properly maintained.  It should be an array of
-  all pairs (x,y) such that the GP has been called with input x and returned
-  output y."""
+  # Make sure the GP's aux is properly maintained.  It should be an
+  # array of all pairs (x,y) such that the GP has been called with
+  # input x and returned output y.
 
   ripl = get_ripl()
   prep_ripl(ripl)
@@ -160,7 +161,8 @@ def testNormalParameters():
 
 @in_backend('none')
 @statisticalTest
-def testOneSample():
+def testOneSample(seed):
+  np_rng = npr.RandomState(seed)
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   test_input = 1.4
@@ -177,15 +179,16 @@ def testOneSample():
   # mean expect_mu.
   n = default_num_samples(4)
   def sample():
-    return gp._gp_sample(mean, covariance, observations, [test_input],
-                         npr.RandomState())[0]
+    s = gp._gp_sample(mean, covariance, observations, [test_input], np_rng)
+    return s[0]
   samples = np.array([sample() for _ in xrange(n)])
   assert samples.shape == (n,)
   return reportKnownGaussian(expect_mu, np.sqrt(expect_sig), samples)
 
 @in_backend('none')
 @statisticalTest
-def testTwoSamples_low_covariance():
+def testTwoSamples_low_covariance(seed):
+  np_rng = npr.RandomState(seed)
   obs_inputs  = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0,  2.3, 8.0])
   in_lo_cov = np.array([1.4, -20.0])
@@ -207,8 +210,76 @@ def testTwoSamples_low_covariance():
   lo_cov_x = []
   lo_cov_y = []
   for i in range(n):
-    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov,
-                         npr.RandomState())
+    x, y = gp._gp_sample(mean, covariance, observations, in_lo_cov, np_rng)
     lo_cov_x.append(x)
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)
+
+@stochasticTest
+def test_gradients(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('s', '(normal 0 1)')
+  ripl.assume('alpha', '(gs_expon_1)')
+  ripl.assume('cov', '(gp_cov_scale (* s s) (gp_cov_se alpha))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp 0)', '1')
+  ripl.observe('(gp 1)', '2')
+  ripl.observe('(gp 2)', '4')
+  ripl.observe('(gp 3)', '8')
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+
+@stochasticTest
+def test_2d(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s', '(expon 1)')
+  ripl.assume('l', '(expon 1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '(gp_cov_scale (* s s) (gp_cov_se (* l l)))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
+  ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
+  ripl.infer('(mh default one 1)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')
+
+@stochasticTest
+def test_2d_gradients(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s', '(gs_expon_1)')
+  ripl.assume('l', '(gs_expon_1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '(gp_cov_scale (* s s) (gp_cov_se (* l l)))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
+  ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')
+
+@stochasticTest
+def test_bump_gradient(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s', '(gs_expon_1)')
+  ripl.assume('l', '(gs_expon_1)')
+  ripl.assume('t', '1')
+  ripl.assume('z', '1')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '''
+    (gp_cov_sum
+     (gp_cov_scale (* s s) (gp_cov_se (* l l)))
+     (gp_cov_bump t z))
+  ''')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
+  ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')

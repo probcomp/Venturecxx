@@ -17,26 +17,23 @@
 
 import copy
 import math
-import numpy.random as npr
 import random
 
+from collections import OrderedDict
+
+import numpy.random as npr
 from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
-from venture.lite.address import Address
-from venture.lite.address import List
 from venture.lite.builtin import builtInSPs
 from venture.lite.builtin import builtInValues
 from venture.lite.detach import detachAndExtract
 from venture.lite.detach import unconstrain
 from venture.lite.detach import unevalFamily
 from venture.lite.env import VentureEnvironment
-from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.exception import VentureError
 from venture.lite.infer import BlockScaffoldIndexer
-from venture.lite.infer import mixMH
 from venture.lite.lkernel import DeterministicLKernel
-from venture.lite.node import Args
 from venture.lite.node import ConstantNode
 from venture.lite.node import LookupNode
 from venture.lite.node import OutputNode
@@ -44,7 +41,9 @@ from venture.lite.node import RequestNode
 from venture.lite.node import isConstantNode
 from venture.lite.node import isLookupNode
 from venture.lite.node import isOutputNode
+from venture.lite.node import TraceNodeArgs
 from venture.lite.omegadb import OmegaDB
+from venture.lite.orderedset import OrderedSet
 from venture.lite.psp import ESRRefOutputPSP
 from venture.lite.regen import constrain
 from venture.lite.regen import evalFamily
@@ -61,10 +60,10 @@ from venture.lite.sp import SPFamilies
 from venture.lite.sp import VentureSPRecord
 from venture.lite.types import ExpressionType
 from venture.lite.value import SPRef
-from venture.lite.value import VentureNumber
 from venture.lite.value import VenturePair
 from venture.lite.value import VentureSymbol
 from venture.lite.value import VentureValue
+import venture.lite.address as addr
 import venture.lite.infer as infer
 
 class Trace(object):
@@ -77,16 +76,17 @@ class Trace(object):
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
 
-    self.rcs = set()
-    self.ccs = set()
-    self.aes = set()
-    self.unpropagatedObservations = {} # {node:val}
-    self.families = {}
-    self.scopes = {} # :: {scope-name:smap{block-id:set(node)}}
+    self.rcs = OrderedSet()
+    self.ccs = OrderedSet()
+    self.aes = OrderedSet()
+    self.unpropagatedObservations = OrderedDict() # {node:val}
+    self.families = OrderedDict()
+    self.scopes = OrderedDict() # :: {scope-name:smap{block-id:set(node)}}
 
     self.profiling_enabled = False
     self.stats = []
 
+    assert seed is not None
     rng = random.Random(seed)
     self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
     self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
@@ -100,10 +100,12 @@ class Trace(object):
     self.globalEnv = VentureEnvironment(self.globalEnv)
 
   def bindPrimitiveName(self, name, val):
-    self.globalEnv.addBinding(name, self.createConstantNode(None, val))
+    address = ('primitive name', name)
+    self.globalEnv.addBinding(name, self.createConstantNode(address, val))
 
   def bindPrimitiveSP(self, name, sp):
-    spNode = self.createConstantNode(None, VentureSPRecord(sp))
+    address = ('primitive SP', name)
+    spNode = self.createConstantNode(address, VentureSPRecord(sp))
     processMadeSP(self, spNode, False)
     assert isinstance(self.valueAt(spNode), SPRef)
     self.globalEnv.addBinding(name, spNode)
@@ -119,7 +121,7 @@ class Trace(object):
   def registerRandomChoiceInScope(self, scope, block, node, unboxed=False):
     if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if scope not in self.scopes: self.scopes[scope] = SamplableMap()
-    if block not in self.scopes[scope]: self.scopes[scope][block] = set()
+    if block not in self.scopes[scope]: self.scopes[scope][block] = OrderedSet()
     assert node not in self.scopes[scope][block]
     self.scopes[scope][block].add(node)
     assert scope != "default" or len(self.scopes[scope][block]) == 1
@@ -139,7 +141,7 @@ class Trace(object):
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
     if isinstance(val, VentureSymbol):
-      if val.getSymbol() in ["default", "none", "one", "all", "ordered"]:
+      if val.getSymbol() in ["default", "none", "one", "all", "each", "each_reverse", "ordered"]:
         return val.getSymbol()
     elif isinstance(val, VenturePair):
       if isinstance(val.first, VentureSymbol) and \
@@ -217,7 +219,7 @@ class Trace(object):
     if isinstance(value, SPRef): return self.madeSPRecordAt(value.makerNode)
     else: return value
 
-  def argsAt(self, node): return Args(self, node)
+  def argsAt(self, node): return TraceNodeArgs(self, node)
 
   def spRefAt(self, node):
     candidate = self.valueAt(node.operatorNode)
@@ -320,9 +322,9 @@ class Trace(object):
   def getAllNodesInScope(self, scope):
     blocks = [self.getNodesInBlock(scope, block) for block in self.getScope(scope).keys()]
     if len(blocks) == 0: # Guido, WTF?
-      return set()
+      return OrderedSet()
     else:
-      return set.union(*blocks)
+      return OrderedSet.union(*blocks)
 
   def getOrderedSetsInScope(self, scope, interval=None):
     if interval is None:
@@ -337,13 +339,19 @@ class Trace(object):
     #import pdb; pdb.set_trace()
     #scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     nodes = self.scopes[scope][block]
-    if scope == "default": return nodes
+    if scope == "default":
+      return nodes
     else:
-      pnodes = set()
-      for node in nodes: self.addRandomChoicesInBlock(scope, block, pnodes, node)
-      return pnodes
+      return self.randomChoicesInExtent(nodes, scope, block)
 
-  def addRandomChoicesInBlock(self, scope, block, pnodes, node):
+  def randomChoicesInExtent(self, nodes, scope, block):
+    # The scope and block, if present, limit the computed dynamic
+    # extent to everything that is not explicitly excluded from them.
+    pnodes = OrderedSet()
+    for node in nodes: self.addRandomChoicesInExtent(node, scope, block, pnodes)
+    return pnodes
+
+  def addRandomChoicesInExtent(self, node, scope, block, pnodes):
     if not isOutputNode(node): return
 
     if self.pspAt(node).isRandom() and node not in self.ccs: pnodes.add(node)
@@ -352,21 +360,21 @@ class Trace(object):
     if self.pspAt(requestNode).isRandom() and requestNode not in self.ccs: pnodes.add(requestNode)
 
     for esr in self.valueAt(node.requestNode).esrs:
-      self.addRandomChoicesInBlock(scope, block, pnodes, self.spFamilyAt(requestNode, esr.id))
+      self.addRandomChoicesInExtent(self.spFamilyAt(requestNode, esr.id), scope, block, pnodes)
 
-    self.addRandomChoicesInBlock(scope, block, pnodes, node.operatorNode)
+    self.addRandomChoicesInExtent(node.operatorNode, scope, block, pnodes)
 
     for i, operandNode in enumerate(node.operandNodes):
       if i == 2 and isTagOutputPSP(self.pspAt(node)):
         (new_scope, new_block, _) = [self.valueAt(randNode) for randNode in node.operandNodes]
         (new_scope, new_block) = self._normalizeEvaluatedScopeAndBlock(new_scope, new_block)
-        if scope != new_scope or block == new_block: self.addRandomChoicesInBlock(scope, block, pnodes, operandNode)
+        if scope != new_scope or block == new_block: self.addRandomChoicesInExtent(operandNode, scope, block, pnodes)
       elif i == 1 and isTagExcludeOutputPSP(self.pspAt(node)):
         (excluded_scope, _) = [self.valueAt(randNode) for randNode in node.operandNodes]
         excluded_scope = self._normalizeEvaluatedScope(excluded_scope)
-        if scope != excluded_scope: self.addRandomChoicesInBlock(scope, block, pnodes, operandNode)
+        if scope != excluded_scope: self.addRandomChoicesInExtent(operandNode, scope, block, pnodes)
       else:
-        self.addRandomChoicesInBlock(scope, block, pnodes, operandNode)
+        self.addRandomChoicesInExtent(operandNode, scope, block, pnodes)
 
 
   def scopeHasEntropy(self, scope):
@@ -381,8 +389,8 @@ class Trace(object):
   def eval(self, id, exp):
     assert id not in self.families
     (_, self.families[id]) = evalFamily(
-      self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
-      Scaffold(), False, OmegaDB(), {})
+      self, addr.directive_address(id), self.unboxExpression(exp), self.globalEnv,
+      Scaffold(), False, OmegaDB(), OrderedDict())
 
   def bindInGlobalEnv(self, sym, id):
     try:
@@ -408,10 +416,10 @@ class Trace(object):
     for node, val in self.unpropagatedObservations.iteritems():
       appNode = self.getConstrainableNode(node)
 #      print "PROPAGATE", node, appNode
-      scaffold = constructScaffold(self, [set([appNode])])
+      scaffold = constructScaffold(self, [OrderedSet([appNode])])
       rhoWeight, _ = detachAndExtract(self, scaffold)
       scaffold.lkernels[appNode] = DeterministicLKernel(self.pspAt(appNode), val)
-      xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
+      xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
       # If xiWeight is -inf, we are in an impossible state, but that might be ok.
       # Finish constraining, to avoid downstream invariant violations.
       node.observe(val)
@@ -481,180 +489,24 @@ class Trace(object):
   def numRandomChoices(self):
     return len(self.rcs)
 
+  # XXX Why are all these inference operations defined as trace methods?
+  # Because
+  # - Multiprocessing doesn't know how to call raw functions, and
+  #   currently uses a Trace as the object whose methods to invoke
+  # - We didn't learn how to export raw functions from the C++
+  #   extension, but we want to show the same interface to Traces.
   def primitive_infer(self, exp):
-    assert len(exp) >= 3
-    (operator, scope, block) = exp[0:3]
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if len(exp) == 3:
-      transitions = 1
-    else:
-      maybe_transitions = exp[-1]
-      if isinstance(maybe_transitions, bool):
-        # The last item was the parallelism indicator
-        transitions = int(exp[-2])
-      else:
-        transitions = int(exp[-1])
-    if not self.scopeHasEntropy(scope):
-      return 0.0
-    ct = 0
-    for _ in range(transitions):
-      if operator == "mh":
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block), infer.MHOperator())
-      elif operator == "func_mh":
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block), infer.FuncMHOperator())
-      elif operator == "draw_scaffold":
-        ct += infer.drawScaffold(self, BlockScaffoldIndexer(scope, block))
-      elif operator == "mh_kernel_update":
-        (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
-        scaffolder = BlockScaffoldIndexer(scope, block,
-          useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
-          updateValues=updateValues)
-        ct += mixMH(self, scaffolder, infer.MHOperator())
-      elif operator == "subsampled_mh":
-        (Nbatch, k0, epsilon,
-         useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:9]
-        scaffolder = infer.SubsampledBlockScaffoldIndexer(scope, block,
-          useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
-          updateValues=updateValues)
-        ct += infer.subsampledMixMH(
-          self, scaffolder, infer.SubsampledMHOperator(), Nbatch, k0, epsilon)
-      elif operator == "subsampled_mh_check_applicability":
-        # Does not affect nodes
-        infer.SubsampledBlockScaffoldIndexer(scope, block).checkApplicability(self)
-      elif operator == "subsampled_mh_make_consistent":
-        (useDeltaKernels, deltaKernelArgs, updateValues) = exp[3:6]
-        scaffolder = infer.SubsampledBlockScaffoldIndexer(scope, block,
-          useDeltaKernels=useDeltaKernels, deltaKernelArgs=deltaKernelArgs,
-          updateValues=updateValues)
-        ct += infer.SubsampledMHOperator().makeConsistent(self, scaffolder)
-      elif operator == "meanfield":
-        steps = int(exp[3])
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.MeanfieldOperator(steps, 0.0001))
-      elif operator == "hmc":
-        (epsilon,  L) = exp[3:5]
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.HamiltonianMonteCarloOperator(epsilon, int(L)))
-      elif operator == "gibbs":
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.EnumerativeGibbsOperator())
-      elif operator == "emap":
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.EnumerativeMAPOperator())
-      elif operator == "gibbs_update":
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True),
-                    infer.EnumerativeGibbsOperator())
-      elif operator == "slice":
-        (w, m) = exp[3:5]
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.StepOutSliceOperator(w, m))
-      elif operator == "slice_doubling":
-        (w, p) = exp[3:5]
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.DoublingSliceOperator(w, p))
-      elif operator == "pgibbs":
-        particles = int(exp[3])
-        if isinstance(block, list): # Ordered range
-          (_, min_block, max_block) = block
-          scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
-                                            (min_block, max_block))
-          ct += mixMH(self, scaffolder, infer.PGibbsOperator(particles))
-        else:
-          ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                      infer.PGibbsOperator(particles))
-      elif operator == "pgibbs_update":
-        particles = int(exp[3])
-        if isinstance(block, list): # Ordered range
-          (_, min_block, max_block) = block
-          scaffolder = BlockScaffoldIndexer(
-            scope, "ordered_range",
-            (min_block, max_block), updateValues=True)
-          ct += mixMH(self, scaffolder, infer.PGibbsOperator(particles))
-        else:
-          ct += mixMH(self, BlockScaffoldIndexer(scope, block, updateValues=True),
-                      infer.PGibbsOperator(particles))
-      elif operator == "func_pgibbs":
-        particles = int(exp[3])
-        if isinstance(block, list): # Ordered range
-          (_, min_block, max_block) = block
-          scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
-                                            (min_block, max_block))
-          ct += mixMH(self, scaffolder, infer.ParticlePGibbsOperator(particles))
-        else:
-          ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                      infer.ParticlePGibbsOperator(particles))
-      elif operator == "func_pmap":
-        particles = int(exp[3])
-        if isinstance(block, list): # Ordered range
-          (_, min_block, max_block) = block
-          scaffolder = BlockScaffoldIndexer(scope, "ordered_range",
-                                            (min_block, max_block))
-          ct += mixMH(self, scaffolder, infer.ParticlePMAPOperator(particles))
-        else:
-          ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                      infer.ParticlePMAPOperator(particles))
-      elif operator == "grad_ascent":
-        (rate, steps) = exp[3:5]
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.GradientAscentOperator(rate, int(steps)))
-      elif operator == "nesterov":
-        (rate, steps) = exp[3:5]
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.NesterovAcceleratedGradientAscentOperator(rate, int(steps)))
-      elif operator == "rejection":
-        if len(exp) == 5:
-          trials = int(exp[3])
-        else:
-          trials = None
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.RejectionOperator(trials))
-      elif operator == "bogo_possibilize":
-        ct += mixMH(self, BlockScaffoldIndexer(scope, block),
-                    infer.BogoPossibilizeOperator())
-      elif operator == "print_scaffold_stats":
-        scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-        scaffold.show()
-        return scaffold.numAffectedNodes()
-      else: raise Exception("INFER %s is not implemented" % operator)
+    return infer.primitive_infer(self, exp)
 
-      for node in self.aes:
-        self.madeSPAt(node).AEInfer(self.madeSPAuxAt(node), self.np_rng)
-      ct += len(self.aes)
+  # XXX Why is there this weird structure of some methods forwarding
+  # to definite functions and other things indirecting through the
+  # primitive_infer dispatch?  History: primitive_infer used not to
+  # return values.  Also ambiguity: not clear which style is better.
+  def log_likelihood_at(self, *args):
+    return infer.log_likelihood_at(self, args)
 
-    if transitions > 0:
-      return ct/float(transitions)
-    else:
-      return float("nan")
-
-  def log_likelihood_at(self, scope, block):
-    # TODO This is a different control path from primitive_infer
-    # because it needs to return the weight, and that didn't used to
-    # return values when this was writen.
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not self.scopeHasEntropy(scope):
-      return 0.0
-    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-    (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
-    # Old state restored, don't need to do anything else
-    return xiWeight
-
-  def log_joint_at(self, scope, block):
-    # TODO This is a different control path from primitive_infer
-    # because it needs to return the weight, and that didn't used to
-    # return values when this was writen.
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    if not self.scopeHasEntropy(scope):
-      return 0.0
-    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-    pnodes = scaffold.getPrincipalNodes()
-    from infer.mh import getCurrentValues, registerDeterministicLKernels
-    currentValues = getCurrentValues(self, pnodes)
-    registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
-    (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
-    # Old state restored, don't need to do anything else
-    return xiWeight
+  def log_joint_at(self, *args):
+    return infer.log_joint_at(self, args)
 
   def likelihood_weight(self):
     # TODO This is a different control path from primitive_infer
@@ -662,7 +514,7 @@ class Trace(object):
     # return values when this was writen.
     scaffold = BlockScaffoldIndexer("default", "all").sampleIndex(self)
     (_rhoWeight, rhoDB) = detachAndExtract(self, scaffold)
-    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, {})
+    xiWeight = regenAndAttach(self, scaffold, False, rhoDB, OrderedDict())
     # Always "accept"
     return xiWeight
 
@@ -701,19 +553,25 @@ function.
       return infer.EnumerativeDiversify(copy_trace)(self, BlockScaffoldIndexer(scope, block))
     else: raise Exception("DIVERSIFY %s is not implemented" % operator)
 
-  def select(self, scope, block):
-    scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
-    scaffold = BlockScaffoldIndexer(scope, block).sampleIndex(self)
-    return scaffold
+  def select(self, scope, block=None):
+    if block is not None:
+      # Assume old scope-block argument style
+      scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
+      return BlockScaffoldIndexer(scope, block).sampleIndex(self)
+    else:
+      # Assume new subproblem-selector argument style
+      selection_blob = scope
+      from venture.untraced.trace_search import TraceSearchIndexer
+      return TraceSearchIndexer(selection_blob.datum).sampleIndex(self)
 
   def just_detach(self, scaffold):
     return detachAndExtract(self, scaffold)
 
   def just_regen(self, scaffold):
-    return regenAndAttach(self, scaffold, False, OmegaDB(), {})
+    return regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
 
   def just_restore(self, scaffold, rhoDB):
-    return regenAndAttach(self, scaffold, True, rhoDB, {})
+    return regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
 
   def detach_for_proposal(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()
@@ -729,7 +587,7 @@ function.
     assert len(values) == len(pnodes), "Tried to propose %d values, but subproblem accepts %d values" % (len(values), len(pnodes))
     from infer.mh import registerDeterministicLKernels, unregisterDeterministicLKernels
     registerDeterministicLKernels(self, scaffold, pnodes, values)
-    xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), {})
+    xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
     # de-mutate the scaffold in case it is used for subsequent operations
     unregisterDeterministicLKernels(self, scaffold, pnodes)
     return xiWeight
@@ -741,7 +599,7 @@ function.
     rcs = copy.copy(self.rcs)
     ccs = copy.copy(self.ccs)
     aes = copy.copy(self.aes)
-    scopes = {}
+    scopes = OrderedDict()
     for (scope_name, scope) in self.scopes.iteritems():
       new_scope = SamplableMap()
       for (block_name, block) in scope.iteritems():
@@ -758,20 +616,22 @@ function.
     assert len(self.scopes) == 1, "Global detach left random choices in non-default scope %s" % self.scopes
     assert len(self.scopes['default']) == 0, "Global detach left random choices in default scope %s" % self.scopes['default']
 
-    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, {})
+    xiWeight = regenAndAttach(self, scaffold, True, rhoDB, OrderedDict())
 
-    assert rcs == self.rcs, "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
+    # XXX Apparently detach/regen sometimes has the effect of changing
+    # the order of rcs.
+    assert set(rcs) == set(self.rcs), "Global detach/restore changed the registered random choices from %s to %s" % (rcs, self.rcs)
     assert ccs == self.ccs, "Global detach/restore changed the registered constrained choices from %s to %s" % (ccs, self.ccs)
     assert aes == self.aes, "Global detach/restore changed the registered AEKernels from %s to %s" % (aes, self.aes)
 
-    for scope_name in set(scopes.keys()).union(self.scopes.keys()):
+    for scope_name in OrderedSet(scopes.keys()).union(self.scopes.keys()):
       if scope_name in scopes and scope_name not in self.scopes:
         assert False, "Global detach/restore destroyed scope %s with blocks %s" % (scope_name, scopes[scope_name])
       if scope_name not in scopes and scope_name in self.scopes:
         assert False, "Global detach/restore created scope %s with blocks %s" % (scope_name, self.scopes[scope_name])
       scope = scopes[scope_name]
       new_scope = self.scopes[scope_name]
-      for block_name in set(scope.keys()).union(new_scope.keys()):
+      for block_name in OrderedSet(scope.keys()).union(new_scope.keys()):
         if block_name in scope and block_name not in new_scope:
           assert False, "Global detach/restore destroyed block %s, %s with nodes %s" % (scope_name, block_name, scope[block_name])
         if block_name not in scope and block_name in new_scope:
@@ -801,25 +661,6 @@ the scaffold determined by the given expression."""
     # Python's native randomness.
     return 0
 
-  def set_seed(self, seed):
-    # random.seed(seed)
-    # numpy.random.seed(seed)
-    pass
-
-  def getGlobalLogScore(self):
-    # TODO This algorithm is totally wrong: https://app.asana.com/0/16653194948424/20100308871203
-    all_scores = [self._getOneLogScore(node) for node in self.rcs.union(self.ccs)]
-    scores, _isLikelihoodFree = zip(*all_scores) if all_scores else [(), ()]
-    return sum(scores)
-
-  def _getOneLogScore(self, node):
-    # Hack: likelihood-free PSP's contribute 0 to global logscore.
-    # This is incorrect, but better than the function breaking entirely.
-    try:
-      return (self.pspAt(node).logDensity(self.groundValueAt(node), self.argsAt(node)), False)
-    except VentureBuiltinSPMethodError:
-      return (0.0, True)
-
   #### Serialization interface
 
   def makeSerializationDB(self, values=None, skipStackDictConversion=False):
@@ -841,16 +682,17 @@ the scaffold determined by the given expression."""
 
   def restore(self, id, db):
     assert id in self.families
-    restore(self, self.families[id], Scaffold(), db, {})
+    restore(self, self.families[id], Scaffold(), db, OrderedDict())
 
   def evalAndRestore(self, id, exp, db):
     assert id not in self.families
     (_, self.families[id]) = evalFamily(
-      self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
-      Scaffold(), True, db, {})
+      self, addr.directive_address(id), self.unboxExpression(exp), self.globalEnv,
+      Scaffold(), True, db, OrderedDict())
 
   def has_own_prng(self): return True
   def set_seed(self, seed):
+    assert seed is not None
     prng = random.Random(seed)
     self.np_prng.seed(prng.random())
     self.py_prng.seed(prng.random())

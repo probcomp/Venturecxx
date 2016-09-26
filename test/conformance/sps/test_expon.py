@@ -23,9 +23,9 @@ from venture.test.stats import reportKnownContinuous
 from venture.test.stats import statisticalTest
 
 @statisticalTest
-def testExpon1():
-  "Check that exponential distribution is parameterized correctly"
-  ripl = get_ripl()
+def testExpon1(seed):
+  # Check that exponential distribution is parameterized correctly
+  ripl = get_ripl(seed=seed)
   ripl.assume("a", "(expon 4.0)", label = "pid")
   observed = collectSamples(ripl, "pid")
   expon_cdf = lambda x: expon.cdf(x, scale = 1. / 4)

@@ -22,5 +22,8 @@
  (let ((d (empty)))
    (do (repeat 100
         (do (mh default all 1)
-            (bind (collect x y (abs (- y x))) (curry into d))))
-       (plotf (quote (ltsr lctl pc0r h0 h1 p0s2 p0d1ds)) d)))]
+            (into d (run (collect x y (abs (- y x)))))))
+       (plotf_to_file
+        (list "normal1" "normal2" "normal3" "normal4")
+        (list "lctl" "pc0r" "h0" "h1")
+        d)))]

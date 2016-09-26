@@ -35,8 +35,8 @@ def extract_from_dataset(result, names):
 
 @statisticalTest
 @on_inf_prim("collect") # Technically also MH, but not testing it
-def testCollectSmoke1():
-  ripl = get_ripl()
+def testCollectSmoke1(seed):
+  ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   prog = """
 (let ((d (empty)))
@@ -49,8 +49,8 @@ def testCollectSmoke1():
 
 @statisticalTest
 @on_inf_prim("collect")
-def testCollectSmoke2():
-  ripl = get_ripl()
+def testCollectSmoke2(seed):
+  ripl = get_ripl(seed=seed)
   prog = """
 (let ((d (empty)))
   (do (repeat %s (bind (collect (normal 0 1)) (curry into d)))
@@ -60,8 +60,8 @@ def testCollectSmoke2():
 
 @statisticalTest
 @on_inf_prim("collect")
-def testCollectSmoke3():
-  ripl = get_ripl()
+def testCollectSmoke3(seed):
+  ripl = get_ripl(seed=seed)
   prog = """
 (let ((d (empty)))
   (do (repeat %s (bind (collect (labelled (normal 0 1) label)) (curry into d)))
@@ -71,9 +71,9 @@ def testCollectSmoke3():
 
 @statisticalTest
 @on_inf_prim("collect") # Technically also resample and MH, but not testing them
-def testCollectSmoke4():
+def testCollectSmoke4(seed):
   # This is the example from examples/normal_plot.vnt
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   ripl.infer("(resample 10)")
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(normal x 1)")
@@ -84,7 +84,7 @@ def testCollectSmoke4():
            (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d))))
       (return d)))""")
   result = out.asPandas()
-  for k in ["x", "y", "iter", "time (s)", "log score", "prt. id", "(abs (sub y x))", "abs_x"]:
+  for k in ["x", "y", "iter", "time (s)", "prt. id", "(abs (sub y x))", "abs_x"]:
     assert k in result
     assert len(result[k]) == 30
   # Check that the dataset can be extracted again
@@ -94,7 +94,7 @@ def testCollectSmoke4():
 
 @on_inf_prim("collect") # Technically also resample and MH, but not testing them
 def testPrintf():
-  '''Intercept stdout and make sure the message read what we expect'''
+  # Intercept stdout and make sure the message read what we expect
   ripl = get_ripl()
   pattern = make_pattern()
   ripl.infer('(resample 2)')
@@ -109,7 +109,7 @@ def testPrintf():
 
 @on_inf_prim("collect") # Technically also resample and MH, but not testing them
 def testPrintf2():
-  '''Intercept stdout and make sure the message read what we expect'''
+  # Intercept stdout and make sure the message read what we expect
   ripl = get_ripl()
   pattern = make_pattern()
   ripl.infer('(resample 2)')
@@ -124,8 +124,8 @@ def testPrintf2():
 
 @on_inf_prim("collect") # Technically also resample and MH, but not testing them
 def testCollectLogScore():
-  '''In the presence of likelihood-free SP's, the calling "collect" or "printf"
-  should not crash the program.'''
+  # In the presence of likelihood-free SP's, the calling "collect" or
+  # "printf" should not crash the program.
   class TestPSP(LikelihoodFreePSP):
     def simulate(self, args):
       x = args.operandValues()[0]

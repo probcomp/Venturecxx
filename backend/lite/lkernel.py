@@ -20,7 +20,6 @@ import sys
 import math
 
 from venture.lite.exception import VentureBuiltinLKernelMethodError
-from venture.lite.node import FixedValueArgs
 from venture.lite.sp import VentureSPRecord
 from venture.lite.value import VentureValue
 
@@ -117,7 +116,7 @@ class SimulationLKernel(LKernel):
     """An upper bound on the value of weight over the variation
     possible by changing the values of everything in the arguments
     whose value is None.  Useful for rejection sampling."""
-    raise VentureBuiltinLKernelMethodError("Cannot rejection sample with weight-unbounded LKernel of type %s" % type(self))
+    raise VentureBuiltinLKernelMethodError("Cannot rejection auto-bound with weight-unbounded LKernel of type %s" % type(self))
 
 class DeltaLKernel(LKernel):
   def reverseWeight(self, _trace, _oldValue, _args): return 0
@@ -211,7 +210,8 @@ class DefaultVariationalLKernel(VariationalLKernel):
     return w
 
   def gradientOfLogDensity(self, value, args):
-    new_args = FixedValueArgs(args, self.parameters)
+    from venture.lite.sp_use import ReplacingArgs
+    new_args = ReplacingArgs(args, self.parameters)
     # Ignore the derivative of the value because we do not care about it
     (_, grad) = self.psp.gradientOfLogDensity(value, new_args)
     return grad
