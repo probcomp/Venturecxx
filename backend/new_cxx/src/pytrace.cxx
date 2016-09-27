@@ -182,6 +182,11 @@ struct Inferer
       VentureValuePtr minBlock = parseValueO(params["min_block"]);
       VentureValuePtr maxBlock = parseValueO(params["max_block"]);
       scaffoldIndexers.push_back(boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block, minBlock, maxBlock)));
+    } else if (block->hasSymbol() && block->getSymbol() == "each") {
+      vector<BlockID> blocks = trace->blocksInScope(scope);
+      BOOST_FOREACH(BlockID block, blocks) {
+        scaffoldIndexers.push_back(boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block)));
+      }
     } else {
       scaffoldIndexers.push_back(boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block)));
     }
