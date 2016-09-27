@@ -499,14 +499,7 @@ class Ripl():
         text = self._get_raw_text(directive_id)
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
-        try:
-            ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
-        except VentureException:
-            # Perhaps the instruction got round-tripped through the
-            # unparser, which always emits church' syntax
-            from venture.parser.church_prime import ChurchPrimeParser
-            q = ChurchPrimeParser.instance()
-            ans = q.expression_index_to_text_index_in_instruction(text, expression_index)
+        ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
         return ans
 
     def directive_id_for_label(self, label):
@@ -522,8 +515,7 @@ class Ripl():
         """Take a parsed expression and index and turn it into
         unparsed form with text indeces."""
 
-        from venture.parser import ChurchPrimeParser
-        p = ChurchPrimeParser.instance() # self._cur_parser() fails b/c VS can't unparse
+        p = self._cur_parser()
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
         if hasattr(sys.stdout, "fileno") and os.isatty(sys.stdout.fileno()):
