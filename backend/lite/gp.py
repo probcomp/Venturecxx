@@ -50,20 +50,21 @@ def _gp_logDensity(mean, covariance, samples, xs, os):
   mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
   return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
 
-def _gp_gradientOfLogDensity(ddx_mean, ddx_covariance, samples, xs, os):
+def _gp_gradientOfLogDensity(mean, ddx_mean, covariance, ddx_covariance,
+    samples, xs, os):
   # d/do_1 log P(o_1 | Mu, Sigma, x_1, X_2, O_2),
   # d/dx_1 log P(o_1 | Mu, Sigma, x_1, X_2, O_2)
   xs1 = xs
   os1 = os
   xs2 = np.array(samples.keys())
-  os2 = np.array(samples.keys())
+  os2 = np.array(samples.values())
 
   dxs1 = []
   dos1 = []
 
   if samples:
-    mu2, _ = ddx_mean(xs2)
-    sigma22, _ = ddx_covariance(xs2, xs2)
+    mu2 = mean(xs2)
+    sigma22 = covariance(xs2, xs2)
     covf22 = mvnormal._covariance_factor(sigma22) # XXX Expose?
     alpha2 = covf22.solve(os2 - mu2)
 
@@ -76,8 +77,8 @@ def _gp_gradientOfLogDensity(ddx_mean, ddx_covariance, samples, xs, os):
       sigma12, dsigma12_dx1 = ddx_covariance(x1, xs2)
       sigma21 = sigma12.T
       mu_, sigma_ = mvnormal.conditional(
-        xs2, mu1, mu2, sigma11, sigma12, sigma21, sigma22)
-      dmu_ = dmu1_dx1 + np.dot(dsigma11_dx1, alpha2)
+        os2, mu1, mu2, sigma11, sigma12, sigma21, sigma22)
+      dmu_ = dmu1_dx1 + np.dot(dsigma12_dx1, alpha2)
       dsigma_ = dsigma11_dx1 - np.dot(dsigma12_dx1, covf22.solve(sigma21))
     else:
       mu_, dmu_, sigma_, dsigma_ = mu1, dmu1_dx1, sigma11, dsigma11_dx1
@@ -156,7 +157,8 @@ class GPOutputPSP(RandomPSP):
     samples = args.spaux().samples
     xs = args.operandValues()[0]
     return _gp_gradientOfLogDensity(
-      self.mean.df_x, self.covariance.df_x, samples, xs, os)
+      self.mean, self.mean.df_x, self.covariance, self.covariance.df_x,
+      samples, xs, os)
 
   def logDensityOfData(self, aux):
     return _gp_logDensityOfData(self.mean, self.covariance, aux.samples)

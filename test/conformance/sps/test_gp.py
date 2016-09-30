@@ -291,6 +291,10 @@ def test_2d_arglebargle(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.assume('foo', '(lookup (gp (array (array 1 2))) 0)')
   ripl.observe('(normal foo 1)', 1.2)
+  ripl.assume('bar', '(lookup (gp (array (array 5 2))) 0)')
+  ripl.observe('(normal bar 1)', -0.2)
+  ripl.assume('baz', '(lookup (gp (array (array 5 -1))) 0)')
+  ripl.observe('(normal baz 1)', -7)
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
