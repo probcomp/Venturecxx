@@ -68,10 +68,11 @@ def const(c):
   return k
 
 def ddtheta_const(c):
-  k = const(c)
-  def dk(X_1, X_2):
-    return (k(X_1, X_2), [c])
-  return dk
+  f = const(c)
+  def dk_const_dtheta(X_1, X_2):
+    k = f(X_1, X_2)
+    return (k, [np.ones(k.shape)])
+  return dk_const_dtheta
 
 def ddx_const(c):
   k = const(c)
