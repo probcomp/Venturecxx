@@ -315,3 +315,35 @@ def test_bump_gradient(seed):
   ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
+
+@stochasticTest
+def test_linear_gradient(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s', '(gs_expon_1)')
+  ripl.assume('origin', '(normal 0 1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '(gp_cov_bias (* s s) (gp_cov_linear origin))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.assume('foo', '(lookup (gp (array 1)) 0)')
+  ripl.observe('(normal foo 1)', 1.2)
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+  ripl.sample('(gp (array 2 3))')
+
+@stochasticTest
+def test_linear_gradient_2d(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s', '(gs_expon_1)')
+  ripl.assume('origin', '(array (normal 0 1) (normal 1 2))')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '(gp_cov_bias (* s s) (gp_cov_linear origin))')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.assume('foo', '(lookup (gp (array (array 1 2))) 0)')
+  ripl.observe('(normal foo 1)', 1.2)
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')

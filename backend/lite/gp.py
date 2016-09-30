@@ -334,6 +334,11 @@ def _cov_gradientOfSimulate(F):
 
 def shape_reals(*theta):
   return [ParamLeaf() for _ in theta]
+def shape_input(theta):
+  if np.asarray(theta).ndim:
+    return [ParamProduct([ParamLeaf() for _ in theta])]
+  else:
+    return [ParamLeaf()]
 def shape_scalarkernel(n, p):
   assert isinstance(p, VenturePartialDiffableFunction)
   return [ParamLeaf(), ParamProduct(p.parameters)]
@@ -391,7 +396,9 @@ registerBuiltinSP("gp_cov_matern_52",
   _cov_maker(cov.matern_52, [t.NumberType("l^2")]))
 
 registerBuiltinSP("gp_cov_linear",
-  _cov_maker(cov.linear, [xType]))
+  _cov_grad_maker(
+    cov.linear, cov.ddtheta_linear, cov.ddx_linear, shape_input,
+    [xType]))
 
 registerBuiltinSP("gp_cov_bias",
   _cov_grad_maker(

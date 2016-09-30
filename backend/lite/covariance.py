@@ -345,13 +345,58 @@ def matern_52(l2):
 def linear(x):
   """Linear covariance kernel: k(x_1, x_2) = (x_1 - x) (x_2 - x)."""
   def k(X_1, X_2):
-    return np.outer(X_1 - x, X_2 - x)
+    if np.asarray(x).ndim:
+      return np.inner(X_1 - x, X_2 - x)
+    else:
+      return np.outer(X_1 - x, X_2 - x)
   return k
 
-def d_linear(x):
-  def dk(_X_1, _X_2):
-    return [np.ones(x.shape)]
-  return dk
+def ddtheta_linear(x):
+  f = linear(x)
+  x = np.asarray(x).reshape(-1)
+
+  def dk_linear_dtheta(X_1, X_2):
+    k = f(X_1, X_2)
+
+    assert x.ndim == 1, '%r' % (x,)
+    d = x.shape[0]
+    X_1 = X_1.reshape(len(X_1), -1)
+    X_2 = X_2.reshape(len(X_2), -1)
+
+    dk = [None] * d
+    for nu in xrange(d):
+      dk[nu] = 2*x[nu] * np.ones((len(X_1), len(X_2)))
+      for i in xrange(len(X_1)):
+        dk[nu][i,:] -= X_2[:,nu]
+      for j in xrange(len(X_2)):
+        dk[nu][:,j] -= X_1[:,nu]
+
+    return (k, dk)
+
+  return dk_linear_dtheta
+
+def ddx_linear(x):
+  f = linear(x)
+  x = np.asarray(x).reshape(-1)
+
+  def dk_linear_dx(x_1, X_2):
+    X_1 = np.array([x_1])
+    k = f(X_1, X_2)
+
+    assert x.ndim == 1
+    d = x.shape[0]
+    X_1 = X_1.reshape(len(X_1), -1)
+    X_2 = X_2.reshape(len(X_2), -1)
+
+    dk = [None] * d
+    for nu in xrange(d):
+      dk[nu] = -x[nu] * np.ones((len(X_1), len(X_2)))
+      for i in xrange(len(X_1)):
+        dk[nu][i,:] += X_2[:,nu]
+
+    return (k, dk)
+
+  return dk_linear_dx
 
 # Composite covariance kernels
 
