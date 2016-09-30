@@ -217,31 +217,31 @@ def delta(tolerance):
   return isotropic(f)
 
 def _bump(r2, t, s):
-  return np.exp(-t/(r2**(s/2.)))
+  return -np.expm1(-t/(r2**(s/2.)))
 
 def bump(tolerance, steepness):
-  """Bump kernel: e^{-t/r^s}"""
+  """Bump kernel: 1 - e^{-t/r^s}"""
   def f(r2):
     return _bump(r2, tolerance, steepness)
   return isotropic(f)
 
 def ddtheta_bump(tolerance, steepness):
   def df_theta(r2):
-    # d/dt e^{-t/r^s} = -e^{-t/r^s}/r^s
-    # d/ds e^{-t/r^s} = e^{-t/r^s} (-t) d/ds r^{-s}
-    #   = e^{-t/r^s} (-t) (-log r) r^{-s}
-    #   = e^{-t/r^s} t r^{-s} log r
+    # d/dt (1 - e^{-t/r^s}) = e^{-t/r^s}/r^s
+    # d/ds (1 - e^{-t/r^s}) = -e^{-t/r^s} (-t) d/ds r^{-s}
+    #   = -e^{-t/r^s} (-t) (-log r) r^{-s}
+    #   = -e^{-t/r^s} t r^{-s} log r
     t = tolerance
     s = steepness
     r_s = r2**(-s/2.)
     k = np.exp(-t*r_s)
-    return (k, [-k*r_s, k*t*r_s*np.log(r2)/2.])
+    return (k, [k*r_s, -k*t*r_s*np.log(r2)/2.])
   return ddtheta_isotropic(df_theta)
 
 def ddx_bump(tolerance, steepness):
   def df_r2(r2):
-    # d/d{r^2} e^{-t/r^s} = e^{-t/r^s} s t / [2 (r^2)^{s/2 + 1}]
-    #   = e^{-t/r^s} s t r^{-s} / [2 r^2]
+    # d/d{r^2} (1 - e^{-t/r^s}) = -e^{-t/r^s} s t / [2 (r^2)^{s/2 + 1}]
+    #   = -e^{-t/r^s} s t r^{-s} / [2 r^2]
     t = tolerance
     s = steepness
     r_s = r2**(-s/2.)
