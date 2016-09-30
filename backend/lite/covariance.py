@@ -116,12 +116,96 @@ def ddx_isotropic(df):
   derivatives with respect to x_1 at each of the pairs (x_1, x_2i).
   """
   def ddx_k(x_1, X_2):
+    # Let x_1 = u and X_2 = (v_1, v_2, ..., v_n), for u, v_j in R^m.
+    # Consider varying only u, so that dv_j = 0 for all j.  Define
+    #
+    #   r_j^2 = |u - v_j|^2 = \sum_nu (u^nu - v_j^nu)^2,
+    #
+    # so that
+    #
+    #   d(r_j^2) = \sum_nu 2 (u^nu - v_j^nu) du^nu = 2 (u - v_j)^T du.
+    #
+    # An isotropic covariance kernel k(u, v_j) is given by a function
+    # kappa of the distance r_j, k(u, v_j) = kappa(r_j^2); hence
+    #
+    #   d k(u, v_j) = d kappa(r_j^2) = kappa'(r_j^2) d(r_j^2)
+    #     = kappa'(r_j^2) 2 (u - v_j)^T du.
+    #
+    # Thus, d/du k(u, v_j), i.e. the du component of d k(u, v_j), is
+    # the row vector
+    #
+    #   kappa'(r_j^2) 2 (u - v_j)^T,
+    #
+    # where kappa'(r_j^2) is a scalar.
+    #
+    # If k(u, V) is the row [k(u, v_1), k(u, v_2), ..., k(u, v_n)],
+    # our job is to return the matrix k(u, V) and a list of the du^nu
+    # components of d k(u, V), namely a list of the columns (d/du^nu
+    # k(u, v_1), d/du^nu k(u, v_2), ..., d/du^nu k(u, v_n)).
+    #
+    # However, we need to compute not the row d/du k(u, v_i), but the
+    # whole matrix d/du k(u, V) = (d/du k(u, v_1), d/du k(u, v_2),
+    # ..., d/du k(u, v_n)), and return its representation as an array
+    # of the columns d/du^nu k(u, V).
+    #
+    # For a matrix r2 of distances (r_ij^2)_ij, the function df(r2)
+    # simultaneously computes the matrices (kappa(r_ij^2))_ij and
+    # (kappa'(r_ij^2))_ij.  In this case, for a single left-hand input
+    # point x_1, i = 1 always -- there is only one row.
+
+    # Construct a single-element array of left-hand input points.
     X_1 = np.array([x_1])
+
+    # Make sure X_1 and X_2 are rank-2 arrays, i.e. arrays of input
+    # points where an input point is an array of scalars, as required
+    # by cdist.
+    #
     X_1 = X_1.reshape(len(X_1), -1)
     X_2 = X_2.reshape(len(X_2), -1)
+
+    # Compute the matrix r2 of all squared distances between x_1 and
+    # every point in the array X_2.  Since X_1 has only one point, the
+    # matrix r2 has only one row:
+    #
+    #   r2 = [r_11^2   r_12^2   r_13^2   ...    r_1n^2],
+    #
+    # where r_1j^2 = |x_1 - X_2[j]|^2.
+    #
     r2 = scipy.spatial.distance.cdist(X_1, X_2, 'sqeuclidean')
-    dr2 = 2*(x_1 - X_2).T       # row of increments in r^2
+
+    # Compute the array (2 (x_1^nu - X_2[j]^nu))_j,nu of the
+    # pointwise differences
+    #
+    #   2 (x_1 - X_2[j]);
+    #
+    # transpose it to give the array (2 (x_1^nu - X_2[j]^nu))_nu,j of
+    # the coordinatewise differences
+    #
+    #   2 (x_1^nu - X_2^nu),
+    #
+    # so that the nu^th element of dr2 is the partial derivative with
+    # respect to the nu^th input space coordinate of the array of
+    # squared distances (r_1^2, r_2^2, ..., r_n^2), namely
+    #
+    #   (d/dx_1^nu r_1^2, d/dx_1^nu r_2^2, ..., d/dx_1^nu r_n^2)
+    #   = (2 (x_1^nu - X_2[1]),
+    #      2 (x_1^nu - X_2[2]),
+    #      ...,
+    #      2 (x_1^nu - X_2[n])).
+    #
+    dr2 = 2*(x_1 - X_2).T       # array of increments in r^2 matrix
+
+    # Compute the covariance matrix k = (kappa(r_ij^2))_ij and the
+    # derivative matrix f_ = (kappa'(r_ij^2))_ij.  Note that i = 1, so
+    # that both k and f_ are single-row matrices.
+    #
     k, f_ = df(r2)              # matrix and increment in matrix
+
+    # Yield the covariance matrix k and the list of partial
+    # derivatives [(kappa'(r_ij^2) d/dx^nu r_ij^2)_ij]_nu by computing
+    # the elementwise product of the matrix f_ = (kappa'(r_ij^2))_ij
+    # with the matrix dr2[nu] = (d/dx^nu r_ij^2)_ij for each nu.
+    #
     return (k, [f_*dr2_k for dr2_k in dr2])
   return ddx_k
 
