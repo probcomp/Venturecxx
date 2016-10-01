@@ -443,14 +443,14 @@ def sum(k_a, k_b):
 def ddtheta_sum(k_a, k_b):
   def dk_sum_dtheta(X_1, X_2):
     ka, dka = k_a.df_theta(X_1, X_2)
-    kb, dkb = k_a.df_theta(X_1, X_2)
+    kb, dkb = k_b.df_theta(X_1, X_2)
     return (ka + kb, dka + dkb)
   return dk_sum_dtheta
 
 def ddx_sum(k_a, k_b):
   def dk_sum_dx(x_1, X_2):
     ka, dka = k_a.df_x(x_1, X_2)
-    kb, dkb = k_a.df_x(x_1, X_2)
+    kb, dkb = k_b.df_x(x_1, X_2)
     return (ka + kb, dka + dkb)
   return dk_sum_dx
 
