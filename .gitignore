@@ -13,6 +13,8 @@ a.out
 *~
 .idea/
 .DS_Store
+# VIM swap files
+.*.swp
 
 # Coverage reports
 /htmlcov
@@ -45,3 +47,5 @@ ideal_prior_trick_mar.png
 .eggs
 *.so
 ideal_prior_weight_mar.png
+
+
