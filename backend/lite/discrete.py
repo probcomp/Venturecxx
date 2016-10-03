@@ -83,8 +83,13 @@ class BernoulliOutputPSP(DiscretePSP):
       return [True,False]
 
   def description(self, name):
-    return '  %s(p) returns true with probability p and false otherwise. '\
-      'If omitted, p is taken to be 0.5.' % name
+    return '  {name}(p) returns true with probability p and false otherwise. '\
+      'If omitted, p is taken to be 0.5. '\
+      'If you are tempted to write ({name} (exp x)),'\
+      ' write (log_{name} x) instead. '\
+      'If you are tempted to write ({name} (logistic x)),'\
+      ' write (log_odds_{name} x) instead.'\
+      .format(name=name)
 
 
 registerBuiltinSP("flip", typed_nr(BernoulliOutputPSP(),
@@ -117,9 +122,12 @@ class LogBernoulliOutputPSP(DiscretePSP):
     else: return [True,False]
 
   def description(self, name):
-    return '  %s(p) returns true with probability exp(p) and false otherwise. '\
-      'This is useful for modeling very low probability events, because it '\
-      'does not suffer the underflow that %s(exp(p)) would.' % (name, name)
+    short = name[len('log_'):]
+    return '  {name}(logp) returns true with probability exp(logp)'\
+      ' and false otherwise. '\
+      'Equivalent to ({short} (exp logp)), but reduces the chance of'\
+      ' pathologies due to rounding (exp logp) to 0 or 1.'\
+      .format(name=name, short=short)
 
 
 registerBuiltinSP("log_flip", typed_nr(LogBernoulliOutputPSP(),
@@ -153,9 +161,11 @@ class LogOddsBernoulliOutputPSP(DiscretePSP):
       return [True, False]
 
   def description(self, name):
-    return '  %s(logodds) returns true with specified log-odds.' \
-      '  Like log_bernoulli/log_flip, this avoids rounding low probabilities' \
-      ' to zero.'
+    short = name[len('log_odds_'):]
+    return '  {name}(x) returns true with log odds x and false otherwise. '\
+      'Equivalent to ({short} (logistic x)), but reduces the chance of'\
+      ' pathologies due to rounding (logistic x) to 0 or 1.'\
+      .format(name=name, short=short)
 
 
 registerBuiltinSP("log_odds_flip", typed_nr(LogOddsBernoulliOutputPSP(),
