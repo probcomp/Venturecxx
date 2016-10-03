@@ -338,8 +338,6 @@ def test_bump_gradient_simulate(seed):
      (gp_cov_scale (* f f) (gp_cov_bump t z)))
   ''')
   ripl.assume('gp', '(make_gp mean cov)')
-  # ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
-  # ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
   ripl.assume('foo', '(lookup (gp (array (array 1 2))) 0)')
   ripl.observe('(log_odds_bernoulli foo)', 1)
   ripl.assume('bar', '(lookup (gp (array (array 5 2))) 0)')
