@@ -503,8 +503,12 @@ class TypedPSP(PSP):
   def gradientOfLogDensity(self, value, args):
     (dvalue, dargs) = self.psp.gradientOfLogDensity(
       self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.gradient_type().wrap_return(dvalue),
-      self.f_type.gradient_type().wrap_arg_list(dargs))
+    dvalue_wrapped = self.f_type.gradient_type().wrap_return(dvalue)
+    if dargs == 0:
+      dargs_wrapped = [0] * len(args.operandValues())
+    else:
+      dargs_wrapped = self.f_type.gradient_type().wrap_arg_list(dargs)
+    return (dvalue_wrapped, dargs_wrapped)
 
   def logDensityBound(self, value, args):
     return self.psp.logDensityBound(
