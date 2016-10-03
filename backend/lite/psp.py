@@ -661,8 +661,12 @@ class TypedLKernel(LKernel):
   def gradientOfReverseWeight(self, trace, value, args):
     (dvalue, dargs) = self.kernel.gradientOfReverseWeight(trace,
       self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
-    return (self.f_type.gradient_type().wrap_return(dvalue),
-      self.f_type.gradient_type().wrap_arg_list(dargs))
+    dvalue_wrapped = self.f_type.gradient_type().wrap_return(dvalue)
+    if dargs == 0:
+      dargs_wrapped = [0] * len(args.operandValues())
+    else:
+      dargs_wrapped = self.f_type.gradient_type().wrap_arg_list(dargs)
+    return (dvalue_wrapped, dargs_wrapped)
 
   def weightBound(self, trace, value, args):
     return self.kernel.weightBound(trace, self.f_type.unwrap_return(value),
