@@ -23,27 +23,27 @@ A covariance kernel on an input space A is a symmetric
 positive-definite function k: A^2 ---> \R.  We currently handle A = \R
 and A = \R^n for some n.  The computational representation of a
 covariance kernel is a function that takes two arrays of elements of
-A, X_1 = (x_11, x_12, ..., x_1m) and X_2 = (x_21, x_22, ..., x_2l),
-and returns a matrix
+A, X = (x_1, x_2, ..., x_m) and Y = (y_1, y_2, ..., y_l), and returns
+a matrix
 
-    [k(x_11, x_21), k(x_11, x_22), ..., k(x_11, x_2l);
-     k(x_12, x_21), k(x_12, x_22), ..., k(x_12, x_2l);
-           :              :        .          :
-           :              :         .         :
-     k(x_1m, x_21), k(x_1m, x_22), ..., k(x_1m, x_2l)]
+    [k(x_1, y_1), k(x_1, y_2), ..., k(x_1, y_l);
+     k(x_2, y_1), k(x_2, y_2), ..., k(x_2, y_l);
+        :              :        .          :
+        :              :         .         :
+     k(x_m, y_1), k(x_m, y_2), ..., k(x_m, y_l)]
 
-of all covariances between all pairwise elements in X_1 and X_2.
+of all covariances between all pairwise elements in X and Y.
 
 For a covariance kernel k_theta parametrized by some theta = (theta^1,
 theta^2, ..., theta^h), the derivative of the covariance kernel with
 respect to theta is computationally represented by a function that
-takes two arrays X_1 and X_2 in A and returns an array of the h
-partial derivatives of k_theta(X_1, X_2) with respect to theta -- that
-is, returns an array of h matrices [t_1, t_2, ..., t_h], so that t_i
-maps an increment in theta^i to an increment in the covariance matrix
-between X_1 and X_2:
+takes two arrays X and Y in A and returns an array of the h partial
+derivatives of k_theta(X, Y) with respect to theta -- that is, returns
+an array of h matrices [t_1, t_2, ..., t_h], so that t_i maps an
+increment in theta^i to an increment in the covariance matrix between
+X and Y:
 
-    d k_theta(X_1, X_2) = t_1 dtheta^1 + t_2 dtheta^2 + ... + t_h dtheta^h.
+    d k_theta(X, Y) = t_1 dtheta^1 + t_2 dtheta^2 + ... + t_h dtheta^h.
 
 Note that because we explicitly represent the matrices t_i, the
 parameters theta^i must be scalars; there is no other matrix
@@ -63,36 +63,36 @@ import scipy.spatial.distance
 
 def const(c):
   """Constant kernel, everywhere equal to c."""
-  def k(X_1, X_2):
-    return c*np.ones((len(X_1), len(X_2)))
+  def k(X, Y):
+    return c*np.ones((len(Y), len(X)))
   return k
 
 def ddtheta_const(c):
   f = const(c)
-  def dk_const_dtheta(X_1, X_2):
-    k = f(X_1, X_2)
+  def dk_const_dtheta(X, Y):
+    k = f(X, Y)
     return (k, [np.ones(k.shape)])
   return dk_const_dtheta
 
 def ddx_const(c):
   k = const(c)
-  def dk_const_dx(x_1, X_2):
-    return (k(np.array([x_1]), X_2), np.zeros(x_1.shape[0]))
+  def dk_const_dx(x, Y):
+    return (k(np.array([x]), Y), np.zeros(x.shape[0]))
   return dk_const_dx
 
 # Isotropic covariance kernels
 
 def isotropic(f):
-  """Isotropic kernel: k(x_1, x_2) = f(||x_1 - x_2||^2).
+  """Isotropic kernel: k(x, y) = f(||x - y||^2).
 
   Given a function f(r) on a matrix of all pairwise distances between
-  two sets of input points, yields a covariance kernel k(X_1, X_2) on
-  two arrays of input points.
+  two sets of input points, yields a covariance kernel k(X, Y) on two
+  arrays of input points.
   """
-  def k(X_1, X_2):
-    X_1 = X_1.reshape(len(X_1), -1)
-    X_2 = X_2.reshape(len(X_2), -1)
-    return f(scipy.spatial.distance.cdist(X_1, X_2, 'sqeuclidean'))
+  def k(X, Y):
+    X = X.reshape(len(X), -1)
+    Y = Y.reshape(len(Y), -1)
+    return f(scipy.spatial.distance.cdist(X, Y, 'sqeuclidean'))
   return k
 
 def ddtheta_isotropic(df_theta):
@@ -101,9 +101,8 @@ def ddtheta_isotropic(df_theta):
   Given a function df_theta(r^2) that maps a matrix of squared
   distances between every pair of points in two arrays of inputs to a
   matrix of d/dtheta kappa({r_ij}^2) covariance derivatives, yields a
-  covariance kernel derivative dk_theta(X_1, X_2) that maps two arrays
-  of input points to a matrix of d/dtheta k(x_1, x_2) covariance
-  derivatives.
+  covariance kernel derivative dk_theta(X, Y) that maps two arrays of
+  input points to a matrix of d/dtheta k(x, y) covariance derivatives.
   """
   return isotropic(df_theta)
 
@@ -112,89 +111,89 @@ def ddx_isotropic(df):
 
   Given a function df_r2(r2) that maps a vector of squared distances
   to a vector of derivatives with respect to squared distance, yields
-  a covariance kernel partial derivative dk_x(x_1, X_2) that maps a
-  point x_1 and an array of points X_2 to a vector of partial
-  derivatives with respect to x_1 at each of the pairs (x_1, x_2i).
+  a covariance kernel partial derivative dk_x(x, Y) that maps a point
+  x and an array of points Y to a vector of partial derivatives with
+  respect to x at each of the pairs (x, y_i).
   """
-  def ddx_k(x_1, X_2):
-    # Let x_1 = u and X_2 = (v_1, v_2, ..., v_n), for u, v_j in R^m.
-    # Consider varying only u, so that dv_j = 0 for all j.  Define
+  def ddx_k(x, Y):
+    # For x, y_j in R^m, consider varying only x, so that dy_j = 0 for
+    # all j.  Define
     #
-    #   r_j^2 = |u - v_j|^2 = \sum_nu (u^nu - v_j^nu)^2,
+    #   r_j^2 = |x - y_j|^2 = \sum_nu (x^nu - y_j^nu)^2,
     #
     # so that
     #
-    #   d(r_j^2) = \sum_nu 2 (u^nu - v_j^nu) du^nu = 2 (u - v_j)^T du.
+    #   d(r_j^2) = \sum_nu 2 (x^nu - y_j^nu) dx^nu = 2 (x - y_j)^T dx.
     #
-    # An isotropic covariance kernel k(u, v_j) is given by a function
-    # kappa of the distance r_j, k(u, v_j) = kappa(r_j^2); hence
+    # An isotropic covariance kernel k(x, y_j) is given by a function
+    # kappa of the distance r_j, k(x, y_j) = kappa(r_j^2); hence
     #
-    #   d k(u, v_j) = d kappa(r_j^2) = kappa'(r_j^2) d(r_j^2)
-    #     = kappa'(r_j^2) 2 (u - v_j)^T du.
+    #   d k(x, y_j) = d kappa(r_j^2) = kappa'(r_j^2) d(r_j^2)
+    #     = kappa'(r_j^2) 2 (x - y_j)^T dx.
     #
-    # Thus, d/du k(u, v_j), i.e. the du component of d k(u, v_j), is
+    # Thus, d/dx k(x, y_j), i.e. the dx component of d k(x, y_j), is
     # the row vector
     #
-    #   kappa'(r_j^2) 2 (u - v_j)^T,
+    #   kappa'(r_j^2) 2 (x - y_j)^T,
     #
     # where kappa'(r_j^2) is a scalar.
     #
-    # If k(u, V) is the row [k(u, v_1), k(u, v_2), ..., k(u, v_n)],
-    # our job is to return the matrix k(u, V) and a list of the du^nu
-    # components of d k(u, V), namely a list of the columns (d/du^nu
-    # k(u, v_1), d/du^nu k(u, v_2), ..., d/du^nu k(u, v_n)).
+    # If k(x, Y) is the row [k(x, y_1), k(x, y_2), ..., k(x, y_n)],
+    # our job is to return the matrix k(x, Y) and a list of the dx^nu
+    # components of d k(x, Y), namely a list of the columns (d/dx^nu
+    # k(x, y_1), d/dx^nu k(x, y_2), ..., d/dx^nu k(x, y_n)).
     #
-    # However, we need to compute not the row d/du k(u, v_i), but the
-    # whole matrix d/du k(u, V) = (d/du k(u, v_1), d/du k(u, v_2),
-    # ..., d/du k(u, v_n)), and return its representation as an array
-    # of the columns d/du^nu k(u, V).
+    # However, we need to compute not the row d/dx k(x, y_j), but the
+    # whole matrix d/dx k(x, Y) = (d/dx k(x, y_1), d/dx k(x, y_2),
+    # ..., d/dx k(x, y_n)), and return its representation as an array
+    # of the columns d/dx^nu k(x, Y).
     #
     # For a matrix r2 of distances (r_ij^2)_ij, the function df(r2)
     # simultaneously computes the matrices (kappa(r_ij^2))_ij and
     # (kappa'(r_ij^2))_ij.  In this case, for a single left-hand input
-    # point x_1, i = 1 always -- there is only one row.
+    # point x, i = 1 always -- there is only one row.
 
     # Construct a single-element array of left-hand input points.
-    X_1 = np.array([x_1])
+    X = np.array([x])
 
-    # Make sure X_1 and X_2 are rank-2 arrays, i.e. arrays of input
+    # Make sure X and Y are rank-2 arrays, i.e. arrays of input
     # points where an input point is an array of scalars, as required
     # by cdist.
     #
-    X_1 = X_1.reshape(len(X_1), -1)
-    X_2 = X_2.reshape(len(X_2), -1)
+    X = X.reshape(len(X), -1)
+    Y = Y.reshape(len(Y), -1)
 
-    # Compute the matrix r2 of all squared distances between x_1 and
-    # every point in the array X_2.  Since X_1 has only one point, the
+    # Compute the matrix r2 of all squared distances between x and
+    # every point in the array Y.  Since X has only one point, the
     # matrix r2 has only one row:
     #
     #   r2 = [r_11^2   r_12^2   r_13^2   ...    r_1n^2],
     #
-    # where r_1j^2 = |x_1 - X_2[j]|^2.
+    # where r_1j^2 = |x - y_j|^2.
     #
-    r2 = scipy.spatial.distance.cdist(X_1, X_2, 'sqeuclidean')
+    r2 = scipy.spatial.distance.cdist(X, Y, 'sqeuclidean')
 
-    # Compute the array (2 (x_1^nu - X_2[j]^nu))_j,nu of the
-    # pointwise differences
+    # Compute the array (2 (x^nu - y_j^nu))_j,nu of the pointwise
+    # differences
     #
-    #   2 (x_1 - X_2[j]);
+    #   2 (x - y_j);
     #
-    # transpose it to give the array (2 (x_1^nu - X_2[j]^nu))_nu,j of
-    # the coordinatewise differences
+    # transpose it to give the array (2 (x^nu - y_j^nu))_nu,j of the
+    # coordinatewise differences
     #
-    #   2 (x_1^nu - X_2^nu),
+    #   2 (x^nu - Y^nu),
     #
     # so that the nu^th element of dr2 is the partial derivative with
     # respect to the nu^th input space coordinate of the array of
     # squared distances (r_1^2, r_2^2, ..., r_n^2), namely
     #
-    #   (d/dx_1^nu r_1^2, d/dx_1^nu r_2^2, ..., d/dx_1^nu r_n^2)
-    #   = (2 (x_1^nu - X_2[1]),
-    #      2 (x_1^nu - X_2[2]),
+    #   (d/dx^nu r_1^2, d/dx^nu r_2^2, ..., d/dx^nu r_n^2)
+    #   = (2 (x^nu - y_1),
+    #      2 (x^nu - y_2),
     #      ...,
-    #      2 (x_1^nu - X_2[n])).
+    #      2 (x^nu - y_n)).
     #
-    dr2 = 2*(x_1 - X_2).T       # array of increments in r^2 matrix
+    dr2 = 2*(x - Y).T           # array of increments in r^2 matrix
 
     # Compute the covariance matrix k = (kappa(r_ij^2))_ij and the
     # derivative matrix f_ = (kappa'(r_ij^2))_ij.  Note that i = 1, so
@@ -404,57 +403,57 @@ def matern_52(l2):
     return (1. + q + q2/3.)*np.exp(-q)
   return isotropic(f)
 
-def linear(x):
-  """Linear covariance kernel: k(x_1, x_2) = (x_1 - x) (x_2 - x)."""
-  def k(X_1, X_2):
-    if np.asarray(x).ndim:
-      return np.inner(X_1 - x, X_2 - x)
+def linear(c):
+  """Linear covariance kernel: k(x, y) = (x - c) (y - c)."""
+  def k(X, Y):
+    if np.asarray(c).ndim:
+      return np.inner(X - c, Y - c)
     else:
-      return np.outer(X_1 - x, X_2 - x)
+      return np.outer(X - c, Y - c)
   return k
 
-def ddtheta_linear(x):
-  f = linear(x)
-  x = np.asarray(x).reshape(-1)
+def ddtheta_linear(c):
+  f = linear(c)
+  c = np.asarray(c).reshape(-1)
 
-  def dk_linear_dtheta(X_1, X_2):
-    k = f(X_1, X_2)
+  def dk_linear_dtheta(X, Y):
+    k = f(X, Y)
 
-    assert x.ndim == 1, '%r' % (x,)
-    d = x.shape[0]
-    X_1 = X_1.reshape(len(X_1), -1)
-    X_2 = X_2.reshape(len(X_2), -1)
+    assert c.ndim == 1, '%r' % (c,)
+    d = c.shape[0]
+    X = X.reshape(len(X), -1)
+    Y = Y.reshape(len(Y), -1)
 
     dk = [None] * d
     for nu in xrange(d):
-      dk[nu] = 2*x[nu] * np.ones((len(X_1), len(X_2)))
-      for i in xrange(len(X_1)):
-        dk[nu][i,:] -= X_2[:,nu]
-      for j in xrange(len(X_2)):
-        dk[nu][:,j] -= X_1[:,nu]
+      dk[nu] = 2*c[nu] * np.ones((len(X), len(Y)))
+      for i in xrange(len(X)):
+        dk[nu][i,:] -= Y[:,nu]
+      for j in xrange(len(Y)):
+        dk[nu][:,j] -= X[:,nu]
 
     return (k, dk)
 
   return dk_linear_dtheta
 
-def ddx_linear(x):
-  f = linear(x)
-  x = np.asarray(x).reshape(-1)
+def ddx_linear(c):
+  f = linear(c)
+  c = np.asarray(c).reshape(-1)
 
-  def dk_linear_dx(x_1, X_2):
-    X_1 = np.array([x_1])
-    k = f(X_1, X_2)
+  def dk_linear_dx(x, Y):
+    X = np.array([x])
+    k = f(X, Y)
 
-    assert x.ndim == 1
-    d = x.shape[0]
-    X_1 = X_1.reshape(len(X_1), -1)
-    X_2 = X_2.reshape(len(X_2), -1)
+    assert c.ndim == 1
+    d = c.shape[0]
+    X = X.reshape(len(X), -1)
+    Y = Y.reshape(len(Y), -1)
 
     dk = [None] * d
     for nu in xrange(d):
-      dk[nu] = -x[nu] * np.ones((len(X_1), len(X_2)))
-      for i in xrange(len(X_1)):
-        dk[nu][i,:] += X_2[:,nu]
+      dk[nu] = -c[nu] * np.ones((len(X), len(Y)))
+      for i in xrange(len(X)):
+        dk[nu][i,:] += Y[:,nu]
 
     return (k, dk)
 
@@ -467,68 +466,68 @@ def bias(s2, k):
 
   Every covariance, including variance/self-covariance, has s^2 added.
   """
-  return lambda X_1, X_2: s2 + k(X_1, X_2)
+  return lambda X, Y: s2 + k(X, Y)
 
 def ddtheta_bias(s2, k):
-  def dk_bias_dtheta(X_1, X_2):
-    k12, dk12 = k.df_theta(X_1, X_2)
+  def dk_bias_dtheta(X, Y):
+    k12, dk12 = k.df_theta(X, Y)
     return (s2 + k12, [np.ones(k12.shape)] + dk12)
   return dk_bias_dtheta
 
 def ddx_bias(s2, k):
-  def dk_bias_dx(x_1, X_2):
-    k12, dk12 = k.df_x(x_1, X_2)
+  def dk_bias_dx(x, Y):
+    k12, dk12 = k.df_x(x, Y)
     return (s2 + k12, dk12)
   return dk_bias_dx
 
 def scale(s2, k):
   """Kernel k scaled by squared output factor s^2."""
-  return lambda X_1, X_2: s2 * k(X_1, X_2)
+  return lambda X, Y: s2 * k(X, Y)
 
 def ddtheta_scale(s2, k):
-  def dk_scale_dtheta(X_1, X_2):
-    k12, dk12 = k.df_theta(X_1, X_2)
+  def dk_scale_dtheta(X, Y):
+    k12, dk12 = k.df_theta(X, Y)
     return (s2 * k12, [k12] + [s2*dk_i for dk_i in dk12])
   return dk_scale_dtheta
 
 def ddx_scale(s2, k):
-  def dk_scale_dx(x_1, X_2):
-    k12, dk12 = k.df_x(x_1, X_2)
+  def dk_scale_dx(x, Y):
+    k12, dk12 = k.df_x(x, Y)
     return (s2 * k12, [s2*dk_i for dk_i in dk12])
   return dk_scale_dx
 
 def sum(k_a, k_b):
   """Sum of kernels k_a and k_b."""
-  return lambda X_1, X_2: k_a(X_1, X_2) + k_b(X_1, X_2)
+  return lambda X, Y: k_a(X, Y) + k_b(X, Y)
 
 def ddtheta_sum(k_a, k_b):
-  def dk_sum_dtheta(X_1, X_2):
-    ka, dka = k_a.df_theta(X_1, X_2)
-    kb, dkb = k_b.df_theta(X_1, X_2)
+  def dk_sum_dtheta(X, Y):
+    ka, dka = k_a.df_theta(X, Y)
+    kb, dkb = k_b.df_theta(X, Y)
     return (ka + kb, dka + dkb)
   return dk_sum_dtheta
 
 def ddx_sum(k_a, k_b):
-  def dk_sum_dx(x_1, X_2):
-    ka, dka = k_a.df_x(x_1, X_2)
-    kb, dkb = k_b.df_x(x_1, X_2)
+  def dk_sum_dx(x, Y):
+    ka, dka = k_a.df_x(x, Y)
+    kb, dkb = k_b.df_x(x, Y)
     return (ka + kb, dka + dkb)
   return dk_sum_dx
 
 def product(k_a, k_b):
   """Product of kernels k_a and k_b."""
-  return lambda X_1, X_2: k_a(X_1, X_2) * k_b(X_1, X_2)
+  return lambda X, Y: k_a(X, Y) * k_b(X, Y)
 
 def ddtheta_product(k_a, k_b):
-  def dk_product_dtheta(X_1, X_2):
-    ka, dka = k_a.df_theta(X_1, X_2)
-    kb, dkb = k_b.df_theta(X_1, X_2)
+  def dk_product_dtheta(X, Y):
+    ka, dka = k_a.df_theta(X, Y)
+    kb, dkb = k_b.df_theta(X, Y)
     return (ka*kb, [dk_ai*kb for dk_ai in dka] + [ka*dk_bi for dk_bi in dkb])
   return dk_product_dtheta
 
 def ddx_product(k_a, k_b):
-  def dk_product_dx(x_1, X_2):
-    ka, dka = k_a.df_x(x_1, X_2)
-    kb, dkb = k_b.df_x(x_1, X_2)
+  def dk_product_dx(x, Y):
+    ka, dka = k_a.df_x(x, Y)
+    kb, dkb = k_b.df_x(x, Y)
     return (ka*kb, [dk_ai*kb + ka*dk_bi for dk_ai, dk_bi in zip(dka, dkb)])
   return dk_product_dx
