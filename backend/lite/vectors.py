@@ -204,3 +204,9 @@ registerBuiltinSP("row",
     [t.MatrixType(), t.IntegerType()],
     t.ArrayUnboxedType(t.NumberType()),
     descr="%s(A, i) returns the ith row of the matrix A."))
+
+registerBuiltinSP("col",
+  deterministic_typed(lambda m, j: m[:, j],
+    [t.MatrixType(), t.IntegerType()],
+    t.ArrayUnboxedType(t.NumberType()),
+    descr="%s(A, j) returns the jth column of the matrix A."))

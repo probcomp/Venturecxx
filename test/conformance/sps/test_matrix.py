@@ -41,6 +41,11 @@ class TestMatrixVector(object):
     assert array_equal(self.ripl.sample("(row m1 1)"), [-1, 0])
 
   @on_inf_prim("none")
+  def testMatrixAccessCol(self):
+    assert array_equal(self.ripl.sample("(col m1 0)"), [0, -1])
+    assert array_equal(self.ripl.sample("(col m1 1)"), [1, 0])
+
+  @on_inf_prim("none")
   def testMatrixAdd(self):
     assert array_equal(self.ripl.sample("(matrix_add m1 m2)"), [[1, 8], [2, 4]])
     assert array_equal(self.ripl.sample("(matrix_add m2 m2)"), [[2, 14], [6, 8]])
