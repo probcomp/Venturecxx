@@ -198,3 +198,9 @@ registerBuiltinSP("matrix_trace",
     [t.MatrixType()],
     t.NumberType(),
     descr="%s(x) returns the trace (in the algebraic sense) of matrix x."))
+
+registerBuiltinSP("row",
+  deterministic_typed(lambda m, i: m[i],
+    [t.MatrixType(), t.IntegerType()],
+    t.ArrayUnboxedType(t.NumberType()),
+    descr="%s(A, i) returns the ith row of the matrix A."))
