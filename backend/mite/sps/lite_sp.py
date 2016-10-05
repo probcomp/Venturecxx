@@ -2,6 +2,7 @@ from venture.lite.builtin import builtInSPs
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_use import MockArgs
+import venture.lite.value as vv
 
 from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
@@ -44,9 +45,17 @@ class LiteSP(SimulationSP):
     # MadeFullSP, which is relevant because it is invoked directly
     # from traces.py instead of going through the Python method
     # interface.
-    # XXX The signature of simulate is different, b/c of the prng and
-    # the absence of the 'output' argument.
-    return getattr(self, method)(inputs[0], inputs[1:])
+    # XXX Simulate requires a prng
+    if method == 'log_density':
+      return vv.VentureNumber(self.log_density(inputs[0], inputs[1:]))
+    elif method == 'log_density_bound':
+      return vv.VentureNumber(self.log_density_bound(inputs[0], inputs[1:]))
+    elif method == 'incorporate':
+      self.incorporate(inputs[0], inputs[1:])
+      return vv.VentureNil()
+    elif method == 'unincorporate':
+      self.unincorporate(inputs[0], inputs[1:])
+      return vv.VentureNil()
 
 for name, sp in builtInSPs().iteritems():
   if isinstance(sp.requestPSP, NullRequestPSP):
