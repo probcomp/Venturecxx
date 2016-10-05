@@ -376,6 +376,11 @@ registerBuiltinSP("gp_cov_deltoid",
     cov.deltoid, cov.ddtheta_deltoid, cov.ddx_deltoid, shape_reals,
     [t.NumberType("t"), t.NumberType("s")]))
 
+registerBuiltinSP("gp_cov_bump",
+  _cov_grad_maker(
+    cov.bump, cov.ddtheta_bump, cov.ddx_bump, shape_reals,
+    [t.NumberType("t_0"), t.NumberType("t_1")]))
+
 registerBuiltinSP("gp_cov_se",
   _cov_grad_maker(
     cov.se, cov.ddtheta_se, cov.ddx_se, shape_reals, [t.NumberType("l^2")]))

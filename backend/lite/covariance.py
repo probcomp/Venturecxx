@@ -269,6 +269,47 @@ def ddx_deltoid(tolerance, steepness):
     return (k, dk)
   return ddx_isotropic(df_r2)
 
+def _on_ring(x, a, b, inner, middle, outer):
+  return np.where(x <= a, inner, np.where(x <= b, middle, outer))
+
+def _bump(r2, t_0, t_1):
+  # np.exp(1 - 1/(1 - ((r2 - t_0)/(t_1 - t_0))))
+  return _on_ring(r2, t_0, t_1,
+    1 + np.zeros_like(r2),
+    np.exp(1 - (t_1 - t_0)/(t_1 - r2)),
+    np.zeros_like(r2))
+
+def bump(min_tolerance, max_tolerance):
+  """Bump kernel: 1 if r^2 < min_tolerance, 0 if r^2 > max_tolerance."""
+  def f(r2):
+    return _bump(r2, min_tolerance, max_tolerance)
+  return isotropic(f)
+
+def ddtheta_bump(min_tolerance, max_tolerance):
+  def df_theta(r2):
+    t_0 = min_tolerance
+    t_1 = max_tolerance
+    k = _bump(r2, t_0, t_1)
+    dk_dt0 = _on_ring(r2, t_0, t_1,
+      np.zeros_like(r2), k/(t_1 - r2), np.zeros_like(r2))
+    dk_dt1 = _on_ring(r2, t_0, t_1,
+      np.zeros_like(r2), k*(r2 - t_0)/(t_1 - r2)**2, np.zeros_like(r2))
+    assert np.all(np.isfinite(dk_dt0)), '%r' % (dk_dt0,)
+    assert np.all(np.isfinite(dk_dt1)), '%r' % (dk_dt1,)
+    return (k, [dk_dt0, dk_dt1])
+  return ddtheta_isotropic(df_theta)
+
+def ddx_bump(min_tolerance, max_tolerance):
+  def df_r2(r2):
+    t_0 = min_tolerance
+    t_1 = max_tolerance
+    w = t_1 - t_0
+    k = _bump(r2, t_0, t_1)
+    dk_dr2 = -k*w/(t_1 - r2)**2
+    assert np.all(np.isfinite(dk_dr2)), '%r' % (dk_dr2,)
+    return (k, dk_dr2)
+  return ddx_isotropic(df_r2)
+
 def _se(r2, l2):
   return np.exp(-0.5 * r2 / l2)
 

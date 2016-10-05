@@ -348,6 +348,55 @@ def test_deltoid_gradient_simulate(seed):
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @stochasticTest
+def test_bump_gradient(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('mu_0', '(normal 0 1)')
+  ripl.assume('s2', '(gs_expon_1)')
+  ripl.assume('l2', '(gs_expon_1)')
+  ripl.assume('t', '(gs_expon_1)')
+  ripl.assume('w', '(gs_expon_1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '''
+    (gp_cov_sum
+     (gp_cov_scale s2 (gp_cov_se l2))
+     (gp_cov_bump t (+ t w)))
+  ''')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
+  ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')
+
+@stochasticTest
+def test_bump_gradient_simulate(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume('gs_expon_1',
+    '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
+  ripl.assume('mu_0', '(tag (quote x) 0 (normal 0 1))')
+  ripl.assume('s2', '(tag (quote x) 0 (gs_expon_1))')
+  ripl.assume('f2', '(tag (quote x) 0 (gs_expon_1))')
+  ripl.assume('l2', '(tag (quote x) 0 (gs_expon_1))')
+  ripl.assume('t', '(gs_expon_1)')
+  ripl.assume('w', '(gs_expon_1)')
+  ripl.assume('mean', '(gp_mean_const mu_0)')
+  ripl.assume('cov', '''
+    (gp_cov_sum
+     (gp_cov_scale s2 (gp_cov_se l2))
+     (gp_cov_scale f2 (gp_cov_bump t (+ t w))))
+  ''')
+  ripl.assume('gp', '(make_gp mean cov)')
+  ripl.assume('foo', '(lookup (gp (array (array 1 2))) 0)')
+  ripl.observe('(log_odds_bernoulli foo)', 1)
+  ripl.assume('bar', '(lookup (gp (array (array 5 2))) 0)')
+  ripl.observe('(log_odds_bernoulli bar)', 0)
+  ripl.assume('baz', '(lookup (gp (array (array 5 -1))) 0)')
+  ripl.observe('(log_odds_bernoulli baz)', 1)
+  ripl.infer('(grad_ascent default one 0.1 10 10)')
+  ripl.sample('(gp (array (array 2 3) (array 5 7)))')
+
+@stochasticTest
 def test_linear_gradient(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
