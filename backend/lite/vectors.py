@@ -174,7 +174,7 @@ registerBuiltinSP("vector_times_matrix",
     t.ArrayUnboxedType(t.NumberType()),
     descr="%s(v, M) returns the vector-matrix product vM."))
 
-def catches_linalg_error(f, *args, **kwargs):
+def catches_linalg_error(f):
   def try_f(*args, **kwargs):
     try:
       return f(*args, **kwargs)
