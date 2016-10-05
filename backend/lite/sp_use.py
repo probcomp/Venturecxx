@@ -32,10 +32,6 @@ class MockArgs(IArgs):
 
   def __init__(self, vals, aux, py_rng=None, np_rng=None, madeSPAux=None):
     super(MockArgs, self).__init__()
-    if py_rng is None:
-      py_rng = random.Random()
-    if np_rng is None:
-      np_rng = npr.RandomState()
     self.vals = vals
     self.aux = aux
     self._madeSPAux = madeSPAux
@@ -50,8 +46,14 @@ class MockArgs(IArgs):
   def esrNodes(self): return []
   def esrValues(self): return []
   def requestValue(self): return None
-  def py_prng(self): return self._py_rng
-  def np_prng(self): return self._np_rng
+  def py_prng(self):
+    if self._py_rng is None:
+      self._py_rng = random.Random()
+    return self._py_rng
+  def np_prng(self):
+    if self._np_rng is None:
+      self._np_rng = npr.RandomState()
+    return self._np_rng
 
 def simulate(sp, no_wrapper=False):
   """Extract the given SP's simulate method as a Python function.
