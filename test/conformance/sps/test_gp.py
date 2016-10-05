@@ -306,8 +306,8 @@ def test_deltoid_gradient(seed):
   ripl.assume('mu_0', '(normal 0 1)')
   ripl.assume('s2', '(gs_expon_1)')
   ripl.assume('l2', '(gs_expon_1)')
-  ripl.assume('t', '1')
-  ripl.assume('z', '1')
+  ripl.assume('t', '(gs_expon_1)')
+  ripl.assume('z', '(gs_expon_1)')
   ripl.assume('mean', '(gp_mean_const mu_0)')
   ripl.assume('cov', '''
     (gp_cov_sum
