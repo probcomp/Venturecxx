@@ -218,3 +218,9 @@ registerBuiltinSP("col",
     [t.MatrixType(), t.IntegerType()],
     t.ArrayUnboxedType(t.NumberType()),
     descr="%s(A, j) returns the jth column of the matrix A."))
+
+registerBuiltinSP("sum",
+  deterministic_typed(np.sum,
+    [t.ArrayUnboxedType(t.NumberType())],
+    t.NumberType(),
+    descr="%s(v) returns the sum of the elements of the vector v."))
