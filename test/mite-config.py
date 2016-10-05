@@ -25,6 +25,7 @@ config["should_reset"] = True
 config["get_ripl"] = "mite"
 
 
+config["seed"] = None
 config["global_reporting_threshold"] = 0.00001
 config["infer"] = """
 (repeat 5
