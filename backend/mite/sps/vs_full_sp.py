@@ -5,7 +5,6 @@ from venture.untraced.node import Node
 
 from venture.mite.address import VentureAddressed
 from venture.mite.sp import ApplicationKernel
-from venture.mite.sp import SimulationSP
 from venture.mite.sp import VentureSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import BlankTrace
