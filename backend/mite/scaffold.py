@@ -89,8 +89,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
     else:
       return False
 
-  for i in range(trace.directive_counter):
-    addr = addresses.directive(i+1)
+  for addr in trace.toplevel_addresses:
     (exp, env) = trace.requests[addr]
     traverse(addr, exp, env)
 

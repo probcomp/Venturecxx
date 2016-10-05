@@ -243,9 +243,12 @@ class FlatTrace(AbstractTrace):
     self.requests = {}
     self.results = OrderedDict()
     self.made_sps = {}
+    self.toplevel_addresses = []
     super(FlatTrace, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
+    if isinstance(addr, addresses.DirectiveAddress):
+      self.toplevel_addresses.append(addr)
     self.requests[addr] = (exp, env)
 
   def register_constant(self, addr, value):
@@ -372,8 +375,7 @@ class FlatTrace(AbstractTrace):
   def extract(self, subproblem):
     x = Regenerator(self, subproblem)
     weight = 0
-    for i in reversed(range(self.directive_counter)):
-      addr = addresses.directive(i+1)
+    for addr in reversed(self.toplevel_addresses):
       (exp, env) = self.requests[addr]
       weight += x.uneval_family(addr, exp, env)
     return (weight, x.fragment)
@@ -381,8 +383,7 @@ class FlatTrace(AbstractTrace):
   def regen(self, subproblem, trace_fragment):
     x = Regenerator(self, subproblem, trace_fragment)
     weight = 0
-    for i in range(self.directive_counter):
-      addr = addresses.directive(i+1)
+    for addr in self.toplevel_addresses:
       (exp, env) = self.requests[addr]
       w, _ = x.eval_family(addr, exp, env)
       weight += w
@@ -390,8 +391,7 @@ class FlatTrace(AbstractTrace):
 
   def restore(self, subproblem, trace_fragment):
     x = Restorer(self, subproblem, trace_fragment)
-    for i in range(self.directive_counter):
-      addr = addresses.directive(i+1)
+    for addr in self.toplevel_addresses:
       (exp, env) = self.requests[addr]
       x.eval_family(addr, exp, env)
 
@@ -399,12 +399,10 @@ class FlatTrace(AbstractTrace):
     from venture.mite.evaluator import WeightBounder
     x = WeightBounder(self, subproblem)
     weight = 0
-    for i in reversed(range(self.directive_counter)):
-      addr = addresses.directive(i+1)
+    for addr in reversed(self.toplevel_addresses):
       (exp, env) = self.requests[addr]
       weight += x.uneval_family(addr, exp, env)
-    for i in range(self.directive_counter):
-      addr = addresses.directive(i+1)
+    for addr in self.toplevel_addresses:
       (exp, env) = self.requests[addr]
       w, _ = x.eval_family(addr, exp, env)
       weight += w
