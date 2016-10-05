@@ -461,73 +461,73 @@ def ddx_linear(c):
 
 # Composite covariance kernels
 
-def bias(s2, k):
-  """Kernel k biased by the constant squared bias s^2.
+def bias(s2, K):
+  """Kernel K biased by the constant squared bias s^2.
 
   Every covariance, including variance/self-covariance, has s^2 added.
   """
-  return lambda X, Y: s2 + k(X, Y)
+  return lambda X, Y: s2 + K(X, Y)
 
-def ddtheta_bias(s2, k):
+def ddtheta_bias(s2, K):
   def dk_bias_dtheta(X, Y):
-    k12, dk12 = k.df_theta(X, Y)
-    return (s2 + k12, [np.ones(k12.shape)] + dk12)
+    k, dk = K.df_theta(X, Y)
+    return (s2 + k, [np.ones(k.shape)] + dk)
   return dk_bias_dtheta
 
-def ddx_bias(s2, k):
+def ddx_bias(s2, K):
   def dk_bias_dx(x, Y):
-    k12, dk12 = k.df_x(x, Y)
-    return (s2 + k12, dk12)
+    k, dk = K.df_x(x, Y)
+    return (s2 + k, dk)
   return dk_bias_dx
 
-def scale(s2, k):
-  """Kernel k scaled by squared output factor s^2."""
-  return lambda X, Y: s2 * k(X, Y)
+def scale(s2, K):
+  """Kernel K scaled by squared output factor s^2."""
+  return lambda X, Y: s2 * K(X, Y)
 
-def ddtheta_scale(s2, k):
+def ddtheta_scale(s2, K):
   def dk_scale_dtheta(X, Y):
-    k12, dk12 = k.df_theta(X, Y)
-    return (s2 * k12, [k12] + [s2*dk_i for dk_i in dk12])
+    k, dk = K.df_theta(X, Y)
+    return (s2 * k, [k] + [s2*dk_i for dk_i in dk])
   return dk_scale_dtheta
 
-def ddx_scale(s2, k):
+def ddx_scale(s2, K):
   def dk_scale_dx(x, Y):
-    k12, dk12 = k.df_x(x, Y)
-    return (s2 * k12, [s2*dk_i for dk_i in dk12])
+    k, dk = K.df_x(x, Y)
+    return (s2 * k, [s2*dk_i for dk_i in dk])
   return dk_scale_dx
 
-def sum(k_a, k_b):
-  """Sum of kernels k_a and k_b."""
-  return lambda X, Y: k_a(X, Y) + k_b(X, Y)
+def sum(K, H):
+  """Sum of kernels K and H."""
+  return lambda X, Y: K(X, Y) + H(X, Y)
 
-def ddtheta_sum(k_a, k_b):
+def ddtheta_sum(K, H):
   def dk_sum_dtheta(X, Y):
-    ka, dka = k_a.df_theta(X, Y)
-    kb, dkb = k_b.df_theta(X, Y)
-    return (ka + kb, dka + dkb)
+    k, dk = K.df_theta(X, Y)
+    h, dh = H.df_theta(X, Y)
+    return (k + h, dk + dh)
   return dk_sum_dtheta
 
-def ddx_sum(k_a, k_b):
+def ddx_sum(K, H):
   def dk_sum_dx(x, Y):
-    ka, dka = k_a.df_x(x, Y)
-    kb, dkb = k_b.df_x(x, Y)
-    return (ka + kb, dka + dkb)
+    k, dk = K.df_x(x, Y)
+    h, dh = H.df_x(x, Y)
+    return (k + h, dk + dh)
   return dk_sum_dx
 
-def product(k_a, k_b):
-  """Product of kernels k_a and k_b."""
-  return lambda X, Y: k_a(X, Y) * k_b(X, Y)
+def product(K, H):
+  """Product of kernels K and H."""
+  return lambda X, Y: K(X, Y) * H(X, Y)
 
-def ddtheta_product(k_a, k_b):
+def ddtheta_product(K, H):
   def dk_product_dtheta(X, Y):
-    ka, dka = k_a.df_theta(X, Y)
-    kb, dkb = k_b.df_theta(X, Y)
-    return (ka*kb, [dk_ai*kb for dk_ai in dka] + [ka*dk_bi for dk_bi in dkb])
+    k, dk = K.df_theta(X, Y)
+    h, dh = H.df_theta(X, Y)
+    return (k*h, [dk_i*h for dk_i in dk] + [k*dh_i for dh_i in dh])
   return dk_product_dtheta
 
-def ddx_product(k_a, k_b):
+def ddx_product(K, H):
   def dk_product_dx(x, Y):
-    ka, dka = k_a.df_x(x, Y)
-    kb, dkb = k_b.df_x(x, Y)
-    return (ka*kb, [dk_ai*kb + ka*dk_bi for dk_ai, dk_bi in zip(dka, dkb)])
+    k, dk = K.df_x(x, Y)
+    h, dh = H.df_x(x, Y)
+    return (k*h, [dk_i*h + k*dh_i for dk_i, dh_i in zip(dk, dh)])
   return dk_product_dx
