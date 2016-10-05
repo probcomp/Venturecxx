@@ -270,7 +270,7 @@ def ddx_deltoid(tolerance, steepness):
   return ddx_isotropic(df_r2)
 
 def _on_ring(x, a, b, inner, middle, outer):
-  return np.where(x <= a, inner, np.where(x <= b, middle, outer))
+  return np.where(x <= a, inner, np.where(x < b, middle, outer))
 
 def _bump(r2, t_0, t_1):
   # np.exp(1 - 1/(1 - ((r2 - t_0)/(t_1 - t_0))))
