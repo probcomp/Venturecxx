@@ -12,12 +12,11 @@ def testTrickCoin():
   yield checkTrickCoin, 20, 0.9536 # (1/22 + 99/2**21) / (1/21 + 99/2**20)
 
 @statisticalTest
-def checkTrickCoin(n, p):
+def checkTrickCoin(n, p, seed):
   if config['get_ripl'] != 'mite':
     raise SkipTest("dpmem only exists in mite")
 
-  ripl = get_ripl()
-
+  ripl = get_ripl(seed=seed)
   ripl.assume("f", "(make_trick_coin 0.99 1000 1)")
   for _ in range(n):
     ripl.observe("(f)", "true")
