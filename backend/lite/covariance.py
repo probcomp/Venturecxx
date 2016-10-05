@@ -59,22 +59,6 @@ in theta is an increment in the covariance matrix.
 import numpy as np
 import scipy.spatial.distance
 
-def _where(c, x, p):
-  """Conditional vectorization operator."""
-  c = np.array(c)
-  if c.shape == ():
-    return p(x, np.array([]))[0] if c else p(np.array([]), x)[1]
-  x = np.array(x)
-  r = np.ndarray(shape=c.shape)
-  rc, rnc = p(np.ma.masked_where(~c, x), np.ma.masked_where(c, x))
-  r[c] = rc.compressed()
-  r[~c] = rnc.compressed()
-  return r
-
-def _where2(c, x, pc, pnc):
-  """Computes the array of pc(x[i]) if c[i] else pnc(x[i]) for each i."""
-  return _where(c, x, lambda xc, xnc: (pc(xc), pnc(xnc)))
-
 # Trivial covariance kernel
 
 def const(c):
@@ -269,13 +253,11 @@ def ddx_deltoid(tolerance, steepness):
     s = steepness
     r_s = r2**(-s/2.)
     k = np.exp(-t*r_s)
-    def zero(r2):
-      # Can't just do np.zeros(r2.shape) here because we need to
-      # return a masked array with the same mask as r2.
-      return 0*r2
-    def positive(r2):
-      return -k*s*t*r_s/(2*r2)
-    dk = _where2(r2 == 0, r2, zero, positive)
+    # For the self-covariances, just give zero derivative because we
+    # do not consider moving the inputs off the diagonal line x = y.
+    # XXX Consider making this generic for all covariance derivatives
+    # with respect to an input.
+    dk = np.where(r2 == 0, np.zeros_like(r2), -k*s*t*r_s/(2*r2))
     assert np.all(np.isfinite(dk)), '%r' % (dk,)
     return (k, dk)
   return ddx_isotropic(df_r2)
