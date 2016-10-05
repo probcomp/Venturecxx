@@ -232,16 +232,23 @@ def delta(tolerance):
     return 1.*(r2 <= tolerance)
   return isotropic(f)
 
-def _bump(r2, t, s):
+def _deltoid(r2, t, s):
   return -np.expm1(-t/(r2**(s/2.)))
 
-def bump(tolerance, steepness):
-  """Bump kernel: 1 - e^{-t/r^s}"""
+def deltoid(tolerance, steepness):
+  """Deltoid kernel: 1 - e^{-t/r^s}.
+
+  Shaped kinda like a sigmoid, but not quite.
+  Behaves kinda like a delta, but smoothly.
+
+  The tolerance parameter is currently hokey and will be replaced by a
+  simple squared scale parameter.
+  """
   def f(r2):
-    return _bump(r2, tolerance, steepness)
+    return _deltoid(r2, tolerance, steepness)
   return isotropic(f)
 
-def ddtheta_bump(tolerance, steepness):
+def ddtheta_deltoid(tolerance, steepness):
   def df_theta(r2):
     # d/dt (1 - e^{-t/r^s}) = e^{-t/r^s}/r^s
     # d/ds (1 - e^{-t/r^s}) = -e^{-t/r^s} (-t) d/ds r^{-s}
@@ -254,7 +261,7 @@ def ddtheta_bump(tolerance, steepness):
     return (k, [k*r_s, -k*t*r_s*np.log(r2)/2.])
   return ddtheta_isotropic(df_theta)
 
-def ddx_bump(tolerance, steepness):
+def ddx_deltoid(tolerance, steepness):
   def df_r2(r2):
     # d/d{r^2} (1 - e^{-t/r^s}) = -e^{-t/r^s} s t / [2 (r^2)^{s/2 + 1}]
     #   = -e^{-t/r^s} s t r^{-s} / [2 r^2]

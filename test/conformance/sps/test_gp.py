@@ -299,7 +299,7 @@ def test_2d_arglebargle(seed):
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @stochasticTest
-def test_bump_gradient(seed):
+def test_deltoid_gradient(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
     '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
@@ -312,7 +312,7 @@ def test_bump_gradient(seed):
   ripl.assume('cov', '''
     (gp_cov_sum
      (gp_cov_scale s2 (gp_cov_se l2))
-     (gp_cov_bump t z))
+     (gp_cov_deltoid t z))
   ''')
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
@@ -321,7 +321,7 @@ def test_bump_gradient(seed):
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @stochasticTest
-def test_bump_gradient_simulate(seed):
+def test_deltoid_gradient_simulate(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
     '(lambda () (- 0. (log_logistic (log_odds_uniform))))')
@@ -335,7 +335,7 @@ def test_bump_gradient_simulate(seed):
   ripl.assume('cov', '''
     (gp_cov_sum
      (gp_cov_scale s2 (gp_cov_se l2))
-     (gp_cov_scale f2 (gp_cov_bump t z)))
+     (gp_cov_scale f2 (gp_cov_deltoid t z)))
   ''')
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.assume('foo', '(lookup (gp (array (array 1 2))) 0)')

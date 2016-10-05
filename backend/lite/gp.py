@@ -371,9 +371,9 @@ registerBuiltinSP("gp_cov_const",
 registerBuiltinSP("gp_cov_delta",
   _cov_maker(cov.delta, [t.NumberType("tolerance")]))
 
-registerBuiltinSP("gp_cov_bump",
+registerBuiltinSP("gp_cov_deltoid",
   _cov_grad_maker(
-    cov.bump, cov.ddtheta_bump, cov.ddx_bump, shape_reals,
+    cov.deltoid, cov.ddtheta_deltoid, cov.ddx_deltoid, shape_reals,
     [t.NumberType("t"), t.NumberType("s")]))
 
 registerBuiltinSP("gp_cov_se",
