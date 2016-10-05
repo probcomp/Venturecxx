@@ -64,7 +64,7 @@ class AnyType(VentureType):
   def __init__(self, type_name=None):
     self.type_name = type_name
   def asVentureValue(self, thing):
-    assert isinstance(thing, vv.VentureValue)
+    assert isinstance(thing, vv.VentureValue), thing
     return thing
   def asPython(self, thing):
     # TODO Make symbolic zeroes a venture value!
