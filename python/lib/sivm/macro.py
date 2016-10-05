@@ -285,7 +285,7 @@ def closure_quasiquotation_macro(name, desc=""):
     if len(program) > 2:
       import pdb; pdb.set_trace()
     assert len(program) == 2, program[2:]
-    (_lambda, params, body) = program[1]
+    (_lambda, params, _body) = program[1]
     pat_names = ["datum-%d" % i for i in range(len(params))]
     pattern = [name, ["lambda", pat_names, "body"]]
     template = ["_" + name] + [
