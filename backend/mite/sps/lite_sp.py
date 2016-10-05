@@ -39,6 +39,15 @@ class LiteSP(SimulationSP):
   def log_density_bound(self, output, inputs):
     return self.wrapped_sp.outputPSP.logDensityBound(output, self.wrap_args(inputs))
 
+  def run_in_helper_trace(self, method, inputs):
+    # XXX This name is chosen to agree with MadeSimulationSP and
+    # MadeFullSP, which is relevant because it is invoked directly
+    # from traces.py instead of going through the Python method
+    # interface.
+    # XXX The signature of simulate is different, b/c of the prng and
+    # the absence of the 'output' argument.
+    return getattr(self, method)(inputs[0], inputs[1:])
+
 for name, sp in builtInSPs().iteritems():
   if isinstance(sp.requestPSP, NullRequestPSP):
     registerBuiltinSP(name, LiteSP(sp))
