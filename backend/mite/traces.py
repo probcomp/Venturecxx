@@ -113,6 +113,9 @@ class AbstractTrace(ITrace):
     self.directive_counter += 1
     return addresses.directive(self.directive_counter)
 
+  def predict_next_base_address(self):
+    return self.directive_counter + 1
+
   def eval_request(self, addr, exp, env):
     weight, value = Evaluator(self).eval_request(addr, exp, env)
     assert weight == 0

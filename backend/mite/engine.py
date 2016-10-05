@@ -32,4 +32,4 @@ class Engine(engine.Engine):
 
   # make the stack happy
   def predictNextDirectiveId(self):
-    return self.infer_trace.directive_counter + 1
+    return self.infer_trace.predict_next_base_address()
