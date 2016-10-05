@@ -135,11 +135,6 @@ class DependencyGraphTrace(AbstractTrace):
     sp = sp_node.value
     return sp.log_density(output, input_values)
 
-  def invoke_metaprogram_of_sp(self, sp_ref, key, input_values):
-    sp_node = self.deref_sp(sp_ref)
-    sp = sp_node.value
-    return sp.run_in_helper_trace(key, input_values)
-
   def proposal_kernel(self, addr, sp_ref):
     # XXX for now just store the dicts, with extra attributes
     # TODO make it easier to construct trace handles.
