@@ -877,8 +877,8 @@ Open issues:
 
     def force(self, expression, value, type=False):
         i = {'instruction':'force', 'expression':expression, 'value':value}
-        self.execute_instruction(i)
-        return None
+        weights = self.execute_instruction(i)["value"]
+        return v.vector(weights) if type else weights
 
     def sample(self, expression, type=False):
         i = {'instruction':'sample', 'expression':expression}

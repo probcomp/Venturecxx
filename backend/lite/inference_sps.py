@@ -813,7 +813,7 @@ register_ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol
 
 register_ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2))
 
-register_ripl_macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()]))
+register_ripl_macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()], return_type=t.AnyType()))
 
 register_ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1))
 
@@ -832,6 +832,14 @@ Removes the directive indicated by the label argument from the
 model.  If an assumption is forgotten, the symbol it binds
 disappears from scope; the behavior if that symbol was still
 referenced is unspecified.
+
+If the directive being forgotten was an observation, returns an array
+containing the log probability of the observed value in each particle.
+Otherwise returns an array of zeroes of the same length as the
+particle set.
+
+The particle weights are not modified, even if an observation is
+forgotten.
 """)
 
 register_ripl_method_sp("freeze", infer_action_maker_type([t.AnyType("<label>")]), desc="""\

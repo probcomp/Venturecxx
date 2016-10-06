@@ -137,10 +137,10 @@ class Engine(object):
     # TODO: The directive counter increments, but the "force" isn't added
     # to the list of directives
     # This mirrors the implementation in the core_sivm, but could be changed?
-    (did, _weight_increments) = self.observe(datum, val)
+    (did, weight_increments) = self.observe(datum, val)
     self.incorporate()
     self.forget(did)
-    return did
+    return weight_increments
 
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,
