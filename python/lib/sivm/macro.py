@@ -632,6 +632,10 @@ observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
 
   The ``<label>``, if supplied, may be used to `forget` this observation.
 
+  This is an action returning an array containing the probability of
+  the observed value in each particle.  The particle weights are
+  incremented by this difference automatically.
+
 """, intended_for_inference=True)
 
 forceMacro = SyntaxRule(["force", "exp", "val"],
