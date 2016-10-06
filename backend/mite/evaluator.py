@@ -26,7 +26,10 @@ class Evaluator(object):
       result_node = env.findSymbol(exp)
       # XXX hack to propagate regenerated global bindings
       try:
+        # old_val = result_node.value
         result_node.value = self.trace.value_at(result_node.address)
+        # if old_val is not result_node.value:
+        #   print "Replaced", old_val, "with", result_node.value, "at", result_node.address
       except KeyError:
         pass
       self.trace.register_lookup(addr, result_node)
@@ -58,11 +61,13 @@ class Evaluator(object):
     else:
       # SP application
       nodes = []
+      # print "Evaluating", exp
       for index, subexp in enumerate(exp):
         subaddr = addresses.subexpression(index, addr)
         w, v = self.eval_family(subaddr, subexp, env)
         weight += w
         nodes.append(Node(subaddr, v))
+      # print "Got subvalues", [n.value for n in nodes]
 
       sp_node = self.trace.deref_sp(nodes[0].value)
       args = nodes[1:]
