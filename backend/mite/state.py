@@ -57,6 +57,7 @@ class TraceActionSP(SimulationSP):
     inputs = [in_t.asPython(value) for in_t, value in
               zip(self.input_types, inputs[1:])]
     output = getattr(trace, self.name)(*inputs)
+    # print "Tried to do trace action", self.name, "on", inputs, "got", output
     return t.Pair(self.output_type, t.Blob).asVentureValue(
       (output, trace))
 
