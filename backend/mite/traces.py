@@ -138,7 +138,7 @@ class AbstractTrace(ITrace):
 
   def single_site_subproblem(self, address, kernel=None):
     scaffold = single_site_scaffold(self, address, kernel)
-    assert scaffold.kernels
+    assert scaffold.kernels, "Scaffold construction around %s found no kernels in trace %s" % (address, self.trace_id)
     return scaffold
 
   def register_observation(self, addr, value):
