@@ -40,11 +40,12 @@ class BuiltinAddress(Address):
 class DirectiveAddress(Address):
   """A top-level directive."""
 
-  def __init__(self, directive_id):
+  def __init__(self, directive_id, trace_id):
     self.directive_id = directive_id
+    self.trace_id = trace_id
 
   def __repr__(self):
-    return "toplevel({!r})".format(self.directive_id)
+    return "toplevel({!r}, {!r})".format(self.directive_id, self.trace_id)
 
 class RequestAddress(Address):
   """An expression requested by a procedure."""
@@ -68,7 +69,6 @@ class SubexpressionAddress(Address):
 
 builtin = BuiltinAddress
 directive = DirectiveAddress
-toplevel = DirectiveAddress
 subexpression = SubexpressionAddress
 
 def request(sp_addr, request_id):
@@ -80,6 +80,25 @@ def request(sp_addr, request_id):
     request_id = t.Pair(t.Blob, t.Object).asPython(request_id)
   return RequestAddress(sp_addr, request_id)
 
+def interpret_address_in_trace(address, trace_id, orig_trace_id=None):
+  if isinstance(address, BuiltinAddress):
+    return address
+  elif isinstance(address, DirectiveAddress):
+    if address.trace_id is orig_trace_id:
+      return directive(address.directive_id, trace_id)
+    else:
+      return address
+  elif isinstance(address, RequestAddress):
+    return RequestAddress(interpret_address_in_trace(address.sp_addr, trace_id, orig_trace_id),
+                          interpret_address_in_trace(address.request_id, trace_id, orig_trace_id))
+  elif isinstance(address, SubexpressionAddress):
+    return subexpression(address.index,
+                         interpret_address_in_trace(address.parent, trace_id, orig_trace_id))
+  else:
+    # Cover request ids that may not be addresses.  This is wrong if
+    # the request ID is a compound object that contains addresses, but
+    # I hope that doesn't happen.
+    return address
 
 ## VentureScript bindings for constructing addresses
 
@@ -95,7 +114,7 @@ class AddressMakerSP(SimulationSP):
     return t.Blob.asVentureValue(self.python_maker(*inputs))
 
 registerBuiltinSP("builtin", AddressMakerSP(builtin, [t.String]))
-registerBuiltinSP("toplevel", AddressMakerSP(toplevel, [t.Int]))
+registerBuiltinSP("toplevel", AddressMakerSP(lambda did: directive(did, None), [t.Int]))
 registerBuiltinSP("request", AddressMakerSP(request, [t.Blob, t.Object]))
 registerBuiltinSP("subexpression", AddressMakerSP(subexpression, [t.Int, t.Blob]))
 

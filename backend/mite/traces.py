@@ -65,6 +65,7 @@ class ITrace(object):
   def weight_bound(self, subproblem):
     raise NotImplementedError
 
+_trace_id = 0
 
 class AbstractTrace(ITrace):
   # common implementation of trace interface
@@ -73,6 +74,9 @@ class AbstractTrace(ITrace):
   def __init__(self, seed):
     super(AbstractTrace, self).__init__()
     prng = random.Random(seed)
+    global _trace_id
+    self.trace_id = _trace_id
+    _trace_id += 1
     self.np_prng = np.random.RandomState(prng.randint(1, 2**31 - 1))
     self.py_prng = random.Random(prng.randint(1, 2**31 - 1))
     self.directive_counter = 0
@@ -111,7 +115,7 @@ class AbstractTrace(ITrace):
 
   def next_base_address(self):
     self.directive_counter += 1
-    return addresses.directive(self.directive_counter)
+    return addresses.directive(self.directive_counter, self.trace_id)
 
   def predict_next_base_address(self):
     return self.directive_counter + 1
@@ -276,7 +280,10 @@ class FlatTrace(AbstractTrace):
     return Node(addr, sp)
 
   def value_at(self, addr):
-    return self.results[addr]
+    try:
+      return self.results[addr]
+    except KeyError:
+      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
   ## low level ops for manual inference programming
 

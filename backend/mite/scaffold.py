@@ -37,6 +37,10 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # extract-restore pass through the program and intercept the
   # requests it makes.
 
+  # If the input involved calls to `toplevel`, need to inject the ID
+  # of the current trace.  Harmless otherwise.
+  principal_address = addresses.interpret_address_in_trace(principal_address, trace.trace_id, None)
+
   kernels = OrderedDict()
   drg = set()
 

@@ -106,7 +106,10 @@ class DependencyGraphTrace(AbstractTrace):
     return Node(addr, sp)
 
   def value_at(self, addr):
-    return self.results[addr]
+    try:
+      return self.results[addr]
+    except KeyError:
+      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
   ## low level ops for manual inference programming
 
@@ -275,6 +278,10 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # dependency aware implementation to find a single-site scaffold.
   # somewhat brittle.
 
+  # If the input involved calls to `toplevel`, need to inject the ID
+  # of the current trace.  Harmless otherwise.
+  principal_address = addresses.interpret_address_in_trace(principal_address, trace.trace_id, None)
+
   assert isinstance(trace, DependencyGraphTrace)
 
   q = [(principal_address, None)]
@@ -295,7 +302,11 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   while q:
     addr, parent = q.pop()
 
-    node = trace.nodes[addr]
+    try:
+      node = trace.nodes[addr]
+    except KeyError:
+      print "Couldn't look up", addr, "in", trace.trace_id
+      raise
     kernel = None
     propagate = False
 
