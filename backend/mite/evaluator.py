@@ -79,7 +79,11 @@ class Evaluator(object):
   def apply_sp(self, addr, sp_node, args):
     sp = sp_node.value
     handle = TraceHandle(self.trace, sp_node.address)
-    return (0, sp.apply(handle, addr, args))
+    try:
+      return (0, sp.apply(handle, addr, args))
+    except Exception:
+      print "Tried applying sp", sp_node.value, "defined at", str(sp_node.address)[0:40], "to", [n.value for n in args]
+      raise
 
 class TraceHandle(object):
   def __init__(self, trace, sp_addr):
