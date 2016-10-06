@@ -358,7 +358,7 @@ def ddtheta_periodic(l2, T):
     d2 = (2.*sin(t))**2
     k, dk_l2 = _d_se_l2(d2, l2)
     return (k, [dk_l2, k * (4/(l2*T)) * t * sin(t) * cos(t)])
-  return ddtheta_isotropic(df)
+  return ddtheta_isotropic(df_theta)
 
 def ddx_periodic(l2, T):
   cos = np.cos
