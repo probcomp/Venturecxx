@@ -118,6 +118,12 @@ registerBuiltinSP("vector_add",
     t.ArrayUnboxedType(t.NumberType()),
     descr="%s(x, y) returns the sum of vectors x and y."))
 
+registerBuiltinSP("hadamard",
+  deterministic_typed(np.multiply,
+    [t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+    t.ArrayUnboxedType(t.NumberType()),
+    descr="%s(x, y) returns the Haramard (elementwise) product of vectors x and y."))
+
 registerBuiltinSP("matrix_add",
   deterministic_typed(np.add,
     [t.MatrixType(), t.MatrixType()],
