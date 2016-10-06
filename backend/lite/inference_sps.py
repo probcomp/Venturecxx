@@ -782,6 +782,11 @@ register_engine_method_sp("set_particle_log_weights",
                    desc="""\
 Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """)
 
+register_engine_method_sp("increment_particle_log_weights",
+                   infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),
+                   desc="""\
+Add the given array to the weights of the particles pointwise.  It is an error if the length of the array differs from the number of particles. """)
+
 register_engine_method_sp("for_each_particle",
                    infer_action_maker_type([t.AnyType("<action>")], t.ListType()), desc="""\
 Run the given inference action once for each particle in the
