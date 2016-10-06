@@ -87,6 +87,7 @@ def test_ddtheta_const():
           return cov.const(theta[0])(X, Y)[0][0]
         def df_dtheta():
           k, dk = cov.ddtheta_const(theta[0])(X, Y)
+          assert_allclose(k[0][0], f())
           assert all(np.all(dki != 0) for dki in dk)
           return dk
         check_ddtheta(f, df_dtheta, theta)
@@ -102,6 +103,7 @@ def test_ddtheta_se():
           return cov.se(theta[0])(X, Y)[0][0]
         def df_dtheta():
           k, dk = cov.ddtheta_se(theta[0])(X, Y)
+          assert_allclose(k[0][0], f())
           if x == y:
             assert all(np.all(dki == 0) for dki in dk)
           else:
@@ -122,6 +124,7 @@ def test_ddtheta_se_scaled():
           def df_dtheta():
             K = DKernel(cov.ddtheta_se(theta[1]))
             k, dk = cov.ddtheta_scale(theta[0], K)(X, Y)
+            assert_allclose(k[0][0], f())
             assert s2*dk[0] == k, 's2*dk[0]=%r k=%r' % (s2*dk[0], k)
             if x == y:
               assert all(np.all(dki == 0) for dki in dk[1:]), 'dk=%r' % (dk,)
@@ -145,6 +148,7 @@ def test_ddtheta_periodic():
             return cov.periodic(theta[0], theta[1])(X, Y)[0][0]
           def df_dtheta():
             k, dk = cov.ddtheta_periodic(theta[0], theta[1])(X, Y)
+            assert_allclose(k[0][0], f())
             if (x - y) % T == 0:
               assert all(np.all(dki == 0) for dki in dk), 'dk=%r' % (dk,)
             else:
@@ -164,6 +168,7 @@ def test_ddtheta_deltoid():
             return cov.deltoid(theta[0], theta[1])(X, Y)[0][0]
           def df_dtheta():
             k, dk = cov.ddtheta_deltoid(theta[0], theta[1])(X, Y)
+            assert_allclose(k[0][0], f())
             return dk
           check_ddtheta(f, df_dtheta, theta)
 
@@ -207,5 +212,6 @@ def test_ddtheta_sum_se_bump():
               K = DKernel(cov.ddtheta_se(theta[0]))
               H = DKernel(cov.ddtheta_bump(theta[1], theta[2]))
               k, dk = cov.ddtheta_sum(K, H)(X, Y)
+              assert_allclose(k[0][0], f())
               return dk
             check_ddtheta(f, df_dtheta, theta)

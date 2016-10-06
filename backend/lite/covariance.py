@@ -240,15 +240,15 @@ def ddtheta_deltoid(tolerance, steepness):
     t = tolerance
     s = steepness
     r_s = r2**(-s/2.)
-    k = np.exp(-t*r_s)
+    k1 = np.exp(-t*r_s)
     # Where r^2 = 0, k is zero, and so should dk/dt and dk/ds be.  But
     # r_s will have infinities there, and log(0) and 0*inf both give
     # NaN where we want zero.  So explicitly give zero there.
-    dk_dt = np.where(r2 == 0, np.zeros_like(r_s), k*r_s)
-    dk_ds = np.where(r2 == 0, np.zeros_like(r_s), -k*t*r_s*np.log(r2)/2.)
+    dk_dt = np.where(r2 == 0, np.zeros_like(r_s), k1*r_s)
+    dk_ds = np.where(r2 == 0, np.zeros_like(r_s), -k1*t*r_s*np.log(r2)/2.)
     assert np.all(np.isfinite(dk_dt)), '%r' % (dk_dt,)
     assert np.all(np.isfinite(dk_ds)), '%r' % (dk_ds,)
-    return (k, [dk_dt, dk_ds])
+    return (-np.expm1(-t*r_s), [dk_dt, dk_ds])
   return ddtheta_isotropic(df_theta)
 
 def ddx_deltoid(tolerance, steepness):
