@@ -144,6 +144,10 @@ registerBuiltinSP("zip", deterministic_typed(zip,
     descr="zip returns a list of lists, where the i-th nested list " \
           "contains the i-th element from each of the input arguments"))
 
+registerBuiltinSP("reverse", deterministic_typed(lambda l: list(reversed(l)),
+    [t.ListType()], t.ListType(),
+    descr="reverse reverses the order of its argument list"))
+
 def mk_dict(*entries):
   return dict([(e.lookup(v.VentureNumber(0)), e.lookup(v.VentureNumber(1)))
                for e in entries])
