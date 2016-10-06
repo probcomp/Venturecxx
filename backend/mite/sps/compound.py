@@ -14,8 +14,8 @@ class CompoundSP(VentureSP):
   def apply(self, trace_handle, application_id, inputs):
     if len(self.params) != len(inputs):
       raise VentureError("Wrong number of arguments: " \
-        "compound takes exactly %d arguments, got %d." \
-        % (len(self.params), len(inputs)))
+        "compound with body %s takes exactly %d arguments, got %d." \
+        % (self.exp, len(self.params), len(inputs)))
     extendedEnv = VentureEnvironment(self.env, self.params, inputs)
     addr = trace_handle.request_address(application_id)
     result = trace_handle.eval_request(
