@@ -511,7 +511,7 @@ def ddx_sum(K, H):
   def dk_sum_dx(x, Y):
     k, dk = K.df_x(x, Y)
     h, dh = H.df_x(x, Y)
-    return (k + h, dk + dh)
+    return (k + h, [dk_i + dh_i for dk_i, dh_i in zip(dk, dh)])
   return dk_sum_dx
 
 def product(K, H):

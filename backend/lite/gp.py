@@ -71,10 +71,16 @@ def _gp_gradientOfLogDensity(mean, ddx_mean, covariance, ddx_covariance,
   for x1, o1 in zip(xs1, os1):
     # Reformulate the question of d/d(x, o) log P(o | Mu, Sigma, x) as
     # d/d(o, Mu, Sigma) log P(o | Mu_*, Sigma_*).
-    mu1, dmu1_dx1 = ddx_mean(np.array([x1]))
+    mu1, dmu1_dx1 = ddx_mean(x1)
+    assert len(dmu1_dx1) == np.asarray(x1).reshape(-1).shape[0], \
+      '%r %r %r' % (x1, dmu1_dx1, np.asarray(x1).reshape(-1).shape)
     sigma11, dsigma11_dx1 = ddx_covariance(x1, np.array([x1]))
+    assert len(dsigma11_dx1) == np.asarray(x1).reshape(-1).shape[0], \
+      '%r %r %r' % (x1, dsigma11_dx1, np.asarray(x1).reshape(-1).shape)
     if samples:
       sigma12, dsigma12_dx1 = ddx_covariance(x1, xs2)
+      assert len(dsigma12_dx1) == np.asarray(x1).reshape(-1).shape[0], \
+        '%r %r %r' % (x1, dsigma12_dx1, np.asarray(x1).reshape(-1).shape)
       sigma21 = sigma12.T
       mu_, sigma_ = mvnormal.conditional(
         os2, mu1, mu2, sigma11, sigma12, sigma21, sigma22)
@@ -350,13 +356,14 @@ def shape_kernels(*ps):
 
 def mean_const(c):
   "Constant mean function, everywhere equal to c."
-  return lambda x: c*np.ones(x.shape[0])
+  return lambda X: c*np.ones(X.shape[0])
 
 def ddtheta_mean_const(c):
-  return lambda x: (c*np.ones(x.shape[0]), [np.ones(x.shape[0])])
+  return lambda X: (c*np.ones(X.shape[0]), [np.ones(X.shape[0])])
 
 def ddx_mean_const(c):
-  return lambda x: (c*np.ones(x.shape[0]), [np.zeros(x.shape[0])])
+  return lambda x: \
+    (c*np.ones(1), [np.zeros(1)]*np.asarray(x).reshape(-1).shape[0])
 
 registerBuiltinSP("gp_mean_const",
   _mean_grad_maker(
