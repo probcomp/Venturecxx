@@ -506,7 +506,12 @@ class VenturePair(VentureValue):
     if tail is None:
       return VentureArray(list_).getArray(elt_type)
     else:
-      raise Exception("Cannot convert an improper list to array")
+      try:
+        end_array = tail.getArray(elt_type)
+        front_array = VentureArray(list_).getArray(elt_type)
+        return end_array + front_array
+      except VentureTypeError:
+        raise Exception("Cannot convert an improper list to array")
 
   def asStackDict(self, trace=None):
     (list_, tail) = self.asPossiblyImproperList()
