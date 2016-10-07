@@ -113,10 +113,7 @@ def _gp_gradientOfLogDensityOfData(mean, covariance, samples):
   sigma, dsigma = covariance.df_theta(xs, xs)
   _dlogp_dos_i, dlogp_dmu_j, dlogp_dsigma_k = \
     mvnormal.dlogpdf(os, dos, mu, dmu, sigma, dsigma)
-  return [
-    v.VentureArrayUnboxed(dlogp_dmu_j, t.NumberType()),
-    v.VentureArrayUnboxed(dlogp_dsigma_k, t.NumberType()),
-  ]
+  return [dlogp_dmu_j, dlogp_dsigma_k]
 
 def _gp_mvnormal(mean, covariance, samples, xs):
   if len(samples) == 0:
@@ -347,8 +344,7 @@ class GPMeanType(t.VentureType):
   def distribution(self, base, **kwargs):
     return None
   def gradient_type(self):
-    # XXX Buh?
-    return t.AnyType()
+    return t.ArrayUnboxedType(t.NumericArrayType())
 
 
 class VentureGPCovarianceKernel(v.VentureValue):
@@ -381,8 +377,7 @@ class GPCovarianceType(t.VentureType):
   def distribution(self, base, **kwargs):
     return None
   def gradient_type(self):
-    # XXX Buh?
-    return t.AnyType()
+    return t.ArrayUnboxedType(t.NumericArrayType())
 
 
 makeGPType = SPType(
