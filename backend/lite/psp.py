@@ -504,7 +504,7 @@ class TypedPSP(PSP):
     (dvalue, dargs) = self.psp.gradientOfLogDensity(
       self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
     dvalue_wrapped = self.f_type.gradient_type().wrap_return(dvalue)
-    if dargs == 0:
+    if dargs is 0:
       dargs_wrapped = [0] * len(args.operandValues())
     else:
       dargs_wrapped = self.f_type.gradient_type().wrap_arg_list(dargs)
@@ -666,7 +666,7 @@ class TypedLKernel(LKernel):
     (dvalue, dargs) = self.kernel.gradientOfReverseWeight(trace,
       self.f_type.unwrap_return(value), self.f_type.unwrap_args(args))
     dvalue_wrapped = self.f_type.gradient_type().wrap_return(dvalue)
-    if dargs == 0:
+    if dargs is 0:
       dargs_wrapped = [0] * len(args.operandValues())
     else:
       dargs_wrapped = self.f_type.gradient_type().wrap_arg_list(dargs)
