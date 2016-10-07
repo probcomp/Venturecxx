@@ -291,7 +291,7 @@ def _deltoid(r2, t2, s):
 
 
 class deltoid(Isotropic):
-  """Deltoid kernel: 1 - e^{-t/r^s}.
+  """Deltoid kernel: 1 - e^{-1/(r/t)^s}.
 
   Shaped kinda like a sigmoid, but not quite.
   Behaves kinda like a delta, but smoothly.
