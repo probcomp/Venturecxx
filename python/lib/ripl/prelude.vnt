@@ -77,10 +77,6 @@
 ; Vector / matrix ops
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-[assume sum
-  (lambda (x)
-    (reduce + x 0))]
-
 [assume prod
   (lambda (x)
     (reduce * x 1))]
