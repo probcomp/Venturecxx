@@ -46,6 +46,8 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'make_ref', 'ref_get',
              # Needs a trace to work, so can't be faked out with MockArgs
              'address_of',
+             # Would need to coordinate matrix size with index
+             'row', 'col',
             ]
 
 # Select particular SPs to test thus:
