@@ -447,7 +447,7 @@ class VentureSivm(object):
                 'directive_id' : o1['directive_id'],
                 }
         self._call_core_sivm_instruction(inst3)
-        return {}
+        return {"value": o1["value"]}
 
     def _do_sample(self, instruction):
         exp = utils.validate_arg(instruction,'expression',
