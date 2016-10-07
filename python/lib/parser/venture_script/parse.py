@@ -746,32 +746,27 @@ class VentureScriptParser(object):
             return self.unparse_expression_and_mark_up(
                 instruction['expression'], expr_markers)
         unparsers = self.unparsers[i]
-        if i in ['forget', 'labeled_forget', 'freeze', 'labeled_freeze',
-                 'report', 'labeled_report', 'clear',
-                 'force', 'sample', 'continuous_inference_status',
-                 'start_continuous_inference', 'stop_continuous_inference',
-        ]:
-            open_char = '('
-            close_char = ')'
-        else:
-            open_char = '['
-            close_char = ']'
         chunks = []
         if 'label' in instruction and 'label' not in (k for k,_u in unparsers):
             chunks.append(instruction['label']['value'])
             chunks.append(': ')
-        chunks.append(open_char)
         if i[0 : len('labeled_')] == 'labeled_':
             chunks.append(i[len('labeled_'):])
         else:
             chunks.append(i)
-        for key, unparser in unparsers:
+        def append_unparsed(key, unparser):
             chunks.append(' ')
             if key == 'expression': # Urk
                 chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
             else:
                 chunks.append(unparser(self, instruction[key]))
-        chunks.append(close_char)
+        if len(unparsers) >= 1:
+            append_unparsed(*unparsers[0])
+        if len(unparsers) >= 2:
+            chunks.append(' =')
+            append_unparsed(*unparsers[1])
+        for key, unparser in unparsers[2:]:
+            append_unparsed(key, unparser)
         return ''.join(chunks)
 
     # XXX ???

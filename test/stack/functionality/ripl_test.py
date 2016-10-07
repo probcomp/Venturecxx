@@ -119,7 +119,7 @@ class TestRipl(unittest.TestCase):
         output = self.ripl.expression_index_to_text_index(did, [])
         # The indexes in this ouptut are large because of the double
         # macroexpansion bug.
-        self.assertEqual(output, [9,110])
+        self.assertEqual(output, [0,104])
 
 
     ############################################
