@@ -136,6 +136,8 @@ class Param(object):
     raise NotImplementedError
   def flat_size(self):
     raise NotImplementedError
+  def __repr__(self):
+    raise NotImplementedError
 
 class ParamLeaf(Param):
   @override(Param)
@@ -145,6 +147,10 @@ class ParamLeaf(Param):
   @override(Param)
   def flat_size(self):
     return 1
+
+  @override(Param)
+  def __repr__(self):
+    return 'R'
 
 class ParamProduct(Param):
   @override(Param)
@@ -156,6 +162,10 @@ class ParamProduct(Param):
   @override(Param)
   def flat_size(self):
     return self._flat_size
+
+  @override(Param)
+  def __repr__(self):
+    return 'P(%s)' % (','.join(f.__repr__() for f in self.factors),)
 
   @property
   def factors(self):
