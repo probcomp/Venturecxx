@@ -155,10 +155,10 @@ class TraceSet(object):
     self.traces.map('observe', baseAddr, datum, val)
 
   def forget(self, directiveId):
-    weights = self.traces.map('forget', directiveId)
+    weight_increments = self.traces.map('forget', directiveId)
     if directiveId in self._did_to_label:
       del self._did_to_label[directiveId]
-    return weights
+    return weight_increments
 
   def freeze(self, directiveId):
     self.traces.map('freeze', directiveId)

@@ -191,7 +191,7 @@ don't actually read the state (e.g., for doing IO)"""
 
 inferenceSPsList = []
 
-inferenceKeywords = [ "default", "all", "none", "one", "each", "ordered" ]
+inferenceKeywords = [ "default", "all", "none", "one", "each", "each_reverse", "ordered" ]
 
 def registerBuiltinInferenceSP(name, sp_obj):
   inferenceSPsList.append([name, sp_obj])
@@ -782,6 +782,11 @@ register_engine_method_sp("set_particle_log_weights",
                    desc="""\
 Set the weights of the particles to the given array.  It is an error if the length of the array differs from the number of particles. """)
 
+register_engine_method_sp("increment_particle_log_weights",
+                   infer_action_maker_type([t.ArrayUnboxedType(t.NumberType())]),
+                   desc="""\
+Add the given array to the weights of the particles pointwise.  It is an error if the length of the array differs from the number of particles. """)
+
 register_engine_method_sp("for_each_particle",
                    infer_action_maker_type([t.AnyType("<action>")], t.ListType()), desc="""\
 Run the given inference action once for each particle in the
@@ -813,7 +818,7 @@ register_ripl_macro_helper("assume", infer_action_maker_type([t.AnyType("<symbol
 
 register_ripl_macro_helper("observe", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType(), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=2))
 
-register_ripl_macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()]))
+register_ripl_macro_helper("force", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType()], return_type=t.AnyType()))
 
 register_ripl_macro_helper("predict", infer_action_maker_type([t.AnyType("<expression>"), t.AnyType("<label>")], return_type=t.AnyType(), min_req_args=1))
 
@@ -832,6 +837,14 @@ Removes the directive indicated by the label argument from the
 model.  If an assumption is forgotten, the symbol it binds
 disappears from scope; the behavior if that symbol was still
 referenced is unspecified.
+
+If the directive being forgotten was an observation, returns an array
+containing the log probability of the observed value in each particle.
+Otherwise returns an array of zeroes of the same length as the
+particle set.
+
+The particle weights are not modified, even if an observation is
+forgotten.
 """)
 
 register_ripl_method_sp("freeze", infer_action_maker_type([t.AnyType("<label>")]), desc="""\

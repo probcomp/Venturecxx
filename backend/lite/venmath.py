@@ -33,6 +33,8 @@ from venture.lite.sp_help import zero_gradient
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import T_logistic
 from venture.lite.utils import careful_exp
+from venture.lite.utils import d_log_logistic
+from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
 from venture.lite.utils import logaddexp
@@ -223,6 +225,14 @@ registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logisitc,
 
 registerBuiltinSP("logit", unaryNum(logit,
     descr="The logit (inverse logistic) function: log(x/(1-x))"))
+
+def grad_log_logistic(args, direction):
+  [x] = args
+  return [direction * d_log_logistic(x)]
+
+registerBuiltinSP("log_logistic", unaryNum(log_logistic,
+    sim_grad=grad_log_logistic,
+    descr="The log of the logistic function: -log (1 + exp(-x))"))
 
 registerBuiltinSP("logsumexp", deterministic_typed(logaddexp,
     [t.UArray(t.Number)], t.Number,

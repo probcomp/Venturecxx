@@ -60,6 +60,7 @@ import numpy as np
 from venture.exception import VentureException
 from venture.lite.value import VentureForeignBlob
 from venture.lite.value import VentureValue
+import venture.lite.address as addr
 import venture.value.dicts as v
 import plugins
 import utils as u
@@ -499,31 +500,23 @@ class Ripl():
         text = self._get_raw_text(directive_id)
         mode = self.directive_id_to_mode[directive_id]
         p = self.parsers[mode]
-        try:
-            ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
-        except VentureException:
-            # Perhaps the instruction got round-tripped through the
-            # unparser, which always emits church' syntax
-            from venture.parser.church_prime import ChurchPrimeParser
-            q = ChurchPrimeParser.instance()
-            ans = q.expression_index_to_text_index_in_instruction(text, expression_index)
+        ans = p.expression_index_to_text_index_in_instruction(text, expression_index)
         return ans
 
     def directive_id_for_label(self, label):
         return self.sivm.core_sivm.engine.get_directive_id(label)
 
-    def addr2Source(self, addr):
+    def addr2Source(self, address):
         """Takes an address and gives the corresponding (unparsed)
         source code and expression index."""
 
-        return self.sivm._resugar(list(addr.last))
+        return self.sivm._resugar(list(addr.top_frame(address).asList()))
 
     def humanReadable(self, exp=None, did=None, index=None, **kwargs):
         """Take a parsed expression and index and turn it into
         unparsed form with text indeces."""
 
-        from venture.parser import ChurchPrimeParser
-        p = ChurchPrimeParser.instance() # self._cur_parser() fails b/c VS can't unparse
+        p = self._cur_parser()
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
         if hasattr(sys.stdout, "fileno") and os.isatty(sys.stdout.fileno()):
@@ -884,8 +877,8 @@ Open issues:
 
     def force(self, expression, value, type=False):
         i = {'instruction':'force', 'expression':expression, 'value':value}
-        self.execute_instruction(i)
-        return None
+        weights = self.execute_instruction(i)["value"]
+        return v.vector(weights) if type else weights
 
     def sample(self, expression, type=False):
         i = {'instruction':'sample', 'expression':expression}
@@ -1035,8 +1028,8 @@ Open issues:
             if name in d:
                 d[name] = f(d[name])
 
-        def resugar(addr):
-            stuff = self.addr2Source(addr)
+        def resugar(address):
+            stuff = self.addr2Source(address)
             return (stuff['did'], tuple(stuff['index']))
 
         def getaddr((did, index)):

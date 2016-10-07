@@ -105,7 +105,6 @@ def testBlockingExample3(seed):
   assert oldb != newb
 
 @stochasticTest
-@broken_in("puma", "Puma does not support the 'each' block keyword (yet).")
 @on_inf_prim("mh")
 def testBlockingExample4(seed):
   ripl = get_ripl(seed=seed)
@@ -116,6 +115,23 @@ def testBlockingExample4(seed):
     oldb = ripl.report("b")
     # A deterministic sweep should touch each relevant block.
     ripl.infer("(mh 0 each 1)")
+    newa = ripl.report("a")
+    newb = ripl.report("b")
+    assert olda != newa
+    assert oldb != newb
+
+@stochasticTest
+@broken_in("puma", "Puma does not support the 'each_reverse' block keyword (yet).")
+@on_inf_prim("mh")
+def testBlockingExample5(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.assume("a", "(tag 0 0 (normal 0.0 1.0))", label="a")
+  ripl.assume("b", "(tag 0 1 (normal 1.0 1.0))", label="b")
+  for _ in range(10):
+    olda = ripl.report("a")
+    oldb = ripl.report("b")
+    # A deterministic sweep should touch each relevant block.
+    ripl.infer("(mh 0 each_reverse 1)")
     newa = ripl.report("a")
     newb = ripl.report("b")
     assert olda != newa

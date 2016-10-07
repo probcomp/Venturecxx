@@ -33,9 +33,12 @@ from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.utils import d_log_logistic
 from venture.lite.utils import extendedLog
 from venture.lite.utils import extendedLog1p
 from venture.lite.utils import logDensityCategorical
+from venture.lite.utils import log_logistic
+from venture.lite.utils import logit
 from venture.lite.utils import simulateCategorical
 from venture.lite.value import VentureInteger
 import venture.lite.types as t
@@ -80,8 +83,13 @@ class BernoulliOutputPSP(DiscretePSP):
       return [True,False]
 
   def description(self, name):
-    return '  %s(p) returns true with probability p and false otherwise. '\
-      'If omitted, p is taken to be 0.5.' % name
+    return '  {name}(p) returns true with probability p and false otherwise. '\
+      'If omitted, p is taken to be 0.5. '\
+      'If you are tempted to write ({name} (exp x)),'\
+      ' write (log_{name} x) instead. '\
+      'If you are tempted to write ({name} (logistic x)),'\
+      ' write (log_odds_{name} x) instead.'\
+      .format(name=name)
 
 
 registerBuiltinSP("flip", typed_nr(BernoulliOutputPSP(),
@@ -114,9 +122,12 @@ class LogBernoulliOutputPSP(DiscretePSP):
     else: return [True,False]
 
   def description(self, name):
-    return '  %s(p) returns true with probability exp(p) and false otherwise. '\
-      'This is useful for modeling very low probability events, because it '\
-      'does not suffer the underflow that %s(exp(p)) would.' % (name, name)
+    short = name[len('log_'):]
+    return '  {name}(logp) returns true with probability exp(logp)'\
+      ' and false otherwise. '\
+      'Equivalent to ({short} (exp logp)), but reduces the chance of'\
+      ' pathologies due to rounding (exp logp) to 0 or 1.'\
+      .format(name=name, short=short)
 
 
 registerBuiltinSP("log_flip", typed_nr(LogBernoulliOutputPSP(),
@@ -124,6 +135,44 @@ registerBuiltinSP("log_flip", typed_nr(LogBernoulliOutputPSP(),
 
 registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(),
   [t.NumberType()], t.BoolType()))
+
+
+class LogOddsBernoulliOutputPSP(DiscretePSP):
+  def simulate(self, args):
+    logodds = args.operandValues()[0]
+    return logit(args.py_prng().random()) < logodds
+
+  def logDensity(self, val, args):
+    logodds = args.operandValues()[0]
+    return log_logistic(logodds if val else -logodds)
+
+  def gradientOfLogDensity(self, val, args):
+    logodds = args.operandValues()[0]
+    return (0, [d_log_logistic(logodds) if val else -d_log_logistic(-logodds)])
+
+  def enumerateValues(self, args):
+    logodds = args.operandValues()[0]
+    inf = float('inf')
+    if logodds == +inf:
+      return [True]
+    elif logodds == -inf:
+      return [False]
+    else:
+      return [True, False]
+
+  def description(self, name):
+    short = name[len('log_odds_'):]
+    return '  {name}(x) returns true with log odds x and false otherwise. '\
+      'Equivalent to ({short} (logistic x)), but reduces the chance of'\
+      ' pathologies due to rounding (logistic x) to 0 or 1.'\
+      .format(name=name, short=short)
+
+
+registerBuiltinSP("log_odds_flip", typed_nr(LogOddsBernoulliOutputPSP(),
+  [t.NumberType()], t.BoolType()))
+
+registerBuiltinSP("log_odds_bernoulli", typed_nr(LogOddsBernoulliOutputPSP(),
+  [t.NumberType()], t.IntegerType()))
 
 
 class BinomialOutputPSP(DiscretePSP):

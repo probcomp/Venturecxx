@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from venture.lite.node import jsonable_address
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import TypedPSP
 from venture.lite.request import ESR
@@ -25,13 +26,18 @@ from venture.lite.sp_help import type_test
 from venture.lite.sp_help import typed_func
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.address as addr
 import venture.lite.env as env
 import venture.lite.types as t
 
-registerBuiltinSP("get_current_environment", typed_func(lambda args: args.env, [], env.EnvironmentType(),
-                                                        descr="get_current_environment returns the lexical environment of its invocation site"))
-registerBuiltinSP("get_empty_environment", typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
-                                                      descr="get_empty_environment returns the empty environment"))
+registerBuiltinSP("get_current_environment",
+  typed_func(lambda args: args.env, [], env.EnvironmentType(),
+             descr="get_current_environment returns the lexical environment of its invocation site"))
+
+registerBuiltinSP("get_empty_environment",
+  typed_func(lambda args: env.VentureEnvironment(), [], env.EnvironmentType(),
+             descr="get_empty_environment returns the empty environment"))
+
 registerBuiltinSP("is_environment", type_test(env.EnvironmentType()))
 
 class ExtendEnvOutputPSP(DeterministicPSP):
@@ -42,19 +48,33 @@ class ExtendEnvOutputPSP(DeterministicPSP):
   def description(self,name):
     return "%s returns an extension of the given environment where the given symbol is bound to the given object" % name
 
-registerBuiltinSP("extend_environment", typed_nr(ExtendEnvOutputPSP(),
-                                                 [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
-                                                 env.EnvironmentType()))
+registerBuiltinSP("extend_environment",
+  typed_nr(ExtendEnvOutputPSP(),
+           [env.EnvironmentType(), t.SymbolType(), t.AnyType()],
+           env.EnvironmentType()))
 
 class EvalRequestPSP(DeterministicPSP):
   def simulate(self,args):
     (exp, en) = args.operandValues()
-    # point to the desugared source code location of lambda body
-    addr = args.operandNodes[0].address.last.append(1)
-    return Request([ESR(args.node,exp,addr,en)])
+    # Point to the desugared source code location of expression.
+    # This is not a full address, because the call stack is gone.
+    source_loc = addr.append(addr.top_frame(args.operandNodes[0].address), 1)
+    return Request([ESR(args.node,exp,source_loc,en)])
   def description(self,name):
     return "%s evaluates the given expression in the given environment and returns the result.  Is itself deterministic, but the given expression may involve a stochasitc computation." % name
 
-registerBuiltinSP("eval",esr_output(TypedPSP(EvalRequestPSP(),
-                                             SPType([t.ExpressionType(), env.EnvironmentType()],
-                                                    t.RequestType("<object>")))))
+registerBuiltinSP("eval",
+  esr_output(TypedPSP(EvalRequestPSP(),
+                      SPType([t.ExpressionType(), env.EnvironmentType()],
+                             t.RequestType("<object>")))))
+
+class AddressOfOutputPSP(DeterministicPSP):
+  def simulate(self,args):
+    place = args.operandNodes[0]
+    node = args.trace.getOutermostNonReferenceNode(place)
+    return jsonable_address(node)
+  def description(self,name):
+    return "%s returns a string representing the address of the top nontrivial node of its argument" % name
+
+registerBuiltinSP("address_of",
+  typed_nr(AddressOfOutputPSP(), [t.AnyType()], t.StringType()))

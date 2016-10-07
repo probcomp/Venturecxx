@@ -224,6 +224,11 @@ class Infer(object):
     assert len(new_weights) == len(self.engine.model.log_weights), \
       "set_particle_log_weights got %d weights, but there are %d particles"
     self.engine.model.log_weights = new_weights
+  def increment_particle_log_weights(self, weight_increments):
+    assert len(weight_increments) == len(self.engine.model.log_weights), \
+      "increment_particle_log_weights got %d weights, but there are %d particles"
+    self.engine.model.log_weights = \
+      [i + w for (i, w) in zip(weight_increments, self.engine.model.log_weights)]
   def particle_normalized_probs(self):
     return logWeightsToNormalizedDirect(self.particle_log_weights())
 
@@ -402,6 +407,10 @@ def print_fun(*args):
 
 inf.registerBuiltinInferenceSP("print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
 Print the given values to the terminal.
+
+If you are trying to add a debugging print statement to a VentureScript expression
+that is not already an inference action, consider using `debug`, which does not
+require sequencing.
 """))
 
 def plot_fun(spec, dataset):

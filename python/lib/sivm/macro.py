@@ -650,6 +650,10 @@ observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
 
   The ``<label>``, if supplied, may be used to `forget` this observation.
 
+  This is an action returning an array containing the log probability of
+  the observed value in each particle.  The particle weights are
+  incremented by this difference automatically.
+
 """, intended_for_inference=True)
 
 forceMacro = SyntaxRule(["force", "exp", "val"],
@@ -663,6 +667,11 @@ forceMacro = SyntaxRule(["force", "exp", "val"],
   Force the model to set the requested variable to the given value,
   without constraining it to stay that way. Implemented as an
   `observe` followed by a `forget`.
+
+  This is an action returning an array containing the log probability of
+  the observed value in each particle.  The particle weights *are*
+  incremented by this difference automatically, even though the
+  observation is immediately forgotten.
 
 """, intended_for_inference=True)
 

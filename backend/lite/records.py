@@ -117,6 +117,9 @@ class VentureRecord(vv.VentureValue):
   def map_real(self, f):
     return VentureRecord(self.tag, [x.map_real(f) for x in self.fields])
 
+  def __str__(self):
+    return "A Venture record of type %s at address 0x%x" % (self.tag, id(self))
+
 def record(tag, arity):
   typ = RecordType(tag)
   tester = sp_help.type_test(typ)

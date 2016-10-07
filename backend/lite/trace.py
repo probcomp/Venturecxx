@@ -25,8 +25,6 @@ import numpy.random as npr
 from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
-from venture.lite.address import Address
-from venture.lite.address import List
 from venture.lite.builtin import builtInSPs
 from venture.lite.builtin import builtInValues
 from venture.lite.detach import detachAndExtract
@@ -65,6 +63,7 @@ from venture.lite.value import SPRef
 from venture.lite.value import VenturePair
 from venture.lite.value import VentureSymbol
 from venture.lite.value import VentureValue
+import venture.lite.address as addr
 import venture.lite.infer as infer
 
 class Trace(object):
@@ -142,7 +141,7 @@ class Trace(object):
 
   def _normalizeEvaluatedScopeOrBlock(self, val):
     if isinstance(val, VentureSymbol):
-      if val.getSymbol() in ["default", "none", "one", "all", "each", "ordered"]:
+      if val.getSymbol() in ["default", "none", "one", "all", "each", "each_reverse", "ordered"]:
         return val.getSymbol()
     elif isinstance(val, VenturePair):
       if isinstance(val.first, VentureSymbol) and \
@@ -390,7 +389,7 @@ class Trace(object):
   def eval(self, id, exp):
     assert id not in self.families
     (_, self.families[id]) = evalFamily(
-      self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
+      self, addr.directive_address(id), self.unboxExpression(exp), self.globalEnv,
       Scaffold(), False, OmegaDB(), OrderedDict())
 
   def bindInGlobalEnv(self, sym, id):
@@ -688,7 +687,7 @@ the scaffold determined by the given expression."""
   def evalAndRestore(self, id, exp, db):
     assert id not in self.families
     (_, self.families[id]) = evalFamily(
-      self, Address(List(id)), self.unboxExpression(exp), self.globalEnv,
+      self, addr.directive_address(id), self.unboxExpression(exp), self.globalEnv,
       Scaffold(), True, db, OrderedDict())
 
   def has_own_prng(self): return True

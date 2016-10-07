@@ -266,10 +266,10 @@ class VentureSivm(object):
 
     def _resugar(self, index):
         did = index[0]
-        if not did:
-            # The empty address used at the top of "mem"s contains the
-            # empty list in the location that usually holds dids.
-            # Skip that frame.
+        if isinstance(did, basestring):
+            # The object used at the top of "mem"s contains a string
+            # in the location that usually holds dids.  Skip that
+            # frame.
             return None
         if self._hack_skip_inference_prelude_entry(did):
             # The reason to skip is that those entries are (still)
@@ -447,7 +447,7 @@ class VentureSivm(object):
                 'directive_id' : o1['directive_id'],
                 }
         self._call_core_sivm_instruction(inst3)
-        return {}
+        return {"value": o1["value"]}
 
     def _do_sample(self, instruction):
         exp = utils.validate_arg(instruction,'expression',

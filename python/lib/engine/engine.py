@@ -109,23 +109,23 @@ class Engine(object):
     baseAddr = self.nextBaseAddr()
     self.model.observe(baseAddr, datum, val)
     if True: # TODO: add flag to toggle auto-incorporation
-      weights = self.incorporate()
-    return (baseAddr, weights)
+      weight_increments = self.incorporate()
+    return (baseAddr, weight_increments)
 
   def labeled_observe(self, label, datum, val):
     baseAddr = self.nextBaseAddr()
     self.model.labeled_observe(label, baseAddr, datum, val)
     if True: # TODO: add flag to toggle auto-incorporation
-      weights = self.incorporate()
-    return (baseAddr, weights)
+      weight_increments = self.incorporate()
+    return (baseAddr, weight_increments)
 
   def forget(self,directiveId):
-    weights = self.model.forget(directiveId)
-    return weights
+    weight_increments = self.model.forget(directiveId)
+    return weight_increments
 
   def labeled_forget(self, label):
-    weights = self.model.labeled_forget(label)
-    return weights
+    weight_increments = self.model.labeled_forget(label)
+    return weight_increments
 
   def get_directive_id(self, label):
     return self.model.get_directive_id(label)
@@ -137,10 +137,10 @@ class Engine(object):
     # TODO: The directive counter increments, but the "force" isn't added
     # to the list of directives
     # This mirrors the implementation in the core_sivm, but could be changed?
-    (did, _weights) = self.observe(datum, val)
+    (did, weight_increments) = self.observe(datum, val)
     self.incorporate()
     self.forget(did)
-    return did
+    return weight_increments
 
   def sample(self,datum):
     # TODO Officially this is taken care of by the Venture SIVM level,

@@ -43,7 +43,16 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'dict', 'to_dict',
              # Can't synthesize dict arguments
              'keys', 'values',
-             'make_ref', 'ref_get']
+             'make_ref', 'ref_get',
+             # Needs a trace to work, so can't be faked out with MockArgs
+             'address_of',
+             # Would need to coordinate matrix size with index
+             'row', 'col',
+             # Can't construct covariance kernels to parametrize these.
+             'gp_cov_bias', 'gp_cov_scale', 'gp_cov_sum', 'gp_cov_product',
+             # Can't synthesize origins with NumericArrayType.
+             'gp_cov_linear',
+            ]
 
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'
@@ -121,6 +130,7 @@ def testRandom():
     if sp.outputPSP.isRandom():
       if name in ["make_uc_dir_cat", "categorical", "make_uc_sym_dir_cat",
                   "log_bernoulli", "log_flip",  # Because the default distribution does a bad job of picking arguments at which log_bernoulli's output actually varies.
+                  "log_odds_bernoulli", "log_odds_flip", # Ditto
                   "exactly" # Because it intentionally pretends to be random even though it's not.
       ]:
         continue
