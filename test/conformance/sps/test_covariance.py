@@ -28,10 +28,12 @@ from venture.test.numerical import gradient_from_lenses
 
 # XXX Kludge to avoid VenturePartialDiffableFunction.
 class DKernel(object):
-  def __init__(self, dk_dtheta):
-    self._dk_dtheta = dk_dtheta
+  def __init__(self, dk):
+    self._dk = dk
   def df_theta(self, X, Y):
-    return self._dk_dtheta(X, Y)
+    return self._dk(X, Y)
+  def df_x(self, x, Y):
+    return self._dk(x, Y)
 
 class Box(object):
   def __init__(self, content):
@@ -76,12 +78,25 @@ def check_ddtheta(f, df_dtheta, theta):
   assert np.all(np.isfinite(numerical_values)), '%r' % (numerical_values,)
   assert_allclose(numerical_values, analytical_values)
 
-def test_ddtheta_const():
+def check_ddx(f, df_dx, x, Y):
+  k, dk_analytical = df_dx(x, Y)
+  assert_allclose(k, f(np.array([x]), Y))
+  assert np.all(np.isfinite(dk_analytical)), '%r' % (dk_analytical,)
+  X = [x]
+  lenses = list_lenses(X)
+  def f_():
+    return f(np.asarray(X), Y)
+  dk_numerical = gradient_from_lenses(f_, lenses, step0=0.0001)
+  assert np.all(np.isfinite(dk_numerical)), '%r' % (dk_numerical,)
+  assert_allclose(dk_numerical, dk_analytical)
+
+def test_const():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
       Y = np.array([y])
       for c in [-1, 0, 1]:
+        check_ddx(cov.const(c), cov.ddx_const(c), x, Y)
         theta = [c]
         def f():
           return cov.const(theta[0])(X, Y)[0][0]
@@ -92,12 +107,13 @@ def test_ddtheta_const():
           return dk
         check_ddtheta(f, df_dtheta, theta)
 
-def test_ddtheta_se():
+def test_se():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
       Y = np.array([y])
       for l2 in [.01, 1, 10, 100]:
+        check_ddx(cov.se(l2), cov.ddx_se(l2), x, Y)
         theta = [l2]
         def f():
           return cov.se(theta[0])(X, Y)[0][0]
@@ -111,13 +127,17 @@ def test_ddtheta_se():
           return dk
         check_ddtheta(f, df_dtheta, theta)
 
-def test_ddtheta_se_scaled():
+def test_se_scaled():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
       Y = np.array([y])
       for s2 in [.1, 1, 10, 100]:
         for l2 in [.1, 1, 10]:
+          check_ddx(
+            cov.scale(s2, cov.se(l2)),
+            cov.ddx_scale(s2, DKernel(cov.ddx_se(l2))),
+            x, Y)
           theta = [s2, l2]
           def f():
             return cov.scale(theta[0], cov.se(theta[1]))(X, Y)[0][0]
@@ -136,13 +156,14 @@ def test_ddtheta_se_scaled():
             return dk
           check_ddtheta(f, df_dtheta, theta)
 
-def test_ddtheta_periodic():
+def test_periodic():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
       Y = np.array([y])
       for l2 in [.1, 1, 10]:
         for T in [2e-1*np.pi, 2*np.pi, 2e1*np.pi]:
+          check_ddx(cov.periodic(l2, T), cov.ddx_periodic(l2, T), x, Y)
           theta = [l2, T]
           def f():
             return cov.periodic(theta[0], theta[1])(X, Y)[0][0]
@@ -156,13 +177,14 @@ def test_ddtheta_periodic():
             return dk
           check_ddtheta(f, df_dtheta, theta)
 
-def test_ddtheta_deltoid():
+def test_deltoid():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
       Y = np.array([y])
       for t in [.1, 1, 10]:
-        for s in [.1, 1, 10]:
+        for s in [.5, 1, 2]:
+          check_ddx(cov.deltoid(t, s), cov.ddx_deltoid(t, s), x, Y)
           theta = [t, s]
           def f():
             return cov.deltoid(theta[0], theta[1])(X, Y)[0][0]
@@ -172,15 +194,16 @@ def test_ddtheta_deltoid():
             return dk
           check_ddtheta(f, df_dtheta, theta)
 
-def test_ddtheta_bump():
+def test_bump():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
       Y = np.array([y])
-      for mint in [.4, 1.4, 2.4]:
-        for maxt in [.6, 1.6, 2.6]:
+      for mint in [.4, 0.8, 3.5]:
+        for maxt in [.6, 1.2, 4.5]:
           if maxt < mint:
             continue
+          check_ddx(cov.bump(mint, maxt), cov.ddx_bump(mint, maxt), x, Y)
           theta = [mint**2, maxt**2]
           def f():
             return cov.bump(theta[0], theta[1])(X, Y)[0][0]
@@ -193,7 +216,7 @@ def test_ddtheta_bump():
             return dk
           check_ddtheta(f, df_dtheta, theta)
 
-def test_ddtheta_sum_se_bump():
+def test_sum_se_bump():
   for x in [-1, 0, 1]:
     X = np.array([x])
     for y in [-1, 0, 1]:
@@ -203,6 +226,13 @@ def test_ddtheta_sum_se_bump():
           for maxt in [.6, 1.6, 2.6]:
             if maxt < mint:
               continue
+            check_ddx(
+              cov.sum(cov.se(l2), cov.bump(mint, maxt)),
+              cov.ddx_sum(
+                DKernel(cov.ddx_se(l2)),
+                DKernel(cov.ddx_bump(mint, maxt))
+              ),
+              x, Y)
             theta = [l2, mint, maxt]
             def f():
               K = cov.se(theta[0])
