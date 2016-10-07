@@ -233,7 +233,7 @@ def deltoid(tolerance, steepness):
     return _deltoid(r2, tolerance, steepness)
   return isotropic(f)
 
-# First, note that since d(a^b) = a^b [log a db + (b/a) da].
+# First, note that since d(a^b) = a^b [log a db + (b/a) da],
 #
 #       d (r/t)^{-s} = (r/t)^{-s} [log (r/t) ds + s/(r/t) d(r/t)]
 #         = (r/t)^{-s} [log (r/t) ds + (s t / r) (t dr - r dt)/t^2]
