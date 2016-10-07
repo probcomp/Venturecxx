@@ -61,65 +61,84 @@ from __future__ import division
 import numpy as np
 import scipy.spatial.distance
 
-# Trivial covariance kernel
+from venture.lite.utils import override
+from venture.lite.function import ParamLeaf
+from venture.lite.function import ParamProduct
 
-def const(c):
-  """Constant kernel, everywhere equal to c."""
-  def k(X, Y):
+
+class Kernel(object):
+  def __init__(self, *args, **kwargs):
+    raise NotImplementedError
+  def __repr__(self):
+    raise NotImplementedError
+  @property
+  def parameters(self):
+    raise NotImplementedError('Non-differentiable kernel: %r' % (self,))
+  def f(self, X, Y):
+    raise NotImplementedError
+  def df_theta(self, X, Y):
+    raise NotImplementedError
+  def df_x(self, x, Y):
+    raise NotImplementedError
+
+
+class const(Kernel):
+  """Constant kernel: everywhere equal to c."""
+
+  @override(Kernel)
+  def __init__(self, c):
+    self._c = c
+
+  @override(Kernel)
+  def __repr__(self):
+    return 'CONST(%r)' % (self._c,)
+
+  @property
+  @override(Kernel)
+  def parameters(self):
+    return [ParamLeaf()]
+
+  @override(Kernel)
+  def f(self, X, Y):
+    c = self._c
     return c*np.ones((len(Y), len(X)))
-  return k
 
-def ddtheta_const(c):
-  f = const(c)
-  def dk_const_dtheta(X, Y):
-    k = f(X, Y)
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    k = self.f(X, Y)
     return (k, [np.ones(k.shape)])
-  return dk_const_dtheta
 
-def ddx_const(c):
-  f = const(c)
-  def dk_const_dx(x, Y):
-    k = f(np.array([x]), Y)
+  @override(Kernel)
+  def df_x(self, x, Y):
+    k = self.f(np.array([x]), Y)
     dk = [np.zeros((1, len(Y)))]*np.asarray(x).reshape(-1).shape[0]
     return (k, dk)
-  return dk_const_dx
 
-# Isotropic covariance kernels
 
-def isotropic(f):
-  """Isotropic kernel: k(x, y) = f(||x - y||^2).
+class Isotropic(Kernel):
+  """Isotropic kernel: k(x, y) = k_r2(|x - y|^2), for some k_r2."""
 
-  Given a function f(r) on a matrix of all pairwise distances between
-  two sets of input points, yields a covariance kernel k(X, Y) on two
-  arrays of input points.
-  """
-  def k(X, Y):
+  def k_r2(self, r2):
+    raise NotImplementedError
+  def ddtheta_k_r2(self, r2):
+    raise NotImplementedError
+  def ddr2_k_r2(self, r2):
+    raise NotImplementedError
+
+  @override(Kernel)
+  def f(self, X, Y):
+    # XXX Use _isotropic.
+    f = self.k_r2
     X = X.reshape(len(X), -1)
     Y = Y.reshape(len(Y), -1)
     return f(scipy.spatial.distance.cdist(X, Y, 'sqeuclidean'))
-  return k
 
-def ddtheta_isotropic(df_theta):
-  """Isotropic kernel derivative with respect to parameters.
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    return _isotropic(self.ddtheta_k_r2, X, Y)
 
-  Given a function df_theta(r^2) that maps a matrix of squared
-  distances between every pair of points in two arrays of inputs to a
-  matrix of d/dtheta kappa({r_ij}^2) covariance derivatives, yields a
-  covariance kernel derivative dk_theta(X, Y) that maps two arrays of
-  input points to a matrix of d/dtheta k(x, y) covariance derivatives.
-  """
-  return isotropic(df_theta)
-
-def ddx_isotropic(df):
-  """Isotropic kernel partial derivative with respect to input point.
-
-  Given a function df_r2(r2) that maps a vector of squared distances
-  to a vector of derivatives with respect to squared distance, yields
-  a covariance kernel partial derivative dk_x(x, Y) that maps a point
-  x and an array of points Y to a vector of partial derivatives with
-  respect to x at each of the pairs (x, y_i).
-  """
-  def ddx_k(x, Y):
+  @override(Kernel)
+  def df_x(self, x, Y):
     # For x, y_j in R^m, consider varying only x, so that dy_j = 0 for
     # all j.  Define
     #
@@ -203,7 +222,7 @@ def ddx_isotropic(df):
     # derivative matrix f_ = (kappa'(r_ij^2))_ij.  Note that i = 1, so
     # that both k and f_ are single-row matrices.
     #
-    k, f_ = df(r2)              # matrix and increment in matrix
+    k, f_ = self.ddr2_k_r2(r2)  # matrix and increment in matrix
 
     # Yield the covariance matrix k and the list of partial
     # derivatives [(kappa'(r_ij^2) d/dx^nu r_ij^2)_ij]_nu by computing
@@ -211,29 +230,39 @@ def ddx_isotropic(df):
     # with the matrix dr2[nu] = (d/dx^nu r_ij^2)_ij for each nu.
     #
     return (k, [f_*dr2_k for dr2_k in dr2])
-  return ddx_k
 
-def delta(tolerance):
-  """Delta kernel: 1, if r^2 is at most tolerance; else 0."""
-  def f(r2):
+
+def _isotropic(f, X, Y):
+  X = X.reshape(len(X), -1)
+  Y = Y.reshape(len(Y), -1)
+  return f(scipy.spatial.distance.cdist(X, Y, 'sqeuclidean'))
+
+
+class delta(Isotropic):
+  """Delta kernel: 1 if r^2 is at most tolerance, else 0."""
+
+  @override(Isotropic)
+  def __init__(self, tolerance):
+    self._tolerance = tolerance
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'DELTA(t^2=%r)' % (self._tolerance,)
+
+  @property
+  @override(Isotropic)
+  def parameters(self):
+    return [ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    tolerance = self._tolerance
     return 1.*(r2 <= tolerance)
-  return isotropic(f)
+
 
 def _deltoid(r2, t2, s):
   return -np.expm1(-(r2/t2)**(-s/2))
 
-def deltoid(tolerance, steepness):
-  """Deltoid kernel: 1 - e^{-1/(r/t)^s}.
-
-  Shaped kinda like a sigmoid, but not quite.
-  Behaves kinda like a delta, but smoothly.
-
-  Tolerance is in units of squared distance and determines at what
-  squared radius the covariance kernel attains 1/2.
-  """
-  def f(r2):
-    return _deltoid(r2, tolerance, steepness)
-  return isotropic(f)
 
 # First, note that since d(a^b) = a^b [log a db + (b/a) da],
 #
@@ -260,10 +289,39 @@ def deltoid(tolerance, steepness):
 #         = (-1/2) e^{-(r^2/t^2)^{-s/2}} (r^2/t^2)^{-s/2}
 #             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt^2].
 
-def ddtheta_deltoid(tolerance, steepness):
-  def df_theta(r2):
-    t2 = tolerance
-    s = steepness
+
+class deltoid(Isotropic):
+  """Deltoid kernel: 1 - e^{-t/r^s}.
+
+  Shaped kinda like a sigmoid, but not quite.
+  Behaves kinda like a delta, but smoothly.
+
+  Tolerance is in units of squared distance and determines at what
+  squared radius the covariance kernel attains 1/2.
+  """
+
+  @override(Isotropic)
+  def __init__(self, tolerance, steepness):
+    self._tolerance = tolerance
+    self._steepness = steepness
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'DELTOID(t^2=%r, s=%r)' % (self._tolerance, self._steepness)
+
+  @property
+  @override(Isotropic)
+  def parameters(self):
+    return [ParamLeaf(), ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    return _deltoid(r2, self._tolerance, self._steepness)
+
+  @override(Isotropic)
+  def ddtheta_k_r2(self, r2):
+    t2 = self._tolerance
+    s = self._steepness
     u = -(r2/t2)**(-s/2)
     v = 0.5*np.exp(u)*u
     k = -np.expm1(u)
@@ -272,12 +330,11 @@ def ddtheta_deltoid(tolerance, steepness):
     assert np.all(np.isfinite(dk_dt2)), '%r' % (dk_dt2,)
     assert np.all(np.isfinite(dk_ds)), '%r' % (dk_ds,)
     return (k, [dk_dt2, dk_ds])
-  return ddtheta_isotropic(df_theta)
 
-def ddx_deltoid(tolerance, steepness):
-  def df_r2(r2):
-    t2 = tolerance
-    s = steepness
+  @override(Isotropic)
+  def ddr2_k_r2(self, r2):
+    t2 = self._tolerance
+    s = self._steepness
     u = -(r2/t2)**(-s/2)
     k = -np.expm1(u)
     # For the self-covariances, just give zero derivative because we
@@ -287,7 +344,7 @@ def ddx_deltoid(tolerance, steepness):
     dk = np.where(r2 == 0, np.zeros_like(r2), 0.5*np.exp(u)*u*s/r2)
     assert np.all(np.isfinite(dk)), '%r' % (dk,)
     return (k, dk)
-  return ddx_isotropic(df_r2)
+
 
 def _on_ring(x, a, b, inner, middle, outer):
   return np.where(x <= a, inner, np.where(x < b, middle, outer))
@@ -299,16 +356,34 @@ def _bump(r2, t_0, t_1):
     np.exp(1 - (t_1 - t_0)/(t_1 - r2)),
     np.zeros_like(r2))
 
-def bump(min_tolerance, max_tolerance):
-  """Bump kernel: 1 if r^2 < min_tolerance, 0 if r^2 > max_tolerance."""
-  def f(r2):
-    return _bump(r2, min_tolerance, max_tolerance)
-  return isotropic(f)
 
-def ddtheta_bump(min_tolerance, max_tolerance):
-  def df_theta(r2):
-    t_0 = min_tolerance
-    t_1 = max_tolerance
+class bump(Isotropic):
+  """Bump kernel: 1 if r^2 < min_tolerance, 0 if r^2 > max_tolerance."""
+
+  @override(Isotropic)
+  def __init__(self, min_tolerance, max_tolerance):
+    self._min_tolerance = min_tolerance
+    self._max_tolerance = max_tolerance
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'BUMP(min=%r, max=%r)' % (self._min_tolerance, self._max_tolerance)
+
+  @property
+  @override(Isotropic)
+  def parameters(self):
+    return [ParamLeaf(), ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    min_tolerance = self._min_tolerance
+    max_tolerance = self._max_tolerance
+    return _bump(r2, min_tolerance, max_tolerance)
+
+  @override(Isotropic)
+  def ddtheta_k_r2(self, r2):
+    t_0 = self._min_tolerance
+    t_1 = self._max_tolerance
     k = _bump(r2, t_0, t_1)
     dk_dt0 = _on_ring(r2, t_0, t_1,
       np.zeros_like(r2), k/(t_1 - r2), np.zeros_like(r2))
@@ -317,26 +392,21 @@ def ddtheta_bump(min_tolerance, max_tolerance):
     assert np.all(np.isfinite(dk_dt0)), '%r' % (dk_dt0,)
     assert np.all(np.isfinite(dk_dt1)), '%r' % (dk_dt1,)
     return (k, [dk_dt0, dk_dt1])
-  return ddtheta_isotropic(df_theta)
 
-def ddx_bump(min_tolerance, max_tolerance):
-  def df_r2(r2):
-    t_0 = min_tolerance
-    t_1 = max_tolerance
+  @override(Isotropic)
+  def ddr2_k_r2(self, r2):
+    t_0 = self._min_tolerance
+    t_1 = self._max_tolerance
     w = t_1 - t_0
     k = _bump(r2, t_0, t_1)
     dk_dr2 = _on_ring(r2, t_0, t_1,
       np.zeros_like(r2), -k*w/(t_1 - r2)**2, np.zeros_like(r2))
     assert np.all(np.isfinite(dk_dr2)), '%r' % (dk_dr2,)
     return (k, dk_dr2)
-  return ddx_isotropic(df_r2)
+
 
 def _se(r2, l2):
   return np.exp(-0.5 * r2 / l2)
-
-def se(l2):
-  """Squared-exponential kernel: e^(-r^2 / (2 l^2))"""
-  return isotropic(lambda r2: _se(r2, l2))
 
 def _d_se_l2(r2, l2):
   """d/d(l^2) of squared exponential kernel."""
@@ -348,46 +418,92 @@ def _d_se_r2(r2, l2):
   k = _se(r2, l2)
   return (k, k * -0.5 / l2)
 
-def ddtheta_se(l2):
-  def df_theta(r2):
+
+class se(Isotropic):
+  """Squared-exponential kernel: e^(-r^2 / (2 l^2))"""
+
+  @override(Isotropic)
+  def __init__(self, l2):
+    self._l2 = l2
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'SE(l^2=%r)' % (self._l2,)
+
+  @property
+  @override(Isotropic)
+  def parameters(self):
+    return [ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    l2 = self._l2
+    return _se(r2, l2)
+
+  @override(Isotropic)
+  def ddtheta_k_r2(self, r2):
+    l2 = self._l2
     k, dk = _d_se_l2(r2, l2)
     return (k, [dk])
-  return ddtheta_isotropic(df_theta)
 
-def ddx_se(l2):
-  def df_r2(r2):
+  @override(Isotropic)
+  def ddr2_k_r2(self, r2):
+    l2 = self._l2
     k, dk = _d_se_r2(r2, l2)
     return (k, dk)
-  return ddx_isotropic(df_r2)
 
-def periodic(l2, T):
+
+class periodic(Isotropic):
   """Periodic kernel: e^(-(2 sin(2pi r / T))^2 / (2 l^2))"""
-  sin = np.sin
-  pi = np.pi
-  sqrt = np.sqrt
-  def f(r2):
+
+  @override(Isotropic)
+  def __init__(self, l2, T):
+    self._l2 = l2
+    self._T = T
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'PER(l^2=%r, T=%r)' % (self._l2, self._T)
+
+  @property
+  @override(Isotropic)
+  def parameters(self):
+    return [ParamLeaf(), ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    pi = np.pi
+    sin = np.sin
+    sqrt = np.sqrt
+    l2 = self._l2
+    T = self._T
+
     d = 2*sin(2*pi*sqrt(r2)/T)
     return _se(d**2, l2)
-  return isotropic(f)
 
-def ddtheta_periodic(l2, T):
-  cos = np.cos
-  pi = np.pi
-  sin = np.sin
-  sqrt = np.sqrt
-  def df_theta(r2):
+  @override(Isotropic)
+  def ddtheta_k_r2(self, r2):
+    cos = np.cos
+    pi = np.pi
+    sin = np.sin
+    sqrt = np.sqrt
+    l2 = self._l2
+    T = self._T
+
     t = 2*pi*sqrt(r2)/T
     d2 = (2*sin(t))**2
     k, dk_l2 = _d_se_l2(d2, l2)
     return (k, [dk_l2, k * (4/(l2*T)) * t * sin(t) * cos(t)])
-  return ddtheta_isotropic(df_theta)
 
-def ddx_periodic(l2, T):
-  cos = np.cos
-  pi = np.pi
-  sin = np.sin
-  sqrt = np.sqrt
-  def df_r2(r2):
+  @override(Isotropic)
+  def ddr2_k_r2(self, r2):
+    cos = np.cos
+    pi = np.pi
+    sin = np.sin
+    sqrt = np.sqrt
+    l2 = self._l2
+    T = self._T
+
     r = sqrt(r2)
     t = 2*pi*r/T
     sin_t = sin(t)
@@ -396,55 +512,139 @@ def ddx_periodic(l2, T):
     dk_r2 = np.where(r2 == 0, np.zeros_like(r2), dk_d2*8*pi*sin_t*cos(t)/(T*r))
     assert np.all(np.isfinite(dk_r2)), '%r' % (dk_r2,)
     return (k, dk_r2)
-  return ddx_isotropic(df_r2)
 
-def rq(l2, alpha):
+
+class rq(Isotropic):
   """Rational quadratic kernel: (1 + r^2/(2 alpha l^2))^-alpha"""
-  def f(r2):
-    return np.power(1 + r2/(2 * alpha * l2), -alpha)
-  return isotropic(f)
 
-def matern(l2, df):
+  @override(Isotropic)
+  def __init__(self, l2, alpha):
+    self._l2 = l2
+    self._alpha = alpha
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'RQ(l^2=%r, alpha=%r)' % (self._l2, self._alpha)
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    l2 = self._l2
+    alpha = self._alpha
+    return np.power(1 + r2/(2 * alpha * l2), -alpha)
+
+
+class matern(Isotropic):
   """Matérn kernel with squared length-scale l2 and nu = df/2."""
-  import scipy.special
-  nu = df/2
-  c = np.exp((1 - nu)*np.log(2) - scipy.special.gammaln(nu))
-  def f(r2):
+
+  @override(Isotropic)
+  def __init__(self, l2, df):
+    import scipy.special
+    nu = df/2
+    c = np.exp((1 - nu)*np.log(2) - scipy.special.gammaln(nu))
+    self._c = c
+    self._df = df
+    self._l2 = l2
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'MATERN(l^2=%r, df=%r)' % (self._l2, self._df)
+
+  # @property
+  # @override(Isotropic)
+  # def parameters(self):
+  #   return [ParamLeaf(), ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    import scipy.special
+    c = self._c
+    df = self._df
+    l2 = self._l2
     q = np.sqrt(df*r2/l2)
     return c * np.power(q, nu) * scipy.special.kv(nu, q)
-  return isotropic(f)
 
-def matern_32(l2):
+
+class matern_32(Isotropic):
   """Matérn kernel specialized with three degrees of freedom."""
-  def f(r2):
+
+  @override(Isotropic)
+  def __init__(self, l2):
+    self._l2 = l2
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'MATERN(l^2=%r, df=3)' % (self._l2,)
+
+  # @property
+  # @override(Isotropic)
+  # def parameters(self):
+  #   return [ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    l2 = self._l2
     q = np.sqrt(3*r2/l2)
     return (1 + q)*np.exp(-q)
-  return isotropic(f)
 
-def matern_52(l2):
-  """Matérn kernel specialized with five degrees of freedom."""
-  def f(r2):
+
+class matern_52(Isotropic):
+  """Matérn kernel specialized with three degrees of freedom."""
+
+  @override(Isotropic)
+  def __init__(self, l2):
+    self._l2 = l2
+
+  @override(Isotropic)
+  def __repr__(self):
+    return 'MATERN(l^2=%r, df=5)' % (self._l2,)
+
+  @property
+  @override(Isotropic)
+  def parameters(self):
+    return [ParamLeaf()]
+
+  @override(Isotropic)
+  def k_r2(self, r2):
+    l2 = self._l2
     q2 = 5*r2/l2
     q = np.sqrt(q2)
     return (1 + q + q2/3)*np.exp(-q)
-  return isotropic(f)
 
-def linear(c):
+
+class linear(Kernel):
   """Linear covariance kernel: k(x, y) = (x - c) (y - c)."""
-  def k(X, Y):
+
+  @override(Kernel)
+  def __init__(self, c):
+    self._c = c
+
+  @override(Kernel)
+  def __repr__(self):
+    return 'LIN(origin=%r)' % (self._c,)
+
+  @property
+  @override(Kernel)
+  def parameters(self):
+    c = self._c
+    if np.asarray(c).ndim:
+      return [ParamProduct([ParamLeaf() for _ in c])]
+    else:
+      return [ParamLeaf()]
+
+  @override(Kernel)
+  def f(self, X, Y):
+    c = self._c
     if np.asarray(c).ndim:
       return np.inner(X - c, Y - c)
     else:
       return np.outer(X - c, Y - c)
-  return k
 
-def ddtheta_linear(c):
-  f = linear(c)
-  c = np.asarray(c).reshape(-1)
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    k = self.f(X, Y)
 
-  def dk_linear_dtheta(X, Y):
-    k = f(X, Y)
-
+    c = self._c
+    c = np.asarray(c).reshape(-1)
     assert c.ndim == 1, '%r' % (c,)
     d = c.shape[0]
     X = X.reshape(len(X), -1)
@@ -460,16 +660,13 @@ def ddtheta_linear(c):
 
     return (k, dk)
 
-  return dk_linear_dtheta
-
-def ddx_linear(c):
-  f = linear(c)
-  c = np.asarray(c).reshape(-1)
-
-  def dk_linear_dx(x, Y):
+  @override(Kernel)
+  def df_x(self, x, Y):
     X = np.array([x])
-    k = f(X, Y)
+    k = self.f(X, Y)
 
+    c = self._c
+    c = np.asarray(c).reshape(-1)
     assert c.ndim == 1
     d = c.shape[0]
     X = X.reshape(len(X), -1)
@@ -483,77 +680,166 @@ def ddx_linear(c):
 
     return (k, dk)
 
-  return dk_linear_dx
 
-# Composite covariance kernels
-
-def bias(s2, K):
+class bias(Kernel):
   """Kernel K biased by the constant squared bias s^2.
 
   Every covariance, including variance/self-covariance, has s^2 added.
   """
-  return lambda X, Y: s2 + K(X, Y)
 
-def ddtheta_bias(s2, K):
-  def dk_bias_dtheta(X, Y):
+  @override(Kernel)
+  def __init__(self, s2, K):
+    self._s2 = s2
+    self._K = K
+
+  @override(Kernel)
+  def __repr__(self):
+    return '(%r + %r)' % (self._s2, self._K)
+
+  @property
+  @override(Kernel)
+  def parameters(self):
+    return [ParamLeaf(), ParamProduct(self._K.parameters)]
+
+  @override(Kernel)
+  def f(self, X, Y):
+    s2 = self._s2
+    K = self._K
+    return s2 + K.f(X, Y)
+
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    s2 = self._s2
+    K = self._K
     k, dk = K.df_theta(X, Y)
     return (s2 + k, [np.ones(k.shape)] + dk)
-  return dk_bias_dtheta
 
-def ddx_bias(s2, K):
-  def dk_bias_dx(x, Y):
+  @override(Kernel)
+  def df_x(self, x, Y):
+    s2 = self._s2
+    K = self._K
     k, dk = K.df_x(x, Y)
     return (s2 + k, dk)
-  return dk_bias_dx
 
-def scale(s2, K):
+
+class scale(Kernel):
   """Kernel K scaled by squared output factor s^2."""
-  return lambda X, Y: s2 * K(X, Y)
 
-def ddtheta_scale(s2, K):
-  def dk_scale_dtheta(X, Y):
+  @override(Kernel)
+  def __init__(self, s2, K):
+    self._s2 = s2
+    self._K = K
+
+  @override(Kernel)
+  def __repr__(self):
+    return '(%r*%r)' % (self._s2, self._K)
+
+  @property
+  @override(Kernel)
+  def parameters(self):
+    return [ParamLeaf(), ParamProduct(self._K.parameters)]
+
+  @override(Kernel)
+  def f(self, X, Y):
+    s2 = self._s2
+    K = self._K
+    return s2 * K.f(X, Y)
+
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    s2 = self._s2
+    K = self._K
     k, dk = K.df_theta(X, Y)
     return (s2 * k, [k] + [s2*dk_i for dk_i in dk])
-  return dk_scale_dtheta
 
-def ddx_scale(s2, K):
-  def dk_scale_dx(x, Y):
+  @override(Kernel)
+  def df_x(self, x, Y):
+    s2 = self._s2
+    K = self._K
     k, dk = K.df_x(x, Y)
+    assert np.all(np.isfinite(dk_i) for dk_i in dk)
     return (s2 * k, [s2*dk_i for dk_i in dk])
-  return dk_scale_dx
 
-def sum(K, H):
+
+class sum(Kernel):
   """Sum of kernels K and H."""
-  return lambda X, Y: K(X, Y) + H(X, Y)
 
-def ddtheta_sum(K, H):
-  def dk_sum_dtheta(X, Y):
+  @override(Kernel)
+  def __init__(self, K, H):
+    self._K = K
+    self._H = H
+
+  @override(Kernel)
+  def __repr__(self):
+    return '(%r + %r)' % (self._K, self._H)
+
+  @property
+  @override(Kernel)
+  def parameters(self):
+    K_shape = ParamProduct(self._K.parameters)
+    H_shape = ParamProduct(self._H.parameters)
+    return [K_shape, H_shape]
+
+  @override(Kernel)
+  def f(self, X, Y):
+    K = self._K
+    H = self._H
+    return K.f(X, Y) + H.f(X, Y)
+
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    K = self._K
+    H = self._H
     k, dk = K.df_theta(X, Y)
     h, dh = H.df_theta(X, Y)
     return (k + h, dk + dh)
-  return dk_sum_dtheta
 
-def ddx_sum(K, H):
-  def dk_sum_dx(x, Y):
+  @override(Kernel)
+  def df_x(self, x, Y):
+    K = self._K
+    H = self._H
     k, dk = K.df_x(x, Y)
     h, dh = H.df_x(x, Y)
     return (k + h, [dk_i + dh_i for dk_i, dh_i in zip(dk, dh)])
-  return dk_sum_dx
 
-def product(K, H):
+
+class product(Kernel):
   """Product of kernels K and H."""
-  return lambda X, Y: K(X, Y) * H(X, Y)
 
-def ddtheta_product(K, H):
-  def dk_product_dtheta(X, Y):
+  @override(Kernel)
+  def __init__(self, K, H):
+    self._K = K
+    self._H = H
+
+  @override(Kernel)
+  def __repr__(self):
+    return '(%r*%r)' % (self._K, self._H)
+
+  @property
+  @override(Kernel)
+  def parameters(self):
+    K_shape = ParamProduct(self._K.parameters)
+    H_shape = ParamProduct(self._H.parameters)
+    return [K_shape, H_shape]
+
+  @override(Kernel)
+  def f(self, X, Y):
+    K = self._K
+    H = self._H
+    return K.f(X, Y) * H.f(X, Y)
+
+  @override(Kernel)
+  def df_theta(self, X, Y):
+    K = self._K
+    H = self._H
     k, dk = K.df_theta(X, Y)
     h, dh = H.df_theta(X, Y)
     return (k*h, [dk_i*h for dk_i in dk] + [k*dh_i for dh_i in dh])
-  return dk_product_dtheta
 
-def ddx_product(K, H):
-  def dk_product_dx(x, Y):
+  @override(Kernel)
+  def df_x(self, x, Y):
+    K = self._K
+    H = self._H
     k, dk = K.df_x(x, Y)
     h, dh = H.df_x(x, Y)
     return (k*h, [dk_i*h + k*dh_i for dk_i, dh_i in zip(dk, dh)])
-  return dk_product_dx
