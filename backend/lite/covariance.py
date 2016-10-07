@@ -369,10 +369,14 @@ def ddx_periodic(l2, T):
   sin = np.sin
   sqrt = np.sqrt
   def df_r2(r2):
-    t = 2.*pi*sqrt(r2)/T
-    d2 = (2.*sin(t))**2
-    k, dk_r2 = _d_se_r2(d2, l2)
-    return (k, k * (8*pi/(l2*d)) * sin(t) * cos(t))
+    r = sqrt(r2)
+    t = 2.*pi*r/T
+    sin_t = sin(t)
+    d2 = (2.*sin_t)**2
+    k, dk_d2 = _d_se_r2(d2, l2)
+    dk_r2 = np.where(r2 == 0, np.zeros_like(r2), dk_d2*8*pi*sin_t*cos(t)/(T*r))
+    assert np.all(np.isfinite(dk_r2)), '%r' % (dk_r2,)
+    return (k, dk_r2)
   return ddx_isotropic(df_r2)
 
 def rq(l2, alpha):
