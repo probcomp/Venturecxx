@@ -15,15 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy
-
 import numpy as np
 
 from numpy.testing import assert_allclose
 
 import venture.lite.covariance as cov
 
-from venture.lite.mlens import real_lenses
 from venture.test.numerical import gradient_from_lenses
 
 # XXX Kludge to avoid VenturePartialDiffableFunction.
