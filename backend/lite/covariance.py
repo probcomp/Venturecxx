@@ -56,6 +56,8 @@ than a function that returns a matrix whose product with an increment
 in theta is an increment in the covariance matrix.
 """
 
+from __future__ import division
+
 import numpy as np
 import scipy.spatial.distance
 
@@ -218,7 +220,7 @@ def delta(tolerance):
   return isotropic(f)
 
 def _deltoid(r2, t2, s):
-  return -np.expm1(-(r2/t2)**(-s/2.))
+  return -np.expm1(-(r2/t2)**(-s/2))
 
 def deltoid(tolerance, steepness):
   """Deltoid kernel: 1 - e^{-1/(r/t)^s}.
@@ -262,7 +264,7 @@ def ddtheta_deltoid(tolerance, steepness):
   def df_theta(r2):
     t2 = tolerance
     s = steepness
-    u = -(r2/t2)**(-s/2.)
+    u = -(r2/t2)**(-s/2)
     v = 0.5*np.exp(u)*u
     k = -np.expm1(u)
     dk_dt2 = np.where(r2 == 0, np.zeros_like(r2), -v*s/t2)
@@ -276,7 +278,7 @@ def ddx_deltoid(tolerance, steepness):
   def df_r2(r2):
     t2 = tolerance
     s = steepness
-    u = -(r2/t2)**(-s/2.)
+    u = -(r2/t2)**(-s/2)
     k = -np.expm1(u)
     # For the self-covariances, just give zero derivative because we
     # do not consider moving the inputs off the diagonal line x = y.
@@ -364,7 +366,7 @@ def periodic(l2, T):
   pi = np.pi
   sqrt = np.sqrt
   def f(r2):
-    d = 2.*sin(2.*pi*sqrt(r2)/T)
+    d = 2*sin(2*pi*sqrt(r2)/T)
     return _se(d**2, l2)
   return isotropic(f)
 
@@ -374,8 +376,8 @@ def ddtheta_periodic(l2, T):
   sin = np.sin
   sqrt = np.sqrt
   def df_theta(r2):
-    t = 2.*pi*sqrt(r2)/T
-    d2 = (2.*sin(t))**2
+    t = 2*pi*sqrt(r2)/T
+    d2 = (2*sin(t))**2
     k, dk_l2 = _d_se_l2(d2, l2)
     return (k, [dk_l2, k * (4/(l2*T)) * t * sin(t) * cos(t)])
   return ddtheta_isotropic(df_theta)
@@ -387,9 +389,9 @@ def ddx_periodic(l2, T):
   sqrt = np.sqrt
   def df_r2(r2):
     r = sqrt(r2)
-    t = 2.*pi*r/T
+    t = 2*pi*r/T
     sin_t = sin(t)
-    d2 = (2.*sin_t)**2
+    d2 = (2*sin_t)**2
     k, dk_d2 = _d_se_r2(d2, l2)
     dk_r2 = np.where(r2 == 0, np.zeros_like(r2), dk_d2*8*pi*sin_t*cos(t)/(T*r))
     assert np.all(np.isfinite(dk_r2)), '%r' % (dk_r2,)
@@ -399,14 +401,14 @@ def ddx_periodic(l2, T):
 def rq(l2, alpha):
   """Rational quadratic kernel: (1 + r^2/(2 alpha l^2))^-alpha"""
   def f(r2):
-    return np.power(1. + r2/(2 * alpha * l2), -alpha)
+    return np.power(1 + r2/(2 * alpha * l2), -alpha)
   return isotropic(f)
 
 def matern(l2, df):
   """Matérn kernel with squared length-scale l2 and nu = df/2."""
   import scipy.special
-  nu = df/2.
-  c = np.exp((1. - nu)*np.log(2.) - scipy.special.gammaln(nu))
+  nu = df/2
+  c = np.exp((1 - nu)*np.log(2) - scipy.special.gammaln(nu))
   def f(r2):
     q = np.sqrt(df*r2/l2)
     return c * np.power(q, nu) * scipy.special.kv(nu, q)
@@ -415,16 +417,16 @@ def matern(l2, df):
 def matern_32(l2):
   """Matérn kernel specialized with three degrees of freedom."""
   def f(r2):
-    q = np.sqrt(3.*r2/l2)
-    return (1. + q)*np.exp(-q)
+    q = np.sqrt(3*r2/l2)
+    return (1 + q)*np.exp(-q)
   return isotropic(f)
 
 def matern_52(l2):
   """Matérn kernel specialized with five degrees of freedom."""
   def f(r2):
-    q2 = 5.*r2/l2
+    q2 = 5*r2/l2
     q = np.sqrt(q2)
-    return (1. + q + q2/3.)*np.exp(-q)
+    return (1 + q + q2/3)*np.exp(-q)
   return isotropic(f)
 
 def linear(c):
