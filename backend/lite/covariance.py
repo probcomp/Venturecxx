@@ -326,7 +326,7 @@ def _d_se_l2(r2, l2):
 
 def _d_se_r2(r2, l2):
   """d/d(r^2) of squared exponential kernel."""
-  k = _se(l2, r2)
+  k = _se(r2, l2)
   return (k, k * -0.5 / l2)
 
 def ddtheta_se(l2):
