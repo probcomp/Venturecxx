@@ -300,10 +300,10 @@ def test_directives_and_forget():
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   x_id = vnt.expect_capture_one_int()
-  vnt.expect_exact(': x: [assume x (normal 0.0 1.0)]:')
+  vnt.expect_exact(': x: assume x = normal(0.0, 1.0):')
   x_val2 = vnt.expect_capture_one_floatln()
   y_id = vnt.expect_capture_one_int()
-  vnt.expect_exact(': y: [assume y (uniform_continuous 1.0 2.0)]:')
+  vnt.expect_exact(': y: assume y = uniform_continuous(1.0, 2.0):')
   y_val2 = vnt.expect_capture_one_floatln()
   vnt.read_to_prompt()
   assert x_id > 0
@@ -311,6 +311,7 @@ def test_directives_and_forget():
   assert abs(x_val2 - x_val) < 10e-5
   assert abs(y_val2 - y_val) < 10e-5
   vnt.send_command('forget(%d)' % x_id)
+  vnt.expect_exact('[0]')
   vnt.read_to_prompt()
   vnt.send_command('list_directives')
   next_y_id = vnt.expect_capture_one_int()
