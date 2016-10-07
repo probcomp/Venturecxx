@@ -23,13 +23,15 @@ def derivative(f, x):
 def richardson_step(f, degree):
   return lambda(h): (2**degree * f(h/2) - f(h)) / (2**degree - 1)
 
-def richardson(f):
+def richardson(f, step0=None):
   # TODO Memoize the incoming function (possibly with an explicit
   # stream) to save compute on repeated evaluations at the same h
+  if step0 is None:
+    step0 = 0.001
 
   # Could also implement the "stop when at machine precision" rule,
   # instead of always taking exactly four steps.
-  return richardson_step(richardson_step(richardson_step(richardson_step(f, 2), 4), 6), 8)(0.001)
+  return richardson_step(richardson_step(richardson_step(richardson_step(f, 2), 4), 6), 8)(step0)
 
 def tweaking_lens(lens, thunk):
   def f(h):
@@ -54,5 +56,6 @@ def tweaking_lens(lens, thunk):
       lens.set(x)
   return f
 
-def gradient_from_lenses(thunk, lenses):
-  return [richardson(derivative(tweaking_lens(lens, thunk), 0)) for lens in lenses]
+def gradient_from_lenses(thunk, lenses, step0=None):
+  return [richardson(derivative(tweaking_lens(lens, thunk), 0), step0=step0)
+    for lens in lenses]

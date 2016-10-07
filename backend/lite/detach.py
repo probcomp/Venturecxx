@@ -188,8 +188,12 @@ def unapplyPSP(trace, node, scaffold, omegaDB, compute_gradient = False):
     #   do not have interesting parents
     # - DeterministicMakerAAALKernel is probably ok because its gradientOfReverseWeight
     #   method computes the same thing gradientOfSimulate would properly have computed
-    grad = psp.gradientOfSimulate(args, omegaDB.getValue(node), omegaDB.getPartial(node))
-    omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
+
+    direction = omegaDB.getPartial(node)
+    if direction != 0:
+      # The python number zero codes for zero in the co-tangent space
+      grad = psp.gradientOfSimulate(args, omegaDB.getValue(node), direction)
+      omegaDB.addPartials(args.operandNodes + trace.esrParentsAt(node), grad)
 
   return weight
 

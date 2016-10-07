@@ -48,6 +48,10 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'address_of',
              # Would need to coordinate matrix size with index
              'row', 'col',
+             # Can't construct covariance kernels to parametrize these.
+             'gp_cov_bias', 'gp_cov_scale', 'gp_cov_sum', 'gp_cov_product',
+             # Can't synthesize origins with NumericArrayType.
+             'gp_cov_linear',
             ]
 
 # Select particular SPs to test thus:
