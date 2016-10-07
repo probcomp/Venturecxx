@@ -244,9 +244,9 @@ def deltoid(tolerance, steepness):
 # radius and tolerance parameters:
 #
 #         = (r^2/t^2)^{-s/2}
-#             [(1/2) log (r^2/t^2) ds + (s / 2 r^2) dr^2 - (s / 2 t^2) dt]
+#             [(1/2) log (r^2/t^2) ds + (s / 2 r^2) dr^2 - (s / 2 t^2) dt^2]
 #         = (1/2) (r^2/t^2){-s/2}
-#             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt].
+#             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt^2].
 #
 # Then
 #
@@ -256,7 +256,7 @@ def deltoid(tolerance, steepness):
 #         = e^{-(r/t)^{-s}} d [-(r/t)^{-s}]
 #         = -e^{-(r/t)^{-s}} (r/t)^{-s} [log (r/t) ds + (s/r) dr - (s/t) dt]
 #         = (-1/2) e^{-(r^2/t^2)^{-s/2}} (r^2/t^2)^{-s/2}
-#             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt].
+#             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt^2].
 
 def ddtheta_deltoid(tolerance, steepness):
   def df_theta(r2):
