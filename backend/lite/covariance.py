@@ -75,9 +75,11 @@ def ddtheta_const(c):
   return dk_const_dtheta
 
 def ddx_const(c):
-  k = const(c)
+  f = const(c)
   def dk_const_dx(x, Y):
-    return (k(np.array([x]), Y), np.zeros(x.shape[0]))
+    k = f(np.array([x]), Y)
+    dk = [np.zeros((1, len(Y)))]*np.asarray(x).reshape(-1).shape[0]
+    return (k, dk)
   return dk_const_dx
 
 # Isotropic covariance kernels
