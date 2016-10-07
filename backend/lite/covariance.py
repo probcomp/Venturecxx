@@ -217,55 +217,72 @@ def delta(tolerance):
     return 1.*(r2 <= tolerance)
   return isotropic(f)
 
-def _deltoid(r2, t, s):
-  return -np.expm1(-t/(r2**(s/2.)))
+def _deltoid(r2, t2, s):
+  return -np.expm1(-(r2/t2)**(-s/2.))
 
 def deltoid(tolerance, steepness):
-  """Deltoid kernel: 1 - e^{-t/r^s}.
+  """Deltoid kernel: 1 - e^{-1/(r/t)^s}.
 
   Shaped kinda like a sigmoid, but not quite.
   Behaves kinda like a delta, but smoothly.
 
-  The tolerance parameter is currently hokey and will be replaced by a
-  simple squared scale parameter.
+  Tolerance is in units of squared distance and determines at what
+  squared radius the covariance kernel attains 1/2.
   """
   def f(r2):
     return _deltoid(r2, tolerance, steepness)
   return isotropic(f)
 
+# First, note that since d(a^b) = a^b [log a db + (b/a) da].
+#
+#       d (r/t)^{-s} = (r/t)^{-s} [log (r/t) ds + s/(r/t) d(r/t)]
+#         = (r/t)^{-s} [log (r/t) ds + (s t / r) (t dr - r dt)/t^2]
+#         = (r/t)^{-s} [log (r/t) ds + (s t^2 / r t^2) dr - (s t r / r t^2) dt]
+#         = (r/t)^{-s} [log (r/t) ds + (s/r) dr - (s/t) dt].
+#
+# Since d(x^2) = 2 x dx, we can write this in terms of the squared
+# radius and tolerance parameters:
+#
+#         = (r^2/t^2)^{-s/2}
+#             [(1/2) log (r^2/t^2) ds + (s / 2 r^2) dr^2 - (s / 2 t^2) dt]
+#         = (1/2) (r^2/t^2){-s/2}
+#             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt].
+#
+# Then
+#
+#       d k(r^2, t^2, s)
+#         = d (1 - e^{-(r/t)^{-s}})
+#         = d e^{-(r/t)^{-s}}
+#         = e^{-(r/t)^{-s}} d [-(r/t)^{-s}]
+#         = -e^{-(r/t)^{-s}} (r/t)^{-s} [log (r/t) ds + (s/r) dr - (s/t) dt]
+#         = (-1/2) e^{-(r^2/t^2)^{-s/2}} (r^2/t^2)^{-s/2}
+#             [log (r^2/t^2) ds + (s/r^2) dr^2 - (s/t^2) dt].
+
 def ddtheta_deltoid(tolerance, steepness):
   def df_theta(r2):
-    # d/dt (1 - e^{-t/r^s}) = e^{-t/r^s}/r^s
-    # d/ds (1 - e^{-t/r^s}) = -e^{-t/r^s} (-t) d/ds r^{-s}
-    #   = -e^{-t/r^s} (-t) (-log r) r^{-s}
-    #   = -e^{-t/r^s} t r^{-s} log r
-    t = tolerance
+    t2 = tolerance
     s = steepness
-    r_s = r2**(-s/2.)
-    k1 = np.exp(-t*r_s)
-    # Where r^2 = 0, k is zero, and so should dk/dt and dk/ds be.  But
-    # r_s will have infinities there, and log(0) and 0*inf both give
-    # NaN where we want zero.  So explicitly give zero there.
-    dk_dt = np.where(r2 == 0, np.zeros_like(r_s), k1*r_s)
-    dk_ds = np.where(r2 == 0, np.zeros_like(r_s), -k1*t*r_s*np.log(r2)/2.)
-    assert np.all(np.isfinite(dk_dt)), '%r' % (dk_dt,)
+    u = -(r2/t2)**(-s/2.)
+    v = 0.5*np.exp(u)*u
+    k = -np.expm1(u)
+    dk_dt2 = np.where(r2 == 0, np.zeros_like(r2), -v*s/t2)
+    dk_ds = np.where(r2 == 0, np.zeros_like(r2), v*np.log(r2/t2))
+    assert np.all(np.isfinite(dk_dt2)), '%r' % (dk_dt2,)
     assert np.all(np.isfinite(dk_ds)), '%r' % (dk_ds,)
-    return (-np.expm1(-t*r_s), [dk_dt, dk_ds])
+    return (k, [dk_dt2, dk_ds])
   return ddtheta_isotropic(df_theta)
 
 def ddx_deltoid(tolerance, steepness):
   def df_r2(r2):
-    # d/d{r^2} (1 - e^{-t/r^s}) = -e^{-t/r^s} s t / [2 (r^2)^{s/2 + 1}]
-    #   = -e^{-t/r^s} s t r^{-s} / [2 r^2]
-    t = tolerance
+    t2 = tolerance
     s = steepness
-    r_s = r2**(-s/2.)
-    k = np.exp(-t*r_s)
+    u = -(r2/t2)**(-s/2.)
+    k = -np.expm1(u)
     # For the self-covariances, just give zero derivative because we
     # do not consider moving the inputs off the diagonal line x = y.
     # XXX Consider making this generic for all covariance derivatives
     # with respect to an input.
-    dk = np.where(r2 == 0, np.zeros_like(r2), -k*s*t*r_s/(2*r2))
+    dk = np.where(r2 == 0, np.zeros_like(r2), 0.5*np.exp(u)*u*s/r2)
     assert np.all(np.isfinite(dk)), '%r' % (dk,)
     return (k, dk)
   return ddx_isotropic(df_r2)
