@@ -120,7 +120,7 @@ class VenturePartialDiffableFunction(VentureFunction):
   def fromStackDict(thing):
     df_theta = thing.pop('parameter_derivative')
     df_x = thing.pop('partial_derivative')
-    return VenturePartialDifableFunction(thing['value'], df_theta, df_x,
+    return VenturePartialDiffableFunction(thing['value'], df_theta, df_x,
       **thing)
 
   def asStackDict(self, _trace=None):
