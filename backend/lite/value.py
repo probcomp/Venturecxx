@@ -515,7 +515,7 @@ class VenturePair(VentureValue):
       try:
         end_array = tail.getArray(elt_type)
         front_array = VentureArray(list_).getArray(elt_type)
-        return end_array + front_array
+        return front_array + end_array
       except VentureTypeError:
         raise Exception("Cannot convert an improper list to array")
 
