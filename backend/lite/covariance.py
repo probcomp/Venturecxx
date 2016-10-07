@@ -306,7 +306,8 @@ def ddx_bump(min_tolerance, max_tolerance):
     t_1 = max_tolerance
     w = t_1 - t_0
     k = _bump(r2, t_0, t_1)
-    dk_dr2 = -k*w/(t_1 - r2)**2
+    dk_dr2 = _on_ring(r2, t_0, t_1,
+      np.zeros_like(r2), -k*w/(t_1 - r2)**2, np.zeros_like(r2))
     assert np.all(np.isfinite(dk_dr2)), '%r' % (dk_dr2,)
     return (k, dk_dr2)
   return ddx_isotropic(df_r2)
