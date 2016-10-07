@@ -46,6 +46,8 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'make_ref', 'ref_get',
              # Needs a trace to work, so can't be faked out with MockArgs
              'address_of',
+             # Can't construct covariance kernels to parametrize these.
+             'gp_cov_bias', 'gp_cov_scale', 'gp_cov_sum', 'gp_cov_product',
             ]
 
 # Select particular SPs to test thus:
