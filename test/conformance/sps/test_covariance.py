@@ -23,6 +23,8 @@ import venture.lite.covariance as cov
 
 from venture.test.numerical import gradient_from_lenses
 
+# pylint:disable=cell-var-from-loop
+
 # XXX Kludge to avoid VenturePartialDiffableFunction.
 class DKernel(object):
   def __init__(self, dk):
@@ -205,7 +207,7 @@ def test_bump():
           def f():
             return cov.bump(theta[0], theta[1])(X, Y)[0][0]
           def df_dtheta():
-            k, dk = cov.ddtheta_bump(theta[0], theta[1])(X, Y)
+            _k, dk = cov.ddtheta_bump(theta[0], theta[1])(X, Y)
             if mint**2 < (x - y)**2 < maxt**2:
               assert all(np.all(dki != 0) for dki in dk)
             else:
