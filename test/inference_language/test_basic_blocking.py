@@ -105,7 +105,6 @@ def testBlockingExample3(seed):
   assert oldb != newb
 
 @stochasticTest
-@broken_in("puma", "Puma does not support the 'each' block keyword (yet).")
 @on_inf_prim("mh")
 def testBlockingExample4(seed):
   ripl = get_ripl(seed=seed)

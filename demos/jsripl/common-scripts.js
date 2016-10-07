@@ -15,9 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-var venture__venture_ec2_demo_instance_host = "54.235.201.199";
-var venture__venture_ec2_demo_instance_port = 80;
-
 function CheckCookieWithVentureRIPLAddress() {
     if ($.cookie('venture__ripl_host') == undefined) {
         GoToSelectRIPLAddress();

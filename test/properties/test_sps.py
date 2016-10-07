@@ -43,7 +43,10 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'dict', 'to_dict',
              # Can't synthesize dict arguments
              'keys', 'values',
-             'make_ref', 'ref_get']
+             'make_ref', 'ref_get',
+             # Needs a trace to work, so can't be faked out with MockArgs
+             'address_of',
+            ]
 
 # Select particular SPs to test thus:
 # nosetests --tc=relevant:'["foo", "bar", "baz"]'

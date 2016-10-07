@@ -108,7 +108,7 @@ class OrderedFrozenSet(object):
         return type(self)(union())
 
     def intersection(self, *others):
-        assert all(isinstance(other, OrderedFrozenSet) for other in others)
+        assert all(isinstance(other, OrderedFrozenSet) for other in others), others
         return type(self)(x for x in self
             if all(x in other for other in others))
 
@@ -116,7 +116,7 @@ class OrderedFrozenSet(object):
         return type(self)(x for x in self if x in other)
 
     def difference(self, *others):
-        assert all(isinstance(other, OrderedFrozenSet) for other in others)
+        assert all(isinstance(other, OrderedFrozenSet) for other in others), others
         return type(self)(x for x in self
             if not any(x in other for other in others))
 

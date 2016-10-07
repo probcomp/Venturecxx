@@ -199,6 +199,21 @@ def dlogpdf(X, dX, Mu, dMu, Sigma, dSigma):
   #       = alpha^T Mu'(p) dp
   #         - (1/2) \sum_i tr((alpha alpha^T - Sigma^-1) d/dq^i Sigma(q)) dq^i.
   #
+
+  # Note: This abstraction does not correspond to what a reverse mode
+  # automatic differentiation system would construct.  Why?  Riastradh
+  # says (9/9/16):
+  #
+  #   Pfergh.  grad_Sigma is supposed to compute w |---> w Sigma'(t)
+  #   at some fixed t.  But the way we compute that is by tr(Q
+  #   Sigma'(t)) for some matrix Q (which we actually compute by
+  #   summing the components of the componentwise product), and the
+  #   object w such that w Sigma'(t) = tr(Q Sigma'(t)) is a
+  #   higher-order tensor.
+  #
+  #   In particular, it is a linear functional on M(n, n), which has
+  #   no matrix representation.
+
   n = len(X)
   assert Mu.shape == (n,)
   assert all(dMu_dpj.shape == (n,) for dMu_dpj in dMu)

@@ -118,6 +118,12 @@ registerBuiltinSP("vector_add",
     t.ArrayUnboxedType(t.NumberType()),
     descr="%s(x, y) returns the sum of vectors x and y."))
 
+registerBuiltinSP("hadamard",
+  deterministic_typed(np.multiply,
+    [t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+    t.ArrayUnboxedType(t.NumberType()),
+    descr="%s(x, y) returns the Haramard (elementwise) product of vectors x and y."))
+
 registerBuiltinSP("matrix_add",
   deterministic_typed(np.add,
     [t.MatrixType(), t.MatrixType()],
@@ -174,7 +180,7 @@ registerBuiltinSP("vector_times_matrix",
     t.ArrayUnboxedType(t.NumberType()),
     descr="%s(v, M) returns the vector-matrix product vM."))
 
-def catches_linalg_error(f, *args, **kwargs):
+def catches_linalg_error(f):
   def try_f(*args, **kwargs):
     try:
       return f(*args, **kwargs)
@@ -198,3 +204,21 @@ registerBuiltinSP("matrix_trace",
     [t.MatrixType()],
     t.NumberType(),
     descr="%s(x) returns the trace (in the algebraic sense) of matrix x."))
+
+registerBuiltinSP("row",
+  deterministic_typed(lambda m, i: m[i],
+    [t.MatrixType(), t.IntegerType()],
+    t.ArrayUnboxedType(t.NumberType()),
+    descr="%s(A, i) returns the ith row of the matrix A."))
+
+registerBuiltinSP("col",
+  deterministic_typed(lambda m, j: m[:, j],
+    [t.MatrixType(), t.IntegerType()],
+    t.ArrayUnboxedType(t.NumberType()),
+    descr="%s(A, j) returns the jth column of the matrix A."))
+
+registerBuiltinSP("sum",
+  deterministic_typed(np.sum,
+    [t.ArrayUnboxedType(t.NumberType())],
+    t.NumberType(),
+    descr="%s(v) returns the sum of the elements of the vector v."))

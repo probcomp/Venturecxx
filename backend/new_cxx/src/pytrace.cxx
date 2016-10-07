@@ -140,14 +140,14 @@ struct Inferer
   boost::shared_ptr<GKernel> gKernel;
   ScopeID scope;
   BlockID block;
-  boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer;
+  vector<boost::shared_ptr<ScaffoldIndexer> > scaffoldIndexers;
   size_t transitions;
   vector<boost::shared_ptr<Inferer> > subkernels;
 
   Inferer(
       const boost::shared_ptr<ConcreteTrace> & trace,
       const boost::python::dict & params)
-    : trace(trace)
+    : trace(trace), scaffoldIndexers(0)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
     if (kernel == "mh") {
@@ -181,9 +181,14 @@ struct Inferer
     if (block->hasSymbol() && block->getSymbol() == "ordered_range") {
       VentureValuePtr minBlock = parseValueO(params["min_block"]);
       VentureValuePtr maxBlock = parseValueO(params["max_block"]);
-      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block, minBlock, maxBlock));
+      scaffoldIndexers.push_back(boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block, minBlock, maxBlock)));
+    } else if (block->hasSymbol() && block->getSymbol() == "each") {
+      vector<BlockID> blocks = trace->blocksInScope(scope);
+      BOOST_FOREACH(BlockID block, blocks) {
+        scaffoldIndexers.push_back(boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block)));
+      }
     } else {
-      scaffoldIndexer = boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block));
+      scaffoldIndexers.push_back(boost::shared_ptr<ScaffoldIndexer>(new ScaffoldIndexer(scope, block)));
     }
     transitions = boost::python::extract<size_t>(params["transitions"]);
   }
@@ -200,7 +205,11 @@ struct Inferer
 
   int inferPrimitive()
   {
-    return mixMH(trace.get(), scaffoldIndexer, gKernel);
+    int total = 0;
+    BOOST_FOREACH(boost::shared_ptr<ScaffoldIndexer> scaffoldIndexer, scaffoldIndexers) {
+      total += mixMH(trace.get(), scaffoldIndexer, gKernel);
+    }
+    return total;
   }
 
   int inferAEKernels()
