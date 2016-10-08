@@ -593,7 +593,7 @@ class matern_32(Isotropic):
 
 
 class matern_52(Isotropic):
-  """Matérn kernel specialized with three degrees of freedom."""
+  """Matérn kernel specialized with five degrees of freedom."""
 
   @override(Isotropic)
   def __init__(self, l2):
