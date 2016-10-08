@@ -426,9 +426,6 @@ registerBuiltinSP('gp_cov_periodic',
 registerBuiltinSP('gp_cov_rq',
   _cov_sp(cov.rq, [t.NumberType('l^2'), t.NumberType('alpha')]))
 
-registerBuiltinSP('gp_cov_rq',
-  _cov_sp(cov.rq, [t.NumberType('l^2'), t.NumberType('alpha')]))
-
 registerBuiltinSP('gp_cov_matern',
   _cov_sp(cov.matern, [t.NumberType('l^2'), t.NumberType('df')]))
 
