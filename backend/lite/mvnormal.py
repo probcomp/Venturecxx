@@ -186,7 +186,7 @@ def dlogpdf(X, dX, Mu, dMu, Sigma, dSigma):
   #     d log P(X | Mu, Sigma)
   #       = -(1/2) [2 alpha^T dA - tr((alpha alpha^T - Sigma^-1) dSigma)]
   #       = -alpha^T dY + alpha^T dMu
-  #             - (1/2) tr((alpha alpha^T - Sigma^-1) dSigma).
+  #             + (1/2) tr((alpha alpha^T - Sigma^-1) dSigma).
   #
   # For dY = 0, dMu = Mu'(p) dp, and dSigma = Sigma'(q) dq = \sum_i
   # (d/dq^i Sigma(q)) dq^nu, where d/dq^i is the partial derivative
