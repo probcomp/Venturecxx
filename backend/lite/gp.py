@@ -97,11 +97,11 @@ def _gp_gradientOfLogDensity(mean, covariance, samples, xs, os):
 def _gp_logDensityOfData(mean, covariance, samples):
   if len(samples) == 0:
     return 0
-  xs = samples.keys()
-  os = samples.values()
-  mu = _gp_mean(mean, xs)
-  sigma = _gp_covariance(covariance, xs, xs)
-  return mvnormal.logpdf(np.asarray(os), mu, sigma)
+  xs = np.asarray(samples.keys())
+  os = np.asarray(samples.values())
+  mu = mean.f(xs)
+  sigma = covariance.f(xs, xs)
+  return mvnormal.logpdf(os, mu, sigma)
 
 def _gp_gradientOfLogDensityOfData(mean, covariance, samples):
   if len(samples) == 0:
@@ -116,27 +116,22 @@ def _gp_gradientOfLogDensityOfData(mean, covariance, samples):
   return [dlogp_dmu_j, dlogp_dsigma_k]
 
 def _gp_mvnormal(mean, covariance, samples, xs):
+  xs = np.asarray(xs)
   if len(samples) == 0:
-    mu = _gp_mean(mean, xs)
-    sigma = _gp_covariance(covariance, xs, xs)
+    mu = mean.f(xs)
+    sigma = covariance.f(xs, xs)
   else:
-    x2s = samples.keys()
-    o2s = samples.values()
-    mu1 = _gp_mean(mean, xs)
-    mu2 = _gp_mean(mean, x2s)
-    sigma11 = _gp_covariance(covariance, xs, xs)
-    sigma12 = _gp_covariance(covariance, xs, x2s)
-    sigma21 = _gp_covariance(covariance, x2s, xs)
-    sigma22 = _gp_covariance(covariance, x2s, x2s)
+    x2s = np.asarray(samples.keys())
+    o2s = np.asarray(samples.values())
+    mu1 = mean.f(xs)
+    mu2 = mean.f(x2s)
+    sigma11 = covariance.f(xs, xs)
+    sigma12 = covariance.f(xs, x2s)
+    sigma21 = covariance.f(x2s, xs)
+    sigma22 = covariance.f(x2s, x2s)
     mu, sigma = mvnormal.conditional(
-      np.asarray(o2s), mu1, mu2, sigma11, sigma12, sigma21, sigma22)
+      o2s, mu1, mu2, sigma11, sigma12, sigma21, sigma22)
   return mu, sigma
-
-def _gp_mean(mean, xs):
-  return mean.f(np.asarray(xs))
-
-def _gp_covariance(covariance, x1s, x2s):
-  return covariance.f(np.asarray(x1s), np.asarray(x2s))
 
 class GPOutputPSP(RandomPSP):
   def __init__(self, mean, covariance):
