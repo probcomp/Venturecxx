@@ -526,6 +526,11 @@ class rq(Isotropic):
   def __repr__(self):
     return 'RQ(l^2=%r, alpha=%r)' % (self._l2, self._alpha)
 
+  # @property
+  # @override(Isotropic)
+  # def parameters(self):
+  #   return [ParamLeaf(), ParamLeaf()]
+
   @override(Isotropic)
   def k_r2(self, r2):
     l2 = self._l2
@@ -598,10 +603,10 @@ class matern_52(Isotropic):
   def __repr__(self):
     return 'MATERN(l^2=%r, df=5)' % (self._l2,)
 
-  @property
-  @override(Isotropic)
-  def parameters(self):
-    return [ParamLeaf()]
+  # @property
+  # @override(Isotropic)
+  # def parameters(self):
+  #   return [ParamLeaf()]
 
   @override(Isotropic)
   def k_r2(self, r2):
