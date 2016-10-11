@@ -52,6 +52,20 @@ def testSmoke():
   assert r.sample("b") != 2
 
 @broken_in("puma", "Puma does not implement subproblem selection")
+def testGibbsSugarySmoke():
+  # Gibbs should not crash with subproblem argument
+  r = get_ripl()
+  r.assume("b1", "(tag 'b integer<1> (flip 0.1))")
+  r.assume("b2", "(tag 'b integer<2> (flip 0.1))")
+  r.assume("c", "(flip (if (or b1 b2) 0.9 0.1))")
+  r.set_mode("venture_script")
+  r.observe("c", True)
+  r.infer("gibbs(quote(b), integer<2>)")
+  r.infer("gibbs(minimal_subproblem(/?b==integer<2>))")
+  # the line below crashes:
+  #r.infer("gibbs(minimal_subproblem(by_tag_value(quote(b), integer<2>)))")
+
+@broken_in("puma", "Puma does not implement subproblem selection")
 def testSmoke2():
   # Same, but with the random choices slightly obscured
   r = get_ripl()
