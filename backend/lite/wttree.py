@@ -195,6 +195,8 @@ class PMap(object):
   def lookup(self, key):
     keyfn = self._keyfn
     return node_lookup(self.root, keyfn(key), keyfn)
+  def __getitem__(self, key):
+    return self.lookup(key)
   def __contains__(self, key):
     keyfn = self._keyfn
     return node_lookup(self.root, keyfn(key), keyfn) is not None
