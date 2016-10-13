@@ -514,8 +514,8 @@ def parse(f, context, languages=None):
         else:
             if token[0] == 0:   # EOF
                 # Implicit ; at EOF.
-                semi = (';', scanner.cur_pos, scanner.cur_pos)
-                parser.feed((grammar.T_SEMI, semi))
+                loc = (scanner.cur_pos, scanner.cur_pos)
+                parser.feed((grammar.T_SEMI, ast.Located(loc, ';')))
             parser.feed(token)
         if token[0] == 0:       # EOF
             break
