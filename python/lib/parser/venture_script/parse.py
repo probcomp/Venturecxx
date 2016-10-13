@@ -358,8 +358,14 @@ class Semantics(object):
     p_multiplicative_mul = _p_binop
     p_multiplicative_div = _p_binop
     p_multiplicative_none = _p_exp
+    p_unary_none = _p_exp
     p_exponential_pow = _p_binop
     p_exponential_none = _p_exp
+
+    def p_unary_pos(self, op, e):
+        return self._p_binop(ast.update_value(op, val.number(0)), op, e)
+    def p_unary_neg(self, op, e):
+        return self._p_binop(ast.update_value(op, val.number(0)), op, e)
 
     def p_applicative_app(self, fn, o, args, c):
         assert ast.isloc(fn)

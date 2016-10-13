@@ -165,7 +165,7 @@ def test_shell_loads():
 @in_backend("none")
 def test_syntax_error():  # does not crash
   vnt = spawn_venture()
-  vnt.send_command('c++')
+  vnt.send_command('c+*')
   vnt.expect('Syntax error')
   vnt.read_to_prompt()
 
@@ -174,11 +174,11 @@ def test_arithmetic():
   vnt = spawn_venture()
   # https://github.com/probcomp/Venturecxx/issues/122
   for nine in ('9', '+9', '9.0',
-               # '-(-9)', '--9',  *** text_parse: Syntax error at '-' (token 54)
+               '-(-9)', '--9',
                '0--9', '0 - -9',
-               # '3+6', '3 +6',   *** text_parse: Syntax error at 6 (token 33)
+               '3+6', '3 +6',
                '3+ 6', '3 + 6', '3  +  6',
-               # '10-1',          *** text_parse: Syntax error at -1 (token 33)
+               '10-1',
                '10 - 1', '10 + -1', '10+-1', '+10+-1', '+10-+1', '10-+1',
                '+3 + 6', '3 + +6', '+3 + +6', '+3+ +6', '+3 ++6', '+3++6',
                '81/9', '-27/-3'):
