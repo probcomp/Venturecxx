@@ -519,7 +519,11 @@ class Ripl():
         p = self._cur_parser()
         exp = p.unparse_expression(exp)
         (start, end) = p.expression_index_to_text_index(exp, index)
-        if hasattr(sys.stdout, "fileno") and os.isatty(sys.stdout.fileno()):
+        try:
+            isatty = os.isatty(sys.stdout.fileno())
+        except:
+            isatty = False
+        if isatty:
             ans = exp[0:start] + "\x1b[31m" + exp[start:end+1] + "\x1b[39;49m" + exp[end+1:]
         else:
             ans = exp
