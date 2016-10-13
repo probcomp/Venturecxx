@@ -101,7 +101,7 @@ class const(Kernel):
   @override(Kernel)
   def f(self, X, Y):
     c = self._c
-    return c*np.ones((len(Y), len(X)))
+    return c*np.ones((len(X), len(Y)))
 
   @override(Kernel)
   def df_theta(self, X, Y):
