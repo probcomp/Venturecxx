@@ -172,7 +172,6 @@ def test_syntax_error():  # does not crash
 @in_backend("none")
 def test_arithmetic():
   vnt = spawn_venture()
-  # https://github.com/probcomp/Venturecxx/issues/122
   for nine in ('9', '+9', '9.0',
                '-(-9)', '--9',
                '0--9', '0 - -9',
