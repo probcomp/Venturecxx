@@ -100,11 +100,11 @@ class Trace(object):
     self.globalEnv = VentureEnvironment(self.globalEnv)
 
   def bindPrimitiveName(self, name, val):
-    address = ('primitive name', name)
+    address = addr.builtin_address(name)
     self.globalEnv.addBinding(name, self.createConstantNode(address, val))
 
   def bindPrimitiveSP(self, name, sp):
-    address = ('primitive SP', name)
+    address = addr.builtin_address(name)
     spNode = self.createConstantNode(address, VentureSPRecord(sp))
     processMadeSP(self, spNode, False)
     assert isinstance(self.valueAt(spNode), SPRef)

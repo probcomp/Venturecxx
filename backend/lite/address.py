@@ -139,6 +139,11 @@ class EmptyAddress(namedtuple('EmptyAddress', [])):
     return Address(emptyList)
 empty_address = EmptyAddress
 
+class BuiltinAddress(namedtuple('BuiltinAddress', ["name"])):
+  def asAddress(self):
+    return Address(List(self.name))
+builtin_address = BuiltinAddress
+
 class DirectiveAddress(namedtuple('DirectiveAddress', ["did"])):
   def asList(self):
     return self.asAddress().asList()
@@ -168,6 +173,7 @@ extend = SubexpressionAddress
 
 def _is_address(thing):
   return isinstance(thing, EmptyAddress) or \
+    isinstance(thing, BuiltinAddress) or \
     isinstance(thing, DirectiveAddress) or \
     isinstance(thing, RequestAddress) or \
     isinstance(thing, SubexpressionAddress)
@@ -196,9 +202,12 @@ def top_frame(addr):
     # Relies on convention that compound procedures use their body
     # locations as request ids
     return addr.req_id
+  assert False, "Taking the top frame of a builtin address? %s" % (addr,)
 
 def jsonable_address(addr):
   assert _is_address(addr)
+  if isinstance(addr, BuiltinAddress):
+    return "/" + str(addr.name)
   if isinstance(addr, DirectiveAddress):
     return "/" + str(addr.did)
   if isinstance(addr, RequestAddress):
