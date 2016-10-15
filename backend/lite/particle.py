@@ -113,9 +113,9 @@ class Particle(Trace):
 
   def unregisterRandomChoice(self, node): assert False
 
-  def registerRandomChoiceInScope(self, scope, block, node):
+  def registerRandomChoiceInScope(self, scope, block, node, unboxed=False):
     assert block is not None
-    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if scope not in self.scopes:
       self.scopes = self.scopes.insert(scope, PMap())
     if block not in self.scopes.lookup(scope):
