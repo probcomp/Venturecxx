@@ -24,9 +24,11 @@ from venture.lite.sp import VentureSPRecord
 from venture.lite.trace import Trace
 from venture.lite.wttree import PMap
 from venture.lite.wttree import PSet
+import venture.lite.address as addr
 
 def node_key(node):
   assert isinstance(node, Node)
+  assert addr._is_address(node.address), node.address
   return (node.address, str(type(node)))
 
 class Particle(Trace):
