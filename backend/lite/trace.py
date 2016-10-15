@@ -432,9 +432,12 @@ class Trace(object):
       weight += xiWeight
       weight -= rhoWeight
     self.unpropagatedObservations.clear()
-    if not math.isinf(weight) and not math.isnan(weight):
+    if not math.isnan(weight):
+      # Note: +inf weight is possible at spikes in density against
+      # Lebesgue measure.
       return weight
     else:
+      # How could we get a NaN here?
       # If one observation made the state inconsistent, the rhoWeight
       # of another might conceivably be infinite, possibly leading to
       # a nan weight.  I want to normalize these to indicating that
