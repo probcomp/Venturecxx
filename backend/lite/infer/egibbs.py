@@ -98,6 +98,13 @@ class EnumerativeGibbsOperator(object):
 
   def accept(self):
     self.finalParticle.commit()
+    assert self.trace == self.finalParticle.base
+    # Use a new scaffold for consistency checking here because the
+    # original's regenCounts may have nodes that aren't in the trace
+    # anymore.
+    from venture.lite.scaffold import constructScaffold
+    clean_scaffold = constructScaffold(self.trace, self.scaffold.setsOfPNodes)
+    assertTrace(self.trace, clean_scaffold)
     return self.scaffold.numAffectedNodes()
 
   def reject(self):
