@@ -73,6 +73,7 @@ def mixMH(trace, indexer, operator):
   # May mutate trace and possibly operator, proposedTrace is the mutated trace
   # Returning the trace is necessary for the non-mutating versions
   proposedTrace, logAlpha = operator.propose(trace, index)
+  assert not math.isnan(logAlpha), "Proposal acceptance ratio should never be NaN"
   xiMix = indexer.logDensityOfIndex(proposedTrace, index)
 
   # record the proposed values for the profiler
@@ -83,6 +84,7 @@ def mixMH(trace, indexer, operator):
   logU = math.log(trace.py_rng.random())
   # print "Alpha", alpha, "= xiMix", xiMix, "+ proposal alpha", \
   #   logAlpha, "- rhoMix", rhoMix, "; logU", logU
+  assert not math.isnan(alpha), "Corrected acceptance ratio should never be NaN"
   if logU < alpha:
 #    sys.stdout.write(".")
     ans = operator.accept() # May mutate trace
