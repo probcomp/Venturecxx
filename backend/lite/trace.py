@@ -333,14 +333,19 @@ class Trace(object):
       blocks = [b for b in self.getScope(scope).keys() if b >= interval[0] if b <= interval[1]]
       return [self.getNodesInBlock(scope, block) for block in sorted(blocks)]
 
-  def numNodesInBlock(self, scope, block): return len(self.getNodesInBlock(scope, block))
+  def numNodesInBlock(self, scope, block): return len(self.getNodesInBlock(scope, block, do_copy=False))
 
-  def getNodesInBlock(self, scope, block):
+  def getNodesInBlock(self, scope, block, do_copy=True):
     #import pdb; pdb.set_trace()
     #scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     nodes = self.scopes[scope][block]
+    # Defensively copying the set of nodes, because
+    # unregisterRandomChoice will mutate them.
     if scope == "default":
-      return nodes
+      if do_copy:
+        return OrderedSet(list(nodes))
+      else:
+        return nodes
     else:
       return self.randomChoicesInExtent(nodes, scope, block)
 

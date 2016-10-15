@@ -32,9 +32,12 @@ def _is_set(thing):
 
 def _canonicalize_to_ordered_frozen_set(thing):
   if isinstance(thing, PSet):
+    # Intended type canonicalization
     return OrderedFrozenSet(list(thing))
   else:
-    return thing
+    # Defensive copy, because trace.unregisterRandomChoice may mutate
+    # the underlying set
+    return OrderedFrozenSet(list(thing))
 
 # The language of possible subproblem selection phrases.  The item in
 # each field is expected to be one of these, except Lookup.key,
