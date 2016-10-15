@@ -24,6 +24,7 @@ from venture.test.config import default_num_transitions_per_sample
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
+from venture.test.config import stochasticTest
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import reportSameDiscrete
 from venture.test.stats import statisticalTest
@@ -184,6 +185,24 @@ def checkEnumerativeGibbsXOR3(in_parallel, seed):
   predictions = collectSamples(ripl, "pid", infer=infer)
   ans = [(True, .75), (False, .25)]
   return reportKnownDiscrete(ans, predictions)
+
+@stochasticTest
+def testEnumerativeGibbsMap(seed):
+  # Prior to this test, an application of mapv created multiple
+  # requests with the same address (namely, the empty address).  The
+  # overwrite tables in the Particle class that Gibbs (in Lite) uses
+  # index nodes by their address.  Node addresses of requested nodes
+  # are derived from request addresses.  If Gibbs touches more than
+  # one of the requests made by the same invocation of mapv, this
+  # causes a key collision in the Particle structure, and messes up.
+  # The specific form of the mess-up is failing to commit a value for
+  # a node that exists in the trace, leaving the value None, which
+  # crashes downstream.
+  ripl = get_ripl(seed=seed)
+  ripl.execute_program("""
+  (assume result (bernoulli))
+  (assume item (mapv (lambda (i) (+ i result)) (arange 5)))
+  (gibbs default one 100)""")
 
 @statisticalTest
 @on_inf_prim("gibbs") # Also rejection, but really testing Gibbs
