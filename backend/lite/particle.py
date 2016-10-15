@@ -296,6 +296,7 @@ class Particle(Trace):
     for node in self.aes: self.base.registerAEKernel(node)
 
     for (node, value) in self.values.iteritems():
+      assert value is not None
       self.base.setValueAt(node, value)
 
     for (node, madeSP) in self.madeSPs.iteritems():
