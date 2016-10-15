@@ -18,6 +18,7 @@
 from nose import SkipTest
 from testconfig import config
 
+from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
@@ -187,6 +188,7 @@ def checkEnumerativeGibbsXOR3(in_parallel, seed):
   return reportKnownDiscrete(ans, predictions)
 
 @stochasticTest
+@broken_in("puma", "Mystery crash #637.")
 def testEnumerativeGibbsMap(seed):
   # Prior to this test, an application of mapv created multiple
   # requests with the same address (namely, the empty address).  The
@@ -202,7 +204,7 @@ def testEnumerativeGibbsMap(seed):
   ripl.execute_program("""
   (assume result (bernoulli))
   (assume item (mapv (lambda (i) (+ i result)) (arange 5)))
-  (gibbs default one 100)""")
+  (gibbs default one 100 false)""")
 
 @statisticalTest
 @on_inf_prim("gibbs") # Also rejection, but really testing Gibbs
