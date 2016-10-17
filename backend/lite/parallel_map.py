@@ -15,48 +15,67 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import cPickle as pickle
+import os
+import struct
 import traceback
 
 from multiprocessing import Process
-from multiprocessing import Queue
+from multiprocessing import Pipe
 from multiprocessing import cpu_count
+
+
+def le32enc(n):
+    return struct.pack('<I', n)
+
+def le32dec(s):
+    return struct.unpack('<I', s)[0]
 
 
 def parallel_map(f, l):
 
     ncpu = cpu_count()          # XXX urk
+    #ncpu = 1
 
     # Per-process action: grab an input from the input queue, compute,
     # toss the output in the output queue.
-    def process_input(inq, outq):
+    def process_input(childno, inq_rd, outq_wr, retq_wr):
         while True:
-            i = inq.get()
+            i = inq_rd.recv()
             if i is None:
                 break
             x = l[i]
             try:
-                fx = f(x)
-                outq.put((i, True, fx))
+                ok, fx = True, f(x)
             except Exception as e:
-                outq.put((i, False, traceback.format_exc()))
+                ok, fx = False, traceback.format_exc()
+            os.write(retq_wr, le32enc(childno))
+            try:
+                outq_wr.send((i, ok, fx))
+            except pickle.PicklingError:
+                outq_wr.send((i, False, traceback.format_exc()))
 
-    def process_output(fl, ctr, (i, ok, fx)):
+    def process_output(fl, ctr, output):
+        (i, ok, fx) = output
         if not ok:
             raise RuntimeError('Subprocess failed: %s' % (fx,))
         fl[i] = fx
         ctr[0] -= 1
 
     # Create the queues and worker processes.
-    inq = Queue(maxsize=ncpu)
-    outq = Queue(maxsize=ncpu)
-    processes = [Process(target=process_input, args=(inq, outq))
-        for _ in xrange(ncpu)]
+    retq_rd, retq_wr = os.pipe()
+    inq = [Pipe(duplex=False) for _ in xrange(ncpu)]
+    outq = [Pipe(duplex=False) for _ in xrange(ncpu)]
+    process = [
+        Process(target=process_input, args=(j, inq[j][0], outq[j][1], retq_wr))
+        for j in xrange(ncpu)
+    ]
 
     # Prepare to bail by terminating all the worker processes.
     try:
 
         # Start the worker processes.
-        for p in processes:
+        for p in process:
             p.start()
 
         # Queue up the tasks one by one.  If the input queue is full,
@@ -65,29 +84,41 @@ def parallel_map(f, l):
         n = len(l)
         fl = [None] * n
         ctr = [n]
-        for i in xrange(n):
-            try:
-                inq.put_nowait(i)
-            except Queue.Full:
-                process_output(fl, ctr, outq.get())
-                inq.put(i)
+        iterator = iter(xrange(n))
+        for j, i in zip(xrange(ncpu), iterator):
+            inq[j][1].send(i)
+        for i in iterator:
+            j = le32dec(os.read(retq_rd, 4))
+            process_output(fl, ctr, outq[j][0].recv())
+            inq[j][1].send(i)
 
         # Process all the remaining output items.
         while 0 < ctr[0]:
-            process_output(fl, ctr, outq.get())
+            j = le32dec(os.read(retq_rd, 4))
+            process_output(fl, ctr, outq[j][0].recv())
 
         # Cancel all the worker processes.
-        for _p in processes:
-            inq.put(None)
+        for _inq_rd, inq_wr in inq:
+            inq_wr.send(None)
 
         # Wait for all the worker processes to complete.
-        for p in processes:
+        for p in process:
             p.join()
 
-    except:                     # paranoia
+    except Exception as e:           # paranoia
         # Terminate all subprocesses immediately and reraise.
-        for p in processes:
+        for p in process:
             p.terminate()
         raise
+
+    finally:
+        os.close(retq_rd)
+        os.close(retq_wr)
+        for inq_rd, inq_wr in inq:
+            inq_rd.close()
+            inq_wr.close()
+        for outq_rd, outq_wr in outq:
+            outq_rd.close()
+            outq_wr.close()
 
     return fl
