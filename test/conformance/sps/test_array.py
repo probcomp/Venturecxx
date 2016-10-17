@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from nose.tools import assert_raises
+
+from venture.exception import VentureException
+
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -84,3 +88,12 @@ def testSimplexSize():
 def testSimplexEq():
   assert get_ripl().predict("(= (simplex 0.5 0.5) (simplex 0.5 0.5))")
   assert not get_ripl().predict("(= (simplex 0.5 0.5) (simplex 0.4 0.6))")
+
+@on_inf_prim("none")
+def test_bogus_mapv():
+  boxed_result = get_ripl().evaluate(
+    '(bogus_mapv (lambda (x) (+ x 1)) (array 1 2 3))')
+  result = [r.getNumber() for r in boxed_result]
+  assert result == [2, 3, 4], '%r' % (result,)
+  assert_raises(VentureException, lambda:
+    get_ripl().sample('(bogus_mapv (lambda (x) (+ x 1)) (array 1 2 3))'))

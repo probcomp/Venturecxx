@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import random
+
+from venture.exception import VentureException
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureValueError
@@ -53,6 +56,36 @@ registerBuiltinSP(
         SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
                 t.HomogeneousArrayType(t.AnyType("a"))],
                t.RequestType("b")))))
+
+class BogusArrayMapOutputPSP(DeterministicPSP):
+    def simulate(self, args):
+        from venture.lite.sp_use import RemappingArgs
+        import venture.untraced.evaluator as untraced_evaluator
+        base_address = args.node.address
+        assert isinstance(args, RemappingArgs)
+        if not isinstance(args.args, untraced_evaluator.OutputArgs):
+            raise VentureException('evaluation', 'Cannot trace bogus_mapv!',
+                address=base_address)
+        assert isinstance(args.args, untraced_evaluator.OutputArgs)
+        operator, operands = args.operandValues()
+        env = VentureEnvironment()
+        rng = args.py_prng()
+        def per_operand((i, seed, operand)):
+            address = addr.request(base_address, addr.req_frame(i))
+            rng_i = random.Random(seed)
+            exp = [operator, e.quote(operand)]
+            return untraced_evaluator.eval(address, exp, env, rng_i)
+        inputs = [
+            (i, rng.randint(1, 2**31 - 1), operand)
+            for i, operand in enumerate(operands)
+        ]
+        return map(per_operand, inputs)
+
+registerBuiltinSP("bogus_mapv",
+    typed_nr(BogusArrayMapOutputPSP(),
+        [SPType([t.AnyType('a')], t.AnyType('b')),
+            t.HomogeneousArrayType(t.AnyType('a'))],
+        t.HomogeneousArrayType(t.AnyType('b'))))
 
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):
