@@ -1053,3 +1053,17 @@ via the name ``ripl``.  Values from the ambient inference program are
 not directly accessible.  The environment against which `pyeval` is
 evaluated persists across invocations of `pyexec` and `pyeval`.
 """)
+
+register_engine_method_sp("save_model_string",
+  infer_action_maker_type([t.ForeignBlobType("model")],
+    t.StringType("model_string")),
+  desc="""\
+Save a model to a string which can later be loaded with load_model_string.
+""")
+
+register_engine_method_sp("load_model_string",
+  infer_action_maker_type([t.StringType("model_string")],
+    t.ForeignBlobType("model")),
+  desc="""\
+Load a model saved with save_model_string.
+""")

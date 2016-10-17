@@ -265,6 +265,21 @@ class Infer(object):
   def load_model(self, filename):
     self.engine.ripl.load(filename)
 
+
+  def save_model_string(self, model):
+    import trace_set
+    assert isinstance(model, trace_set.TraceSet), '%r' % (model,)
+    with self.engine.ripl.sivm.cleared():
+      with self.engine.using_model(model):
+        return self.engine.saves()
+
+  def load_model_string(self, model_string):
+    model = self.new_model()
+    with self.engine.ripl.sivm.cleared():
+      with self.engine.using_model(model):
+        self.engine.loads(model_string)
+    return model
+
   def select(self, scope, block=None):
     assert len(self.engine.model.log_weights) == 1, \
       "Custom subproblems only supported for one trace at a time"
