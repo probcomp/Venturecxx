@@ -21,6 +21,7 @@ from venture.exception import VentureException
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureValueError
+from venture.lite.parallel_map import parallel_map
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
@@ -57,14 +58,15 @@ registerBuiltinSP(
                 t.HomogeneousArrayType(t.AnyType("a"))],
                t.RequestType("b")))))
 
-class BogusArrayMapOutputPSP(DeterministicPSP):
+class ParallelArrayMapOutputPSP(DeterministicPSP):
     def simulate(self, args):
+        from multiprocessing.pool import Pool
         from venture.lite.sp_use import RemappingArgs
         import venture.untraced.evaluator as untraced_evaluator
         base_address = args.node.address
         assert isinstance(args, RemappingArgs)
         if not isinstance(args.args, untraced_evaluator.OutputArgs):
-            raise VentureException('evaluation', 'Cannot trace bogus_mapv!',
+            raise VentureException('evaluation', 'Cannot trace parallel_mapv!',
                 address=base_address)
         assert isinstance(args.args, untraced_evaluator.OutputArgs)
         operator, operands = args.operandValues()
@@ -79,10 +81,10 @@ class BogusArrayMapOutputPSP(DeterministicPSP):
             (i, rng.randint(1, 2**31 - 1), operand)
             for i, operand in enumerate(operands)
         ]
-        return map(per_operand, inputs)
+        return parallel_map(per_operand, inputs)
 
-registerBuiltinSP("bogus_mapv",
-    typed_nr(BogusArrayMapOutputPSP(),
+registerBuiltinSP("parallel_mapv",
+    typed_nr(ParallelArrayMapOutputPSP(),
         [SPType([t.AnyType('a')], t.AnyType('b')),
             t.HomogeneousArrayType(t.AnyType('a'))],
         t.HomogeneousArrayType(t.AnyType('b'))))
