@@ -288,7 +288,6 @@ prelude = [
 
 
 ["duplicate_particle", """\
-.. _duplicate_particle:
 .. function:: duplicate_particle(<int>)
 
   :rtype: <inference action returning ()>

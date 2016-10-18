@@ -557,7 +557,7 @@ class LogOddsUniformOutputPSP(RandomPSP):
 
   def description(self, name):
     return "  %s() samples a log-odds representation of a uniform real number"\
-      " between 0 and 1.  This is also called the `logistic distribution',"\
+      " between 0 and 1.  This is also called the \"logistic distribution\","\
       " named differently to avoid confusion with the logistic function."\
       % (name,)
 
