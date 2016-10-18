@@ -31,8 +31,8 @@ def override(interface_class):
     return method
   return overrider
 
-def extendedLog(x): return float('-inf') if x == 0 else math.log(x)
-def extendedLog1p(x): return float('-inf') if x == -1 else math.log1p(x)
+def log(x): return float('-inf') if x == 0 else math.log(x)
+def log1p(x): return float('-inf') if x == -1 else math.log1p(x)
 def xlogx(x): return 0 if x == 0 else x*math.log(x)
 def expm1(x): return math.expm1(x)
 
@@ -57,7 +57,7 @@ def logsumexp(array):
 
   # Since m = max{a_0, a_1, ...}, it follows that a <= m for all a,
   # so a - m <= 0; hence exp(a - m) is guaranteed not to overflow.
-  return m + extendedLog(sum(careful_exp(a - m) for a in array))
+  return m + log(sum(exp(a - m) for a in array))
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -159,7 +159,7 @@ def sampleLogCategorical(logs, np_rng):
 def logDensityMVNormal(x, mu, sigma):
   return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))
 
-def careful_exp(x):
+def exp(x):
   try:
     return math.exp(x)
   except OverflowError:
@@ -235,7 +235,7 @@ def log_d_logistic(x):
     # -x - 2 log (1 + e^{-x}) ~= -x - 2 log (e^{-x}) = -x - 2 (-x) = x
     return x
   else:
-    return -x - 2*extendedLog1p(careful_exp(-x))
+    return -x - 2*log1p(exp(-x))
 
 def log_logistic(x):
   """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
@@ -266,7 +266,7 @@ def logit(x):
 
   Maps direct-space probabilities in [0, 1] into log-odds space.
   """
-  return extendedLog(x / (1 - x))
+  return log(x / (1 - x))
 
 def simulateLogGamma(shape, np_rng):
   """Sample from log of standard Gamma distribution with given shape."""
@@ -312,7 +312,7 @@ def logDensityLogGamma(x, shape):
   #       = (k - 1) x - e^x - log Gamma(k) + x
   #       = k x - e^x - log Gamma(k).
   #
-  return shape*x - careful_exp(x) - math.lgamma(shape)
+  return shape*x - exp(x) - math.lgamma(shape)
 
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
