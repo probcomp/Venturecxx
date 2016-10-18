@@ -341,6 +341,15 @@ class Safely(object):
     # eta expand b/c getattr might fail pylint:disable=W0108
     return safely(lambda *args,**kwargs: getattr(self.obj, attrname)(*args, **kwargs))
 
+class Confidently(object):
+  """Counterpart to Safely that meets the interface but propagates
+exceptions instead of wrapping them."""
+  def __init__(self, obj):
+    self.obj = obj
+
+  def __getattr__(self, attrname):
+    return lambda *args, **kwargs: Success(getattr(self.obj, attrname)(*args, **kwargs))
+
 class WorkerBase(object):
 
   '''The base class is WorkerBase, which manages a list of objects
@@ -484,7 +493,11 @@ class SynchronousWorker(SharedMemoryWorkerBase, SynchronousBase):
   serialization. Controlled by SynchronousMaster.
 
   '''
-  pass
+  def _initialize(self):
+    super(SynchronousWorker, self)._initialize()
+    # Re-wrap the trace objects not to capture exceptions, but to
+    # propagate them into the master.
+    self.objs = [Confidently(o.obj) for o in self.objs]
 
 ######################################################################
 # Code to handle exceptions in worker processes
