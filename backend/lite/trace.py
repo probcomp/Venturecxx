@@ -100,11 +100,11 @@ class Trace(object):
     self.globalEnv = VentureEnvironment(self.globalEnv)
 
   def bindPrimitiveName(self, name, val):
-    address = ('primitive name', name)
+    address = addr.builtin_address(name)
     self.globalEnv.addBinding(name, self.createConstantNode(address, val))
 
   def bindPrimitiveSP(self, name, sp):
-    address = ('primitive SP', name)
+    address = addr.builtin_address(name)
     spNode = self.createConstantNode(address, VentureSPRecord(sp))
     processMadeSP(self, spNode, False)
     assert isinstance(self.valueAt(spNode), SPRef)
@@ -333,14 +333,19 @@ class Trace(object):
       blocks = [b for b in self.getScope(scope).keys() if b >= interval[0] if b <= interval[1]]
       return [self.getNodesInBlock(scope, block) for block in sorted(blocks)]
 
-  def numNodesInBlock(self, scope, block): return len(self.getNodesInBlock(scope, block))
+  def numNodesInBlock(self, scope, block): return len(self.getNodesInBlock(scope, block, do_copy=False))
 
-  def getNodesInBlock(self, scope, block):
+  def getNodesInBlock(self, scope, block, do_copy=True):
     #import pdb; pdb.set_trace()
     #scope, block = self._normalizeEvaluatedScopeAndBlock(scope, block)
     nodes = self.scopes[scope][block]
+    # Defensively copying the set of nodes, because
+    # unregisterRandomChoice will mutate them.
     if scope == "default":
-      return nodes
+      if do_copy:
+        return OrderedSet(list(nodes))
+      else:
+        return nodes
     else:
       return self.randomChoicesInExtent(nodes, scope, block)
 
@@ -427,9 +432,12 @@ class Trace(object):
       weight += xiWeight
       weight -= rhoWeight
     self.unpropagatedObservations.clear()
-    if not math.isinf(weight) and not math.isnan(weight):
+    if not math.isnan(weight):
+      # Note: +inf weight is possible at spikes in density against
+      # Lebesgue measure.
       return weight
     else:
+      # How could we get a NaN here?
       # If one observation made the state inconsistent, the rhoWeight
       # of another might conceivably be infinite, possibly leading to
       # a nan weight.  I want to normalize these to indicating that
