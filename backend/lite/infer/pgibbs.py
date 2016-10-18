@@ -22,7 +22,7 @@ from ..omegadb import OmegaDB
 from ..regen import regenAndAttachAtBorder
 from ..detach import detachAndExtractAtBorder
 from ..utils import sampleLogCategorical
-from ..utils import logaddexp
+from ..utils import logsumexp
 from ..consistency import assertTrace
 from ..consistency import assertTorus
 
@@ -117,8 +117,8 @@ class PGibbsOperator(object):
     otherXiWeightsWithRho.pop(finalIndex)
     otherXiWeightsWithRho.append(rhoWeight)
 
-    weightMinusXi = logaddexp(otherXiWeightsWithRho)
-    weightMinusRho = logaddexp(xiWeights)
+    weightMinusXi = logsumexp(otherXiWeightsWithRho)
+    weightMinusRho = logsumexp(xiWeights)
     alpha = weightMinusRho - weightMinusXi
     return alpha
 
@@ -209,8 +209,8 @@ class ParticlePGibbsOperator(object):
     particleWeightsNoXi = copy.copy(particleWeights)
     particleWeightsNoXi.pop(finalIndex)
 
-    weightMinusXi = logaddexp(particleWeightsNoXi)
-    weightMinusRho = logaddexp(particleWeights[0:-1])
+    weightMinusXi = logsumexp(particleWeightsNoXi)
+    weightMinusRho = logsumexp(particleWeights[0:-1])
     alpha = weightMinusRho - weightMinusXi
     return alpha
 

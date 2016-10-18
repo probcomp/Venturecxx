@@ -123,19 +123,11 @@ def cartesianProduct(original):
     recursiveProduct = cartesianProduct(original[1:])
     return [ [v] + vs for v in firstGroup for vs in recursiveProduct]
 
-def logaddexp(items):
-  "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
-  the_max = max(items)
-  if the_max > float("-inf"):
-    return the_max + math.log(sum(math.exp(item - the_max) for item in items))
-  else:
-    return the_max # Don't want NaNs from trying to correct from the maximum
-
 def log_domain_even_out(items, n=None):
   "Return a list of n equal numbers whose logsumexp equals the logsumexp of the inputs."
   if n is None:
     n = len(items)
-  answer = logaddexp(items) - math.log(n)
+  answer = logsumexp(items) - math.log(n)
   return [answer for _ in range(n)]
 
 def logWeightsToNormalizedDirect(logs):
