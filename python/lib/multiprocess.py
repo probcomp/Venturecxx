@@ -341,8 +341,14 @@ class Safely(object):
     # eta expand b/c getattr might fail pylint:disable=W0108
     return safely(lambda *args,**kwargs: getattr(self.obj, attrname)(*args, **kwargs))
 
-  def has_own_prng(self):
-    return self.obj.has_own_prng()
+class Confidently(object):
+  """Counterpart to Safely that meets the interface but propagates
+exceptions instead of wrapping them."""
+  def __init__(self, obj):
+    self.obj = obj
+
+  def __getattr__(self, attrname):
+    return lambda *args, **kwargs: Success(getattr(self.obj, attrname)(*args, **kwargs))
 
 class WorkerBase(object):
 
@@ -378,7 +384,10 @@ class WorkerBase(object):
     # If we're in puma, set the seed; else don't.
     # The truly parallel case is handled by the subclass MultiprocessingWorker.
     did_set_global_prng = False
-    for (obj, seed) in zip(self.objs, seeds):
+    for (o, seed) in zip(self.objs, seeds):
+      # Circumvent the Safely wrapper here, since this function itself
+      # is wrapped in @safely.
+      obj = o.obj
       assert seed is not None
       if hasattr(obj, "has_own_prng") and obj.has_own_prng():
         obj.set_seed(seed)
@@ -484,7 +493,11 @@ class SynchronousWorker(SharedMemoryWorkerBase, SynchronousBase):
   serialization. Controlled by SynchronousMaster.
 
   '''
-  pass
+  def _initialize(self):
+    super(SynchronousWorker, self)._initialize()
+    # Re-wrap the trace objects not to capture exceptions, but to
+    # propagate them into the master.
+    self.objs = [Confidently(o.obj) for o in self.objs]
 
 ######################################################################
 # Code to handle exceptions in worker processes
