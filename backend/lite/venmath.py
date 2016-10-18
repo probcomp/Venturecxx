@@ -116,7 +116,7 @@ def integer_divide(x, y):
     return int(x) // int(y)
 
 registerBuiltinSP("int_div", binaryNumInt(integer_divide,
-    descr="div returns the integer quotient of its first argument by its second"))
+    descr="int_div(n, d) = floor(n/d)"))
 
 def integer_mod(x, y):
   if int(y) == 0:
@@ -125,7 +125,7 @@ def integer_mod(x, y):
     return int(x) % int(y)
 
 registerBuiltinSP("int_mod", binaryNumInt(integer_mod,
-    descr="mod returns the modulus of its first argument by its second"))
+    descr="int_mod(n, d) = r, where n = d*q + r and q = floor(n/d)"))
 
 registerBuiltinSP("min",
     binaryNum(min, descr="min returns the minimum value of its arguments"))
