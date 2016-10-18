@@ -35,6 +35,11 @@ def log(x): return float('-inf') if x == 0 else math.log(x)
 def log1p(x): return float('-inf') if x == -1 else math.log1p(x)
 def xlogx(x): return 0 if x == 0 else x*math.log(x)
 def expm1(x): return math.expm1(x)
+def exp(x):
+  try:
+    return math.exp(x)
+  except OverflowError:
+    return float("inf")
 
 def logsumexp(array):
   """Given [log x_0, ..., log x_{n-1}], yield log (x_0 + ... + x_{n-1}).
@@ -158,12 +163,6 @@ def sampleLogCategorical(logs, np_rng):
 
 def logDensityMVNormal(x, mu, sigma):
   return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))
-
-def exp(x):
-  try:
-    return math.exp(x)
-  except OverflowError:
-    return float("inf")
 
 def logistic(x):
   """Logistic function: 1/(1 + e^{-x}).  Inverse of logit.
