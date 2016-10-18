@@ -97,7 +97,6 @@ def testMVN2b(seed):
   predictions = collectSamples(ripl,"pid")
   return reportKnownGaussian(12, math.sqrt(0.5), predictions)
 
-@skipWhenRejectionSampling("MVN has no log density bound")
 @statisticalTest
 def testMVN3(seed):
   # Check that MVN is observable
