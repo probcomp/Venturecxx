@@ -55,7 +55,6 @@ from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
 from venture.lite.utils import logsumexp
-from venture.lite.utils import numpy_force_number
 from venture.lite.utils import override
 from venture.lite.utils import simulateLogGamma
 import venture.lite.types as t
@@ -127,7 +126,7 @@ class MVNormalOutputPSP(RandomPSP):
     (mu, sigma) = self.__parse_args__(args)
     if sigma is not None:
       # The maximum is obtained when x = mu
-      return numpy_force_number(-.5*len(sigma)*np.log(np.pi) - \
+      return float(-.5*len(sigma)*np.log(np.pi) -
         .5*np.log(abs(npla.det(sigma))))
     elif x is not None and mu is not None:
       raise Exception('TODO: Find an analytical form for the maximum of the '\

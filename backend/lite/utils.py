@@ -156,12 +156,6 @@ def sampleLogCategorical(logs, np_rng):
     # impossible.
     return simulateCategorical([0 for _ in logs], np_rng, os=None)
 
-def numpy_force_number(answer):
-  if isinstance(answer, numbers.Number):
-    return answer
-  else:
-    return answer[0,0]
-
 def logDensityMVNormal(x, mu, sigma):
   return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))
 
