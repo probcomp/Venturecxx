@@ -21,7 +21,6 @@ from venture.exception import VentureException
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureValueError
-from venture.lite.parallel_map import parallel_map
 from venture.lite.psp import DeterministicPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
@@ -57,43 +56,6 @@ registerBuiltinSP(
         SPType([SPType([t.AnyType("a")], t.AnyType("b"), variadic=True),
                 t.HomogeneousArrayType(t.AnyType("a"))],
                t.RequestType("b")))))
-
-class ParallelArrayMapOutputPSP(DeterministicPSP):
-    def simulate(self, args):
-        from venture.lite.sp_use import RemappingArgs
-        import venture.untraced.evaluator as untraced_evaluator
-        base_address = args.node.address
-        assert isinstance(args, RemappingArgs)
-        if not isinstance(args.args, untraced_evaluator.OutputArgs):
-            raise VentureException('evaluation', 'Cannot trace parallel_mapv!',
-                address=base_address)
-        assert isinstance(args.args, untraced_evaluator.OutputArgs)
-        operator = args.operandValues()[0]
-        operands = args.operandValues()[1]
-        if len(args.operandValues()) == 3:
-            parallelism = args.operandValues()[2]
-        else:
-            parallelism = None
-        env = VentureEnvironment()
-        rng = args.py_prng()
-        def per_operand((i, seed, operand)):
-            address = addr.request(base_address, addr.req_frame(i))
-            rng_i = random.Random(seed)
-            exp = [operator, e.quote(operand)]
-            return untraced_evaluator.eval(address, exp, env, rng_i)
-        inputs = [
-            (i, rng.randint(1, 2**31 - 1), operand)
-            for i, operand in enumerate(operands)
-        ]
-        return parallel_map(per_operand, inputs, parallelism=parallelism)
-
-registerBuiltinSP("parallel_mapv",
-    typed_nr(ParallelArrayMapOutputPSP(),
-        [SPType([t.AnyType('a')], t.AnyType('b')),
-            t.HomogeneousArrayType(t.AnyType('a')),
-            t.IntegerType('parallelism')],
-        t.HomogeneousArrayType(t.AnyType('b')),
-        min_req_args=2))
 
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):

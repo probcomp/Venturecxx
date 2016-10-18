@@ -35,7 +35,10 @@ class InferPrimitiveOutputPSP(psp.DeterministicPSP):
     self.tp = tp
   def simulate(self, args):
     result = self.klass(self.val, args.operandValues())
-    if self.klass is MadeRiplMethodInferOutputPSP:
+    if self.klass in (
+        MadeRiplMethodInferOutputPSP,
+        ParallelArrayMapActionOutputPSP,
+    ):
       # Hack to allow MadeRiplMethodInferOutputPSP s to blame the
       # maker application for errors.
       result.addr = args.node.address
@@ -1067,3 +1070,54 @@ register_engine_method_sp("load_model_string",
   desc="""\
 Load a model saved with save_model_string.
 """)
+
+
+class ParallelArrayMapActionOutputPSP(psp.LikelihoodFreePSP):
+
+  def __init__(self, name, args):
+    self._name = name
+    self._operator = args[0]
+    self._operands = args[1]
+    if len(args) == 3:
+      self._parallelism = args[2]
+    else:
+      self._parallelism = None
+
+  def simulate(self, args):
+    from venture.lite.env import VentureEnvironment
+    from venture.lite.parallel_map import parallel_map
+    import random
+    import venture.lite.address as addr
+    import venture.lite.exp as e
+    import venture.untraced.evaluator as untraced_evaluator
+    engine = args.operandValues()[0]
+    base_address = self.addr
+    operator = self._operator
+    operands = self._operands
+    parallelism = self._parallelism
+    env = VentureEnvironment()
+    rng = args.py_prng()
+    def per_operand((i, seed, operand)):
+      address = addr.request(base_address, addr.req_frame(i))
+      rng_i = random.Random(seed)
+      exp = [operator, e.quote(operand)]
+      engine.engine._py_rng.seed(rng_i.randint(1, 2**31 - 1))
+      engine.engine.model.traces.reset_seeds(rng_i.randint(1, 2**31 - 1))
+      return untraced_evaluator.eval(address, exp, env, rng_i)
+    inputs = [
+      (i, rng.randint(1, 2**31 - 1), operand)
+      for i, operand in enumerate(operands)
+    ]
+    result = parallel_map(per_operand, inputs, parallelism=parallelism)
+    return result, engine
+
+registerBuiltinInferenceSP("parallel_mapv_action",
+  typed_inf_sp("parallel_mapv_action",
+    sp.SPType(
+      [sp.SPType([t.AnyType('a')], t.AnyType('b')),
+        t.HomogeneousArrayType(t.AnyType('a')),
+        t.IntegerType('parallelism')],
+      infer_action_type(t.HomogeneousArrayType(t.AnyType('b'))),
+      min_req_args=2
+    ),
+    ParallelArrayMapActionOutputPSP))
