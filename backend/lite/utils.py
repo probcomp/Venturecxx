@@ -22,6 +22,8 @@ import numpy as np
 import numpy.linalg as npla
 import scipy.special as ss
 
+import venture.lite.mvnormal as mvnormal
+
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
 def override(interface_class):
   def overrider(method):
@@ -160,11 +162,8 @@ def numpy_force_number(answer):
   else:
     return answer[0,0]
 
-# TODO Change it to use the scipy function when Venture moves to requiring scipy 0.14+
 def logDensityMVNormal(x, mu, sigma):
-  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
-            -.5*len(sigma)*np.log(2 * np.pi)-.5*np.log(abs(npla.det(sigma)))
-  return numpy_force_number(answer)
+  return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))
 
 def careful_exp(x):
   try:
