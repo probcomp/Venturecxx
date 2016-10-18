@@ -69,7 +69,12 @@ class ParallelArrayMapOutputPSP(DeterministicPSP):
             raise VentureException('evaluation', 'Cannot trace parallel_mapv!',
                 address=base_address)
         assert isinstance(args.args, untraced_evaluator.OutputArgs)
-        operator, operands = args.operandValues()
+        operator = args.operandValues()[0]
+        operands = args.operandValues()[1]
+        if len(args.operandValues()) == 3:
+            parallelism = args.operandValues()[2]
+        else:
+            parallelism = None
         env = VentureEnvironment()
         rng = args.py_prng()
         def per_operand((i, seed, operand)):
@@ -81,13 +86,15 @@ class ParallelArrayMapOutputPSP(DeterministicPSP):
             (i, rng.randint(1, 2**31 - 1), operand)
             for i, operand in enumerate(operands)
         ]
-        return parallel_map(per_operand, inputs)
+        return parallel_map(per_operand, inputs, parallelism=parallelism)
 
 registerBuiltinSP("parallel_mapv",
     typed_nr(ParallelArrayMapOutputPSP(),
         [SPType([t.AnyType('a')], t.AnyType('b')),
-            t.HomogeneousArrayType(t.AnyType('a'))],
-        t.HomogeneousArrayType(t.AnyType('b'))))
+            t.HomogeneousArrayType(t.AnyType('a')),
+            t.IntegerType('parallelism')],
+        t.HomogeneousArrayType(t.AnyType('b')),
+        min_req_args=2))
 
 class ArrayMapRequestPSP(DeterministicPSP):
     def simulate(self, args):

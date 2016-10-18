@@ -32,10 +32,9 @@ def le32dec(s):
     return struct.unpack('<I', s)[0]
 
 
-def parallel_map(f, l):
+def parallel_map(f, l, parallelism=None):
 
-    ncpu = cpu_count()          # XXX urk
-    #ncpu = 1
+    ncpu = cpu_count() if parallelism is None else parallelism
 
     # Per-process action: grab an input from the input queue, compute,
     # toss the output in the output queue.

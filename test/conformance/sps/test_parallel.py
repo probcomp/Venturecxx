@@ -25,16 +25,16 @@ from venture.test.config import on_inf_prim
 @on_inf_prim('none')
 def test_parallel_mapv():
   boxed_result = get_ripl().evaluate(
-    '(parallel_mapv (lambda (x) (+ x 1)) (array 1 2 3))')
+    '(parallel_mapv (lambda (x) (+ x 1)) (array 1 2 3) 2)')
   result = [r.getNumber() for r in boxed_result]
   assert result == [2, 3, 4], '%r' % (result,)
 
 @on_inf_prim('none')
 def test_parallel_mapv_traced():
   assert_raises(VentureException, lambda:
-    get_ripl().sample('(parallel_mapv (lambda (x) (+ x 1)) (array 1 2 3))'))
+    get_ripl().sample('(parallel_mapv (lambda (x) (+ x 1)) (array 1 2 3) 2)'))
 
 @on_inf_prim('none')
 def test_parallel_mapv_error():
   assert_raises(VentureException, lambda:
-    get_ripl().evaluate('(parallel_mapv (lambda (x) y) (array 1 2 3))'))
+    get_ripl().evaluate('(parallel_mapv (lambda (x) y) (array 1 2 3) 2)'))
