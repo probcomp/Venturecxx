@@ -341,9 +341,6 @@ class Safely(object):
     # eta expand b/c getattr might fail pylint:disable=W0108
     return safely(lambda *args,**kwargs: getattr(self.obj, attrname)(*args, **kwargs))
 
-  def has_own_prng(self):
-    return self.obj.has_own_prng()
-
 class WorkerBase(object):
 
   '''The base class is WorkerBase, which manages a list of objects
@@ -378,7 +375,10 @@ class WorkerBase(object):
     # If we're in puma, set the seed; else don't.
     # The truly parallel case is handled by the subclass MultiprocessingWorker.
     did_set_global_prng = False
-    for (obj, seed) in zip(self.objs, seeds):
+    for (o, seed) in zip(self.objs, seeds):
+      # Circumvent the Safely wrapper here, since this function itself
+      # is wrapped in @safely.
+      obj = o.obj
       assert seed is not None
       if hasattr(obj, "has_own_prng") and obj.has_own_prng():
         obj.set_seed(seed)
