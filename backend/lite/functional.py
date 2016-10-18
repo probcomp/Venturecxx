@@ -60,7 +60,6 @@ registerBuiltinSP(
 
 class ParallelArrayMapOutputPSP(DeterministicPSP):
     def simulate(self, args):
-        from multiprocessing.pool import Pool
         from venture.lite.sp_use import RemappingArgs
         import venture.untraced.evaluator as untraced_evaluator
         base_address = args.node.address
