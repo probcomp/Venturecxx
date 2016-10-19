@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.lite.address import emptyAddress
+import random
+
+from venture.exception import VentureException
 from venture.lite.env import EnvironmentType
 from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureValueError
@@ -41,7 +43,7 @@ class ApplyRequestPSP(DeterministicPSP):
         (operator, operands) = args.operandValues()
         exp = [operator] + operands
         env = VentureEnvironment()
-        return Request([ESR(args.node, exp, emptyAddress, env)])
+        return Request([ESR(args.node, exp, addr.req_frame(0), env)])
 
     def description(self, name):
         return "%s(func, vals) returns the result of applying a variadic" \
@@ -60,7 +62,7 @@ class ArrayMapRequestPSP(DeterministicPSP):
         (operator, operands) = args.operandValues()
         exps = [[operator, e.quote(operand)] for operand in operands]
         env = VentureEnvironment()
-        return Request([ESR((args.node, i), exp, emptyAddress, env)
+        return Request([ESR((args.node, i), exp, addr.req_frame(i), env)
                         for i, exp in enumerate(exps)])
 
     def description(self, name):
@@ -85,7 +87,7 @@ class ArrayMap2RequestPSP(DeterministicPSP):
         exps = [[operator, e.quote(operand1), e.quote(operand2)]
                 for operand1, operand2 in zip(operands1, operands2)]
         env = VentureEnvironment()
-        return Request([ESR((args.node, i), exp, emptyAddress, env)
+        return Request([ESR((args.node, i), exp, addr.req_frame(i), env)
                         for i, exp in enumerate(exps)])
 
     def description(self, name):
@@ -107,7 +109,7 @@ class IndexedArrayMapRequestPSP(DeterministicPSP):
         exps = [[operator, index, e.quote(operand)]
                 for (index, operand) in enumerate(operands)]
         env = VentureEnvironment()
-        return Request([ESR((args.node, i), exp, emptyAddress, env)
+        return Request([ESR((args.node, i), exp, addr.req_frame(i), env)
                         for i, exp in enumerate(exps)])
 
     def description(self, name):

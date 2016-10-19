@@ -22,9 +22,22 @@ from venture.lite.orderedset import OrderedFrozenSet
 from venture.lite.scaffold import constructScaffold, Scaffold
 from venture.lite.smap import SamplableMap
 from venture.lite.sp_help import deterministic_typed
+from venture.lite.wttree import PSet
 import venture.lite.inference_sps as inf
 import venture.lite.node as n
 import venture.lite.types as t
+
+def _is_set(thing):
+  return isinstance(thing, OrderedFrozenSet) or isinstance(thing, PSet)
+
+def _canonicalize_to_ordered_frozen_set(thing):
+  if isinstance(thing, PSet):
+    # Intended type canonicalization
+    return OrderedFrozenSet(list(thing))
+  else:
+    # Defensive copy, because trace.unregisterRandomChoice may mutate
+    # the underlying set
+    return OrderedFrozenSet(list(thing))
 
 # The language of possible subproblem selection phrases.  The item in
 # each field is expected to be one of these, except Lookup.key,
@@ -143,7 +156,11 @@ def interpret(prog, trace):
     return (Top(), 0) # Hack: Top as a node set is also a special token, reusing the same token
   elif isinstance(prog, MinimalSubproblem):
     (nodes, wt) = interpret(prog.source, trace)
-    return (constructScaffold(trace, [as_set(nodes)]), wt)
+    node_set = as_set(nodes)
+    assert _is_set(node_set)
+    for node in node_set:
+      assert isinstance(node, n.Node), node
+    return (constructScaffold(trace, [_canonicalize_to_ordered_frozen_set(node_set)]), wt)
   else:
     raise Exception("Unknown trace search term %s" % (prog,))
 
@@ -156,7 +173,7 @@ def union(thing1, thing2):
 def sample_one(thing, prng):
   if isinstance(thing, SamplableMap):
     return thing.sample(prng)[1]
-  elif isinstance(thing, OrderedFrozenSet):
+  elif _is_set(thing):
     return prng.sample(list(thing),1)[0]
   else:
     raise Exception("Can only sample one element of a collection, not %s" % (thing,))
@@ -219,7 +236,7 @@ def extent(thing, trace):
   return set_fmap(thing, lambda nodes: trace.randomChoicesInExtent(nodes, None, None))
 
 def as_set(thing):
-  if isinstance(thing, OrderedFrozenSet):
+  if _is_set(thing):
     return thing
   elif isinstance(thing, SamplableMap):
     ans = OrderedFrozenSet()
@@ -236,8 +253,8 @@ def set_fmap(thing, f):
     for k, v in thing.iteritems():
       ans[k] = f(v)
     return ans
-  elif isinstance(thing, OrderedFrozenSet):
-    return f(thing)
+  elif _is_set(thing):
+    return f(_canonicalize_to_ordered_frozen_set(thing))
   else:
     return f(OrderedFrozenSet([thing]))
 
@@ -248,7 +265,7 @@ def set_bind(thing, f):
     for k, v in thing.iteritems():
       ans[k] = set_bind(v, f)
     return ans
-  elif isinstance(thing, OrderedFrozenSet):
+  elif _is_set(thing):
     return OrderedFrozenSet([]).union(*[f(v) for v in thing])
   else:
     return f(thing)
@@ -294,6 +311,7 @@ inf.registerBuiltinInferenceSP("by_walk", \
 Walk along the given edge in the dependency graph pointwise.
 
 Possible edges are
+
 - `operator`, for the operator position of an expression
 - `source`, for the expression a variable is bound to
 - `request`, for the request node corresponding to a procedure application

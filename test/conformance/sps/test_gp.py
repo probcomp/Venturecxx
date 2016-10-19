@@ -215,6 +215,7 @@ def testTwoSamples_low_covariance(seed):
     lo_cov_y.append(y)
   return reportPearsonIndependence(lo_cov_x, lo_cov_y)
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_gradients(seed):
   ripl = get_ripl(seed=seed)
@@ -232,6 +233,7 @@ def test_gradients(seed):
   ripl.observe('(gp 3)', '8')
   ripl.infer('(grad_ascent default one 0.1 10 10)')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_2d(seed):
   ripl = get_ripl(seed=seed)
@@ -246,6 +248,7 @@ def test_2d(seed):
   ripl.infer('(mh default one 1)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_2d_gradients(seed):
   ripl = get_ripl(seed=seed)
@@ -262,6 +265,7 @@ def test_2d_gradients(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_arglebargle(seed):
   ripl = get_ripl(seed=seed)
@@ -278,6 +282,7 @@ def test_arglebargle(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array 2 3))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_2d_arglebargle(seed):
   ripl = get_ripl(seed=seed)
@@ -298,6 +303,7 @@ def test_2d_arglebargle(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_deltoid_gradient(seed):
   ripl = get_ripl(seed=seed)
@@ -320,6 +326,7 @@ def test_deltoid_gradient(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_deltoid_gradient_simulate(seed):
   ripl = get_ripl(seed=seed)
@@ -347,6 +354,7 @@ def test_deltoid_gradient_simulate(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_bump_gradient(seed):
   ripl = get_ripl(seed=seed)
@@ -369,6 +377,7 @@ def test_bump_gradient(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_bump_gradient_simulate(seed):
   ripl = get_ripl(seed=seed)
@@ -396,6 +405,7 @@ def test_bump_gradient_simulate(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_linear_gradient(seed):
   ripl = get_ripl(seed=seed)
@@ -412,6 +422,7 @@ def test_linear_gradient(seed):
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array 2 3))')
 
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
 def test_linear_gradient_2d(seed):
   ripl = get_ripl(seed=seed)

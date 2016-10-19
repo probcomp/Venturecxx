@@ -33,7 +33,7 @@ from venture.lite.continuous import LogBetaOutputPSP
 from venture.lite.continuous import LogOddsBetaOutputPSP
 from venture.lite.continuous import LogOddsUniformOutputPSP
 from venture.lite.sp_use import MockArgs
-from venture.lite.utils import careful_exp
+from venture.lite.utils import exp
 from venture.lite.utils import logistic
 
 from venture.test.config import broken_in
@@ -107,7 +107,7 @@ def collect_sp_samples(sp, args, seed, aux=None, nsamples=None):
 
 BETA_SPACES = (
     ('beta', BetaOutputPSP, lambda x: x, 0, 1),
-    ('log_beta', LogBetaOutputPSP, careful_exp, float('-inf'), 0),
+    ('log_beta', LogBetaOutputPSP, exp, float('-inf'), 0),
     ('log_odds_beta', LogOddsBetaOutputPSP, logistic,
      float('-inf'), float('+inf')),
 )
@@ -116,7 +116,7 @@ def check_beta_density_quad(sp, lo, hi, a, b):
     sp0 = sp()
     args = MockArgs((a, b), None)
     def pdf(x):
-        return careful_exp(sp0.logDensity(x, args))
+        return exp(sp0.logDensity(x, args))
     one, esterr = scipy.integrate.quad(pdf, lo, hi)
     assert relerr(1, one) < esterr
 
@@ -134,7 +134,7 @@ def test_log_odds_uniform_cdf(seed):
     sp0 = LogOddsUniformOutputPSP()
     args = MockArgs((), None)
     def pdf(x):
-        return careful_exp(sp0.logDensity(x, args))
+        return exp(sp0.logDensity(x, args))
     def cdf(x):
         return logistic(x)
     for x in samples:
@@ -167,7 +167,7 @@ def check_beta_ks_quad(name, sp, lo, a, b, seed):
     sp0 = sp()
     args = MockArgs((a, b), None)
     def pdf(x):
-        return careful_exp(sp0.logDensity(x, args))
+        return exp(sp0.logDensity(x, args))
     def cdf(x):
         p, e = scipy.integrate.quad(pdf, lo, x)
         assert p < 1 or relerr(1, p) < 100*e

@@ -19,7 +19,7 @@ import math
 import time
 import matplotlib.pyplot as plt
 
-from venture.lite.utils import logaddexp
+from venture.lite.utils import logsumexp
 
 start_time = None
 true_speed = 0
@@ -28,7 +28,7 @@ errors = []
 
 def log_weighted_avg(weights, vals):
   total = sum([math.exp(w)*v["value"] for (w,v) in zip(weights, vals)])
-  weight = math.exp(logaddexp(weights))
+  weight = math.exp(logsumexp(weights))
   return total / weight
 
 def collect(inferrer, step_speed):

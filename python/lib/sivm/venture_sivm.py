@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
 import copy
 import cStringIO as StringIO
 
@@ -109,6 +110,15 @@ class VentureSivm(object):
         # Maps directive ids to the Syntax objects that record their
         # macro expansion history
         self.syntax_dict = {}
+
+    @contextlib.contextmanager
+    def cleared(self):
+        syntax_dict = self.syntax_dict
+        self._clear()
+        try:
+            yield
+        finally:
+            self.syntax_dict = syntax_dict
 
     ###############################
     # Serialization

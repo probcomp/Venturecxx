@@ -120,9 +120,13 @@ additive(add)		::= additive(l) K_ADD|T_ADD(op) multiplicative(r).
 additive(sub)		::= additive(l) K_SUB|T_SUB(op) multiplicative(r).
 additive(none)		::= multiplicative(e).
 
-multiplicative(mul)	::= multiplicative(l) K_MUL|T_MUL(op) exponential(r).
-multiplicative(div)	::= multiplicative(l) K_DIV|T_DIV(op) exponential(r).
-multiplicative(none)	::= exponential(e).
+multiplicative(mul)	::= multiplicative(l) K_MUL|T_MUL(op) unary(r).
+multiplicative(div)	::= multiplicative(l) K_DIV|T_DIV(op) unary(r).
+multiplicative(none)	::= unary(e).
+
+unary(pos)		::= T_ADD(op) unary(e).
+unary(neg)		::= T_SUB(op) unary(e).
+unary(none)		::= exponential(e).
 
 exponential(pow)	::= applicative(l) K_POW|T_POW(op) exponential(r).
 exponential(none)	::= applicative(e).

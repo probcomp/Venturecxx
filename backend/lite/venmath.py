@@ -32,8 +32,8 @@ from venture.lite.sp_help import unaryNum
 from venture.lite.sp_help import zero_gradient
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import T_logistic
-from venture.lite.utils import careful_exp
 from venture.lite.utils import d_log_logistic
+from venture.lite.utils import exp
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
@@ -118,7 +118,7 @@ def integer_divide(x, y):
     return int(x) // int(y)
 
 registerBuiltinSP("int_div", binaryNumInt(integer_divide,
-    descr="div returns the integer quotient of its first argument by its second"))
+    descr="int_div(n, d) = floor(n/d)"))
 
 def integer_mod(x, y):
   if int(y) == 0:
@@ -127,7 +127,7 @@ def integer_mod(x, y):
     return int(x) % int(y)
 
 registerBuiltinSP("int_mod", binaryNumInt(integer_mod,
-    descr="mod returns the modulus of its first argument by its second"))
+    descr="int_mod(n, d) = r, where n = d*q + r and q = floor(n/d)"))
 
 registerBuiltinSP("min",
     binaryNum(min, descr="min returns the minimum value of its arguments"))
@@ -158,8 +158,8 @@ registerBuiltinSP("tan", unaryNum(math.tan, sim_grad=grad_tan,
 registerBuiltinSP("hypot", binaryNum(math.hypot,
     descr="Returns the hypot of its arguments"))
 
-registerBuiltinSP("exp", unaryNum(careful_exp,
-    sim_grad=lambda args, direction: [direction * careful_exp(args[0])],
+registerBuiltinSP("exp", unaryNum(exp,
+    sim_grad=lambda args, direction: [direction * exp(args[0])],
     descr="Returns the exp of its argument"))
 
 registerBuiltinSP("log", unaryNum(np.log,

@@ -21,10 +21,10 @@ import math
 
 from nose.tools import assert_raises
 
-from venture.lite.utils import careful_exp
+from venture.lite.utils import exp
 from venture.lite.utils import expm1
-from venture.lite.utils import extendedLog
-from venture.lite.utils import extendedLog1p
+from venture.lite.utils import log
+from venture.lite.utils import log1p
 from venture.lite.utils import logsumexp
 from venture.lite.utils import xlogx
 
@@ -37,30 +37,30 @@ def relerr(expected, actual):
 def test_log():
   inf = float('inf')
   nan = float('nan')
-  assert extendedLog(0) == -inf
-  assert extendedLog(1) == 0
-  assert relerr(1, extendedLog(2.718281828)) < 1e-8
-  assert extendedLog(+inf) == +inf
-  assert math.isnan(extendedLog(nan))
+  assert log(0) == -inf
+  assert log(1) == 0
+  assert relerr(1, log(2.718281828)) < 1e-8
+  assert log(+inf) == +inf
+  assert math.isnan(log(nan))
 
 def test_log1p():
   inf = float('inf')
   nan = float('nan')
-  assert extendedLog1p(-1) == -inf
-  assert extendedLog1p(0) == 0
-  assert relerr(1, extendedLog1p(1.718281828)) < 1e-8
-  assert extendedLog1p(+inf) == +inf
-  assert relerr(1e-20, extendedLog1p(1e-20)) < 1e-16
-  assert math.isnan(extendedLog1p(nan))
+  assert log1p(-1) == -inf
+  assert log1p(0) == 0
+  assert relerr(1, log1p(1.718281828)) < 1e-8
+  assert log1p(+inf) == +inf
+  assert relerr(1e-20, log1p(1e-20)) < 1e-16
+  assert math.isnan(log1p(nan))
 
 def test_exp():
   inf = float('inf')
   nan = float('nan')
-  assert careful_exp(-inf) == 0
-  assert careful_exp(0) == 1
-  assert relerr(2.718281828, careful_exp(1)) < 1e-8
-  assert careful_exp(+inf) == +inf
-  assert math.isnan(careful_exp(nan))
+  assert exp(-inf) == 0
+  assert exp(0) == 1
+  assert relerr(2.718281828, exp(1)) < 1e-8
+  assert exp(+inf) == +inf
+  assert math.isnan(exp(nan))
 
 def test_expm1():
   inf = float('inf')

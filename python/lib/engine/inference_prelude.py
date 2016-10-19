@@ -28,7 +28,10 @@ prelude = [
 """(lambda (f iter)
   (if (<= iter 0)
       pass
-      (do f (iterate f (- iter 1)))))"""],
+      (if (<= iter 1)
+          f
+          (do (iterate f (int_div iter 2))
+              (iterate f (int_div (+ iter 1) 2))))))"""],
 
 ["repeat",
 """\
@@ -285,7 +288,6 @@ prelude = [
 
 
 ["duplicate_particle", """\
-.. _duplicate_particle:
 .. function:: duplicate_particle(<int>)
 
   :rtype: <inference action returning ()>

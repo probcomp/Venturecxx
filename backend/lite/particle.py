@@ -24,9 +24,11 @@ from venture.lite.sp import VentureSPRecord
 from venture.lite.trace import Trace
 from venture.lite.wttree import PMap
 from venture.lite.wttree import PSet
+import venture.lite.address as addr
 
 def node_key(node):
   assert isinstance(node, Node)
+  assert addr._is_address(node.address), node.address
   return (node.address, str(type(node)))
 
 class Particle(Trace):
@@ -111,9 +113,9 @@ class Particle(Trace):
 
   def unregisterRandomChoice(self, node): assert False
 
-  def registerRandomChoiceInScope(self, scope, block, node):
+  def registerRandomChoiceInScope(self, scope, block, node, unboxed=False):
     assert block is not None
-    (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
+    if not unboxed: (scope, block) = self._normalizeEvaluatedScopeAndBlock(scope, block)
     if scope not in self.scopes:
       self.scopes = self.scopes.insert(scope, PMap())
     if block not in self.scopes.lookup(scope):
@@ -294,6 +296,7 @@ class Particle(Trace):
     for node in self.aes: self.base.registerAEKernel(node)
 
     for (node, value) in self.values.iteritems():
+      assert value is not None
       self.base.setValueAt(node, value)
 
     for (node, madeSP) in self.madeSPs.iteritems():
