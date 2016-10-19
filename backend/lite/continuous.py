@@ -45,17 +45,16 @@ from venture.lite.sp_help import dispatching_psp
 from venture.lite.sp_help import no_request
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
-from venture.lite.utils import careful_exp
+from venture.lite.utils import exp
 from venture.lite.utils import expm1
-from venture.lite.utils import extendedLog
-from venture.lite.utils import extendedLog1p
+from venture.lite.utils import log
+from venture.lite.utils import log1p
 from venture.lite.utils import logDensityMVNormal
 from venture.lite.utils import log_d_logistic
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
 from venture.lite.utils import logsumexp
-from venture.lite.utils import numpy_force_number
 from venture.lite.utils import override
 from venture.lite.utils import simulateLogGamma
 import venture.lite.types as t
@@ -127,7 +126,7 @@ class MVNormalOutputPSP(RandomPSP):
     (mu, sigma) = self.__parse_args__(args)
     if sigma is not None:
       # The maximum is obtained when x = mu
-      return numpy_force_number(-.5*len(sigma)*np.log(np.pi) - \
+      return float(-.5*len(sigma)*np.log(np.pi) -
         .5*np.log(abs(npla.det(sigma))))
     elif x is not None and mu is not None:
       raise Exception('TODO: Find an analytical form for the maximum of the '\
@@ -553,7 +552,7 @@ class LogOddsUniformOutputPSP(RandomPSP):
     #     = log (1 - 1/2)*(1/2) = log (1/4)
     #     = -log 4.
     #
-    return -extendedLog(4)
+    return -log(4)
 
   def description(self, name):
     return "  %s() samples a log-odds representation of a uniform real number"\
@@ -772,8 +771,7 @@ class LogBetaOutputPSP(RandomPSP):
     #   = a x + (b - 1) log (1 - e^x) - log B(a, b).
     #
     a, b = args.operandValues()
-    return a*x + (b - 1)*extendedLog1p(-careful_exp(x)) \
-      - scipy.special.betaln(a, b)
+    return a*x + (b - 1)*log1p(-exp(x)) - scipy.special.betaln(a, b)
 
   def gradientOfLogDensity(self, x, args):
     # We seek the derivative of
@@ -811,7 +809,7 @@ class LogBetaOutputPSP(RandomPSP):
     a, b = args.operandValues()
     d_x = a - (b - 1)/expm1(-x)
     d_a = x + spsp.digamma(a + b) - spsp.digamma(a)
-    d_b = extendedLog(-expm1(x)) + spsp.digamma(a + b) - spsp.digamma(b)
+    d_b = log(-expm1(x)) + spsp.digamma(a + b) - spsp.digamma(b)
     return (d_x, [d_a, d_b])
 
   def description(self, name):
@@ -899,7 +897,7 @@ class LogOddsBetaOutputPSP(RandomPSP):
       H = np_rng.gamma(beta)
       assert G != 0
       assert H != 0
-      return extendedLog(G/H)
+      return log(G/H)
 
   def logDensity(self, x, args):
     # x = logit(y) for a beta sample y, so its density is the beta

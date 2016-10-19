@@ -22,7 +22,7 @@ import scipy.stats
 
 from nose import SkipTest
 
-from venture.lite.utils import careful_exp
+from venture.lite.utils import exp
 from venture.lite.utils import logDensityLogGamma
 from venture.lite.utils import simulateLogGamma
 
@@ -39,7 +39,7 @@ def relerr(expected, actual):
 def check_loggamma_density_quad(shape):
   inf = float('inf')
   def pdf(x):
-    return careful_exp(logDensityLogGamma(x, shape))
+    return exp(logDensityLogGamma(x, shape))
   one, esterr = scipy.integrate.quad(pdf, -inf, +inf)
   assert relerr(1, one) < esterr
 
@@ -69,7 +69,7 @@ def check_loggamma_ks_quad(shape, seed):
   nsamples = default_num_samples()
   samples = [simulateLogGamma(shape, np_rng) for _ in xrange(nsamples)]
   def pdf(x):
-    return careful_exp(logDensityLogGamma(x, shape))
+    return exp(logDensityLogGamma(x, shape))
   def cdf(x):
     p, _e = scipy.integrate.quad(pdf, -inf, x)
     return p

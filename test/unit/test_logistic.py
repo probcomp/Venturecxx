@@ -20,9 +20,9 @@ from __future__ import division
 import numpy as np
 
 from venture.lite.utils import T_logistic
-from venture.lite.utils import careful_exp
 from venture.lite.utils import d_log_logistic
 from venture.lite.utils import d_logistic
+from venture.lite.utils import exp
 from venture.lite.utils import log_d_logistic
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
@@ -46,11 +46,11 @@ def check(x, Lx, dLx, logLx, dlogLx, logdLx):
     assert T_logistic(-x)[0] < 1e-300
   assert relerr(dLx, T_logistic(x)[1]) < 1e-15
   assert relerr(dLx, d_logistic(x)) < 1e-15
-  assert relerr(dLx, careful_exp(log_d_logistic(x))) < 1e-15
+  assert relerr(dLx, exp(log_d_logistic(x))) < 1e-15
   assert relerr(logdLx, log_d_logistic(x)) < 1e-15
   assert relerr(dLx, T_logistic(-x)[1]) < 1e-15
   assert relerr(dLx, d_logistic(-x)) < 1e-15
-  assert relerr(dLx, careful_exp(log_d_logistic(x))) < 1e-15
+  assert relerr(dLx, exp(log_d_logistic(x))) < 1e-15
   assert relerr(logdLx, log_d_logistic(x)) < 1e-15
   assert relerr(logLx, log_logistic(x)) < 1e-15
   if Lx < 1:

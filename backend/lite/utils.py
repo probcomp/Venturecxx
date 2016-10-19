@@ -22,6 +22,8 @@ import numpy as np
 import numpy.linalg as npla
 import scipy.special as ss
 
+import venture.lite.mvnormal as mvnormal
+
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
 def override(interface_class):
   def overrider(method):
@@ -29,10 +31,15 @@ def override(interface_class):
     return method
   return overrider
 
-def extendedLog(x): return float('-inf') if x == 0 else math.log(x)
-def extendedLog1p(x): return float('-inf') if x == -1 else math.log1p(x)
+def log(x): return float('-inf') if x == 0 else math.log(x)
+def log1p(x): return float('-inf') if x == -1 else math.log1p(x)
 def xlogx(x): return 0 if x == 0 else x*math.log(x)
 def expm1(x): return math.expm1(x)
+def exp(x):
+  try:
+    return math.exp(x)
+  except OverflowError:
+    return float("inf")
 
 def logsumexp(array):
   """Given [log x_0, ..., log x_{n-1}], yield log (x_0 + ... + x_{n-1}).
@@ -55,7 +62,7 @@ def logsumexp(array):
 
   # Since m = max{a_0, a_1, ...}, it follows that a <= m for all a,
   # so a - m <= 0; hence exp(a - m) is guaranteed not to overflow.
-  return m + extendedLog(sum(careful_exp(a - m) for a in array))
+  return m + log(sum(exp(a - m) for a in array))
 
 def normalizeList(seq):
   denom = sum(seq)
@@ -116,19 +123,11 @@ def cartesianProduct(original):
     recursiveProduct = cartesianProduct(original[1:])
     return [ [v] + vs for v in firstGroup for vs in recursiveProduct]
 
-def logaddexp(items):
-  "Apparently this was added to scipy in a later version than the one installed on my machine.  Sigh."
-  the_max = max(items)
-  if the_max > float("-inf"):
-    return the_max + math.log(sum(math.exp(item - the_max) for item in items))
-  else:
-    return the_max # Don't want NaNs from trying to correct from the maximum
-
 def log_domain_even_out(items, n=None):
   "Return a list of n equal numbers whose logsumexp equals the logsumexp of the inputs."
   if n is None:
     n = len(items)
-  answer = logaddexp(items) - math.log(n)
+  answer = logsumexp(items) - math.log(n)
   return [answer for _ in range(n)]
 
 def logWeightsToNormalizedDirect(logs):
@@ -154,23 +153,8 @@ def sampleLogCategorical(logs, np_rng):
     # impossible.
     return simulateCategorical([0 for _ in logs], np_rng, os=None)
 
-def numpy_force_number(answer):
-  if isinstance(answer, numbers.Number):
-    return answer
-  else:
-    return answer[0,0]
-
-# TODO Change it to use the scipy function when Venture moves to requiring scipy 0.14+
 def logDensityMVNormal(x, mu, sigma):
-  answer =  -.5*np.dot(np.dot(x-mu, npla.inv(sigma)), np.transpose(x-mu)) \
-            -.5*len(sigma)*np.log(2 * np.pi)-.5*np.log(abs(npla.det(sigma)))
-  return numpy_force_number(answer)
-
-def careful_exp(x):
-  try:
-    return math.exp(x)
-  except OverflowError:
-    return float("inf")
+  return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))
 
 def logistic(x):
   """Logistic function: 1/(1 + e^{-x}).  Inverse of logit.
@@ -242,7 +226,7 @@ def log_d_logistic(x):
     # -x - 2 log (1 + e^{-x}) ~= -x - 2 log (e^{-x}) = -x - 2 (-x) = x
     return x
   else:
-    return -x - 2*extendedLog1p(careful_exp(-x))
+    return -x - 2*log1p(exp(-x))
 
 def log_logistic(x):
   """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
@@ -273,7 +257,7 @@ def logit(x):
 
   Maps direct-space probabilities in [0, 1] into log-odds space.
   """
-  return extendedLog(x / (1 - x))
+  return log(x / (1 - x))
 
 def simulateLogGamma(shape, np_rng):
   """Sample from log of standard Gamma distribution with given shape."""
@@ -319,7 +303,7 @@ def logDensityLogGamma(x, shape):
   #       = (k - 1) x - e^x - log Gamma(k) + x
   #       = k x - e^x - log Gamma(k).
   #
-  return shape*x - careful_exp(x) - math.lgamma(shape)
+  return shape*x - exp(x) - math.lgamma(shape)
 
 class FixedRandomness(object):
   """A Python context manager for executing (stochastic) code repeatably
