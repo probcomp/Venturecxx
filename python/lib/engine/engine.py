@@ -233,6 +233,7 @@ class Engine(object):
     stack_dict_action = {"type":"SP", "value":action}
     program = [v.sym("run"), v.quote(stack_dict_action)]
     try:
+     with self.ripl.sivm.cleared():
       with self.inference_trace():
         did = self._do_raw_evaluate(program)
         ans = self.infer_trace.extractRaw(did)
@@ -240,6 +241,15 @@ class Engine(object):
         return (ans, model)
     finally:
       self.model = current_model
+
+  @contextmanager
+  def using_model(self, model):
+    previous = self.model
+    self.model = model
+    try:
+      yield
+    finally:
+      self.model = previous
 
   @contextmanager
   def _particle_swapping(self, action):
