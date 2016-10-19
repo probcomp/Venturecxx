@@ -311,6 +311,7 @@ inf.registerBuiltinInferenceSP("by_walk", \
 Walk along the given edge in the dependency graph pointwise.
 
 Possible edges are
+
 - `operator`, for the operator position of an expression
 - `source`, for the expression a variable is bound to
 - `request`, for the request node corresponding to a procedure application

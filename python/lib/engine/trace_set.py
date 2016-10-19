@@ -29,7 +29,7 @@ from ..multiprocess import ThreadedMaster
 from ..multiprocess import ThreadedSerializingMaster
 from venture.exception import VentureException
 from venture.lite.utils import log_domain_even_out
-from venture.lite.utils import logaddexp
+from venture.lite.utils import logsumexp
 from venture.lite.utils import sampleLogCategorical
 import venture.engine.trace as tr
 
@@ -273,7 +273,7 @@ if freeze has been used.
 
   def collapse(self, scope, block):
     def sample(weights):
-      return (sampleLogCategorical(weights), logaddexp(weights))
+      return (sampleLogCategorical(weights), logsumexp(weights))
     self._collapse_help(scope, block, sample)
 
   def collapse_map(self, scope, block):

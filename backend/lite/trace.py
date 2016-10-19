@@ -701,9 +701,9 @@ the scaffold determined by the given expression."""
   def has_own_prng(self): return True
   def set_seed(self, seed):
     assert seed is not None
-    prng = random.Random(seed)
-    self.np_prng.seed(prng.random())
-    self.py_prng.seed(prng.random())
+    rng = random.Random(seed)
+    self.np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self.py_rng = random.Random(rng.randint(1, 2**31 - 1))
 
   def short_circuit_copyable(self): return False
 

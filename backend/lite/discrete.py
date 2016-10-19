@@ -34,8 +34,8 @@ from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import d_log_logistic
-from venture.lite.utils import extendedLog
-from venture.lite.utils import extendedLog1p
+from venture.lite.utils import log
+from venture.lite.utils import log1p
 from venture.lite.utils import logDensityCategorical
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logit
@@ -59,9 +59,9 @@ class BernoulliOutputPSP(DiscretePSP):
     vals = args.operandValues()
     p = vals[0] if vals else 0.5
     if val:
-      return extendedLog(p)
+      return log(p)
     else:
-      return extendedLog1p(-p)
+      return log1p(-p)
 
   def gradientOfLogDensity(self, val, args):
     vals = args.operandValues()
@@ -107,7 +107,7 @@ class LogBernoulliOutputPSP(DiscretePSP):
   def logDensity(self, val, args):
     logp = args.operandValues()[0]
     if val: return logp
-    else: return extendedLog1p(-math.exp(logp))
+    else: return log1p(-math.exp(logp))
 
   def gradientOfLogDensity(self, val, args):
     logp = args.operandValues()[0]
@@ -256,7 +256,7 @@ class UniformDiscreteOutputPSP(DiscretePSP):
     if a <= val and val < b:
       return -math.log(b-a)
     else:
-      return extendedLog(0.0)
+      return log(0.0)
 
   def enumerateValues(self, args):
     return range(*[int(x) for x in args.operandValues()])

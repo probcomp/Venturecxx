@@ -22,7 +22,7 @@ from testconfig import config
 import numpy as np
 import scipy.stats
 
-from venture.lite.utils import logaddexp
+from venture.lite.utils import logsumexp
 from venture.lite.sp_registry import builtInSPs
 from venture.lite.sp_use import logDensity
 from venture.test.config import SkipTest
@@ -192,7 +192,7 @@ def testInvWishartAssess():
   inv_wisharts = np.vectorize(inv_wishart)(np.linspace(low, high, n))
   inv_gamma = scipy.stats.invgamma(dof*0.5, scale=psi*0.5).logpdf
   inv_gammas = np.vectorize(inv_gamma)(np.linspace(low, high, n))
-  cum_w = math.exp(logaddexp(inv_wisharts)) * (high - low) / n
-  cum_g = math.exp(logaddexp(inv_gammas)) * (high - low) / n
+  cum_w = math.exp(logsumexp(inv_wisharts)) * (high - low) / n
+  cum_g = math.exp(logsumexp(inv_gammas)) * (high - low) / n
   np.testing.assert_allclose([1, 1], [cum_w, cum_g], rtol=1e-2)
   np.testing.assert_allclose(inv_wisharts, inv_gammas)

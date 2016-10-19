@@ -641,7 +641,7 @@ observeMacro = Macro(arg0("observe"), ObserveExpand, desc="""\
 forceMacro = SyntaxRule(["force", "exp", "val"],
                         ["_force", ["quasiquote", "exp"], "val"],
                         desc="""\
-.. _force
+.. _force:
 .. object:: force <model-expression> = <value>;
 
   Programatically force the state of the model.
