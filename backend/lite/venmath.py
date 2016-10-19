@@ -37,7 +37,7 @@ from venture.lite.utils import exp
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
-from venture.lite.utils import logaddexp
+from venture.lite.utils import logsumexp
 import venture.lite.types as t
 import venture.lite.value as v
 
@@ -234,6 +234,6 @@ registerBuiltinSP("log_logistic", unaryNum(log_logistic,
     sim_grad=grad_log_logistic,
     descr="The log of the logistic function: -log (1 + exp(-x))"))
 
-registerBuiltinSP("logsumexp", deterministic_typed(logaddexp,
+registerBuiltinSP("logsumexp", deterministic_typed(logsumexp,
     [t.UArray(t.Number)], t.Number,
     descr="Equivalent to log(apply(add, mapv(exp, x)))"))
