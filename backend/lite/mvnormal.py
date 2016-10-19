@@ -71,7 +71,9 @@ class Covariance_Loser(object):
   def inverse(self):
     return la.pinv(self._Sigma)
   def logsqrtdet(self):
-    return (1/2)*np.log(la.det(self._Sigma))
+    det = la.det(self._Sigma)
+    assert det != 0., "la.det(self._Sigma) ==0!" 
+    return (1/2)*np.log(det)
 
 def logpdf(X, Mu, Sigma):
   """Multivariate normal log pdf."""
@@ -100,7 +102,7 @@ def logpdf(X, Mu, Sigma):
 
   X_ = X - Mu
   covf = _covariance_factor(Sigma)
-
+ 
   logp = -np.dot(X_.T, covf.solve(X_)/2.)
   logp -= (n/2.)*np.log(2*np.pi)
   logp -= covf.logsqrtdet()
