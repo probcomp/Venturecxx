@@ -32,6 +32,8 @@ def le32dec(s):
     return struct.unpack('<I', s)[0]
 
 
+# Not using multiprocessing.pool because it is not clear how to get it
+# to share data from the parent to the child process.
 def parallel_map(f, l, parallelism=None):
 
     ncpu = cpu_count() if parallelism is None else parallelism
