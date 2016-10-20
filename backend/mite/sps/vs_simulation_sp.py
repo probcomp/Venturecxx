@@ -34,10 +34,20 @@ class MadeSimulationSP(SimulationSP):
     return t.Number.asPython(logp)
 
   def incorporate(self, output, inputs):
-    self.run_in_helper_trace('incorporate', [output] + inputs)
+    if self.has_method('incorporate'):
+      self.run_in_helper_trace('incorporate', [output] + inputs)
 
   def unincorporate(self, output, inputs):
-    self.run_in_helper_trace('unincorporate', [output] + inputs)
+    if self.has_method('unincorporate'):
+      self.run_in_helper_trace('unincorporate', [output] + inputs)
+
+  def has_method(self, method):
+    helper_trace = self.helper_trace
+    addr = helper_trace.next_base_address()
+    expr = ['contains', 'the_sp', ['quote', method]]
+    env = VentureEnvironment(helper_trace.global_env)
+    value = helper_trace.eval_request(addr, expr, env)
+    return value.getBool()
 
   def run_in_helper_trace(self, method, inputs):
     helper_trace = self.helper_trace
