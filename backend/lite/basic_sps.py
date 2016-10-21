@@ -27,10 +27,10 @@ from venture.lite.utils import raise_
 import venture.lite.types as t
 import venture.lite.value as v
 
-registerBuiltinSP("eq", binaryPred(lambda x,y: x.compare(y) == 0,
+registerBuiltinSP("eq", binaryPred(lambda x,y: x.equal(y),
     descr="eq compares its two arguments for equality"))
 
-registerBuiltinSP("neq", binaryPred(lambda x,y: x.compare(y) != 0,
+registerBuiltinSP("neq", binaryPred(lambda x,y: not x.equal(y),
     descr="neq checkes whether its arguments are not equal"))
 
 registerBuiltinSP("gt", binaryPred(lambda x,y: x.compare(y) >  0,
