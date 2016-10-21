@@ -1,4 +1,4 @@
-from venture.lite.builtin import builtInSPs
+from venture.lite.builtin import builtInSPs as lite_builtInSPs
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_use import MockArgs
@@ -6,6 +6,7 @@ import venture.lite.value as vv
 
 from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
+from venture.mite.sp_registry import builtInSPs
 
 class LiteSP(SimulationSP):
   def __init__(self, wrapped_sp, wrapped_aux=None):
@@ -57,7 +58,8 @@ class LiteSP(SimulationSP):
       self.unincorporate(inputs[0], inputs[1:])
       return vv.VentureNil()
 
-for name, sp in builtInSPs().iteritems():
+for name, sp in lite_builtInSPs().iteritems():
   if isinstance(sp.requestPSP, NullRequestPSP):
-    registerBuiltinSP(name, LiteSP(sp))
+    if name not in builtInSPs():
+      registerBuiltinSP(name, LiteSP(sp))
 
