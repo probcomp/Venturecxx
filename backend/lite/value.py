@@ -434,6 +434,11 @@ class VentureForeignBlob(VentureValue):
   @staticmethod
   def fromStackDict(thing):
     return VentureForeignBlob(thing["value"])
+  def equalSameType(self, other):
+    import venture.mite.address as address
+    if isinstance(self.datum, address.Address) or isinstance(other.datum, address.Address):
+      print self.datum, other.datum
+    return self.datum == other.datum
 
 class VentureNil(VentureValue):
   def __init__(self):
