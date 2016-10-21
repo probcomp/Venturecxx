@@ -235,7 +235,10 @@ class BlankTrace(AbstractTrace):
     return sp_ref.makerNode
 
   def value_at(self, addr):
-    return self.results[addr]
+    try:
+      return self.results[addr]
+    except KeyError:
+      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
 
 class FlatTrace(AbstractTrace):
