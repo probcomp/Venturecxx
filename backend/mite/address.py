@@ -81,24 +81,24 @@ def request(sp_addr, request_id):
   return RequestAddress(sp_addr, request_id)
 
 def interpret_address_in_trace(address, trace_id, orig_trace_id=None):
-  if isinstance(address, BuiltinAddress):
-    return address
-  elif isinstance(address, DirectiveAddress):
-    if address.trace_id is orig_trace_id:
-      return directive(address.directive_id, trace_id)
-    else:
+  def recur(address):
+    if isinstance(address, BuiltinAddress):
       return address
-  elif isinstance(address, RequestAddress):
-    return RequestAddress(interpret_address_in_trace(address.sp_addr, trace_id, orig_trace_id),
-                          interpret_address_in_trace(address.request_id, trace_id, orig_trace_id))
-  elif isinstance(address, SubexpressionAddress):
-    return subexpression(address.index,
-                         interpret_address_in_trace(address.parent, trace_id, orig_trace_id))
-  else:
-    # Cover request ids that may not be addresses.  This is wrong if
-    # the request ID is a compound object that contains addresses, but
-    # I hope that doesn't happen.
-    return address
+    elif isinstance(address, DirectiveAddress):
+      if address.trace_id is orig_trace_id:
+        return directive(address.directive_id, trace_id)
+      else:
+        return address
+    elif isinstance(address, RequestAddress):
+      return RequestAddress(recur(address.sp_addr), recur(address.request_id))
+    elif isinstance(address, SubexpressionAddress):
+      return subexpression(address.index, recur(address.parent))
+    else:
+      # Cover request ids that may not be addresses.  This is wrong if
+      # the request ID is a compound object that contains addresses, but
+      # I hope that doesn't happen.
+      return address
+  return recur(address)
 
 ## VentureScript bindings for constructing addresses
 
