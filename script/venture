@@ -106,7 +106,15 @@ def ripl_builder(args, backend):
     else:
         r.set_mode("venture_script")
     return (interactive, r, files, plugins)
-  return build
+  def prof_build():
+    import cProfile
+    loc = {"build": build}
+    cProfile.runctx("ans = build()", {}, loc, sort='cumtime')
+    return loc["ans"]
+  if args is not None and args.profile:
+    return prof_build
+  else:
+    return build
 
 def add_local_args(parser):
     parser.add_argument('-f', '--file', action='append', help="execute the given file")
@@ -119,6 +127,7 @@ def add_local_args(parser):
     parser.add_argument('--prelude', action='store_true',
                         help = 'load model prelude on startup (default: off)')
     parser.add_argument('-s', '--seed', action='store', help="Random seed")
+    parser.add_argument('-p', '--profile', action='store_true', help="Print implementation profile after running")
     return parser
 
 parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform',
