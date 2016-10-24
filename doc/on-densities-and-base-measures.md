@@ -300,6 +300,33 @@ Subtleties:
   depend on whether the cutoff parameter was computed by an integer or
   floating-point process (which, however, is known from its type tag).
 
+Variant: Truncated density semantics
+------------------------------------
+
+[Recorded 10/24/16]
+
+Instead of returning the probability of a given floating point number,
+return the ratio of that probability to the size (in Lebesgue measure)
+of the interval that rounds to that number.  The difference between
+this and the previous is the float density correction, which has the
+effect that most of the time the returned values are essentially the
+same as the densities.
+
+- Interesting effect: Infinite densities (such as beta(1;0.01,0.01))
+  vanish.
+
+- However: not clear whether this is actually a solution to the base
+  measure problem, because the semantics of a logDensity result still
+  depend on said base measure (i.e., whether that Lebesgue correction
+  is there or not).
+
+- Also: The situations where this would make a difference are those
+  where the truncated density is significantly different from the
+  limiting density (e.g., infinities in the latter); but those regions
+  are probably evidence of the model being computationally bad anyway,
+  and maybe the system should fail loudly rather than quitly when that
+  happens.
+
 Type-Driven Universal Base Measure
 ----------------------------------
 
