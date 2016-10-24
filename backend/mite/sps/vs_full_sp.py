@@ -60,7 +60,10 @@ class MadeFullSP(VentureSP):
     app_id = t.Blob.asVentureValue(app_id)
     parent = t.Blob.asVentureValue(parent)
     kernel_dict = self.run_in_helper_trace('propagating_kernel', [handle, app_id, parent])
-    return ProxyKernel(self.helper_trace, kernel_dict)
+    if kernel_dict is None or kernel_dict in t.Nil:
+      return None
+    else:
+      return ProxyKernel(self.helper_trace, kernel_dict)
 
   def run_in_helper_trace(self, method, inputs):
     helper_trace = self.helper_trace
