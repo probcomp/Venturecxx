@@ -81,7 +81,7 @@ def request(sp_addr, request_id):
   return RequestAddress(sp_addr, request_id)
 
 def interpret_address_in_trace(address, trace_id, orig_trace_id=None):
-  def recur(address):
+  def recur_raw(address):
     if isinstance(address, BuiltinAddress):
       return address
     elif isinstance(address, DirectiveAddress):
@@ -98,6 +98,22 @@ def interpret_address_in_trace(address, trace_id, orig_trace_id=None):
       # the request ID is a compound object that contains addresses, but
       # I hope that doesn't happen.
       return address
+  table = {}
+  def memoize_unary(f):
+    def f_memo(x):
+      if x in table:
+        return table[x]
+      else:
+        ans = f(x)
+        if x in table:
+          # f mutated the table and added x
+          assert ans == table[x], "Recursive invocation of memoized function produced incompatible answers"
+          return table[x]
+        else:
+          table[x] = ans
+          return ans
+    return f_memo
+  recur = memoize_unary(recur_raw)
   return recur(address)
 
 ## VentureScript bindings for constructing addresses
