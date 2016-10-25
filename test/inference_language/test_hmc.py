@@ -196,3 +196,10 @@ def testTypeSmoke():
   # it should stay an integer and politely not move, or it should
   # become a VentureNumber and politely move, but it should not crash.
   ripl.infer("(hmc default one 0.1 10 1)")
+
+@broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
+@on_inf_prim("hmc")
+def testSubproblemSelection():
+  get_ripl(init_mode='venture_script').execute_program('''
+assume x = normal(0, 1) #hyper:0;
+infer hmc(minimal_subproblem(/?hyper==0), 0.01, 1, 1)''')

@@ -61,23 +61,26 @@ def parse_transitions_extra(args):
     extra = []
   else:
     maybe_transitions = args[-1]
-    if isinstance(maybe_transitions, bool):
-      # The last item was the parallelism indicator, which Lite
-      # ignores anyway
-      transitions = int(args[-2])
-      extra = args[:-2]
-    elif isinstance(maybe_transitions, numbers.Number):
-      transitions = int(args[-1])
-      extra = args[:-1]
-    elif isinstance(maybe_transitions, v.VentureNumber):
-      # Transitions came in without type unwrapping
+    if isinstance(maybe_transitions, v.VentureNumber):
       transitions = int(args[-1].getNumber())
       extra = args[:-1]
     elif isinstance(maybe_transitions, v.VentureBool):
-      # Arguments came in without type unwrapping
+      # maybe_transitions is the parallelism indicator, which Lite
+      # ignores anyway.
       transitions = int(args[-2].getNumber())
       extra = args[:-2]
-  return (transitions, extra)
+  def unwrap_default(arg):
+    # XXX I was forced to suppress annotated unwrapping of arguments
+    # at the SP level because which argument is meant to be which is
+    # not determined until dispatch_arguments in this module.
+    # Fortunately, t.Exp implements an isomorphism that is appropriate
+    # for all the arguments that all the current operators actually
+    # take.
+    if isinstance(arg, v.VentureValue):
+      return t.Exp.asPython(arg)
+    else:
+      return arg
+  return (transitions, [unwrap_default(e) for e in extra])
 
 def dispatch_arguments(trace, args):
   import venture.untraced.trace_search as search
@@ -163,6 +166,8 @@ def primitive_infer(trace, exp):
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "hmc":
     (scaffolders, transitions, (epsilon, L)) = dispatch_arguments(trace, exp)
+    assert isinstance(L, numbers.Number)
+    assert isinstance(epsilon, numbers.Number)
     def doit(scaffolder):
       return mixMH(trace, scaffolder, HamiltonianMonteCarloOperator(epsilon, int(L)))
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
@@ -257,8 +262,8 @@ def primitive_infer(trace, exp):
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "rejection":
     (scaffolders, transitions, extra) = dispatch_arguments(trace, exp)
-    if len(extra) >= 1 and extra[0] in t.NumberType():
-      logBound = extra[0].getNumber()
+    if len(extra) >= 1:
+      logBound = float(extra[0])
     else:
       logBound = None
     if len(extra) == 2:
