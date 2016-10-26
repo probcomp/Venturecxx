@@ -57,10 +57,10 @@ class Scaffold(object):
   def hasLKernel(self,node): return node in self.lkernels
   def getLKernel(self,node): return self.lkernels[node]
   def getPNode(self):
-    assert len(self.setsOfPNodes) == 1
+    assert len(self.setsOfPNodes) == 1, "Expecting only one principal node group"
     pnodes = []
     for pnode in self.setsOfPNodes[0]: pnodes.append(pnode)
-    assert len(pnodes) == 1
+    assert len(pnodes) == 1, "Expecting only one principal node"
     return pnodes[0]
   def isBrush(self, node): return node in self.brush
 
