@@ -19,7 +19,7 @@ import time
 import threading
 
 from nose.tools import eq_
-from flaky import flaky
+from venture.test.flaky import flaky
 
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim

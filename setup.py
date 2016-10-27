@@ -369,7 +369,6 @@ tests_require = [
     'nose>=1.3',
     'nose-testconfig>=0.9',
     'nose-cov>=1.6',
-    'flaky',
     'pexpect',
     'cython', # Because it has to be installed before pystan, and pip
               # does the wrong thing with ordering packages pulled in
