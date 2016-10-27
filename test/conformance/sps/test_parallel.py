@@ -19,6 +19,7 @@ from nose.tools import assert_raises
 
 from venture.exception import VentureException
 
+from venture.test.config import broken_in
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 
@@ -30,10 +31,14 @@ def test_parallel_mapv():
   assert result == [2, 3, 4], '%r' % (result,)
 
 @on_inf_prim('none')
+@broken_in("puma", "Puma raises RuntimeError rather than VentureException.")
 def test_parallel_mapv_traced():
+  # The goal of this test is to make sure that parallel_mapv_action is
+  # not usable inside the model, because it relies on aspects of how
+  # the untraced interpreter works.
   assert_raises(VentureException, lambda:
     get_ripl().sample(
-      '(run (parallel_mapv_action (lambda (x) (+ x 1)) (array 1 2 3) 2))'))
+      '(parallel_mapv_action (lambda (x) (+ x 1)) (array 1 2 3) 2)'))
 
 @on_inf_prim('none')
 def test_parallel_mapv_error():

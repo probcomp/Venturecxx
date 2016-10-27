@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2016 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,22 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-[nosetests]
-verbosity=3
-detailed-errors=1
-nocapture=1
-
-tc-file=test/lite-config.py
-tc-format=python
-
-tc=ignore_inference_quality:true
-
-# For code coverage with coverage.py and nose-cov:
-# sudo pip install coverage
-# sudo pip install nose-cov
-with-cov=1
-cov=venture
-cov-report=html
-
-eval-attr=not slow and (not backend or backend in ['lite', 'any', 'all'])
-
+def flaky(f):
+    def flaky_f(*args, **kwargs):
+        for trial in xrange(2):
+            try:
+                x = f(*args, **kwargs)
+            except Exception:
+                continue
+            else:
+                return x
+        return f(*args, **kwargs)
+    return flaky_f

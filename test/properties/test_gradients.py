@@ -19,7 +19,7 @@ import math
 import random
 
 from numpy.testing import assert_allclose
-from flaky import flaky
+from venture.test.flaky import flaky
 
 from venture.test.config import gen_broken_in
 from venture.test.config import gen_in_backend

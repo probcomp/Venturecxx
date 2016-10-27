@@ -434,6 +434,8 @@ class VentureForeignBlob(VentureValue):
   @staticmethod
   def fromStackDict(thing):
     return VentureForeignBlob(thing["value"])
+  def equalSameType(self, other):
+    return self.datum == other.datum
 
 class VentureNil(VentureValue):
   def __init__(self):

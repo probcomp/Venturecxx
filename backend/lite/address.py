@@ -151,20 +151,22 @@ class DirectiveAddress(namedtuple('DirectiveAddress', ["did"])):
     return Address(List(self.did))
 directive_address = DirectiveAddress
 
-class RequestAddress(namedtuple('RequestAddress', ["app_addr", "req_id"])):
-  def __init__(self, app_addr, req_id):
+_RequestAddress = namedtuple('RequestAddress', ["app_addr", "req_id"])
+class RequestAddress(_RequestAddress):
+  def __new__(cls, app_addr, req_id):
     assert _is_address(app_addr)
-    super(RequestAddress, self).__init__(app_addr, req_id)
+    return _RequestAddress.__new__(cls, app_addr, req_id)
   def asList(self):
     return self.asAddress().asList()
   def asAddress(self):
     return self.app_addr.asAddress().request(self.req_id.asList())
 request = RequestAddress
 
-class SubexpressionAddress(namedtuple('SubexpressionAddress', ["sup_exp", "index"])):
-  def __init__(self, sup_exp, index):
+_SubexpressionAddress = namedtuple('SubexpressionAddress', ["sup_exp", "index"])
+class SubexpressionAddress(_SubexpressionAddress):
+  def __new__(cls, sup_exp, index):
     assert _is_address(sup_exp)
-    super(SubexpressionAddress, self).__init__(sup_exp, index)
+    return _SubexpressionAddress.__new__(cls, sup_exp, index)
   def asList(self):
     return self.asAddress().asList()
   def asAddress(self):
