@@ -72,7 +72,7 @@ class Covariance_Loser(object):
     return la.pinv(self._Sigma)
   def logsqrtdet(self):
     det = la.det(self._Sigma)
-    assert det != 0., "la.det(self._Sigma) ==0!" 
+    #assert det != 0., "la.det(self._Sigma) ==0!" 
     return (1/2)*np.log(det)
 
 def logpdf(X, Mu, Sigma):
@@ -98,14 +98,20 @@ def logpdf(X, Mu, Sigma):
   assert Sigma.shape == (n, n)
   assert np.all(np.isfinite(X))
   assert np.all(np.isfinite(Mu))
-  assert np.all(np.isfinite(Sigma))
 
+  # horrible hack, part 1:
+  if not np.all(np.isfinite(Sigma)):
+    return float("-inf")
   X_ = X - Mu
   covf = _covariance_factor(Sigma)
  
   logp = -np.dot(X_.T, covf.solve(X_)/2.)
   logp -= (n/2.)*np.log(2*np.pi)
   logp -= covf.logsqrtdet()
+
+  # horrible hack, part 2:
+  if np.isnan(logp):
+    return float("-inf")
 
   # Convert 1x1 matrix to float.
   return float(logp)
@@ -223,7 +229,7 @@ def dlogpdf(X, dX, Mu, dMu, Sigma, dSigma):
   assert all(dSigma_dqk.shape == (n, n) for dSigma_dqk in dSigma)
   assert np.all(np.isfinite(X))
   assert np.all(np.isfinite(Mu))
-  assert np.all(np.isfinite(Sigma))
+  #assert np.all(np.isfinite(Sigma))
 
   X_ = X - Mu
   covf = _covariance_factor(Sigma)
@@ -277,10 +283,10 @@ def conditional(X2, Mu1, Mu2, Sigma11, Sigma12, Sigma21, Sigma22):
   assert np.all(np.isfinite(X2))
   assert np.all(np.isfinite(Mu1))
   assert np.all(np.isfinite(Mu2))
-  assert np.all(np.isfinite(Sigma11))
-  assert np.all(np.isfinite(Sigma12))
-  assert np.all(np.isfinite(Sigma21))
-  assert np.all(np.isfinite(Sigma22))
+  #assert np.all(np.isfinite(Sigma11))
+  #assert np.all(np.isfinite(Sigma12))
+  #assert np.all(np.isfinite(Sigma21))
+  #assert np.all(np.isfinite(Sigma22))
 
   covf22 = _covariance_factor(Sigma22)
   Mu_ = Mu1 + np.dot(Sigma12, covf22.solve(X2 - Mu2))

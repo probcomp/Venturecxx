@@ -47,7 +47,11 @@ def _gp_sample(mean, covariance, samples, xs, np_rng):
 
 def _gp_logDensity(mean, covariance, samples, xs, os):
   mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
-  return mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma)
+  logp = mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma) 
+  # horrible hack - but necessary for structure learning:
+  if np.isnan(logp):
+    return float("-inf")
+  return logp
 
 def _gp_gradientOfLogDensity(mean, covariance, samples, xs, os):
   # d/do_1 log P(o_1 | Mu, Sigma, x_1, X_2, O_2),
@@ -101,7 +105,11 @@ def _gp_logDensityOfData(mean, covariance, samples):
   os = np.asarray(samples.values())
   mu = mean.f(xs)
   sigma = covariance.f(xs, xs)
-  return mvnormal.logpdf(os, mu, sigma)
+  logp =  mvnormal.logpdf(os, mu, sigma)
+  # horrible hack - but necessary for structure learning:
+  if np.isnan(logp):
+    return float("-inf")
+  return logp
 
 def _gp_gradientOfLogDensityOfData(mean, covariance, samples):
   if len(samples) == 0:
