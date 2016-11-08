@@ -260,10 +260,6 @@ class ICompleteTrace(ITrace):
   This is as opposed to BlankTrace, which only retains the results of toplevel
   evaluations."""
 
-  def context_at(self, addr):
-    """Return the (exp, env) whose evaluation is at the given addr."""
-    raise NotImplementedError
-
   ## low level operations for manual inference programming
 
   def find_symbol(self, env, symbol):
@@ -298,9 +294,6 @@ class AbstractCompleteTrace(ICompleteTrace):
   def __init__(self, seed):
     self.made_sps = {}
     super(AbstractCompleteTrace, self).__init__(seed)
-
-  def context_at(self, addr):
-    raise NotImplementedError
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
@@ -386,6 +379,12 @@ class SourceTracing(object):
           yield context
     yield (addr, exp, env)
 
+  # Note: This also admits a context_at(self, addr) function that will
+  # return the exp-env corresponding to a given address.  The way to
+  # implement it is to unroll layers of SubexpressionAddress from the
+  # argument until finding something present in self.requests, and
+  # then roll the above traversal forward guided by said
+  # SubexpressionAddress indexes.
 
 class FlatTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace):
   """Maintain a flat lookup table of random choices, keyed by address.
