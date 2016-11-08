@@ -267,35 +267,42 @@ class ICompleteTrace(ITrace):
     """A generator that yields every (addr, exp, env) triple traced by this trace."""
     raise NotImplementedError
 
+  ## low level operations for manual inference programming
 
-class FlatTrace(ResultTrace, AbstractTrace):
-  """Maintain a flat lookup table of random choices, keyed by address.
+  def find_symbol(self, env, symbol):
+    """Look up the address of the given symbol's binding expression."""
+    raise NotImplementedError
 
-  This corresponds to the "random database" implementation approach
-  from Wingate et al (2011).
+  def set_value_at(self, addr, value):
+    """Low-level set the value at a given address.  May leave the trace in
+    an inconsistent state."""
+    raise NotImplementedError
 
-  """
+  def apply_sp(self, addr, sp_ref, input_values):
+    """Compute the result of applying the given SP (by reference) to the
+    given inputs at the given address."""
+    raise NotImplementedError
 
-  def __init__(self, seed):
-    self.requests = {}
-    self.made_sps = {}
-    self.toplevel_addresses = []
-    super(FlatTrace, self).__init__(seed)
+  def log_density_of_sp(self, sp_ref, output, input_values):
+    """Compute the log density of the given SP (by reference) at the given output and inputs."""
+    raise NotImplementedError
 
-  def register_request(self, addr, exp, env):
-    if isinstance(addr, addresses.DirectiveAddress):
-      self.toplevel_addresses.append(addr)
-    self.requests[addr] = (exp, env)
+  def proposal_kernel(self, addr, sp_ref):
+    """Produce a proposal kernel for the given SP (by reference) at the given address."""
+    raise NotImplementedError
 
-  def register_constant(self, addr, value):
-    self.record_result(addr, value)
+  def constraint_kernel(self, addr, sp_ref, val):
+    """Produce a constraint kernel for the given SP (by reference) at the
+    given address to produce the given value."""
+    raise NotImplementedError
 
-  def register_lookup(self, addr, node):
-    assert node.value is self.results[node.address]
-    self.record_result(addr, node.value)
+class AbstractCompleteTrace(ICompleteTrace):
 
-  def register_application(self, addr, arity, value):
-    self.record_result(addr, value)
+  def context_at(self, addr):
+    raise NotImplementedError
+
+  def all_contexts(self):
+    raise NotImplementedError
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
@@ -308,8 +315,6 @@ class FlatTrace(ResultTrace, AbstractTrace):
     addr = sp_ref.makerNode.address
     sp = self.made_sps[addr]
     return Node(addr, sp)
-
-  ## low level ops for manual inference programming
 
   def find_symbol(self, env, symbol):
     node = env.findSymbol(symbol)
@@ -344,6 +349,36 @@ class FlatTrace(ResultTrace, AbstractTrace):
   def constraint_kernel(self, addr, sp_ref, val):
     return {'addr': addr, 'sp_ref': sp_ref,
             'type': 'constraint', 'val': val}
+
+
+class FlatTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
+  """Maintain a flat lookup table of random choices, keyed by address.
+
+  This corresponds to the "random database" implementation approach
+  from Wingate et al (2011).
+
+  """
+
+  def __init__(self, seed):
+    self.requests = {}
+    self.made_sps = {}
+    self.toplevel_addresses = []
+    super(FlatTrace, self).__init__(seed)
+
+  def register_request(self, addr, exp, env):
+    if isinstance(addr, addresses.DirectiveAddress):
+      self.toplevel_addresses.append(addr)
+    self.requests[addr] = (exp, env)
+
+  def register_constant(self, addr, value):
+    self.record_result(addr, value)
+
+  def register_lookup(self, addr, node):
+    assert node.value is self.results[node.address]
+    self.record_result(addr, node.value)
+
+  def register_application(self, addr, arity, value):
+    self.record_result(addr, value)
 
   def extract_kernel(self, kernel, output, input_values):
     addr = kernel['addr']

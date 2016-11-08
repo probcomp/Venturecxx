@@ -5,6 +5,7 @@ from venture.untraced.node import Node
 import venture.mite.address as addresses
 from venture.mite.sp import VentureSP
 from venture.mite.sp_registry import registerBuiltinSP
+from venture.mite.traces import AbstractCompleteTrace
 from venture.mite.traces import AbstractTrace
 from venture.mite.traces import ResultTrace
 from venture.mite.traces import VentureTraceConstructorSP
@@ -46,7 +47,7 @@ class ApplicationNode(DependencyNode):
   def parents(self): return [self.operator_addr] + self.operand_addrs
 
 
-class DependencyGraphTrace(ResultTrace, AbstractTrace):
+class DependencyGraphTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
   """Maintain a dynamic dependency graph of the program execution.
 
   This corresponds to the "probabilistic execution trace"
@@ -91,54 +92,6 @@ class DependencyGraphTrace(ResultTrace, AbstractTrace):
     self.nodes[parent_addr].children.add(child_addr)
     sp_node = self.deref_sp(self.value_at(parent_addr))
     self.nodes[sp_node.address].application_children.add(child_addr)
-
-  def register_made_sp(self, addr, sp):
-    assert self.results[addr] is sp
-    self.made_sps[addr] = sp
-    ret = SPRef(Node(addr, sp))
-    self.record_result(addr, ret)
-    return ret
-
-  def deref_sp(self, sp_ref):
-    addr = sp_ref.makerNode.address
-    sp = self.made_sps[addr]
-    return Node(addr, sp)
-
-  ## low level ops for manual inference programming
-
-  def find_symbol(self, env, symbol):
-    node = env.findSymbol(symbol)
-    return node.address
-
-  def set_value_at(self, addr, value):
-    # low level operation. may leave the trace in an inconsistent state
-    self.record_result(addr, value)
-
-  def apply_sp(self, addr, sp_ref, input_values):
-    # TODO for now this auto-derefs the SP; is this what we want, or
-    # should we just expose deref_sp separately?
-    sp_node = self.deref_sp(sp_ref)
-    inputs = []
-    for index, val in enumerate(input_values):
-      subaddr = addresses.subexpression(index + 1, addr)
-      inputs.append(Node(subaddr, val))
-    (weight, output) = Evaluator(self).apply_sp(addr, sp_node, inputs)
-    assert weight == 0
-    return output
-
-  def log_density_of_sp(self, sp_ref, output, input_values):
-    sp_node = self.deref_sp(sp_ref)
-    sp = sp_node.value
-    return sp.log_density(output, input_values)
-
-  def proposal_kernel(self, addr, sp_ref):
-    # XXX for now just store the dicts, with extra attributes
-    # TODO make it easier to construct trace handles.
-    return {'addr': addr, 'sp_ref': sp_ref, 'type': 'proposal'}
-
-  def constraint_kernel(self, addr, sp_ref, val):
-    return {'addr': addr, 'sp_ref': sp_ref,
-            'type': 'constraint', 'val': val}
 
   ## support for regen/extract
 
