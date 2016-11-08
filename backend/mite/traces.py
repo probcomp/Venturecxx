@@ -241,6 +241,21 @@ class BlankTrace(AbstractTrace):
       return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
 
+class ICompleteTrace(ITrace):
+  """A kind of trace that maintains the full execution history (somehow).
+
+  This is as opposed to BlankTrace, which only retains the results of toplevel
+  evaluations."""
+
+  def context_at(self, addr):
+    """Return the (exp, env) whose evaluation is at the given addr."""
+    raise NotImplementedError
+
+  def all_contexts(self):
+    """A generator that yields every (addr, exp, env) triple traced by this trace."""
+    raise NotImplementedError
+
+
 class FlatTrace(AbstractTrace):
   """Maintain a flat lookup table of random choices, keyed by address.
 
