@@ -73,15 +73,21 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         kernels[addr] = {'type': 'proposal'}
         drg.add(addr)
       elif any(parents_affected[1:]):
-        sp_ref = trace.value_at(addresses.subexpression(0, addr))
-        sp = trace.deref_sp(sp_ref).value
-        val = trace.value_at(addr)
-        kernel = sp.constraint_kernel(None, addr, val)
-        if kernel is NotImplemented or likelihood_free_lite_sp(sp):
+        if is_constrainable_application(addr):
+          kernels[addr] = {'type': 'constraint', 'val': trace.value_at(addr)}
+        else:
           kernels[addr] = {'type': 'proposal'}
           drg.add(addr)
-        else:
-          kernels[addr] = {'type': 'constraint', 'val': val}
+
+  def is_constrainable_application(addr):
+    sp_ref = trace.value_at(addresses.subexpression(0, addr))
+    sp = trace.deref_sp(sp_ref).value
+    val = trace.value_at(addr)
+    kernel = sp.constraint_kernel(None, addr, val)
+    if kernel is NotImplemented or likelihood_free_lite_sp(sp):
+      return False
+    else:
+      return True
 
   def likelihood_free_lite_sp(sp):
     from venture.mite.sps.lite_sp import LiteSP
