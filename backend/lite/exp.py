@@ -45,6 +45,14 @@ def destructLambda(exp):
   body = t.ExpressionType().asPython(textOfQuotation(exp[2]))
   return (params, body)
 
+def isApplication(exp):
+  return not (isVariable(exp) or isSelfEvaluating(exp) or \
+              isQuotation(exp) or isLambda(exp))
+
+def subexpressions(exp):
+  assert isinstance(exp,list)
+  return exp
+
 def getOperator(exp):
   assert isinstance(exp,list)
   assert len(exp) > 0

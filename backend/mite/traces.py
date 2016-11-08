@@ -9,6 +9,7 @@ from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureError
 from venture.lite.value import SPRef
 from venture.untraced.node import Node
+import venture.lite.exp as e
 import venture.lite.types as t
 
 from venture.mite.evaluator import Evaluator
@@ -263,10 +264,6 @@ class ICompleteTrace(ITrace):
     """Return the (exp, env) whose evaluation is at the given addr."""
     raise NotImplementedError
 
-  def all_contexts(self):
-    """A generator that yields every (addr, exp, env) triple traced by this trace."""
-    raise NotImplementedError
-
   ## low level operations for manual inference programming
 
   def find_symbol(self, env, symbol):
@@ -303,9 +300,6 @@ class AbstractCompleteTrace(ICompleteTrace):
     super(AbstractCompleteTrace, self).__init__(seed)
 
   def context_at(self, addr):
-    raise NotImplementedError
-
-  def all_contexts(self):
     raise NotImplementedError
 
   def register_made_sp(self, addr, sp):
@@ -376,6 +370,21 @@ class SourceTracing(object):
 
   def unregister_request(self, addr):
     del self.requests[addr]
+
+  def all_contexts(self):
+    """A generator that yields every (addr, exp, env) triple traced by this trace, in execution order."""
+    for addr in self.toplevel_addresses:
+      (exp, env) = self.requests[addr]
+      for context in self._traverse(addr, exp, env):
+        yield context
+
+  def _traverse(self, addr, exp, env):
+    if e.isApplication(exp):
+      for index, subexp in enumerate(e.subexpressions(exp)):
+        subaddr = addresses.subexpression(index, addr)
+        for context in self._traverse(subaddr, subexp, env):
+          yield context
+    yield (addr, exp, env)
 
 
 class FlatTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace):
