@@ -361,23 +361,30 @@ class AbstractCompleteTrace(ICompleteTrace):
             'type': 'constraint', 'val': val}
 
 
-class FlatTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
+class SourceTracing(object):
+  """Traces source code of the execution."""
+
+  def __init__(self, seed):
+    self.requests = {}
+    self.toplevel_addresses = []
+    super(SourceTracing, self).__init__(seed)
+
+  def register_request(self, addr, exp, env):
+    if isinstance(addr, addresses.DirectiveAddress):
+      self.toplevel_addresses.append(addr)
+    self.requests[addr] = (exp, env)
+
+  def unregister_request(self, addr):
+    del self.requests[addr]
+
+
+class FlatTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace):
   """Maintain a flat lookup table of random choices, keyed by address.
 
   This corresponds to the "random database" implementation approach
   from Wingate et al (2011).
 
   """
-
-  def __init__(self, seed):
-    self.requests = {}
-    self.toplevel_addresses = []
-    super(FlatTrace, self).__init__(seed)
-
-  def register_request(self, addr, exp, env):
-    if isinstance(addr, addresses.DirectiveAddress):
-      self.toplevel_addresses.append(addr)
-    self.requests[addr] = (exp, env)
 
   def register_constant(self, addr, value):
     self.record_result(addr, value)
@@ -431,9 +438,6 @@ class FlatTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
     return output
 
   ## support for regen/extract
-
-  def unregister_request(self, addr):
-    del self.requests[addr]
 
   def unregister_constant(self, addr):
     self.forget_result(addr)

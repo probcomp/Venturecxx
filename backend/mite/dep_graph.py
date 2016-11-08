@@ -8,6 +8,7 @@ from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import AbstractCompleteTrace
 from venture.mite.traces import AbstractTrace
 from venture.mite.traces import ResultTrace
+from venture.mite.traces import SourceTracing
 from venture.mite.traces import VentureTraceConstructorSP
 
 from venture.mite.evaluator import Regenerator, Restorer
@@ -47,7 +48,7 @@ class ApplicationNode(DependencyNode):
   def parents(self): return [self.operator_addr] + self.operand_addrs
 
 
-class DependencyGraphTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
+class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace):
   """Maintain a dynamic dependency graph of the program execution.
 
   This corresponds to the "probabilistic execution trace"
@@ -56,12 +57,8 @@ class DependencyGraphTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
   """
 
   def __init__(self, seed):
-    self.requests = {}
     self.nodes = {}
     super(DependencyGraphTrace, self).__init__(seed)
-
-  def register_request(self, addr, exp, env):
-    self.requests[addr] = (exp, env)
 
   def register_constant(self, addr, value):
     self.nodes[addr] = ConstantNode(addr)
@@ -96,9 +93,6 @@ class DependencyGraphTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
 
   def single_site_subproblem(self, address, kernel=None):
     return single_site_scaffold(self, address, kernel)
-
-  def unregister_request(self, addr):
-    del self.requests[addr]
 
   def unregister_constant(self, addr):
     self.forget_result(addr)
