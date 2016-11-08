@@ -176,7 +176,26 @@ class AbstractTrace(ITrace):
     raise NotImplementedError
 
 
-class BlankTrace(AbstractTrace):
+class ResultTrace(object):
+  """Common interface and implementation of recording results of evaluation."""
+
+  def __init__(self, seed):
+    self.results = OrderedDict()
+    super(ResultTrace, self).__init__(seed)
+
+  def record_result(self, addr, value):
+    self.results[addr] = value
+
+  def forget_result(self, addr):
+    del self.results[addr]
+
+  def value_at(self, addr):
+    try:
+      return self.results[addr]
+    except KeyError:
+      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
+
+class BlankTrace(ResultTrace, AbstractTrace):
   """Record only the final results of requested expressions.
 
   This corresponds to "untraced" evaluation, and supports forward
@@ -185,7 +204,6 @@ class BlankTrace(AbstractTrace):
   """
 
   def __init__(self, seed):
-    self.results = OrderedDict()
     super(BlankTrace, self).__init__(seed)
 
   def extract(self, _subproblem):
@@ -213,7 +231,7 @@ class BlankTrace(AbstractTrace):
 
   def maybe_record_result(self, addr, value):
     if isinstance(addr, addresses.DirectiveAddress):
-      self.results[addr] = value
+      self.record_result(addr, value)
     elif isinstance(addr, addresses.RequestAddress):
       # record the result of a request, in case the value at the same
       # id is requested again (like mem).
@@ -222,23 +240,17 @@ class BlankTrace(AbstractTrace):
       # heuristic: if the request id is an address, assume it's unique
       # and won't be requested again
       if not isinstance(addr.request_id, addresses.Address):
-        self.results[addr] = value
+        self.record_result(addr, value)
 
   def register_made_sp(self, addr, sp):
     ret = SPRef(Node(addr, sp))
     if addr in self.results:
       assert self.results[addr] is sp
-      self.results[addr] = ret
+      self.record_result(addr, ret)
     return ret
 
   def deref_sp(self, sp_ref):
     return sp_ref.makerNode
-
-  def value_at(self, addr):
-    try:
-      return self.results[addr]
-    except KeyError:
-      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
 
 class ICompleteTrace(ITrace):
@@ -256,7 +268,7 @@ class ICompleteTrace(ITrace):
     raise NotImplementedError
 
 
-class FlatTrace(AbstractTrace):
+class FlatTrace(ResultTrace, AbstractTrace):
   """Maintain a flat lookup table of random choices, keyed by address.
 
   This corresponds to the "random database" implementation approach
@@ -266,7 +278,6 @@ class FlatTrace(AbstractTrace):
 
   def __init__(self, seed):
     self.requests = {}
-    self.results = OrderedDict()
     self.made_sps = {}
     self.toplevel_addresses = []
     super(FlatTrace, self).__init__(seed)
@@ -277,31 +288,26 @@ class FlatTrace(AbstractTrace):
     self.requests[addr] = (exp, env)
 
   def register_constant(self, addr, value):
-    self.results[addr] = value
+    self.record_result(addr, value)
 
   def register_lookup(self, addr, node):
     assert node.value is self.results[node.address]
-    self.results[addr] = node.value
+    self.record_result(addr, node.value)
 
   def register_application(self, addr, arity, value):
-    self.results[addr] = value
+    self.record_result(addr, value)
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
     self.made_sps[addr] = sp
-    self.results[addr] = ret = SPRef(Node(addr, sp))
+    ret = SPRef(Node(addr, sp))
+    self.record_result(addr, ret)
     return ret
 
   def deref_sp(self, sp_ref):
     addr = sp_ref.makerNode.address
     sp = self.made_sps[addr]
     return Node(addr, sp)
-
-  def value_at(self, addr):
-    try:
-      return self.results[addr]
-    except KeyError:
-      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
   ## low level ops for manual inference programming
 
@@ -311,7 +317,7 @@ class FlatTrace(AbstractTrace):
 
   def set_value_at(self, addr, value):
     # low level operation. may leave the trace in an inconsistent state
-    self.results[addr] = value
+    self.record_result(addr, value)
 
   def apply_sp(self, addr, sp_ref, input_values):
     # TODO for now this auto-derefs the SP; is this what we want, or
@@ -386,18 +392,18 @@ class FlatTrace(AbstractTrace):
     del self.requests[addr]
 
   def unregister_constant(self, addr):
-    del self.results[addr]
+    self.forget_result(addr)
 
   def unregister_lookup(self, addr):
-    del self.results[addr]
+    self.forget_result(addr)
 
   def unregister_application(self, addr):
-    del self.results[addr]
+    self.forget_result(addr)
 
   def unregister_made_sp(self, addr):
     sp = self.made_sps[addr]
     del self.made_sps[addr]
-    self.results[addr] = sp
+    self.record_result(addr, sp)
     return sp
 
   def extract(self, subproblem):

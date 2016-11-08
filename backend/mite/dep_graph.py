@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from venture.lite.value import SPRef
 
 from venture.untraced.node import Node
@@ -8,6 +6,7 @@ import venture.mite.address as addresses
 from venture.mite.sp import VentureSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import AbstractTrace
+from venture.mite.traces import ResultTrace
 from venture.mite.traces import VentureTraceConstructorSP
 
 from venture.mite.evaluator import Regenerator, Restorer
@@ -47,7 +46,7 @@ class ApplicationNode(DependencyNode):
   def parents(self): return [self.operator_addr] + self.operand_addrs
 
 
-class DependencyGraphTrace(AbstractTrace):
+class DependencyGraphTrace(ResultTrace, AbstractTrace):
   """Maintain a dynamic dependency graph of the program execution.
 
   This corresponds to the "probabilistic execution trace"
@@ -57,7 +56,6 @@ class DependencyGraphTrace(AbstractTrace):
 
   def __init__(self, seed):
     self.requests = {}
-    self.results = OrderedDict()
     self.made_sps = {}
     self.nodes = {}
     super(DependencyGraphTrace, self).__init__(seed)
@@ -67,12 +65,12 @@ class DependencyGraphTrace(AbstractTrace):
 
   def register_constant(self, addr, value):
     self.nodes[addr] = ConstantNode(addr)
-    self.results[addr] = value
+    self.record_result(addr, value)
 
   def register_lookup(self, addr, node):
     assert node.value is self.results[node.address]
     self.nodes[addr] = LookupNode(addr, node.address)
-    self.results[addr] = node.value
+    self.record_result(addr, node.value)
     self.add_child_at(node.address, addr)
 
   def register_application(self, addr, arity, value):
@@ -81,7 +79,7 @@ class DependencyGraphTrace(AbstractTrace):
     operator = parents[0]
     operands = parents[1:]
     self.nodes[addr] = ApplicationNode(addr, operator, operands)
-    self.results[addr] = value
+    self.record_result(addr, value)
     self.add_application_child_at(operator, addr)
     for operand in operands:
       self.add_child_at(operand, addr)
@@ -97,19 +95,14 @@ class DependencyGraphTrace(AbstractTrace):
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
     self.made_sps[addr] = sp
-    self.results[addr] = ret = SPRef(Node(addr, sp))
+    ret = SPRef(Node(addr, sp))
+    self.record_result(addr, ret)
     return ret
 
   def deref_sp(self, sp_ref):
     addr = sp_ref.makerNode.address
     sp = self.made_sps[addr]
     return Node(addr, sp)
-
-  def value_at(self, addr):
-    try:
-      return self.results[addr]
-    except KeyError:
-      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
 
   ## low level ops for manual inference programming
 
@@ -119,7 +112,7 @@ class DependencyGraphTrace(AbstractTrace):
 
   def set_value_at(self, addr, value):
     # low level operation. may leave the trace in an inconsistent state
-    self.results[addr] = value
+    self.record_result(addr, value)
 
   def apply_sp(self, addr, sp_ref, input_values):
     # TODO for now this auto-derefs the SP; is this what we want, or
@@ -156,13 +149,13 @@ class DependencyGraphTrace(AbstractTrace):
     del self.requests[addr]
 
   def unregister_constant(self, addr):
-    del self.results[addr]
+    self.forget_result(addr)
     del self.nodes[addr]
 
   def unregister_lookup(self, addr):
     node = self.nodes[addr]
     self.remove_child_at(node.orig_addr, addr)
-    del self.results[addr]
+    self.forget_result(addr)
     del self.nodes[addr]
 
   def unregister_application(self, addr):
@@ -171,7 +164,7 @@ class DependencyGraphTrace(AbstractTrace):
     for operand in node.operand_addrs:
       self.remove_child_at(operand, addr)
     del self.nodes[addr]
-    del self.results[addr]
+    self.forget_result(addr)
 
   def remove_child_at(self, parent_addr, child_addr):
     self.nodes[parent_addr].children.remove(child_addr)
@@ -184,7 +177,7 @@ class DependencyGraphTrace(AbstractTrace):
   def unregister_made_sp(self, addr):
     sp = self.made_sps[addr]
     del self.made_sps[addr]
-    self.results[addr] = sp
+    self.record_result(addr, sp)
     return sp
 
   def extract(self, subproblem):
@@ -224,14 +217,14 @@ class DependencyGraphRegenerator(Regenerator):
 
     node = self.trace.nodes[addr]
     if isinstance(node, LookupNode):
-      del self.trace.results[addr]
+      self.trace.forget_result(addr)
     else:
       # unapply
       assert isinstance(node, ApplicationNode)
       value = self.trace.value_at(addr)
       if isinstance(value, SPRef) and value.makerNode is addr:
         value = self.trace.unregister_made_sp(addr)
-      del self.trace.results[addr]
+      self.trace.forget_result(addr)
 
       sp_node = self.trace.deref_sp(
         self.trace.value_at(node.operator_addr))
@@ -249,7 +242,7 @@ class DependencyGraphRegenerator(Regenerator):
 
     node = self.trace.nodes[addr]
     if isinstance(node, LookupNode):
-      self.trace.results[addr] = self.trace.value_at(node.orig_addr)
+      self.trace.record_result(addr, self.trace.value_at(node.orig_addr))
     else:
       # SP application
       assert isinstance(node, ApplicationNode)
@@ -263,7 +256,7 @@ class DependencyGraphRegenerator(Regenerator):
       w, value = self.apply_sp(addr, sp_node, args)
       weight += w
 
-      self.trace.results[addr] = value
+      self.trace.record_result(addr, value)
       if isinstance(value, VentureSP):
         _value = self.trace.register_made_sp(addr, value)
 
