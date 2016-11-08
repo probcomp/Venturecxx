@@ -57,7 +57,6 @@ class DependencyGraphTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
 
   def __init__(self, seed):
     self.requests = {}
-    self.made_sps = {}
     self.nodes = {}
     super(DependencyGraphTrace, self).__init__(seed)
 
@@ -126,12 +125,6 @@ class DependencyGraphTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
     self.nodes[parent_addr].children.remove(child_addr)
     sp_node = self.deref_sp(self.value_at(parent_addr))
     self.nodes[sp_node.address].application_children.remove(child_addr)
-
-  def unregister_made_sp(self, addr):
-    sp = self.made_sps[addr]
-    del self.made_sps[addr]
-    self.record_result(addr, sp)
-    return sp
 
   def extract(self, subproblem):
     x = DependencyGraphRegenerator(self, subproblem)

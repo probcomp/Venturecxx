@@ -298,6 +298,10 @@ class ICompleteTrace(ITrace):
 
 class AbstractCompleteTrace(ICompleteTrace):
 
+  def __init__(self, seed):
+    self.made_sps = {}
+    super(AbstractCompleteTrace, self).__init__(seed)
+
   def context_at(self, addr):
     raise NotImplementedError
 
@@ -310,6 +314,12 @@ class AbstractCompleteTrace(ICompleteTrace):
     ret = SPRef(Node(addr, sp))
     self.record_result(addr, ret)
     return ret
+
+  def unregister_made_sp(self, addr):
+    sp = self.made_sps[addr]
+    del self.made_sps[addr]
+    self.record_result(addr, sp)
+    return sp
 
   def deref_sp(self, sp_ref):
     addr = sp_ref.makerNode.address
@@ -361,7 +371,6 @@ class FlatTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
 
   def __init__(self, seed):
     self.requests = {}
-    self.made_sps = {}
     self.toplevel_addresses = []
     super(FlatTrace, self).__init__(seed)
 
@@ -434,12 +443,6 @@ class FlatTrace(AbstractCompleteTrace, ResultTrace, AbstractTrace):
 
   def unregister_application(self, addr):
     self.forget_result(addr)
-
-  def unregister_made_sp(self, addr):
-    sp = self.made_sps[addr]
-    del self.made_sps[addr]
-    self.record_result(addr, sp)
-    return sp
 
   def extract(self, subproblem):
     x = Regenerator(self, subproblem)
