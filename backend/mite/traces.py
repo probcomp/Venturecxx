@@ -369,11 +369,13 @@ class SourceTracing(object):
     super(SourceTracing, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
+    assert addr not in self.requests
     if isinstance(addr, addresses.DirectiveAddress):
       self.toplevel_addresses.append(addr)
     self.requests[addr] = (exp, env)
 
   def unregister_request(self, addr):
+    assert not isinstance(addr, addresses.DirectiveAddress)
     del self.requests[addr]
 
   def all_contexts(self):
