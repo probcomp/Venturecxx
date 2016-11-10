@@ -381,7 +381,7 @@ class SourceTracing(object):
     del self.requests[addr]
 
   def all_contexts(self):
-    """A generator that yields every (addr, exp, env) triple traced by this trace, in execution order."""
+    """A generator that yields every (addr, exp, env) triple traced by this trace, in execution order, _except requests_."""
     for addr in self.toplevel_addresses:
       (exp, env) = self.requests[addr]
       for context in self._traverse(addr, exp, env):
