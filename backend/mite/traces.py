@@ -142,17 +142,19 @@ class AbstractTrace(ITrace):
     assert scaffold.kernels, "Scaffold construction around %s found no kernels in trace %s" % (address, self.trace_id)
     return scaffold
 
+  def _sites(self):
+    return [a for (a, exp, _) in self.all_contexts() if e.isApplication(exp)]
+
   def random_site(self):
     """Return a uniformly random address among the random choices in this trace."""
     # XXX There is actually no way to detect whether an SP is random
     # or not, so this will return arbitrary sites (including
     # deterministic ones).  Resimulation M-H steps on deterministic
     # procedures are useless but harmless.
-    addrs = [a for (a, _, _) in self.all_contexts()]
-    return self.py_prng.choice(addrs)
+    return self.py_prng.choice(self._sites())
 
   def num_sites(self):
-    return len(self.all_contexts())
+    return len(self._sites())
 
   def register_observation(self, addr, value):
     self.observations[addr] = value
