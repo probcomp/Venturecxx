@@ -23,6 +23,8 @@ class InternedObject(object):
   def __copy__(self): return self
   def __deepcopy__(self, _memo): return self
 
+# Address construction
+
 class Address(InternedObject):
   """Uniquely identifies a point in a Venture program execution."""
 
@@ -79,6 +81,21 @@ def request(sp_addr, request_id):
   elif request_id in t.Pair(t.Blob, t.Object):
     request_id = t.Pair(t.Blob, t.Object).asPython(request_id)
   return RequestAddress(sp_addr, request_id)
+
+# Address manipulations
+
+def split_subexpression(address):
+  """Split the subexpression top, if any, off an address.
+
+  Return a pair (root, branch) where `root` is the top
+  non-subexpression address occurring in the given address, and
+  `branch` is the list of subexpression indexes from there."""
+  if isinstance(address, SubexpressionAddress):
+    (root, branch) = split_subexpression(address.parent)
+    branch.append(address.index)
+    return (root, branch)
+  else:
+    return (address, [])
 
 def interpret_address_in_trace(address, trace_id, orig_trace_id=None):
   def recur_raw(address):
