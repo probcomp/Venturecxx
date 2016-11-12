@@ -289,6 +289,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
           propagate = True
 
     if kernel is not None:
+      assert addr not in kernels
       kernels[addr] = kernel
       if parent is not None:
         regen_parents.setdefault(addr, set()).add(parent)
