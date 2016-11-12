@@ -100,6 +100,8 @@ class VentureValue(object):
   def compareSameType(self, _):
     raise Exception("Cannot compare %s" % type(self))
   def equal(self, other):
+    if self is other:
+      return True
     st = type(self)
     ot = type(other)
     if st == ot:
