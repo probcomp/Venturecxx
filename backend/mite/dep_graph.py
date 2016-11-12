@@ -299,8 +299,6 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # XXX remove dependency on toposort
   import toposort
   assert set(kernels) == set(regen_parents)
-  kernels = OrderedDict([
-    (addr, kernels[addr])
-    for addr in toposort.toposort_flatten(regen_parents)
-  ])
+  toposorted = toposort.toposort_flatten(regen_parents)
+  kernels = OrderedDict([(addr, kernels[addr]) for addr in toposorted])
   return Scaffold(kernels)
