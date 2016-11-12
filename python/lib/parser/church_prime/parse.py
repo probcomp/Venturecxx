@@ -17,6 +17,7 @@
 
 # Venture parser (`Church prime', Lisp-style notation).
 
+import numbers
 import StringIO
 import json
 
@@ -443,6 +444,8 @@ class ChurchPrimeParser(object):
                 return value_to_string(expression)
         elif isinstance(expression, vv.VentureValue):
             return value_to_string(expression.asStackDict(None))
+        elif isinstance(expression, numbers.Number):
+            return str(expression)
         elif isinstance(expression, basestring):
             # XXX This is due to &@!#^&$@!^$&@#!^%&*.
             return expression
