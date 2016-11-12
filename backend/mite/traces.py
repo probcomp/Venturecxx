@@ -139,8 +139,11 @@ class AbstractTrace(ITrace):
 
   def single_site_subproblem(self, address, kernel=None):
     scaffold = single_site_scaffold(self, address, kernel)
-    assert scaffold.kernels, "Scaffold construction around %s found no kernels in trace %s" % (address, self.trace_id)
-    return scaffold
+    if scaffold.kernels:
+      return scaffold
+    else:
+      self.print_stack(address)
+      assert scaffold.kernels, "Scaffold construction around %s found no kernels in trace %s" % (address, self.trace_id)
 
   def _sites(self):
     return [a for (a, exp, _) in self.all_contexts() if e.isApplication(exp)]
@@ -420,6 +423,7 @@ class SourceTracing(object):
       # Assume this was a compound procedure and the request id is the
       # call site
       self.print_stack(root.request_id)
+    # XXX TODO do something with `mem` RequestAddresses
     self.print_frame(addr)
 
 class FlatTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace):
