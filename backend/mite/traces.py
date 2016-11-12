@@ -369,7 +369,7 @@ class SourceTracing(object):
   """Traces source code of the execution."""
 
   def __init__(self, seed):
-    self.requests = {}
+    self.requests = OrderedDict()
     self.toplevel_addresses = []
     super(SourceTracing, self).__init__(seed)
 
@@ -385,8 +385,7 @@ class SourceTracing(object):
 
   def all_contexts(self):
     """A generator that yields every (addr, exp, env) triple traced by this trace, in execution order, _except requests_."""
-    for addr in self.toplevel_addresses:
-      (exp, env) = self.requests[addr]
+    for (addr, (exp, env)) in self.requests.iteritems():
       for context in self._traverse(addr, exp, env):
         yield context
 
