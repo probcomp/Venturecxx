@@ -149,8 +149,8 @@ class CRPOutputPSP(RandomPSP):
         aux.freeTables.discard(table)
       else:
         aux.nextTable = max(table+1, aux.nextTable)
-      if args.node in aux.cachedTables:
-        del aux.cachedTables[args.node]
+    if args.node in aux.cachedTables:
+      del aux.cachedTables[args.node]
 
   def unincorporate(self, table, args):
     aux = args.spaux()
