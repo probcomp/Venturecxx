@@ -312,6 +312,7 @@ def testEnumerateCoupledChoices2(seed):
 
 @statisticalTest
 @on_inf_prim("gibbs")
+@broken_in("puma", "Github issue #470")
 def testEnumerateCoupledChoices3(seed):
   # A third illustration of Issue #462 (second manifestation).
   #
@@ -323,7 +324,6 @@ def testEnumerateCoupledChoices3(seed):
   # "remain the same as I was", and "become a unique snowflake".  This
   # will cause it to overweight the state where the choices are
   # distinct by 2:1.
-  raise SkipTest("Fails due to https://github.com/probcomp/Venturecxx/issues/462")
   r = get_ripl(seed=seed)
   r.assume("crp", "(make_crp 1)")
   r.assume("result1", "(crp)")

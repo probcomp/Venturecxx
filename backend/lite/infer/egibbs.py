@@ -47,13 +47,14 @@ class EnumerativeGibbsOperator(object):
 
     pnodes = scaffold.getPrincipalNodes()
     currentValues = getCurrentValues(trace, pnodes)
-    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace, pnodes)
 
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
 
     rhoWeight, self.rhoDB = detachAndExtract(trace, scaffold)
     xiWeights = []
     xiParticles = []
+
+    allSetsOfValues = getCartesianProductOfEnumeratedValues(trace, pnodes)
 
     for newValues in allSetsOfValues:
       if newValues == currentValues:
