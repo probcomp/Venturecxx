@@ -25,7 +25,7 @@ import numpy.random as npr
 from numpy.testing import assert_allclose
 
 from venture.exception import VentureException
-from venture.lite.builtin import builtInSPs
+from venture.lite.builtin import builtInSPsIter
 from venture.lite.builtin import builtInValues
 from venture.lite.detach import detachAndExtract
 from venture.lite.detach import unconstrain
@@ -72,7 +72,7 @@ class Trace(object):
     self.globalEnv = VentureEnvironment()
     for name, val in builtInValues().iteritems():
       self.bindPrimitiveName(name, val)
-    for name, sp in builtInSPs().iteritems():
+    for name, sp in builtInSPsIter():
       self.bindPrimitiveSP(name, sp)
     self.sealEnvironment() # New frame so users can shadow globals
 
