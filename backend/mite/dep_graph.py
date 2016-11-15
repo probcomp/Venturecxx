@@ -309,6 +309,15 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # XXX remove dependency on toposort
   import toposort
   assert set(kernels) == set(regen_parents)
-  toposorted = toposort.toposort_flatten(regen_parents)
+  try:
+    toposorted = toposort.toposort_flatten(regen_parents)
+  except ValueError:
+    print "Failure when trying to build a scaffold at"
+    trace.print_stack(principal_address)
+    print "Cyclic dependencies among"
+    for a in regen_parents.keys():
+      print a
+      trace.print_stack(a)
+    raise
   kernels = OrderedDict([(addr, kernels[addr]) for addr in toposorted])
   return Scaffold(kernels)
