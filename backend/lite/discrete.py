@@ -134,7 +134,7 @@ registerBuiltinSP("log_flip", typed_nr(LogBernoulliOutputPSP(),
   [t.NumberType()], t.BoolType()))
 
 registerBuiltinSP("log_bernoulli", typed_nr(LogBernoulliOutputPSP(),
-  [t.NumberType()], t.BoolType()))
+  [t.NumberType()], t.IntegerType()))
 
 
 class LogOddsBernoulliOutputPSP(DiscretePSP):
