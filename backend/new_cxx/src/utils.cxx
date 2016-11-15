@@ -214,3 +214,30 @@ ran_log_gamma(gsl_rng *rng, double shape)
     return log(gsl_ran_gamma(rng, shape, 1));
   }
 }
+
+double
+logit(double x)
+{
+  return log(x/(1 - x));
+}
+
+double
+logistic(double x)
+{
+  // For x <= -37, 1 + e^{-x} rounds to e^{-x}, so 1/(1 + e^{-x})
+  // rounds to 1/e^{-x} = e^x.  For e < -709, e^{-x} would overflow
+  // anyway, whereas e^x never will.
+  if (x <= -37)
+    return exp(x);
+  else
+    return 1/(1 + exp(-x));
+}
+
+double
+log_logistic(double x)
+{
+  if (x <= -37)
+    return x;
+  else
+    return -log1p(exp(-x));
+}

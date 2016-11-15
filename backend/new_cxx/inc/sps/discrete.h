@@ -45,6 +45,18 @@ struct LogFlipOutputPSP : virtual RandomPSP
   vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
 };
 
+struct LogOddsFlipOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+};
+
 struct BernoulliOutputPSP : virtual RandomPSP
   , DefaultIncorporatePSP
 {
@@ -58,6 +70,18 @@ struct BernoulliOutputPSP : virtual RandomPSP
 };
 
 struct LogBernoulliOutputPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+
+  bool canEnumerateValues(shared_ptr<Args> args) const { return true; }
+  vector<VentureValuePtr> enumerateValues(shared_ptr<Args> args) const;
+};
+
+struct LogOddsBernoulliOutputPSP : virtual RandomPSP
   , DefaultIncorporatePSP
 {
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;

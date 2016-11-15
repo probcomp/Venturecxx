@@ -386,6 +386,73 @@ LogBetaPSP::gradientOfLogDensity(double x, const vector<double> & args) const
   return d;
 }
 
+/* Log-odds of beta */
+VentureValuePtr
+LogOddsBetaPSP::simulate(const shared_ptr<Args> & args, gsl_rng * rng) const
+{
+  checkArgsLength("log_odds_beta", args, 2);
+
+  const double inf = std::numeric_limits<double>::infinity();
+  const double a = args->operandValues[0]->getDouble();
+  const double b = args->operandValues[1]->getDouble();
+  double r;
+
+  if (a == 0 && b == 0) {
+    r = (gsl_rng_get(rng) & 1) ? -inf : +inf;
+  } else if (a == 0) {
+    r = -inf;
+  } else if (b == 0) {
+    r = +inf;
+  } else if (std::min(a, b) < 1e-300) {
+    r = gsl_ran_bernoulli(rng, a/(a + b)) ? +inf : -inf;
+  } else if (std::min(a, b) < 1) {
+    const double log_g = ran_log_gamma(rng, a);
+    const double log_h = ran_log_gamma(rng, b);
+    assert(!isinf(log_g));
+    assert(!isinf(log_h));
+    r = log_g - log_h;
+  } else {
+    assert(1 <= std::min(a, b));
+    const double g = gsl_ran_gamma(rng, a, 1);
+    const double h = gsl_ran_gamma(rng, b, 1);
+    assert(g != 0);
+    assert(h != 0);
+    r = log(g/h);
+  }
+
+  return VentureValuePtr(new VentureNumber(r));
+}
+
+double
+LogOddsBetaPSP::logDensity(
+    const VentureValuePtr & value, const shared_ptr<Args> & args) const
+{
+  checkArgsLength("log_odds_beta", args, 2);
+
+  const double x = value->getDouble();
+  const double a = args->operandValues[0]->getDouble();
+  const double b = args->operandValues[1]->getDouble();
+
+  return a*log_logistic(x) + b*log_logistic(-x) - gsl_sf_lnbeta(a, b);
+}
+
+vector<double>
+LogOddsBetaPSP::gradientOfLogDensity(
+    double x, const vector<double> & args) const
+{
+  const double a = args[0];
+  const double b = args[1];
+
+  // const double d_x = a*logistic(-x) - b*logistic(x);
+  const double d_a = log_logistic(x) + gsl_sf_psi(a + b) - gsl_sf_psi(a);
+  const double d_b = log_logistic(-x) + gsl_sf_psi(a + b) - gsl_sf_psi(b);
+
+  vector<double> d(2);
+  d.at(0) = d_a;
+  d.at(1) = d_b;
+  return d;
+}
+
 /* Student-t */
 VentureValuePtr StudentTPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const

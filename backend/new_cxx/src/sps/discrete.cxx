@@ -107,6 +107,48 @@ vector<VentureValuePtr> LogFlipOutputPSP::enumerateValues(
 }
 
 
+VentureValuePtr LogOddsFlipOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
+{
+  checkArgsLength("log_odds_flip", args, 0, 1);
+  double logodds = 0;
+  if (!args->operandValues.empty()) {
+    logodds = args->operandValues[0]->getDouble();
+  }
+  double u = gsl_rng_uniform(rng);
+  return VentureValuePtr(new VentureBool(logit(u) < logodds));
+}
+
+double LogOddsFlipOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
+{
+  double logodds = 0;
+  if (!args->operandValues.empty()) {
+    logodds = args->operandValues[0]->getDouble();
+  }
+
+  if (value->getBool()) { return log_logistic(logodds); }
+  else { return log_logistic(-logodds); }
+}
+
+vector<VentureValuePtr> LogOddsFlipOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
+{
+  double logodds = 0;
+  if (!args->operandValues.empty()) {
+    logodds = args->operandValues[0]->getDouble();
+  }
+
+  vector<VentureValuePtr> vs;
+
+  const double inf = std::numeric_limits<double>::infinity();
+  if (-inf < logodds) { vs.push_back(VentureValuePtr(new VentureBool(true))); }
+  if (logodds < +inf) { vs.push_back(VentureValuePtr(new VentureBool(false))); }
+  return vs;
+}
+
+
 VentureValuePtr BernoulliOutputPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const
 {
@@ -185,6 +227,48 @@ vector<VentureValuePtr> LogBernoulliOutputPSP::enumerateValues(
 
   if (!isinf(logp)) { vs.push_back(VentureValuePtr(new VentureInteger(1))); }
   if (logp < 0) { vs.push_back(VentureValuePtr(new VentureInteger(0))); }
+  return vs;
+}
+
+
+VentureValuePtr LogOddsBernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
+{
+  checkArgsLength("log_odds_bernoulli", args, 0, 1);
+  double logodds = 0;
+  if (!args->operandValues.empty()) {
+    logodds = args->operandValues[0]->getDouble();
+  }
+  double u = gsl_rng_uniform(rng);
+  return VentureValuePtr(new VentureInteger(logit(u) < logodds));
+}
+
+double LogOddsBernoulliOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
+{
+  double logodds = 0;
+  if (!args->operandValues.empty()) {
+    logodds = args->operandValues[0]->getDouble();
+  }
+
+  if (value->getInt()) { return log_logistic(logodds); }
+  else { return log_logistic(-logodds); }
+}
+
+vector<VentureValuePtr> LogOddsBernoulliOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
+{
+  double logodds = 0;
+  if (!args->operandValues.empty()) {
+    logodds = args->operandValues[0]->getDouble();
+  }
+
+  vector<VentureValuePtr> vs;
+
+  const double inf = std::numeric_limits<double>::infinity();
+  if (-inf < logodds) { vs.push_back(VentureValuePtr(new VentureInteger(1))); }
+  if (logodds < +inf) { vs.push_back(VentureValuePtr(new VentureInteger(0))); }
   return vs;
 }
 
