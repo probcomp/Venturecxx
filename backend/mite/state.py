@@ -36,6 +36,9 @@ class TracePropertySP(SimulationSP):
     return t.Pair(self.output_type, t.Blob).asVentureValue(
       (output, trace))
 
+  def is_deterministic(self):
+    return True
+
   def action_defn(self, action_func_name):
     # interpreted by register_trace_type
     return ([], ['inference_action', action_func_name])
@@ -46,10 +49,11 @@ trace_property = TracePropertySP
 # TODO: this should have an unapply method that undoes its effect on
 # the trace.
 class TraceActionSP(SimulationSP):
-  def __init__(self, method_name, input_types, output_type):
+  def __init__(self, method_name, input_types, output_type, deterministic=False):
     self.name = method_name
     self.input_types = input_types
     self.output_type = output_type
+    self.deterministic = deterministic
 
   def simulate(self, inputs, _prng):
     assert len(inputs) == 1 + len(self.input_types)
@@ -60,6 +64,9 @@ class TraceActionSP(SimulationSP):
     # print "Tried to do trace action", self.name, "on", inputs, "got", output
     return t.Pair(self.output_type, t.Blob).asVentureValue(
       (output, trace))
+
+  def is_deterministic(self):
+    return self.deterministic
 
   def action_defn(self, action_func_name):
     # interpreted by register_trace_type
