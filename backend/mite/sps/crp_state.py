@@ -43,5 +43,5 @@ register_trace_type("crp_state", CRPState, {
   "crp_table_counts": trace_property("table_counts", t.Dict(t.Atom, t.Int)),
   "crp_next_table": trace_property("next_table", t.Atom),
   "crp_num_customers": trace_property("num_customers", t.Int),
-  "crp_seat": trace_action("seat", [t.Atom, t.Int], t.Nil),
+  "crp_seat": trace_action("seat", [t.Atom, t.Int], t.Nil, deterministic=True),
 })

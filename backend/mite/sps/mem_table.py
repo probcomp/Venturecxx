@@ -38,11 +38,11 @@ class MemTable(object):
     return self
 
 register_trace_type("mem_table", MemTable, {
-  "mem_has_value": trace_action("has_value", [t.Object], t.Bool),
-  "mem_lookup": trace_action("lookup", [t.Object], t.Object),
-  "mem_assoc": trace_action("assoc", [t.Object, t.Object], t.Nil),
-  "mem_incr": trace_action("incr", [t.Object], t.Nil),
-  "mem_decr": trace_action("decr", [t.Object], t.Nil),
-  "mem_count": trace_action("count", [t.Object], t.Int),
-  "mem_dissoc": trace_action("dissoc", [t.Object], t.Nil),
+  "mem_has_value": trace_action("has_value", [t.Object], t.Bool, deterministic=True),
+  "mem_lookup": trace_action("lookup", [t.Object], t.Object, deterministic=True),
+  "mem_assoc": trace_action("assoc", [t.Object, t.Object], t.Nil, deterministic=True),
+  "mem_incr": trace_action("incr", [t.Object], t.Nil, deterministic=True),
+  "mem_decr": trace_action("decr", [t.Object], t.Nil, deterministic=True),
+  "mem_count": trace_action("count", [t.Object], t.Int, deterministic=True),
+  "mem_dissoc": trace_action("dissoc", [t.Object], t.Nil, deterministic=True),
 })

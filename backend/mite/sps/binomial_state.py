@@ -27,6 +27,6 @@ class BinomialState(object):
 register_trace_type("binomial_state", BinomialState, {
   "binomial_N": trace_property("N", t.Int),
   "binomial_K": trace_property("K", t.Int),
-  "binomial_add": trace_action("add", [t.Int, t.Int], t.Nil),
-  "binomial_remove": trace_action("remove", [t.Int, t.Int], t.Nil),
+  "binomial_add": trace_action("add", [t.Int, t.Int], t.Nil, deterministic=True),
+  "binomial_remove": trace_action("remove", [t.Int, t.Int], t.Nil, deterministic=True),
 })

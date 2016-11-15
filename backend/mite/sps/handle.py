@@ -19,7 +19,7 @@ from venture.mite.state import trace_action
 register_trace_type("_handle", TraceHandle, {
   "request_address": trace_action("request_address", [t.Object], t.Blob),
   "eval_request": trace_action("eval_request", [t.Blob, t.Exp, EnvironmentType()], t.Object),
-  "value_at": trace_action("value_at", [t.Blob], t.Object),
+  "value_at": trace_action("value_at", [t.Blob], t.Object, deterministic=True),
   "uneval_request": trace_action("uneval_request", [t.Blob], t.Nil),
-  "restore_request": trace_action("restore_request", [t.Blob], t.Object),
+  "restore_request": trace_action("restore_request", [t.Blob], t.Object, deterministic=True),
 })
