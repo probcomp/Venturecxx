@@ -11,12 +11,16 @@ class ExtendEnvSP(SimulationSP):
     sym = t.Symbol.asPython(inputs[1])
     node = t.Blob.asPython(inputs[2])
     return VentureEnvironment(env, [sym], [node])
+  def is_deterministic(self):
+    return True
 
 registerBuiltinSP("extend_environment", ExtendEnvSP())
 
 # TODO this is stubbed
 class GetCurrentEnvironmentSP(VentureSP):
-  def apply(self, trace_handle, _application_id, inputs):
+  def apply(self, trace_handle, _application_id, _inputs):
     return trace_handle.trace.global_env
+  def is_deterministic(self):
+    return True
 
 registerBuiltinSP("get_current_environment", GetCurrentEnvironmentSP())

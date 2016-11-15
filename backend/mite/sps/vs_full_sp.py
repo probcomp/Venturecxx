@@ -39,6 +39,12 @@ class MadeFullSP(VentureSP):
     logp = self.run_in_helper_trace('log_density', [output] + inputs)
     return t.Number.asPython(logp)
 
+  def is_deterministic(self):
+    if self.has_method('is_deterministic'):
+      self.run_in_helper_trace('is_deterministic', [])
+    else:
+      return False
+
   def proposal_kernel(self, trace_handle, app_id):
     handle = t.Blob.asVentureValue(trace_handle)
     app_id = t.Blob.asVentureValue(app_id)
@@ -64,6 +70,14 @@ class MadeFullSP(VentureSP):
       return None
     else:
       return ProxyKernel(self.helper_trace, kernel_dict)
+
+  def has_method(self, method):
+    helper_trace = self.helper_trace
+    addr = helper_trace.next_base_address()
+    expr = ['contains', 'the_sp', ['quote', method]]
+    env = VentureEnvironment(helper_trace.global_env)
+    value = helper_trace.eval_request(addr, expr, env)
+    return value.getBool()
 
   def run_in_helper_trace(self, method, inputs):
     helper_trace = self.helper_trace

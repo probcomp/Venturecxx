@@ -214,6 +214,9 @@ class MakeTailAssessableSP(VentureSP):
     return TailAssessableCompoundSP(
       sp.params, sp.exp[0], sp.exp[1:], sp.env)
 
+  def is_deterministic(self):
+    return True
+
   def unapply(self, trace_handle, _id, output, inputs):
     pass
 

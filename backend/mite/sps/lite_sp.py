@@ -32,6 +32,9 @@ class LiteSP(SimulationSP):
   def log_density(self, output, inputs):
     return self.wrapped_sp.outputPSP.logDensity(output, self.wrap_args(inputs))
 
+  def is_deterministic(self):
+    return not self.wrapped_sp.outputPSP.isRandom()
+
   def incorporate(self, output, inputs):
     return self.wrapped_sp.outputPSP.incorporate(output, self.wrap_args(inputs))
 

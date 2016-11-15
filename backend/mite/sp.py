@@ -21,6 +21,9 @@ class VentureSP(VentureValue):
   def log_density_bound(self, _value, _inputs):
     raise VentureBuiltinSPMethodError("Cannot compute log density bound")
 
+  def is_deterministic(self):
+    return False
+
   def proposal_kernel(self, trace_handle, application_id):
     return DefaultProposalKernel(self, trace_handle, application_id)
 

@@ -21,11 +21,16 @@ class MakeSimulationSP(SimulationSP):
     helper_trace.eval_request(addr, expr, env)
     helper_trace.bind_global("the_sp", addr)
     return MadeSimulationSP(helper_trace)
+
   def log_density(self, _value, _inputs):
     # XXX Assumes the value is what the application actually produced.
     # I can't even fix this by rerunning the simulation function,
     # because equality testing of SRRefs relies on object identity.
     return 0
+
+  def is_deterministic(self):
+    return True
+
 
 class MadeSimulationSP(SimulationSP):
   def __init__(self, helper_trace):
@@ -37,6 +42,12 @@ class MadeSimulationSP(SimulationSP):
   def log_density(self, output, inputs):
     logp = self.run_in_helper_trace('log_density', [output] + inputs)
     return t.Number.asPython(logp)
+
+  def is_deterministic(self):
+    if self.has_method('is_deterministic'):
+      self.run_in_helper_trace('is_deterministic', [])
+    else:
+      return False
 
   def incorporate(self, output, inputs):
     if self.has_method('incorporate'):
