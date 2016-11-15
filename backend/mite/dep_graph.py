@@ -290,7 +290,9 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
           propagate = True
 
     if kernel is not None:
-      assert addr not in kernels
+      if addr in kernels:
+        if kernel != kernels[addr]:
+          assert False, "Trying to overwrite %s with %s; see Issue #646" % (kernels[addr], kernel)
       kernels[addr] = kernel
       if parent is not None:
         # print "Registering dependency of", addr, "on", parent
