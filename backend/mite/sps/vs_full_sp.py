@@ -25,9 +25,32 @@ class MakeFullSP(VentureSP):
     helper_trace.bind_global("the_sp", addr)
     return MadeFullSP(helper_trace)
 
-class MadeFullSP(VentureSP):
+class WithHelperTrace(object):
   def __init__(self, helper_trace):
     self.helper_trace = helper_trace
+
+  def has_method(self, method):
+    helper_trace = self.helper_trace
+    addr = helper_trace.next_base_address()
+    expr = ['contains', 'the_sp', ['quote', method]]
+    env = VentureEnvironment(helper_trace.global_env)
+    value = helper_trace.eval_request(addr, expr, env)
+    return value.getBool()
+
+  def run_in_helper_trace(self, method, inputs):
+    helper_trace = self.helper_trace
+    addr = helper_trace.next_base_address()
+    names = ['var{}'.format(i) for i in range(len(inputs))]
+    values = [Node(None, val) for val in inputs]
+    expr = ['first',
+            [['action_func',
+              [['lookup', 'the_sp', ['quote', method]]] + names],
+             ['lookup', 'the_sp', ['quote', 'state']]]]
+    env = VentureEnvironment(helper_trace.global_env, names, values)
+    value = helper_trace.eval_request(addr, expr, env)
+    return value
+
+class MadeFullSP(WithHelperTrace, VentureSP):
 
   def apply(self, trace_handle, app_id, inputs):
     handle = t.Blob.asVentureValue(trace_handle)
@@ -70,27 +93,6 @@ class MadeFullSP(VentureSP):
       return None
     else:
       return ProxyKernel(self.helper_trace, kernel_dict)
-
-  def has_method(self, method):
-    helper_trace = self.helper_trace
-    addr = helper_trace.next_base_address()
-    expr = ['contains', 'the_sp', ['quote', method]]
-    env = VentureEnvironment(helper_trace.global_env)
-    value = helper_trace.eval_request(addr, expr, env)
-    return value.getBool()
-
-  def run_in_helper_trace(self, method, inputs):
-    helper_trace = self.helper_trace
-    addr = helper_trace.next_base_address()
-    names = ['var{}'.format(i) for i in range(len(inputs))]
-    values = [Node(None, val) for val in inputs]
-    expr = ['first',
-            [['action_func',
-              [['lookup', 'the_sp', ['quote', method]]] + names],
-             ['lookup', 'the_sp', ['quote', 'state']]]]
-    env = VentureEnvironment(helper_trace.global_env, names, values)
-    value = helper_trace.eval_request(addr, expr, env)
-    return value
 
 class ProxyKernel(ApplicationKernel):
   def __init__(self, helper_trace, kernel_dict):

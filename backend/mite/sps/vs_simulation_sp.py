@@ -6,6 +6,7 @@ from venture.untraced.node import Node
 from venture.mite.sp import SimulationSP
 from venture.mite.sp_registry import registerBuiltinSP
 from venture.mite.traces import BlankTrace
+from venture.mite.sps.vs_full_sp import WithHelperTrace
 
 class MakeSimulationSP(SimulationSP):
   def simulate(self, inputs, prng):
@@ -32,7 +33,7 @@ class MakeSimulationSP(SimulationSP):
     return True
 
 
-class MadeSimulationSP(SimulationSP):
+class MadeSimulationSP(WithHelperTrace, SimulationSP):
   def __init__(self, helper_trace):
     self.helper_trace = helper_trace
 
@@ -56,27 +57,6 @@ class MadeSimulationSP(SimulationSP):
   def unincorporate(self, output, inputs):
     if self.has_method('unincorporate'):
       self.run_in_helper_trace('unincorporate', [output] + inputs)
-
-  def has_method(self, method):
-    helper_trace = self.helper_trace
-    addr = helper_trace.next_base_address()
-    expr = ['contains', 'the_sp', ['quote', method]]
-    env = VentureEnvironment(helper_trace.global_env)
-    value = helper_trace.eval_request(addr, expr, env)
-    return value.getBool()
-
-  def run_in_helper_trace(self, method, inputs):
-    helper_trace = self.helper_trace
-    addr = helper_trace.next_base_address()
-    names = ['var{}'.format(i) for i in range(len(inputs))]
-    values = [Node(None, val) for val in inputs]
-    expr = ['first',
-            [['action_func',
-              [['lookup', 'the_sp', ['quote', method]]] + names],
-             ['lookup', 'the_sp', ['quote', 'state']]]]
-    env = VentureEnvironment(helper_trace.global_env, names, values)
-    value = helper_trace.eval_request(addr, expr, env)
-    return value
 
 # TODO: rename to "elementary" SP everywhere
 # (including the "SimulationSP" class itself)
