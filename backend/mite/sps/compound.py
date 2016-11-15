@@ -35,6 +35,7 @@ class CompoundSP(VentureSP):
   def propagating_kernel(self, trace_handle, application_id, parent):
     addr = trace_handle.request_address(application_id)
     if addr == parent:
+      # print "Choosing to propagate to", application_id, "from", parent
       return RequestPropagatingKernel(trace_handle, addr)
     else:
       return None

@@ -214,6 +214,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # If the input involved calls to `toplevel`, need to inject the ID
   # of the current trace.  Harmless otherwise.
   principal_address = addresses.interpret_address_in_trace(principal_address, trace.trace_id, None)
+  # print "Proposing at", principal_address
 
   assert isinstance(trace, DependencyGraphTrace)
 
@@ -292,6 +293,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
       assert addr not in kernels
       kernels[addr] = kernel
       if parent is not None:
+        # print "Registering dependency of", addr, "on", parent
         regen_parents.setdefault(addr, set()).add(parent)
 
     if propagate and addr not in drg:

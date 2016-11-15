@@ -66,6 +66,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         traverse(subaddr, subexp, env)
         parents_affected.append(subaddr in drg)
       if addr == principal_address:
+        # print "Proposing at", addr
         kernels[addr] = principal_kernel
         drg.add(addr)
       elif parents_affected[0]:
