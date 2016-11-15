@@ -146,7 +146,13 @@ class AbstractTrace(ITrace):
       assert scaffold.kernels, "Scaffold construction around %s found no kernels in trace %s" % (address, self.trace_id)
 
   def _sites(self):
-    return [a for (a, exp, _) in self.all_contexts() if e.isApplication(exp)]
+    def is_random_application(addr, exp):
+      if not e.isApplication(exp):
+        return False
+      sp_ref = self.value_at(addresses.subexpression(0, addr))
+      sp = self.deref_sp(sp_ref).value
+      return not sp.is_deterministic()
+    return [a for (a, exp, _) in self.all_contexts() if is_random_application(a, exp)]
 
   def random_site(self):
     """Return a uniformly random address among the random choices in this trace."""
