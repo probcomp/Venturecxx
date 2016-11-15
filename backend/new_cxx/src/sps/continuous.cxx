@@ -315,6 +315,77 @@ vector<double> BetaPSP::gradientOfLogDensity(double output,
 
 }
 
+/* Log of Beta */
+VentureValuePtr
+LogBetaPSP::simulate(const shared_ptr<Args> & args, gsl_rng * rng) const
+{
+  checkArgsLength("log_beta", args, 2);
+
+  const double inf = std::numeric_limits<double>::infinity();
+  const double a = args->operandValues[0]->getDouble();
+  const double b = args->operandValues[1]->getDouble();
+  double r;
+
+  if (a == 0 && b == 0) {
+    r = (gsl_rng_get(rng) & 1) ? -inf : 0;
+  } else if (a == 0) {
+    r = -inf;
+  } else if (b == 0) {
+    r = 0;
+  } else if (std::min(a, b) < 1e-300) {
+    r = gsl_ran_bernoulli(rng, a/(a + b)) ? 0 : -inf;
+  } else {
+    const double log_g = ran_log_gamma(rng, a);
+    const double log_h = ran_log_gamma(rng, b);
+    assert(!isinf(log_g));
+    assert(!isinf(log_h));
+    vector<double> log_gh(2);
+    log_gh[0] = log_g;
+    log_gh[1] = log_h;
+    r = log_g - logSumExp(log_gh);
+  }
+
+  return VentureValuePtr(new VentureNumber(r));
+}
+
+double
+LogBetaPSP::logDensity(
+    const VentureValuePtr & value, const shared_ptr<Args> & args) const
+{
+  checkArgsLength("log_beta", args, 2);
+
+  const double x = value->getDouble();
+  const double a = args->operandValues[0]->getDouble();
+  const double b = args->operandValues[1]->getDouble();
+
+  // x = log y for a beta sample y, so its density is the beta density
+  // of y = e^x with the Jacobian dy/dx = e^x:
+  //
+  //	log p(x | a, b) = log [p(y | a, b) dy/dx]
+  //	= (a - 1) log y + (b - 1) log (1 - y) - log Beta(a, b) + log dy/dx
+  //	= (a - 1) log e^x + (b - 1) log (1 - e^x) - log B(a, b) + log e^x
+  //	= (a - 1) x + (b - 1) log (1 - e^x) - log B(a, b) + x
+  //	= a x + (b - 1) log (1 - e^x) - log B(a, b).
+  //
+  return a*x + (b - 1)*log1p(-exp(x)) - gsl_sf_lnbeta(a, b);
+}
+
+vector<double>
+LogBetaPSP::gradientOfLogDensity(double x, const vector<double> & args) const
+{
+  const double a = args[0];
+  const double b = args[1];
+
+  // const double d_x = a - (b - 1)/expm1(-x);
+  const double d_a = x + gsl_sf_psi(a + b) - gsl_sf_psi(a);
+  const double d_b = log1p(-exp(x)) + gsl_sf_psi(a + b) - gsl_sf_psi(b);
+
+  vector<double> d(2);
+  d.at(0) = d_a;
+  d.at(1) = d_b;
+  return d;
+}
+
 /* Student-t */
 VentureValuePtr StudentTPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const

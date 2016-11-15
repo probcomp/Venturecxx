@@ -66,6 +66,47 @@ vector<VentureValuePtr> FlipOutputPSP::enumerateValues(
   return vs;
 }
 
+
+VentureValuePtr LogFlipOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
+{
+  checkArgsLength("log_flip", args, 0, 1);
+  double logp = log(0.5);
+  if (!args->operandValues.empty()) {
+    logp = args->operandValues[0]->getDouble();
+  }
+  return VentureValuePtr(new VentureBool(log(gsl_rng_uniform(rng)) < logp));
+}
+
+double LogFlipOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
+{
+  double logp = log(0.5);
+  if (!args->operandValues.empty()) {
+    logp = args->operandValues[0]->getDouble();
+  }
+
+  if (value->getBool()) { return logp; }
+  else { return log1p(-exp(logp)); }
+}
+
+vector<VentureValuePtr> LogFlipOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
+{
+  double logp = log(0.5);
+  if (!args->operandValues.empty()) {
+    logp = args->operandValues[0]->getDouble();
+  }
+
+  vector<VentureValuePtr> vs;
+
+  if (!isinf(logp)) { vs.push_back(VentureValuePtr(new VentureBool(true))); }
+  if (logp < 0) { vs.push_back(VentureValuePtr(new VentureBool(false))); }
+  return vs;
+}
+
+
 VentureValuePtr BernoulliOutputPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const
 {
@@ -104,6 +145,46 @@ vector<VentureValuePtr> BernoulliOutputPSP::enumerateValues(
 
   if (p > 0) { vs.push_back(VentureValuePtr(new VentureInteger(1))); }
   if (p < 1) { vs.push_back(VentureValuePtr(new VentureInteger(0))); }
+  return vs;
+}
+
+
+VentureValuePtr LogBernoulliOutputPSP::simulate(
+    const shared_ptr<Args> & args, gsl_rng * rng) const
+{
+  checkArgsLength("log_bernoulli", args, 0, 1);
+  double logp = log(0.5);
+  if (!args->operandValues.empty()) {
+    logp = args->operandValues[0]->getDouble();
+  }
+  return VentureValuePtr(new VentureInteger(log(gsl_rng_uniform(rng)) < logp));
+}
+
+double LogBernoulliOutputPSP::logDensity(
+    const VentureValuePtr & value,
+    const shared_ptr<Args> & args) const
+{
+  double logp = log(0.5);
+  if (!args->operandValues.empty()) {
+    logp = args->operandValues[0]->getDouble();
+  }
+
+  if (value->getInt()) { return logp; }
+  else { return log1p(-exp(logp)); }
+}
+
+vector<VentureValuePtr> LogBernoulliOutputPSP::enumerateValues(
+    shared_ptr<Args> args) const
+{
+  double logp = log(0.5);
+  if (!args->operandValues.empty()) {
+    logp = args->operandValues[0]->getDouble();
+  }
+
+  vector<VentureValuePtr> vs;
+
+  if (!isinf(logp)) { vs.push_back(VentureValuePtr(new VentureInteger(1))); }
+  if (logp < 0) { vs.push_back(VentureValuePtr(new VentureInteger(0))); }
   return vs;
 }
 

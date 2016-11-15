@@ -202,3 +202,15 @@ void checkArgsLength(
       + lexical_cast<string>(length);
   }
 }
+
+double
+ran_log_gamma(gsl_rng *rng, double shape)
+{
+  if (shape < 1) {
+    const double G = gsl_ran_gamma(rng, shape + 1, 1);
+    const double U = gsl_rng_uniform(rng);
+    return log(G) + log(U)/shape;
+  } else {
+    return log(gsl_ran_gamma(rng, shape, 1));
+  }
+}

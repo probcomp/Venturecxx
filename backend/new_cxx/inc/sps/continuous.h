@@ -118,6 +118,23 @@ struct BetaPSP : virtual RandomPSP
 
 };
 
+struct LogBetaPSP : virtual RandomPSP
+  , DefaultIncorporatePSP
+{
+  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
+  double logDensity(
+      const VentureValuePtr & value,
+      const shared_ptr<Args> & args) const;
+  vector<double> gradientOfLogDensity(
+      double, const vector<double> & arguments) const;
+
+  bool isContinuous() const { return true; }
+  double getSupportUpperBound() const {
+    return -std::numeric_limits<double>::infinity();
+  }
+  double getSupportLowerBound() const { return 0; }
+};
+
 struct StudentTPSP : virtual RandomPSP
   , DefaultIncorporatePSP
 {
