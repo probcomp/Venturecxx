@@ -57,7 +57,13 @@ class RequestAddress(Address):
     self.request_id = request_id
 
   def __repr__(self):
-    return "request({!r}, {!r})".format(self.sp_addr, self.request_id)
+    if isinstance(self.request_id, Address):
+      # Assume it's probably a compound SP application.  Since those
+      # may duplicate exponentially much stuff between their sp_addr
+      # and their request_id, suppress some.
+      return "request({!r}, {!r})".format(hash(self.sp_addr), self.request_id)
+    else:
+      return "request({!r}, {!r})".format(self.sp_addr, self.request_id)
 
 class SubexpressionAddress(Address):
   """A subexpression of a combination."""
