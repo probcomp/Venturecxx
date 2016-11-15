@@ -198,12 +198,59 @@ VentureValuePtr BetaPSP::simulate(
 {
   checkArgsLength("beta", args, 2);
 
-  double a = args->operandValues[0]->getDouble();
-  double b = args->operandValues[1]->getDouble();
+  const double a = args->operandValues[0]->getDouble();
+  const double b = args->operandValues[1]->getDouble();
+  double r;
 
-  double x = gsl_ran_beta(rng, a, b);
+  // Copypasta of BetaOutputPSP.simulate from lite/continuous.py.  See
+  // references and commentary on the algorithm there.
+  if (a == 0 && b == 0) {
+    // Dirac deltas at 0 and 1.
+    r = gsl_rng_get(rng) & 1;
+  } else if (a == 0) {
+    // Dirac delta at 1.
+    r = 1;
+  } else if (b == 0) {
+    // Dirac delta at 0.
+    r = 0;
+  } else if (std::min(a, b) < 1e-300) {
+    // Dirac deltas at 0 and 1 with magnitude ratio a/(a + b).
+    r = 1 - gsl_ran_bernoulli(rng, a/(a + b));
+  } else if (1 < a || 1 < b) {
+    // Easy case: well-known reduction to G/(G + H) where G ~ Gamma(a)
+    // and H ~ Gamma(b) are independent.
+    const double g = gsl_ran_gamma(rng, a, 1);
+    const double h = gsl_ran_gamma(rng, b, 1);
+    r = g/(g + h);
+  } else {
+    // Johnk's algorithm
+    for (;;) {
+      const double u = gsl_rng_uniform(rng);
+      const double v = gsl_rng_uniform(rng);
+      const double x = pow(u, 1/a);
+      const double y = pow(v, 1/b);
+      if (1 < x + y)
+	continue;		// reject
+      if (0 < x + y) {
+	r = x/(x + y);
+	break;			// accept
+      }
 
-  return VentureValuePtr(new VentureNumber(x));
+      assert(0 < u);
+      assert(0 < v);
+      double log_x = log(u)/a;
+      double log_y = log(v)/b;
+      assert(!isinf(log_x));
+      assert(!isinf(log_y));
+      const double log_m = std::max(log_x, log_y);
+      log_x -= log_m;
+      log_y -= log_m;
+      r = exp(log_x - log(exp(log_x) + exp(log_y)));
+      break;			// accept
+    }
+  }
+
+  return VentureValuePtr(new VentureNumber(r));
 }
 
 double BetaPSP::simulateNumeric(const vector<double> & args, gsl_rng * rng) const
