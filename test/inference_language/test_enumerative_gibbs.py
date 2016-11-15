@@ -188,7 +188,6 @@ def checkEnumerativeGibbsXOR3(in_parallel, seed):
   return reportKnownDiscrete(ans, predictions)
 
 @stochasticTest
-@broken_in("puma", "Mystery crash #637.")
 def testEnumerativeGibbsMap(seed):
   # Prior to this test, an application of mapv created multiple
   # requests with the same address (namely, the empty address).  The
