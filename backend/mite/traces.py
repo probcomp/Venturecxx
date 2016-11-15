@@ -374,7 +374,13 @@ class SourceTracing(object):
     super(SourceTracing, self).__init__(seed)
 
   def register_request(self, addr, exp, env):
-    assert addr not in self.requests
+    if addr in self.requests:
+      (old_exp, old_env) = self.requests[addr]
+      print "Multiply registering request at", addr
+      print "Old request", old_exp, old_env
+      print "New request", exp, env
+      self.print_stack(addr)
+      assert False, "Multiply registering request"
     if isinstance(addr, addresses.DirectiveAddress):
       self.toplevel_addresses.append(addr)
     self.requests[addr] = (exp, env)
