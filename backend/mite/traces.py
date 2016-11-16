@@ -156,10 +156,6 @@ class AbstractTrace(ITrace):
 
   def random_site(self):
     """Return a uniformly random address among the random choices in this trace."""
-    # XXX There is actually no way to detect whether an SP is random
-    # or not, so this will return arbitrary sites (including
-    # deterministic ones).  Resimulation M-H steps on deterministic
-    # procedures are useless but harmless.
     return self.py_prng.choice(self._sites())
 
   def num_sites(self):
