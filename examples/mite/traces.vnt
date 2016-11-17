@@ -1,10 +1,11 @@
 [define example1
   (lambda ()
-    (run_in (do (assume slope (normal 0 1))
-             (assume intercept (normal 0 1))
-             (assume f (lambda (x) (+ (* slope x) intercept)))
-             (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1)))))
-         (blank_trace)))]
+    (run_in
+     (do (assume slope (normal 0 1))
+         (assume intercept (normal 0 1))
+         (assume f (lambda (x) (+ (* slope x) intercept)))
+         (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1)))))
+     (blank_trace)))]
 
 [define split_rejection_loop
   (let ((reset_trace
@@ -33,71 +34,76 @@
 
 [define example2
   (lambda ()
-    (run_in (split_rejection_loop
-          (do (assume theta (beta 1 1))
-              (observe (flip theta) true)
-              (observe (flip theta) true)
-              (observe (flip theta) true)
-              (observe (flip theta) true)
-              (predict (debug 'theta theta))))
-         (blank_trace)))]
+    (run_in
+     (split_rejection_loop
+      (do (assume theta (beta 1 1))
+          (observe (flip theta) true)
+          (observe (flip theta) true)
+          (observe (flip theta) true)
+          (observe (flip theta) true)
+          (predict (debug 'theta theta))))
+     (blank_trace)))]
 
 [define example3
   (lambda ()
-    (run_in (split_rejection_loop
-          (do (assume theta (beta 1 1))
-              (observe (binomial 100 theta) 100)
-              (predict (debug 'theta theta))))
-         (flat_trace)))]
+    (run_in
+     (split_rejection_loop
+      (do (assume theta (beta 1 1))
+          (observe (binomial 100 theta) 100)
+          (predict (debug 'theta theta))))
+     (flat_trace)))]
 
 [define example4
   (lambda ()
-    (run_in (do (assume slope (normal 0 1))
-                (assume intercept (normal 0 1))
-                (assume f (lambda (x) (+ (* slope x) intercept)))
-                (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1))))
-                (s <- (select nil))
-                (rho <- (extract s))
-                (xi <- (regen s (rest rho)))
-                (extract s)
-                (restore s (rest rho))
-                (predict (debug 'xyz (list (f 0) (f 1) (f 2) (f 1))))
-                (return (debug 'results (list rho xi))))
-            (flat_trace)))]
+    (run_in
+     (do (assume slope (normal 0 1))
+         (assume intercept (normal 0 1))
+         (assume f (lambda (x) (+ (* slope x) intercept)))
+         (predict (debug 'xy (list (f 0) (f 1) (f 2) (f 1))))
+         (s <- (select nil))
+         (rho <- (extract s))
+         (xi <- (regen s (rest rho)))
+         (extract s)
+         (restore s (rest rho))
+         (predict (debug 'xyz (list (f 0) (f 1) (f 2) (f 1))))
+         (return (debug 'results (list rho xi))))
+     (flat_trace)))]
 
 [define example5
   (lambda ()
-    (run_in (regen_rejection_loop
-          (do (assume theta (beta 1 1))
-              (observe (binomial 100 theta) 100)
-              (predict (debug 'theta theta))))
-         (flat_trace)))]
+    (run_in
+     (regen_rejection_loop
+      (do (assume theta (beta 1 1))
+          (observe (binomial 100 theta) 100)
+          (predict (debug 'theta theta))))
+     (flat_trace)))]
 
 [define example6
   (lambda ()
-    (run_in (do (assume x (normal 0 1))
-                (assume y (normal x 1))
-                (x <- (value_at (toplevel 1)))
-                (y <- (value_at (toplevel 2)))
-                (return (debug 'xy (list x y)))
-                (s <- (pyselect "{
+    (run_in
+     (do (assume x (normal 0 1))
+         (assume y (normal x 1))
+         (x <- (value_at (toplevel 1)))
+         (y <- (value_at (toplevel 2)))
+         (return (debug 'xy (list x y)))
+         (s <- (pyselect "{
                          directive(2): {'type': 'proposal'}
                        }"))
-                (rho <- (extract s))
-                (regen s (rest rho))
-                (x <- (value_at (toplevel 1)))
-                (y <- (value_at (toplevel 2)))
-                (return (debug 'xy (list x y)))
-                (s <- (pyselect "{
+         (rho <- (extract s))
+         (regen s (rest rho))
+         (x <- (value_at (toplevel 1)))
+         (y <- (value_at (toplevel 2)))
+         (return (debug 'xy (list x y)))
+         (s <- (pyselect "{
                          directive(1): {'type': 'proposal'},
                          directive(2): {'type': 'proposal'},
                        }"))
-                (rho <- (extract s))
-                (regen s (rest rho))
-                (x <- (value_at (toplevel 1)))
-                (y <- (value_at (toplevel 2)))
-                (return (debug 'xy (list x y))))
-            (flat_trace)))]
+         (rho <- (extract s))
+         (regen s (rest rho))
+         (x <- (value_at (toplevel 1)))
+         (y <- (value_at (toplevel 2)))
+         (return (debug 'xy (list x y))))
+     (flat_trace)))]
 
 [define resimulation_step
   (lambda (subproblem)
@@ -113,17 +119,18 @@
 
 [define example7
   (lambda ()
-    (run_in (do (assume x (normal 0 1))
-                (assume y (normal x 1))
-                (observe y 4)
-                (weight <- (incorporate_constraint (toplevel 2) 4))
-                (return (debug 'weight weight))
-                (repeat 100
-                  (do (s <- (single_site_subproblem (toplevel 1)))
-                      (resimulation_step s)
-                      (x <- (value_at (toplevel 1)))
-                      (return (debug 'x x)))))
-            (flat_trace)))]
+    (run_in
+     (do (assume x (normal 0 1))
+         (assume y (normal x 1))
+         (observe y 4)
+         (weight <- (incorporate_constraint (toplevel 2) 4))
+         (return (debug 'weight weight))
+         (repeat 100
+           (do (s <- (single_site_subproblem (toplevel 1)))
+               (resimulation_step s)
+               (x <- (value_at (toplevel 1)))
+               (return (debug 'x x)))))
+     (flat_trace)))]
 
 [define rejection_auto_bound
   (lambda (subproblem)
@@ -142,14 +149,15 @@
 
 [define example8
   (lambda ()
-    (run_in (do (assume x (normal 0 1))
-                (assume y (normal x 1))
-                (observe y 4)
-                (weight <- (incorporate_constraint (toplevel 2) 4))
-                (return (debug 'weight weight))
-                (repeat 10
-                  (do (s <- (single_site_subproblem (toplevel 1)))
-                      (rejection_auto_bound s)
-                      (x <- (value_at (toplevel 1)))
-                      (return (debug 'x x)))))
-            (flat_trace)))]
+    (run_in
+     (do (assume x (normal 0 1))
+         (assume y (normal x 1))
+         (observe y 4)
+         (weight <- (incorporate_constraint (toplevel 2) 4))
+         (return (debug 'weight weight))
+         (repeat 10
+           (do (s <- (single_site_subproblem (toplevel 1)))
+               (rejection_auto_bound s)
+               (x <- (value_at (toplevel 1)))
+               (return (debug 'x x)))))
+     (flat_trace)))]
