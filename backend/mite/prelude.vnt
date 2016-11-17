@@ -178,7 +178,7 @@
          (array 'state nil)
          (array 'simulate
                 (lambda (trace)
-                  (return (eval_in (_random_site) trace))))
+                  (return (pair (eval_in (_random_site) trace) trace))))
          (array 'log_density
                 (lambda (site trace)
                   (return (eval_in (do (n_sites <- (_num_sites))
