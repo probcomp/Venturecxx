@@ -169,3 +169,17 @@
         (rev <- (extract subproblem))
         (let trace_frag (rest rev))
         (regen subproblem trace_frag)))]
+
+[define random_site_
+  (lambda ()
+    (make_elementary_sp
+     (lambda ()
+       (dict
+        (array 'state nil)
+        (array 'simulate
+               (lambda ()
+                 (return (_random_site))))
+        (array 'log_density_action
+               (lambda (site)
+                 (return (do (n_sites <- (_num_sites))
+                             (return (log n_sites))))))))))]

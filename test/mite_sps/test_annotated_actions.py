@@ -23,24 +23,8 @@ from venture.mite import address
 import venture.ripl.utils as u
 
 def test_random_site_sim_smoke():
-  ans = get_ripl().evaluate("(eval_in (do (assume x (normal 0 1)) (random_site)) (flat_trace))")
-  assert isinstance(ans, address.DirectiveAddress)
-
-def test_random_site_sim_smoke():
   prog = """
-[define random_site
-  (make_elementary_sp
-   (lambda ()
-     (dict
-      (array 'state nil)
-      (array 'simulate
-             (lambda ()
-               (return (_random_site))))
-      (array 'log_density_action
-             (lambda (site)
-               (return (do (n_sites <- (_num_sites))
-                           (return (log n_sites)))))))))]
-
+[define random_site (random_site_)]
 (eval_in (do (assume x (normal 0 1)) (random_site)) (flat_trace))
 """
   ans = get_ripl().execute_program(prog)
@@ -48,18 +32,7 @@ def test_random_site_sim_smoke():
 
 def test_random_site_assess_smoke():
   prog = """
-[define random_site
-  (make_elementary_sp
-   (lambda ()
-     (dict
-      (array 'state nil)
-      (array 'simulate
-             (lambda ()
-               (return (_random_site))))
-      (array 'log_density_action
-             (lambda (site)
-               (return (do (n_sites <- (_num_sites))
-                           (return (log n_sites)))))))))]
+[define random_site (random_site_)]
 (eval_in
  (do (assume x (normal 0 1))
      (invoke_metaprogram_of_action_sp random_site 'log_density_action (array (by_walk (by_top) 1))))
