@@ -26,7 +26,7 @@ class MakeSimulationSP(SimulationSP):
   def log_density(self, _value, _inputs):
     # XXX Assumes the value is what the application actually produced.
     # I can't even fix this by rerunning the simulation function,
-    # because equality testing of SRRefs relies on object identity.
+    # because equality testing of SPRefs relies on object identity.
     return 0
 
   def is_deterministic(self):
