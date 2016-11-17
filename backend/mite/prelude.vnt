@@ -175,11 +175,11 @@
      (make_elementary_sp
       (lambda ()
         (dict
-         (array "state" nil)
-         (array "simulate"
+         (array 'state nil)
+         (array 'simulate
                 (lambda (trace)
                   (return (eval_in (_random_site) trace))))
-         (array "log_density"
+         (array 'log_density
                 (lambda (site trace)
                   (return (eval_in (do (n_sites <- (_num_sites))
                                        (return (log n_sites)))
