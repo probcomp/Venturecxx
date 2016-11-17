@@ -482,3 +482,26 @@ def testOccasionalRejectionBrushScope(seed):
   # that is skewed in the expected direction".
   ans = [(True, 4.0/7), (False, 3.0/7)]
   return reportKnownDiscrete(ans, predictions)
+
+# Github issue #590: particles with ESRs shadow ESRs from the same
+# maker node in the base trace.
+@stochasticTest
+def test_590(seed):
+  r = get_ripl(seed=seed, init_mode="venture_script")
+  r.execute_program("""
+assume alpha    ~ tag("hyper", "alpha", gamma(1.0, 1.0)) ;     // Concentration parameter
+assume assign   = make_crp(alpha);                 // Choose the CRP representation
+assume z        = mem((i) ~> { tag("clustering", i, assign()) });        // The partition on i induced by the DP
+assume pct      = mem((d) ~> { tag_exclude("compt", tag("hyper", d, gamma(1.0, 1.0))) });         // Per-dimension hyper prior
+assume theta    = mem((z, d) ~> { tag("compt", pair(z, d), beta(pct(d), pct(d))) });       // Per-component latent
+assume datum    = mem((i, d) ~> {                  // Per-datapoint:
+  cmpt ~ tag("row", i, z(i));                         // Select cluster
+  weight ~ theta(cmpt, d);                         // Fetch latent weight
+  flip(weight)});                                  // Apply component model
+
+observe datum(1, 1) = True;
+observe datum(1, 2) = True;
+observe datum(2, 1) = True;
+
+gibbs("row", 1, 10, false);
+""")
