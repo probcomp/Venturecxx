@@ -22,18 +22,19 @@
            (binomial_remove n k))))
     (lambda ()
       (debug 'results
-             (run_in (do (x1 <- (simulate 10))
-                         (incorporate x1 10)
-                         (x2 <- (simulate 10))
-                         (incorporate x2 10)
-                         (x3 <- (simulate 10))
-                         (incorporate x3 10)
-                         (x4 <- (simulate 10))
-                         (incorporate x4 10)
-                         (x5 <- (simulate 10))
-                         (incorporate x5 10)
-                         (return (+ x1 x2 x3 x4 x5)))
-                     (binomial_state)))))]
+             (run_in
+              (do (x1 <- (simulate 10))
+                  (incorporate x1 10)
+                  (x2 <- (simulate 10))
+                  (incorporate x2 10)
+                  (x3 <- (simulate 10))
+                  (incorporate x3 10)
+                  (x4 <- (simulate 10))
+                  (incorporate x4 10)
+                  (x5 <- (simulate 10))
+                  (incorporate x5 10)
+                  (return (+ x1 x2 x3 x4 x5)))
+              (binomial_state)))))]
 
 ;;; collapsed beta binomial as a simulation procedure
 [define make_beta_binomial_s_defn
@@ -105,11 +106,12 @@
 
 [define v_binomial_state
   (lambda ()
-    (run_in (do (assume N (poisson 1))
-                (assume K (poisson 1))
-                (v_binomial_set 0 0)
-                (clone_trace))
-            (flat_trace)))]
+    (run_in
+     (do (assume N (poisson 1))
+         (assume K (poisson 1))
+         (v_binomial_set 0 0)
+         (clone_trace))
+     (flat_trace)))]
 
 [define v_binomial_set
   (lambda (N K)
@@ -152,18 +154,19 @@
            (v_binomial_remove n k))))
     (lambda ()
       (debug 'results
-             (run_in (do (x1 <- (simulate 10))
-                         (incorporate x1 10)
-                         (x2 <- (simulate 10))
-                         (incorporate x2 10)
-                         (x3 <- (simulate 10))
-                         (incorporate x3 10)
-                         (x4 <- (simulate 10))
-                         (incorporate x4 10)
-                         (x5 <- (simulate 10))
-                         (incorporate x5 10)
-                         (return (+ x1 x2 x3 x4 x5)))
-                     (v_binomial_state)))))]
+             (run_in
+              (do (x1 <- (simulate 10))
+                  (incorporate x1 10)
+                  (x2 <- (simulate 10))
+                  (incorporate x2 10)
+                  (x3 <- (simulate 10))
+                  (incorporate x3 10)
+                  (x4 <- (simulate 10))
+                  (incorporate x4 10)
+                  (x5 <- (simulate 10))
+                  (incorporate x5 10)
+                  (return (+ x1 x2 x3 x4 x5)))
+              (v_binomial_state)))))]
 
 ;;; collapsed beta binomial as a full procedure
 [define make_beta_binomial_f_defn
