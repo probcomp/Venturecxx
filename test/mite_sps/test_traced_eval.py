@@ -48,10 +48,11 @@ def testPredictInBlankTrace2(trace):
 def testAssumeInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in (do (assume x 3)
-            (assume y 4)
-            (predict (* x y)))
-        (%s))
+(run_in
+ (do (assume x 3)
+     (assume y 4)
+     (predict (* x y)))
+ (%s))
 """ % trace)
   assert_equal(result,12)
 
@@ -60,8 +61,9 @@ def testAssumeInBlankTrace1(trace):
 def testLambdaInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in (do (assume f (lambda (x y) (+ x y 1)))
-            (predict (f (f 2 3) (f 1 2))))
-        (%s))
+(run_in
+ (do (assume f (lambda (x y) (+ x y 1)))
+     (predict (f (f 2 3) (f 1 2))))
+ (%s))
 """ % trace)
   assert_equal(result,11)
