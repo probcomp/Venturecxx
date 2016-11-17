@@ -116,6 +116,13 @@
         (eval_toplevel addr expr)
         (value_at addr)))]
 
+[define invoke_metaprogram_of_action
+  (lambda (action name args)
+    (inference_action
+     (lambda (trace)
+       (run_in (invoke_metaprogram_of_sp (action_func action) name args)
+               trace))))]
+
 ;; address literals
 
 [define by_top
