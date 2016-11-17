@@ -40,7 +40,7 @@ def testExtractRegen(trace):
     raise SkipTest("graph trace doesn't support the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (z <- (predict (* x y)))
@@ -61,7 +61,7 @@ def testExtractRestore(trace):
     raise SkipTest("graph trace doesn't support the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (z <- (predict (* x y)))
@@ -82,7 +82,7 @@ def testExtractRegenLambda(trace):
     raise SkipTest("graph trace doesn't support the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (assume f (lambda (x y) (+ x y 1)))
@@ -104,7 +104,7 @@ def testExtractRestoreLambda(trace):
     raise SkipTest("graph trace can't detach the DefaultAllScaffold")
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (assume f (lambda (x y) (+ x y 1)))
@@ -124,7 +124,7 @@ def testExtractRestoreLambda(trace):
 def testSelectRegen1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (x <- (predict x))
@@ -146,7 +146,7 @@ def testSelectRegen1(trace):
 def testSelectRegen2(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (x <- (predict x))
@@ -168,7 +168,7 @@ def testSelectRegen2(trace):
 def testSelectRegen3(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (x <- (predict x))
@@ -191,7 +191,7 @@ def testSelectRegen3(trace):
 def testSelectRegen4(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (normal x 1))
      (x <- (predict x))
@@ -215,7 +215,7 @@ def testSelectRegen4(trace):
 def testSelectRegenLambda1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y ((lambda () (normal 0 1))))
      (x <- (predict x))

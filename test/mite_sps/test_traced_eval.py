@@ -33,14 +33,14 @@ def gen_for_each(items):
 @gen_for_each(["blank_trace", "flat_trace", "graph_trace"])
 def testPredictInBlankTrace1(trace):
   ripl = get_ripl()
-  result = ripl.evaluate("(run_in (predict 1) (%s))" % trace)
+  result = ripl.evaluate("(eval_in (predict 1) (%s))" % trace)
   assert_equal(result,1)
 
 @gen_on_inf_prim("none")
 @gen_for_each(["blank_trace", "flat_trace", "graph_trace"])
 def testPredictInBlankTrace2(trace):
   ripl = get_ripl()
-  result = ripl.evaluate("(run_in (predict (+ 3 4)) (%s))" % trace)
+  result = ripl.evaluate("(eval_in (predict (+ 3 4)) (%s))" % trace)
   assert_equal(result,7)
 
 @gen_on_inf_prim("none")
@@ -48,7 +48,7 @@ def testPredictInBlankTrace2(trace):
 def testAssumeInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x 3)
      (assume y 4)
      (predict (* x y)))
@@ -61,7 +61,7 @@ def testAssumeInBlankTrace1(trace):
 def testLambdaInBlankTrace1(trace):
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume f (lambda (x y) (+ x y 1)))
      (predict (f (f 2 3) (f 1 2))))
  (%s))

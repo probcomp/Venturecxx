@@ -25,7 +25,7 @@ from venture.test.config import on_inf_prim
 def testESREdge():
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y ((lambda () x)))
      (predict (list x y))
@@ -46,7 +46,7 @@ def testESREdge():
 def testRecursion():
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume f (lambda (i) (if (= i 0) x (f (- i 1)))))
      (assume y (f 2))
@@ -69,7 +69,7 @@ def testBrush():
   raise SkipTest("Brush needs to be cleared from the regenerated set")
   ripl = get_ripl()
   result = ripl.evaluate("""\
-(run_in
+(eval_in
  (do (assume x (normal 0 1))
      (assume y (if (> x 0) x x))
      (predict (list x y))
