@@ -22,7 +22,7 @@
            (binomial_remove n k))))
     (lambda ()
       (debug 'results
-             (run_in
+             (eval_in
               (do (x1 <- (simulate 10))
                   (incorporate x1 10)
                   (x2 <- (simulate 10))
@@ -62,7 +62,7 @@
 ;;; basic example
 [define example2
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume make_beta_binomial_s ,make_beta_binomial_s_defn)
          (assume f (make_beta_binomial_s 1 1))
          (assume x1 (f 10))
@@ -90,7 +90,7 @@
 
 [define example2b
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume make_beta_binomial_s ,make_beta_binomial_s_defn)
          (assume f (make_beta_binomial_s 1 1))
          (assume y (f 4))
@@ -106,7 +106,7 @@
 
 [define v_binomial_state
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume N (poisson 1))
          (assume K (poisson 1))
          (v_binomial_set 0 0)
@@ -154,7 +154,7 @@
            (v_binomial_remove n k))))
     (lambda ()
       (debug 'results
-             (run_in
+             (eval_in
               (do (x1 <- (simulate 10))
                   (incorporate x1 10)
                   (x2 <- (simulate 10))
@@ -211,7 +211,7 @@
 ;;; basic example
 [define example4
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume make_beta_binomial_f ,make_beta_binomial_f_defn)
          (assume f (make_beta_binomial_f 1 1))
          (assume x1 (f 10))

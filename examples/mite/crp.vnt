@@ -19,7 +19,7 @@
            (crp_seat table -1))))
     (lambda ()
       (debug 'results
-             (run_in
+             (eval_in
               (do (x1 <- (simulate))
                   (incorporate x1)
                   (x2 <- (simulate))
@@ -73,7 +73,7 @@
 ;;; basic CRP example
 [define example2
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume make_crp_s ,make_crp_s_defn)
          (assume f (make_crp_s 1))
          (assume x1 (f))
@@ -101,7 +101,7 @@
 
 [define example2b
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume make_crp_s ,make_crp_s_defn)
          (assume f (make_crp_s 1))
          (assume x1 (f))
@@ -126,7 +126,7 @@
 
 [define example2c
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume make_crp_s ,make_crp_s_defn)
          (assume f (make_crp_s 1))
          (assume x1 (f))

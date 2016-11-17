@@ -70,7 +70,7 @@
 ;;; basic mem example
 [define example1
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume mem ,mem_defn)
          (assume f (mem (lambda (x) (normal 0 1))))
          (result <- (predict (list (f 1) (f 2) (f 3) (f 2) (f 1))))
@@ -80,7 +80,7 @@
 ;;; regen example
 [define example2
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume mem ,mem_defn)
          (assume f (mem (lambda (x) (normal 0 1))))
          (assume x1 (f 1))
@@ -119,7 +119,7 @@
 
 [define example3
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume mem ,mem_defn)
          (assume f (mem (lambda (x) (normal 0 1))))
          (assume x1 (flip))

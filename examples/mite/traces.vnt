@@ -1,6 +1,6 @@
 [define example1
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume slope (normal 0 1))
          (assume intercept (normal 0 1))
          (assume f (lambda (x) (+ (* slope x) intercept)))
@@ -34,7 +34,7 @@
 
 [define example2
   (lambda ()
-    (run_in
+    (eval_in
      (split_rejection_loop
       (do (assume theta (beta 1 1))
           (observe (flip theta) true)
@@ -46,7 +46,7 @@
 
 [define example3
   (lambda ()
-    (run_in
+    (eval_in
      (split_rejection_loop
       (do (assume theta (beta 1 1))
           (observe (binomial 100 theta) 100)
@@ -55,7 +55,7 @@
 
 [define example4
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume slope (normal 0 1))
          (assume intercept (normal 0 1))
          (assume f (lambda (x) (+ (* slope x) intercept)))
@@ -71,7 +71,7 @@
 
 [define example5
   (lambda ()
-    (run_in
+    (eval_in
      (regen_rejection_loop
       (do (assume theta (beta 1 1))
           (observe (binomial 100 theta) 100)
@@ -80,7 +80,7 @@
 
 [define example6
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume x (normal 0 1))
          (assume y (normal x 1))
          (x <- (value_at (toplevel 1)))
@@ -119,7 +119,7 @@
 
 [define example7
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume x (normal 0 1))
          (assume y (normal x 1))
          (observe y 4)
@@ -149,7 +149,7 @@
 
 [define example8
   (lambda ()
-    (run_in
+    (eval_in
      (do (assume x (normal 0 1))
          (assume y (normal x 1))
          (observe y 4)

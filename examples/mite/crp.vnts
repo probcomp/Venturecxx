@@ -38,7 +38,7 @@ define make_crp_s_defn = quote((alpha) -> {
 });
 
 define example2 = () -> {
-  run_in({
+  eval_in({
     assume make_crp_s = unquote(make_crp_s_defn);
     assume f = make_crp_s(1);
     assume x1 = f();
@@ -52,7 +52,7 @@ define example2 = () -> {
 };
 
 define example2c = () -> {
-  run_in({
+  eval_in({
     assume make_crp_s = unquote(make_crp_s_defn);
     assume f = make_crp_s(1);
     assume x1 = f();
