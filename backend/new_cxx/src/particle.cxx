@@ -290,7 +290,8 @@ bool Particle::containsMadeSPFamily(Node * makerNode, const FamilyID & id)
 {
   if (newMadeSPFamilies.contains(makerNode)) {
     if (newMadeSPFamilies.lookup(makerNode).contains(id)) { return true; }
-  } else if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) {
+  }
+  if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) {
     return true;
   }
   return false;
