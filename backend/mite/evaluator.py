@@ -88,6 +88,8 @@ class Evaluator(object):
       return (0, sp.apply(handle, addr, args))
     except Exception:
       print "Tried applying sp", sp_node.value, "defined at", str(sp_node.address)[0:40], "to", [n.value for n in args]
+      if hasattr(self.trace, 'print_frame'):
+        self.trace.print_frame(addr)
       raise
 
 class TraceHandle(object):
