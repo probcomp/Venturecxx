@@ -20,10 +20,19 @@
   (lambda (state)
     (first (clone_trace_func state)))]
 
+[define run_in
+  (lambda (act state)
+    ((action_func act) (copy state)))]
+
 [define eval_in
   (lambda (act state)
     (let ((result ((action_func act) (copy state))))
       (first result)))]
+
+[define exec_in
+  (lambda (act state)
+    (let ((result ((action_func act) (copy state))))
+      (rest result)))]
 
 [define with
   (lambda (state act)
