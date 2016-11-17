@@ -11,6 +11,10 @@
   (lambda (act next)
     (bind act (lambda (_) (next))))]
 
+[define join
+  (lambda (act)
+    (bind act (lambda (x) x)))]
+
 [define return
   (lambda (val)
     (inference_action
@@ -116,12 +120,9 @@
         (eval_toplevel addr expr)
         (value_at addr)))]
 
-[define invoke_metaprogram_of_action
-  (lambda (act name args)
-    (inference_action
-     (lambda (trace)
-       (run_in (invoke_metaprogram_of_sp (action_func act) name args)
-               trace))))]
+[define invoke_metaprogram_of_action_sp
+  (lambda (sp name args)
+    (join (invoke_metaprogram_of_sp sp name args)))]
 
 ;; address literals
 
@@ -168,19 +169,3 @@
         (rev <- (extract subproblem))
         (let trace_frag (rest rev))
         (regen subproblem trace_frag)))]
-
-[define random_site
-  (lambda ()
-    (inference_action
-     (make_elementary_sp
-      (lambda ()
-        (dict
-         (array 'state nil)
-         (array 'simulate
-                (lambda (trace)
-                  (return (pair (eval_in (_random_site) trace) trace))))
-         (array 'log_density
-                (lambda (site trace)
-                  (return (eval_in (do (n_sites <- (_num_sites))
-                                       (return (log n_sites)))
-                                   trace)))))))))]
