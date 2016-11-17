@@ -19,18 +19,19 @@
            (crp_seat table -1))))
     (lambda ()
       (debug 'results
-             (run_in (do (x1 <- (simulate))
-                         (incorporate x1)
-                         (x2 <- (simulate))
-                         (incorporate x2)
-                         (x3 <- (simulate))
-                         (incorporate x3)
-                         (x4 <- (simulate))
-                         (incorporate x4)
-                         (x5 <- (simulate))
-                         (incorporate x5)
-                         (return (list x1 x2 x3 x4 x5)))
-                     (crp_state)))))]
+             (run_in
+              (do (x1 <- (simulate))
+                  (incorporate x1)
+                  (x2 <- (simulate))
+                  (incorporate x2)
+                  (x3 <- (simulate))
+                  (incorporate x3)
+                  (x4 <- (simulate))
+                  (incorporate x4)
+                  (x5 <- (simulate))
+                  (incorporate x5)
+                  (return (list x1 x2 x3 x4 x5)))
+              (crp_state)))))]
 
 ;;; CRP as a simulation procedure
 [define make_crp_s_defn
