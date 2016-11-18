@@ -100,6 +100,14 @@ class VentureEnvironment(VentureValue):
     return self.findSymbol(key.getSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
 
+  def printEnv(self):
+    print "-- Frame --"
+    for (k, v) in self.frame.iteritems():
+      print k, v
+    if self.outerEnv is not None and self.outerEnv.outerEnv is not None:
+      # Skip the top frame, which is presumably the global environment
+      self.outerEnv.printEnv()
+
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming
 exec(standard_venture_type("Environment", value_classname="VentureEnvironment")) # pylint: disable=exec-used
