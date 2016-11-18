@@ -382,6 +382,8 @@ class SourceTracing(object):
       print "Old request", old_exp, old_env
       print "New request", exp, env
       self.print_stack(addr)
+      old_env.printEnv()
+      env.printEnv()
       assert False, "Multiply registering request"
     if isinstance(addr, addresses.DirectiveAddress):
       self.toplevel_addresses.append(addr)
