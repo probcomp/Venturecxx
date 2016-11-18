@@ -426,7 +426,7 @@ class SourceTracing(object):
   def print_stack(self, addr):
     (root, _branch) = addresses.split_subexpression(addr)
     if isinstance(root, addresses.RequestAddress) and \
-       isinstance(root, addresses.Address):
+       isinstance(root.request_id, addresses.Address):
       # Assume this was a compound procedure and the request id is the
       # call site
       self.print_stack(root.request_id)
