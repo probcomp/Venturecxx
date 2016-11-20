@@ -24,6 +24,9 @@ from venture.lite.exception import VentureValueError
 from venture.lite.function import ParamLeaf
 from venture.lite.function import parameter_nest
 from venture.lite.psp import DeterministicMakerAAAPSP
+from venture.lite.psp import DeterministicPSP
+from venture.lite.lkernel import SimulationAAALKernel
+from venture.lite.sp_help import no_request
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
 from venture.lite.psp import TypedPSP
@@ -407,6 +410,82 @@ def _cov_sp(F, argtypes):
   return deterministic_typed(F, argtypes, GPCovarianceType(),
     sim_grad=cov_gradientOfSimulate,
     descr=F.__doc__)
+
+class MakeMakeGPMSPOutputPSP(DeterministicPSP):
+    """
+    We need to say ((allocate_gpmem) f) instead of just (gpmem f) -- that is,
+    we need a separate gpmem-er for each f -- because the gpmem-er's SPAux will
+    be used and updated by the f_probe and f_emu that it spits out.  We need a
+    separate such aux for each f.
+    """
+    def simulate(self, args):
+        return VentureSPRecord(no_request(MakeGPMSPOutputPSP()))
+
+class MakeGPMSPOutputPSP(DeterministicPSP):
+    """"
+    This class (except its simulate method) is based on DeterministicAAAMakerPSP.
+    """
+    def __init__(self):
+        self.shared_aux = GPSPAux(OrderedDict())
+
+    def simulate(self, args):
+        f_node = args.operandNodes[0]
+        prior_mean_function = args.operandValues()[1]
+        prior_covariance_function = args.operandValues()[2]
+        f_compute = VentureSPRecord(
+                SP(GPMComputerRequestPSP(f_node), GPMComputerOutputPSP()))
+        f_emu = VentureSPRecord(GPSP(prior_mean_function, prior_covariance_function))
+        f_emu.spAux = self.shared_aux
+        f_compute.spAux = self.shared_aux
+        return v.pythonListToVentureList([f_compute, f_emu])
+
+    def childrenCanAAA(self): return True
+    def getAAALKernel(self): return GPMDeterministicMakerAAALKernel(self)
+
+class GPMDeterministicMakerAAALKernel(SimulationAAALKernel):
+    """
+    This is based on DeterministicMakerAAALKernel.
+    """
+    def __init__(self,makerPSP): self.makerPSP = makerPSP
+    def simulate(self, _trace, args):
+        return self.makerPSP.simulate(args)
+    def weight(self, _trace, newValue, _args):
+        (_f_compute, f_emu) = newValue.asPythonList()
+        answer = f_emu.sp.outputPSP.logDensityOfCounts(self.makerPSP.shared_aux)
+        # print "gpmem LKernel weight = %s" % answer
+        return answer
+
+allocateGPmemSP = no_request(MakeMakeGPMSPOutputPSP())
+
+class GPMComputerRequestPSP(DeterministicPSP):
+    def __init__(self, f_node):
+        self.f_node = f_node
+
+    def simulate(self, args):
+        id = str(args.operandValues())
+        exp = ["gpmemmedSP"] + [["quote",val] for val in args.operandValues()]
+        env = VentureEnvironment(None,["gpmemmedSP"],[self.f_node])
+        return Request([ESR(id,exp,emptyAddress,env)])
+
+# TODO Perhaps this could subclass ESRRefOutputPSP to correctly handle
+# back-propagation?
+class GPMComputerOutputPSP(DeterministicPSP):
+    def simulate(self,args):
+        assert len(args.esrNodes()) ==  1
+        return args.esrValues()[0]
+
+    def incorporate(self, value, args):
+        x = args.operandValues()[0].getNumber()
+        y = value.getNumber()
+        args.spaux().samples[x] = y
+
+    def unincorporate(self, value, args):
+        x = args.operandValues()[0].getNumber()
+        samples = args.spaux().samples
+        if x in samples:
+            del samples[x]
+
+registerBuiltinSP('allocate_gpmem',allocateGPmemSP)
 
 
 registerBuiltinSP('gp_mean_const',
