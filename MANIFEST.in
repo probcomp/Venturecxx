@@ -509,7 +509,6 @@ include demos/jsripl/gp_fitting.js
 include demos/jsripl/gp_server.py
 include demos/jsripl/graph_curve_fitting.html
 include demos/jsripl/jripl.js
-include demos/jsripl/restart_venture_ec2_demo_server.html
 include demos/jsripl/select_venture_server.html
 include demos/jsripl/template.txt
 include demos/jsripl/utils.js
@@ -532,10 +531,12 @@ include doc/impossibility.md
 include doc/intuiting-kl/intuiting-kl.tex
 include doc/on-approximating-kl-divergence.md
 include doc/on-comparing-discrete-distributions.md
+include doc/on-geweke-testing.txt
 include doc/on-latents.md
 include doc/on-log-density-of-counts.md
 include doc/on-non-probability-measures.md
 include doc/on-sps-and-node-kernels.md
+include doc/on-teaching-exchangeable-coupling.txt
 include doc/on-testing.md
 include doc/on-the-indian-gpa-problem.md
 include doc/sp-math/sp-math.tex
@@ -559,8 +560,6 @@ include examples/crp_2d_demo.py
 include examples/hmm.vnt
 include examples/hmm_plugin.py
 include examples/lda.vnt
-include examples/on-geweke-testing.txt
-include examples/on-teaching-exchangeable-coupling.txt
 include examples/plotting/README
 include examples/plotting/bimodal.vnt
 include examples/plotting/dice_plot.vnt
@@ -569,7 +568,6 @@ include examples/ppaml-talk/README
 include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits2.csv
-include examples/profile_tricky_coin.py
 include examples/dual-semantics/README
 include examples/dual-semantics/trickiness-concrete-2.vnts
 include examples/dual-semantics/trickiness-concrete.vnts
@@ -781,7 +779,7 @@ include refman/venture.lite.sp.rst
 include refman/venture.lite.sp_help.rst
 include refman/venture.lite.types.rst
 include refman/venture.lite.value.rst
-include refman/venture.parser.api.rst
+include refman/venture.parser.ast.rst
 include refman/venture.parser.venture_script.subscanner.rst
 include refman/venture.ripl.ripl.rst
 include refman/venture.shortcuts.rst
@@ -813,6 +811,7 @@ include test/conformance/sps/test_beta.py
 include test/conformance/sps/test_binomial.py
 include test/conformance/sps/test_categorical.py
 include test/conformance/sps/test_cmvn.py
+include test/conformance/sps/test_covariance.py
 include test/conformance/sps/test_crp.py
 include test/conformance/sps/test_dict.py
 include test/conformance/sps/test_discrete.py
@@ -830,6 +829,7 @@ include test/conformance/sps/test_make_csp.py
 include test/conformance/sps/test_matrix.py
 include test/conformance/sps/test_misc.py
 include test/conformance/sps/test_mvn.py
+include test/conformance/sps/test_parallel.py
 include test/conformance/sps/test_poisson.py
 include test/conformance/sps/test_print.py
 include test/conformance/sps/test_quote.py
@@ -837,13 +837,13 @@ include test/conformance/sps/test_trig.py
 include test/conformance/sps/test_wishart.py
 include test/conformance/sps/test_zip.py
 include test/conformance/test_constrain.py
+include test/conformance/test_determinism.py
 include test/conformance/test_execute.py
 include test/conformance/test_foreign_sp.py
 include test/conformance/test_forget.py
 include test/conformance/test_get_global_logscore.py
 include test/conformance/test_observe.py
 include test/conformance/test_prelude.py
-include test/conformance/test_sivm.py
 include test/core/__init__.py
 include test/core/test_basics.py
 include test/core/test_equals.py
@@ -859,6 +859,7 @@ include test/errors.py
 include test/exception/__init__.py
 include test/exception/test_runtime.py
 include test/exception/test_syntax.py
+include test/flaky.py
 include test/inference_language/__init__.py
 include test/inference_language/test_basic_blocking.py
 include test/inference_language/test_callback.py
@@ -886,6 +887,7 @@ include test/inference_language/test_persistent_inference_trace.py
 include test/inference_language/test_pgibbs.py
 include test/inference_language/test_plotf.py
 include test/inference_language/test_plugins.py
+include test/inference_language/test_rejection.py
 include test/inference_language/test_slice.py
 include test/inference_language/test_subsampledmh.py
 include test/inference_language/test_utils.py
@@ -916,6 +918,7 @@ include test/manual/console-error.sh
 include test/manual/python-error.sh
 include test/misc/__init__.py
 include test/misc/test_exp.py
+include test/misc/test_profiler.py
 include test/misc/test_venture_script.py
 include test/numerical.py
 include test/performance/__init__.py
@@ -929,6 +932,7 @@ include test/performance/asymptotics/test_references.py
 include test/performance/asymptotics/test_subsampled_mh.py
 include test/performance/end_to_end/__init__.py
 include test/performance/stack/__init__.py
+include test/plots.py
 include test/profiling/__init__.py
 include test/profiling/test_basic.py
 include test/properties/__init__.py
@@ -944,8 +948,9 @@ include test/regressions/__init__.py
 include test/regressions/test_comments_in_strings.py
 include test/regressions/test_esr_ref_absorb.py
 include test/regressions/test_if.py
-include test/regressions/test_numerical_comparisons.py
+include test/regressions/test_keyword_syntax.py
 include test/regressions/test_logdensitymvnormal.py
+include test/regressions/test_numerical_comparisons.py
 include test/regressions/test_observe_mem_scope.py
 include test/regressions/test_owain_mixture.py
 include test/regressions/test_references.py
@@ -981,7 +986,11 @@ include test/stack/skip_ripl_hacks/test_sivm_wrappers.py
 include test/stats.py
 include test/timing.py
 include test/unit/__init__.py
+include test/unit/test_explog.py
 include test/unit/test_lenses.py
+include test/unit/test_loggamma.py
+include test/unit/test_logistic.py
+include test/unit/test_orderedset.py
 include test/unit/test_stats.py
 include test/unit/test_wttree.py
 include tool/check_capabilities.sh
@@ -990,7 +999,9 @@ include tool/copyrights/notes.org
 include tool/copyrights/venture
 include tool/grind
 include tool/minimal_deps.py
-include tool/pylintrc
+include tool/pylintrc-1.1.0
+include tool/pylintrc-1.5.1
+include tool/pylintrc-1.6.1
 include tool/python-flymake.el
 include tool/refman-changelog
 include tool/venture-epylint.py

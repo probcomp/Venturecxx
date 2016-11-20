@@ -93,6 +93,8 @@ map<string, SP*> initBuiltInSPs()
   m["expon"] = new SP(new NullRequestPSP(), new ExponentialPSP());
   m["uniform_continuous"] = new SP(new NullRequestPSP(), new UniformContinuousPSP());
   m["beta"] = new SP(new NullRequestPSP(), new BetaPSP());
+  m["log_beta"] = new SP(new NullRequestPSP(), new LogBetaPSP());
+  m["log_odds_beta"] = new SP(new NullRequestPSP(), new LogOddsBetaPSP());
   m["student_t"] = new SP(new NullRequestPSP(), new StudentTPSP());
   m["chi_sq"] = new SP(new NullRequestPSP(), new ChiSquaredPSP());
   m["inv_chi_sq"] = new SP(new NullRequestPSP(), new InvChiSquaredPSP());
@@ -103,6 +105,10 @@ map<string, SP*> initBuiltInSPs()
   /* Discrete SPs */
   m["bernoulli"] = new SP(new NullRequestPSP(), new BernoulliOutputPSP());
   m["flip"] = new SP(new NullRequestPSP(), new FlipOutputPSP());
+  m["log_bernoulli"] = new SP(new NullRequestPSP(), new LogBernoulliOutputPSP());
+  m["log_flip"] = new SP(new NullRequestPSP(), new LogFlipOutputPSP());
+  m["log_odds_bernoulli"] = new SP(new NullRequestPSP(), new LogOddsBernoulliOutputPSP());
+  m["log_odds_flip"] = new SP(new NullRequestPSP(), new LogOddsFlipOutputPSP());
   m["uniform_discrete"] = new SP(new NullRequestPSP(), new UniformDiscreteOutputPSP());
   m["binomial"] = new SP(new NullRequestPSP(), new BinomialOutputPSP());
   m["categorical"] = new SP(new NullRequestPSP(), new CategoricalOutputPSP());

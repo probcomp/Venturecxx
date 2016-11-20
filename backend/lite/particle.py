@@ -211,7 +211,7 @@ class Particle(Trace):
       assert isinstance(self.newMadeSPFamilies.lookup(makerNode), PMap)
       if id in self.newMadeSPFamilies.lookup(makerNode):
         return True
-    elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
+    if self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
     return False
 
   def initMadeSPFamiliesAt(self, node):

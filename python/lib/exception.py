@@ -50,9 +50,7 @@ class VentureException(Exception):
     # perhaps this should not be done in the ripl but in the parser itself?
     if self.exception in ['parse', 'text_parse', 'invalid_argument'] and 'instruction_string' in self.data:
       s += '\n' + self.data['instruction_string']
-      offset = self.data['text_index'][0]
-      length = self.data['text_index'][1] - offset + 1
-      s += '\n' + ''.join([' '] * offset + ['^'] * length)
+      s += '\n' + underline(self.data['text_index'])
     if self.exception is 'evaluation' and self.annotated:
       for stack_frame in self.data['stack_trace']:
         s += '\n' + stack_frame['expression_string']

@@ -125,4 +125,10 @@ void checkArgsLength(
     size_t lower,
     size_t upper);
 
+double ran_log_gamma(gsl_rng *, double);
+
+double logit(double);
+double logistic(double);
+double log_logistic(double);
+
 #endif
