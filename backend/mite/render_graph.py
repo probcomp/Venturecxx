@@ -29,13 +29,13 @@ def digraph(trace, scaffold, principal_nodes=None):
   _add_links(dot, trace, scaffold.kernels.keys() + list(brush))
   return dot
 
-def _represent_value(trace, v):
+def _represent_value(v):
   if isinstance(v, vv.SPRef):
     ad = v.makerNode.address
     if isinstance(ad, addr.BuiltinAddress):
       return ad.name
     else:
-      proc = trace.made_sps[ad]
+      proc = v.makerNode.value
       if isinstance(proc, CompoundSP):
         lambda_exp = ['lambda', proc.params, proc.exp]
         p = ChurchPrimeParser.instance()
@@ -50,7 +50,7 @@ def _add_node_for(dot, trace, ad, color=None):
   name = _node_name(ad)
   try:
     val = trace.value_at(ad)
-    val_repr = _represent_value(trace, val)
+    val_repr = _represent_value(val)
   except KeyError:
     val_repr = "(none)"
   label = name + "\n" + val_repr
