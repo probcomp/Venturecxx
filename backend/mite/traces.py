@@ -209,6 +209,12 @@ class ResultTrace(object):
   def forget_result(self, addr):
     del self.results[addr]
 
+  def has_value_at(self, addr):
+    if addr in self.results:
+      return True
+    candidate = addresses.interpret_address_in_trace(addr, self.trace_id, None)
+    return candidate in self.results
+
   def value_at(self, addr):
     try:
       return self.results[addr]

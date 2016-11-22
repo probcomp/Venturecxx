@@ -25,13 +25,11 @@ class Evaluator(object):
     if e.isVariable(exp):
       result_node = env.findSymbol(exp)
       # XXX hack to propagate regenerated global bindings
-      try:
+      if self.trace.has_value_at(result_node.address):
         # old_val = result_node.value
         result_node.value = self.trace.value_at(result_node.address)
         # if old_val is not result_node.value:
         #   print "Replaced", old_val, "with", result_node.value, "at", result_node.address
-      except KeyError:
-        pass
       self.trace.register_lookup(addr, result_node)
       value = result_node.value
     elif e.isSelfEvaluating(exp):

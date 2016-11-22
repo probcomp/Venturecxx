@@ -48,10 +48,10 @@ def _represent_value(v):
 
 def _add_node_for(dot, trace, ad, color=None):
   name = _node_name(ad)
-  try:
+  if trace.has_value_at(ad):
     val = trace.value_at(ad)
     val_repr = _represent_value(val)
-  except KeyError:
+  else:
     val_repr = "(none)"
   label = name + "\n" + val_repr
   if color is not None:
