@@ -311,26 +311,23 @@ class ICompleteTrace(ITrace):
 class AbstractCompleteTrace(ICompleteTrace):
 
   def __init__(self, seed):
-    self.made_sps = {}
     super(AbstractCompleteTrace, self).__init__(seed)
 
   def register_made_sp(self, addr, sp):
     assert self.results[addr] is sp
-    self.made_sps[addr] = sp
     ret = SPRef(Node(addr, sp))
     self.record_result(addr, ret)
     return ret
 
   def unregister_made_sp(self, addr):
-    sp = self.made_sps[addr]
-    del self.made_sps[addr]
+    ref = self.value_at(addr)
+    node = self.deref_sp(ref)
+    sp = node.value
     self.record_result(addr, sp)
     return sp
 
   def deref_sp(self, sp_ref):
-    addr = sp_ref.makerNode.address
-    sp = self.made_sps[addr]
-    return Node(addr, sp)
+    return sp_ref.makerNode
 
   def find_symbol(self, env, symbol):
     node = env.findSymbol(symbol)
