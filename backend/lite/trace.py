@@ -245,6 +245,9 @@ class Trace(object):
     assert node.isAppropriateValue(value)
     node.value = value
 
+  def hasMadeSPRecordAt(self, node):
+    return node.madeSPRecord is not None
+
   def madeSPRecordAt(self, node):
     assert node.madeSPRecord is not None
     return node.madeSPRecord
