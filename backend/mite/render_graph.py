@@ -12,6 +12,7 @@ from venture.mite.sps.compound import CompoundSP
 def digraph(trace, scaffold, principal_nodes=None):
   if principal_nodes is None:
     principal_nodes = set()
+  principal_nodes = set([addr.interpret_address_in_trace(p, trace.trace_id, None) for p in principal_nodes])
   dot = Digraph(name="A scaffold")
   for ad in scaffold.kernels.keys():
     ker = scaffold.kernels[ad]
