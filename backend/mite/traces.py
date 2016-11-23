@@ -423,7 +423,7 @@ class SourceTracing(object):
   # then roll the above traversal forward guided by said
   # SubexpressionAddress indexes.
 
-  def print_frame(self, addr):
+  def print_frame(self, addr, stream=None):
     (root, branch) = addresses.split_subexpression(addr)
     (exp, _env) = self.requests[root]
     import venture.parser.church_prime.parse as parser
@@ -431,18 +431,22 @@ class SourceTracing(object):
     string = p.unparse_expression(exp)
     ind = p.expression_index_to_text_index(string, branch)
     from venture.exception import underline
-    print string
-    print underline(ind)
+    if stream is not None:
+      print >>stream, string
+      print >>stream, underline(ind)
+    else:
+      print string
+      print underline(ind)
 
-  def print_stack(self, addr):
+  def print_stack(self, addr, stream=None):
     (root, _branch) = addresses.split_subexpression(addr)
     if isinstance(root, addresses.RequestAddress) and \
        isinstance(root.request_id, addresses.Address):
       # Assume this was a compound procedure and the request id is the
       # call site
-      self.print_stack(root.request_id)
+      self.print_stack(root.request_id, stream=stream)
     # XXX TODO do something with `mem` RequestAddresses
-    self.print_frame(addr)
+    self.print_frame(addr, stream=stream)
 
 class FlatTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace):
   """Maintain a flat lookup table of random choices, keyed by address.

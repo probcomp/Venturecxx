@@ -1,3 +1,6 @@
+import os
+import sys
+
 from venture.lite.value import SPRef
 
 from venture.untraced.node import Node
@@ -13,6 +16,10 @@ from venture.mite.traces import VentureTraceConstructorSP
 
 from venture.mite.evaluator import Regenerator, Restorer
 
+def log_scaffold_event(msg, trace, addr):
+  if 'VENTURE_DEBUG_SCAFFOLD' in os.environ:
+    print >>sys.stderr, msg, "at", addr
+    trace.print_frame(addr, sys.stderr)
 
 class DependencyNode(object):
   def __init__(self, addr):
@@ -210,11 +217,16 @@ class DependencyGraphRestorer(DependencyGraphRegenerator, Restorer):
 def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # dependency aware implementation to find a single-site scaffold.
   # somewhat brittle.
+  def log(msg, address):
+    log_scaffold_event(msg, trace, address)
+  def log_(*msgs):
+    if 'VENTURE_DEBUG_SCAFFOLD' in os.environ:
+      print >>sys.stderr, ' '.join([str(m) for m in msgs])
 
   # If the input involved calls to `toplevel`, need to inject the ID
   # of the current trace.  Harmless otherwise.
   principal_address = addresses.interpret_address_in_trace(principal_address, trace.trace_id, None)
-  # print "Proposing at", principal_address
+  log("Building scaffold", principal_address)
 
   assert isinstance(trace, DependencyGraphTrace)
 
@@ -244,8 +256,10 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
     kernel = None
     propagate = False
 
+    log("Processing", addr)
     if isinstance(node, LookupNode):
       assert node.orig_addr == parent
+      log_("Allocating proagate lookup kernel")
       kernel = {'type': 'propagate_lookup'}
       propagate = True
     else:
@@ -261,10 +275,12 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         # the request in question (which presumably it does not).
         # This scenario can occur if the principal address is an
         # application of a recursive compound SP.
+        log_("Allocating principal kernel", principal_kernel)
         kernel = principal_kernel
         propagate = True
       elif node.operator_addr in drg:
         # operator changed
+        log_("Allocating proposal kernel b/c operator changed")
         kernel = {'type': 'proposal'}
         propagate = True
       elif any(operand in drg for operand in node.operand_addrs):
@@ -274,8 +290,10 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         val = trace.value_at(addr)
         kernel = sp.constraint_kernel(None, addr, val)
         if kernel is not NotImplemented and not likelihood_free_lite_sp(sp):
+          log_("Allocating constraint kernel")
           kernel = {'type': 'constraint', 'val': val}
         else:
+          log_("Allocating proposal kernel b/c cannot constrain")
           kernel = {'type': 'proposal'}
           propagate = True
       elif isinstance(parent, addresses.RequestAddress):
@@ -286,8 +304,13 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         handle = TraceHandle(trace, sp_node.address)
         kernel = sp.propagating_kernel(handle, addr, parent)
         if kernel is not None:
+          log_("Allocating propagate request kernel")
           kernel = {'type': 'propagate_request', 'parent': parent}
           propagate = True
+        else:
+          log_("Not allocating request propagation kernel because can't")
+      else:
+        log_("Not allocating any kernel because no circumstances matched")
 
     if kernel is not None:
       if addr in kernels:
@@ -305,6 +328,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         # by default, notify all applications of this SP.
         sp_node = trace.nodes[addr.sp_addr]
         request_children = sp_node.application_children
+      log_('node %r children %r' % (node, node.children))
       for child in node.children | request_children:
         q.append((child, addr))
 
