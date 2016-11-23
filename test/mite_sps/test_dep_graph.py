@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from nose.tools import assert_equal, assert_not_equal
+from nose.tools import assert_equal, assert_almost_equal, assert_not_equal
 from nose import SkipTest
 
 from venture.test.config import get_ripl
@@ -111,7 +111,7 @@ def testCompoundArgument(seed):
   print result
   (x, y), (x_, y_) = result
   assert_not_equal(x, x_)
-  assert_equal(y - x, y_ - x_) # Because the internal normal(0, 1) should not get resampled
+  assert_almost_equal(y - x, y_ - x_) # Because the internal normal(0, 1) should not get resampled
 
 @on_inf_prim("none")
 @stochasticTest
