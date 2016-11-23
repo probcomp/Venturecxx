@@ -253,7 +253,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
       assert isinstance(node, ApplicationNode)
       if addr == principal_address and parent is None:
         # Why check that parent is None?  Because if the
-        # principal_address is an application on an SP, and some
+        # principal_address is an application of an SP, and some
         # requests of that SP enter the drg, the principal_address may
         # appear in the queue again.  If that happens, the SP in
         # question should have the opportunity not to repropagate, if
