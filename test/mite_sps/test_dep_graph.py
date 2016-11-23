@@ -108,7 +108,6 @@ def testCompoundArgument(seed):
      (return (list xy xy_)))
  (graph_trace))
 """)
-  print result
   (x, y), (x_, y_) = result
   assert_not_equal(x, x_)
   assert_almost_equal(y - x, y_ - x_) # Because the internal normal(0, 1) should not get resampled
@@ -131,7 +130,6 @@ def testProcArgument(seed):
      (return (list xy xy_)))
  (flat_trace))
 """)
-  print result
   (x, y), (x_, y_) = result
   assert_not_equal(x, x_)
   assert_equal(y, y_)
