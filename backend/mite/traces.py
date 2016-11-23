@@ -204,7 +204,12 @@ class ResultTrace(object):
     super(ResultTrace, self).__init__(seed)
 
   def record_result(self, addr, value):
-    self.results[addr] = value
+    if value is not None:
+      # XXX This check is here to allow RequesterConstraintKernel to
+      # return no value, as indeed its effect must not update the
+      # value at the address, since it concerns itself with only the
+      # first stage.
+      self.results[addr] = value
 
   def forget_result(self, addr):
     del self.results[addr]

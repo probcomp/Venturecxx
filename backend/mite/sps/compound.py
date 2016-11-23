@@ -44,13 +44,7 @@ class CompoundSP(VentureSP):
     # TODO Should this accept the identity of the request made, or
     # should we assume the SP can deduce it?
     addr = trace_handle.request_address(application_id)
-    # Oddly, the code I intended for the RequesterConstraintKernel is
-    # identical (currently) to the code for RequestPropagatingKernel.
-    # Maybe that's because I am confused about what values will be put
-    # in and taken out of its extract and regen methods, or maybe it's
-    # because the treatment of deterministic stages is the same
-    # regardless.
-    return RequestPropagatingKernel(trace_handle, addr)
+    return RequesterConstraintKernel(trace_handle, addr)
 
 class RequestPropagatingKernel(ApplicationKernel):
   def __init__(self, trace_handle, request_addr):
@@ -63,6 +57,20 @@ class RequestPropagatingKernel(ApplicationKernel):
   def regen(self, _inputs):
     output = self.trace_handle.value_at(self.request_addr)
     return (0, output)
+
+  def restore(self, _inputs, output):
+    return output
+
+class RequesterConstraintKernel(ApplicationKernel):
+  def __init__(self, trace_handle, request_addr):
+    self.trace_handle = trace_handle
+    self.request_addr = request_addr
+
+  def extract(self, output, _inputs):
+    return (0, output)
+
+  def regen(self, _inputs):
+    return (0, None)
 
   def restore(self, _inputs, output):
     return output
