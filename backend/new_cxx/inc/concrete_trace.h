@@ -92,6 +92,7 @@ struct ConcreteTrace : Trace
   boost::shared_ptr<SPFamilies> getMadeSPFamilies(Node * makerNode);
 
   boost::shared_ptr<SPAux> getMadeSPAux(Node * makerNode);
+  bool hasMadeSPRecord(Node * makerNode);
   boost::shared_ptr<VentureSPRecord> getMadeSPRecord(Node * makerNode);
 
 

@@ -288,10 +288,16 @@ void Particle::registerMadeSPFamily(
 
 bool Particle::containsMadeSPFamily(Node * makerNode, const FamilyID & id)
 {
+  assert(newMadeSPFamilies.contains(makerNode) ||
+	 baseTrace->hasMadeSPRecord(makerNode));
   if (newMadeSPFamilies.contains(makerNode)) {
     if (newMadeSPFamilies.lookup(makerNode).contains(id)) { return true; }
-  }
-  if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) {
+    if (baseTrace->hasMadeSPRecord(makerNode)) {
+      if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) {
+	return true;
+      }
+    }
+  } else if (baseTrace->getMadeSPFamilies(makerNode)->containsFamily(id)) {
     return true;
   }
   return false;
