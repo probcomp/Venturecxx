@@ -4,6 +4,8 @@ from venture.lite.exception import VentureError
 from venture.mite.sp import VentureSP
 from venture.mite.sp import ApplicationKernel
 
+from venture.mite.util import log_regen_event_at
+
 class CompoundSP(VentureSP):
   def __init__(self, params, exp, env):
     super(CompoundSP, self).__init__()
@@ -23,6 +25,7 @@ class CompoundSP(VentureSP):
     return result
 
   def unapply(self, trace_handle, application_id, _output, _inputs):
+    log_regen_event_at("Unapplying compound application at", trace_handle.trace, application_id)
     addr = trace_handle.request_address(application_id)
     trace_handle.uneval_request(addr)
     return None
