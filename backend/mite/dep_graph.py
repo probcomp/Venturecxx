@@ -267,7 +267,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         # operator changed
         kernel = {'type': 'proposal'}
         propagate = True
-      elif any(operand in drg for operand in node.operand_addrs):
+      elif parent in node.operand_addrs:
         # operands changed
         sp_ref = trace.value_at(node.operator_addr)
         sp = trace.deref_sp(sp_ref).value
@@ -275,6 +275,15 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         kernel = sp.constraint_kernel(None, addr, val)
         if kernel is not NotImplemented and not likelihood_free_lite_sp(sp):
           kernel = {'type': 'constraint', 'val': val}
+        elif hasattr(sp, 'request_constraint_kernel'):
+          print "Allocating request constraint kernel at", addr
+          trace.print_frame(addr)
+          # TODO Probably want to let the SP do some computation
+          # before deciding that this is OK
+          kernel = {'type': 'request_constraint'}
+          # Propagation may be needed if the value of the request
+          # changes, but another iteration of this loop will handle
+          # that.
         else:
           kernel = {'type': 'proposal'}
           propagate = True
@@ -291,8 +300,7 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
 
     if kernel is not None:
       if addr in kernels:
-        if kernel != kernels[addr]:
-          assert False, "Trying to overwrite %s with %s; see Issue #646" % (kernels[addr], kernel)
+        kernel = merge_kernels(kernels[addr], kernel)
       kernels[addr] = kernel
       if parent is not None:
         # print "Registering dependency of", addr, "on", parent
@@ -325,3 +333,19 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
     raise
   kernels = OrderedDict([(addr, kernels[addr]) for addr in toposorted])
   return Scaffold(kernels)
+
+def merge_kernels(orig, new):
+  print "Merging kernels", orig, new
+  def propagate_request_kernel(thing):
+    return isinstance(thing, dict) and thing['type'] == 'propagate_request'
+  def request_constraint_kernel(thing):
+    return isinstance(thing, dict) and thing['type'] == 'request_constraint'
+  if orig == new:
+    return orig
+  if request_constraint_kernel(orig) and propagate_request_kernel(new):
+    return [orig, new]
+  if propagate_request_kernel(orig) and request_constraint_kernel(new):
+    return [new, orig]
+  if isinstance(orig, list) and new in orig:
+    return orig
+  assert False, "Trying to overwrite %s with %s; see Issue #646" % (orig, new)

@@ -10,10 +10,15 @@ class Scaffold(object):
 
   def kernel_at(self, sp, trace_handle, address):
     kernel = self.kernels.get(address)
+    return self._interpret_kernel(kernel, sp, trace_handle, address)
+
+  def _interpret_kernel(self, kernel, sp, trace_handle, address):
     if isinstance(kernel, ApplicationKernel):
       return kernel
     elif kernel is None:
       return None
+    elif isinstance(kernel, list):
+      return SequenceKernel([self._interpret_kernel(k, sp, trace_handle, address) for k in kernel])
     elif kernel['type'] == 'proposal':
       return sp.proposal_kernel(trace_handle, address)
     elif kernel['type'] == 'constraint':
@@ -22,12 +27,42 @@ class Scaffold(object):
     elif kernel['type'] == 'propagate_request':
       parent = kernel['parent']
       return sp.propagating_kernel(trace_handle, address, parent)
+    elif kernel['type'] == 'request_constraint':
+      return sp.request_constraint_kernel(trace_handle, address)
 
 class DefaultAllScaffold(object):
   def kernel_at(self, sp, trace_handle, address):
     return sp.proposal_kernel(trace_handle, address)
 
+class SequenceKernel(ApplicationKernel):
+  def __init__(self, subkernels):
+    self.subkernels = subkernels
 
+  def extract(self, output, inputs):
+    # TODO What's the right backward chaining of intermediate outputs,
+    # if there is one?  What about intermediate inputs?
+    total = 0
+    answer = []
+    for k in reversed(self.subkernels):
+      (w, sub_out) = k.extract(output, inputs)
+      total += w
+      answer.insert(0, sub_out)
+    return (total, answer)
+
+  def regen(self, inputs):
+    total = 0
+    answer = None
+    for k in self.subkernels:
+      (w, sub_out) = k.regen(inputs)
+      total += w
+      answer = sub_out
+    return (total, answer)
+
+  def restore(self, inputs, output):
+    answer = None
+    for (k, sub_out) in zip(self.subkernels, output):
+      answer = k.restore(inputs, sub_out)
+    return answer
 
 def single_site_scaffold(trace, principal_address, principal_kernel=None):
   # lightweight implementation to find a single-site scaffold.
