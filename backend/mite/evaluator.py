@@ -17,8 +17,12 @@ class Evaluator(object):
     self.trace = trace
 
   def eval_request(self, addr, exp, env):
-    self.trace.register_request(addr, exp, env)
-    return self.eval_family(addr, exp, env)
+    if not hasattr(self.trace, 'requests') or addr not in self.trace.requests:
+      self.trace.register_request(addr, exp, env)
+      return self.eval_family(addr, exp, env)
+    else:
+      # XXX Should at least check that the request is the same
+      return (0, self.trace.value_at(addr))
 
   def eval_family(self, addr, exp, env):
     weight = 0
