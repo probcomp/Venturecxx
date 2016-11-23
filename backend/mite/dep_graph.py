@@ -273,11 +273,11 @@ def single_site_scaffold(trace, principal_address, principal_kernel=None):
         sp = trace.deref_sp(sp_ref).value
         val = trace.value_at(addr)
         kernel = sp.constraint_kernel(None, addr, val)
-        if kernel is NotImplemented or likelihood_free_lite_sp(sp):
+        if kernel is not NotImplemented and not likelihood_free_lite_sp(sp):
+          kernel = {'type': 'constraint', 'val': val}
+        else:
           kernel = {'type': 'proposal'}
           propagate = True
-        else:
-          kernel = {'type': 'constraint', 'val': val}
       elif isinstance(parent, addresses.RequestAddress):
         sp_ref = trace.value_at(node.operator_addr)
         sp_node = trace.deref_sp(sp_ref)
