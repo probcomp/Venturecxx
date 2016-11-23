@@ -20,10 +20,12 @@ from nose import SkipTest
 
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
+from venture.test.config import stochasticTest
 
 @on_inf_prim("none")
-def testESREdge():
-  ripl = get_ripl()
+@stochasticTest
+def testESREdge(seed):
+  ripl = get_ripl(seed=seed)
   result = ripl.evaluate("""\
 (eval_in
  (do (assume x (normal 0 1))
@@ -43,8 +45,9 @@ def testESREdge():
   assert_equal(x_, y_)
 
 @on_inf_prim("none")
-def testRecursion():
-  ripl = get_ripl()
+@stochasticTest
+def testRecursion(seed):
+  ripl = get_ripl(seed=seed)
   result = ripl.evaluate("""\
 (eval_in
  (do (assume x (normal 0 1))
@@ -65,9 +68,10 @@ def testRecursion():
   assert_equal(x_, y_)
 
 @on_inf_prim("none")
-def testBrush():
+@stochasticTest
+def testBrush(seed):
   raise SkipTest("Brush needs to be cleared from the regenerated set")
-  ripl = get_ripl()
+  ripl = get_ripl(seed=seed)
   result = ripl.evaluate("""\
 (eval_in
  (do (assume x (normal 0 1))
@@ -87,8 +91,9 @@ def testBrush():
   assert_equal(x_, y_)
 
 @on_inf_prim("none")
-def testCompoundArgument():
-  ripl = get_ripl()
+@stochasticTest
+def testCompoundArgument(seed):
+  ripl = get_ripl(seed=seed)
   result = ripl.evaluate("""\
 (eval_in
  (do (assume x (normal 0 1))
@@ -109,8 +114,9 @@ def testCompoundArgument():
   assert_equal(y - x, y_ - x_) # Because the internal normal(0, 1) should not get resampled
 
 @on_inf_prim("none")
-def testProcArgument():
-  ripl = get_ripl()
+@stochasticTest
+def testProcArgument(seed):
+  ripl = get_ripl(seed=seed)
   result = ripl.evaluate("""\
 (eval_in
  (do (assume x (normal 0 1))
