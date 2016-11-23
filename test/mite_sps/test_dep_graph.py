@@ -85,3 +85,47 @@ def testBrush():
   assert_equal(x, y)
   assert_not_equal(x, x_)
   assert_equal(x_, y_)
+
+@on_inf_prim("none")
+def testCompoundArgument():
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(eval_in
+ (do (assume x (normal 0 1))
+     (assume inc (lambda (x) (+ x (normal 0 1))))
+     (assume y (inc x))
+     (predict (list x y))
+     (xy <- (value_at (toplevel 4)))
+     (s <- (single_site_subproblem (toplevel 1)))
+     (p <- (extract s))
+     (regen s (rest p))
+     (xy_ <- (value_at (toplevel 4)))
+     (return (list xy xy_)))
+ (graph_trace))
+""")
+  print result
+  (x, y), (x_, y_) = result
+  assert_not_equal(x, x_)
+  assert_equal(y - x, y_ - x_) # Because the internal normal(0, 1) should not get resampled
+
+@on_inf_prim("none")
+def testProcArgument():
+  ripl = get_ripl()
+  result = ripl.evaluate("""\
+(eval_in
+ (do (assume x (normal 0 1))
+     (assume inc (proc (x) (normal x 1)))
+     (assume y (inc x))
+     (predict (list x y))
+     (xy <- (value_at (toplevel 4)))
+     (s <- (single_site_subproblem (toplevel 1)))
+     (p <- (extract s))
+     (regen s (rest p))
+     (xy_ <- (value_at (toplevel 4)))
+     (return (list xy xy_)))
+ (flat_trace))
+""")
+  print result
+  (x, y), (x_, y_) = result
+  assert_not_equal(x, x_)
+  assert_equal(y, y_)
