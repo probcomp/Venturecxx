@@ -24,8 +24,9 @@ from venture.mite.state import TraceConstructorSP
 from venture.mite.state import register_trace_type
 from venture.mite.state import trace_action
 from venture.mite.state import trace_property
+from venture.mite.util import log_regen_event
+from venture.mite.util import log_regen_event_at
 import venture.mite.address as addresses
-
 
 class ITrace(object):
   # external trace interface exposed to VentureScript
@@ -524,27 +525,33 @@ class FlatTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, AbstractTrace
     self.forget_result(addr)
 
   def extract(self, subproblem):
+    log_regen_event("Extracting", subproblem)
     x = Regenerator(self, subproblem)
     weight = 0
     for addr in reversed(self.toplevel_addresses):
       (exp, env) = self.requests[addr]
       weight += x.uneval_family(addr, exp, env)
+    log_regen_event("Done extracting", subproblem)
     return (weight, x.fragment)
 
   def regen(self, subproblem, trace_fragment):
+    log_regen_event("Regenerating", subproblem)
     x = Regenerator(self, subproblem, trace_fragment)
     weight = 0
     for addr in self.toplevel_addresses:
       (exp, env) = self.requests[addr]
       w, _ = x.eval_family(addr, exp, env)
       weight += w
+    log_regen_event("Done regenerating", subproblem)
     return weight
 
   def restore(self, subproblem, trace_fragment):
+    log_regen_event("Restoring", subproblem)
     x = Restorer(self, subproblem, trace_fragment)
     for addr in self.toplevel_addresses:
       (exp, env) = self.requests[addr]
       x.eval_family(addr, exp, env)
+    log_regen_event("Done restoring", subproblem)
 
   def weight_bound(self, subproblem):
     from venture.mite.evaluator import WeightBounder

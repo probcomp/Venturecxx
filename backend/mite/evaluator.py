@@ -6,6 +6,8 @@ import venture.lite.exp as e
 
 from venture.mite.sp import VentureSP
 from venture.mite.sps.compound import CompoundSP
+from venture.mite.util import log_regen_event
+from venture.mite.util import log_regen_event_at
 import venture.mite.address as addresses
 
 class Evaluator(object):
@@ -134,6 +136,7 @@ class Regenerator(Evaluator):
     self.fragment = fragment
 
   def uneval_request(self, addr):
+    log_regen_event_at("Regenerator unevaluating request", self.trace, addr)
     (exp, env) = self.trace.requests[addr]
     weight = self.uneval_family(addr, exp, env)
     self.trace.unregister_request(addr)
@@ -141,6 +144,7 @@ class Regenerator(Evaluator):
     return weight
 
   def uneval_family(self, addr, exp, env):
+    log_regen_event_at("Unevaluating family", self.trace, addr)
     weight = 0
 
     if e.isVariable(exp):
@@ -171,11 +175,13 @@ class Regenerator(Evaluator):
     return weight
 
   def unapply_sp(self, addr, value, sp_node, args):
+    log_regen_event_at("Regenerator unapplying", self.trace, addr)
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
 
     kernel = self.scaffold.kernel_at(sp, handle, addr)
+    log_regen_event("Unapplication kernel was", kernel)
     if kernel is None:
       weight = 0
       fragment = value
@@ -186,6 +192,7 @@ class Regenerator(Evaluator):
     return weight
 
   def apply_sp(self, addr, sp_node, args):
+    log_regen_event_at("Regenerator applying", self.trace, addr)
     sp = sp_node.value
     handle = RegeneratingTraceHandle(
       self.trace, sp_node.address, self)
@@ -263,10 +270,12 @@ class RegeneratingTraceHandle(TraceHandle):
     self.regenerator = regenerator
 
   def uneval_request(self, addr):
+    log_regen_event_at("RegeneratingTraceHandle unevaluating request", self.trace, addr)
     w = self.regenerator.uneval_request(addr)
     assert w == 0
 
   def restore_request(self, addr):
+    log_regen_event_at("RegeneratingTraceHandle restoring request", self.trace, addr)
     w, value = self.regenerator.restore_request(addr)
     assert w == 0
     return value

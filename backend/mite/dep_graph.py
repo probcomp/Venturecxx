@@ -13,6 +13,8 @@ from venture.mite.traces import AbstractTrace
 from venture.mite.traces import ResultTrace
 from venture.mite.traces import SourceTracing
 from venture.mite.traces import VentureTraceConstructorSP
+from venture.mite.util import log_regen_event
+from venture.mite.util import log_regen_event_at
 
 from venture.mite.evaluator import Regenerator, Restorer
 
@@ -128,18 +130,24 @@ class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, Ab
     self.nodes[sp_node.address].application_children.remove(child_addr)
 
   def extract(self, subproblem):
+    log_regen_event("Dependency-extracting", subproblem)
     x = DependencyGraphRegenerator(self, subproblem)
     weight = x.extract_subproblem()
+    log_regen_event("Done dependency-extracting", subproblem)
     return (weight, x.fragment)
 
   def regen(self, subproblem, trace_fragment):
+    log_regen_event("Dep regenerating", subproblem)
     x = DependencyGraphRegenerator(self, subproblem, trace_fragment)
     weight = x.regen_subproblem()
+    log_regen_event("Done dep regenerating", subproblem)
     return weight
 
   def restore(self, subproblem, trace_fragment):
+    log_regen_event("Dep restoring", subproblem)
     x = DependencyGraphRestorer(self, subproblem, trace_fragment)
     x.regen_subproblem()
+    log_regen_event("Done dep restoring", subproblem)
 
 
 registerBuiltinSP("graph_trace", VentureTraceConstructorSP(
@@ -160,6 +168,7 @@ class DependencyGraphRegenerator(Regenerator):
     return weight
 
   def extract(self, addr):
+    log_regen_event_at("Dependency graph regenerator extracting node", self.trace, addr)
     weight = 0
 
     node = self.trace.nodes[addr]
@@ -185,6 +194,7 @@ class DependencyGraphRegenerator(Regenerator):
     return weight
 
   def regen(self, addr):
+    log_regen_event_at("Dependency graph regenerator regenerating node", self.trace, addr)
     weight = 0
 
     node = self.trace.nodes[addr]
