@@ -219,7 +219,13 @@ class ResultTrace(object):
     try:
       return self.results[addr]
     except KeyError:
-      return self.results[addresses.interpret_address_in_trace(addr, self.trace_id, None)]
+      candidate = addresses.interpret_address_in_trace(addr, self.trace_id, None)
+      if candidate in self.results:
+        return self.results[candidate]
+      else:
+        print "Unable to locate value at", addr, "or", candidate, "in", self
+        self.print_stack(candidate)
+        raise
 
 class BlankTrace(ResultTrace, AbstractTrace):
   """Record only the final results of requested expressions.
