@@ -152,6 +152,9 @@ class AbstractTrace(ITrace):
         return False
       sp_ref = self.value_at(addresses.subexpression(0, addr))
       sp = self.deref_sp(sp_ref).value
+      if isinstance(sp, CompoundSP):
+        # Hack to avoid proposing applications of compound SPs
+        return False
       return not sp.is_deterministic()
     return [a for (a, exp, _) in self.all_contexts() if is_random_application(a, exp)]
 
