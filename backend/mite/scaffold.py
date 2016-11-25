@@ -10,7 +10,9 @@ class Scaffold(object):
 
   def kernel_at(self, sp, trace_handle, address):
     kernel = self.kernels.get(address)
-    return self._interpret_kernel(kernel, sp, trace_handle, address)
+    k = self._interpret_kernel(kernel, sp, trace_handle, address)
+    self.kernels[address] = k
+    return k
 
   def _interpret_kernel(self, kernel, sp, trace_handle, address):
     if isinstance(kernel, ApplicationKernel):

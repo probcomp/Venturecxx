@@ -68,12 +68,19 @@ class RequesterConstraintKernel(ApplicationKernel):
   def __init__(self, trace_handle, request_addr):
     self.trace_handle = trace_handle
     self.request_addr = request_addr
+    self.saved_output = None
 
   def extract(self, output, _inputs):
+    # In this case, the output of the whole application.
+    self.saved_output = output
     return (0, output)
 
   def regen(self, _inputs):
-    return (0, None)
+    # Sadly, if this is the only kernel, its regen method is
+    # responsible for the result of the whole application.  If it is
+    # indeed the only kernel, then the output must not have changed,
+    # so we should be able to return the old one.
+    return (0, self.saved_output)
 
   def restore(self, _inputs, output):
     return output
