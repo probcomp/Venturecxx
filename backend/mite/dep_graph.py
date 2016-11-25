@@ -71,7 +71,7 @@ class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, Ab
     if len(ans) > 0:
       print >>sys.stderr, "Invariant violation detected"
       for (msg, addr) in ans:
-        print >>sys.stderr, msg
+        print >>sys.stderr, msg, addr
         self.print_stack(addr, stream=sys.stderr)
     assert len(ans) == 0, ans
 
