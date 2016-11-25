@@ -66,6 +66,44 @@ class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, Ab
     self.nodes = {}
     super(DependencyGraphTrace, self).__init__(seed)
 
+  def checkInvariants(self):
+    ans = self.violatedInvariants()
+    if len(ans) > 0:
+      print >>sys.stderr, "Invariant violation detected"
+      for (msg, addr) in ans:
+        print >>sys.stderr, msg
+        self.print_stack(addr, stream=sys.stderr)
+    assert len(ans) == 0, ans
+
+  def violatedInvariants(self):
+    ans = []
+    touched = set()
+    def touch(addr):
+      if addr not in touched:
+        ans.extend(self.violatedInvariantsAt(addr))
+        touched.add(addr)
+    for (addr, node) in self.nodes.iteritems():
+      touch(addr)
+      for addr in node.children:
+        touch(addr)
+      for addr in node.application_children:
+        touch(addr)
+    for (addr, _) in self.results.iteritems():
+      touch(addr)
+    for (addr, _) in self.requests.iteritems():
+      touch(addr)
+    return ans
+
+  def violatedInvariantsAt(self, addr):
+    ans = []
+    if addr not in self.nodes:
+      ans.append(("No node at", addr))
+    if not self.has_value_at(addr):
+      ans.append(("No value at", addr))
+    if isinstance(addr, addresses.RequestAddress) and addr not in self.requests:
+      ans.append(("No request registered at", addr))
+    return ans
+
   def register_constant(self, addr, value):
     self.nodes[addr] = ConstantNode(addr)
     self.record_result(addr, value)
@@ -222,6 +260,7 @@ class DependencyGraphRestorer(DependencyGraphRegenerator, Restorer):
 
 
 def single_site_scaffold(trace, principal_address, principal_kernel=None):
+  trace.checkInvariants()
   # dependency aware implementation to find a single-site scaffold.
   # somewhat brittle.
   def log(msg, address):
