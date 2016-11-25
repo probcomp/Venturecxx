@@ -81,12 +81,15 @@ class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, Ab
     def touch(addr):
       if addr not in touched:
         ans.extend(self.violatedInvariantsAt(addr))
+        ans.extend(self.violatedInterlinksAt(addr))
         touched.add(addr)
     for (addr, node) in self.nodes.iteritems():
       touch(addr)
       for addr in node.children:
         touch(addr)
       for addr in node.application_children:
+        touch(addr)
+      for addr in node.parents():
         touch(addr)
     for (addr, _) in self.results.iteritems():
       touch(addr)
@@ -102,6 +105,18 @@ class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, Ab
       ans.append(("No value at", addr))
     if isinstance(addr, addresses.RequestAddress) and addr not in self.requests:
       ans.append(("No request registered at", addr))
+    return ans
+
+  def violatedInterlinksAt(self, addr):
+    ans = []
+    node = self.nodes[addr]
+    for parent in node.parents():
+      if addr not in self.nodes[parent].children:
+        ans.append(("Node not registered as a child of its parent", addr))
+    if isinstance(node, ApplicationNode):
+      sp_node = self.deref_sp(self.value_at(node.operator_addr))
+      if addr not in self.nodes[sp_node.address].application_children:
+        ans.append(("Application not registered as a child of its operator", addr))
     return ans
 
   def register_constant(self, addr, value):
@@ -157,7 +172,8 @@ class DependencyGraphTrace(SourceTracing, AbstractCompleteTrace, ResultTrace, Ab
     self.forget_result(addr)
 
   def remove_child_at(self, parent_addr, child_addr):
-    self.nodes[parent_addr].children.remove(child_addr)
+    parent = self.nodes[parent_addr]
+    parent.children.remove(child_addr)
 
   def remove_application_child_at(self, parent_addr, child_addr):
     self.nodes[parent_addr].children.remove(child_addr)
