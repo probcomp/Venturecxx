@@ -245,8 +245,13 @@ class Semantics(object):
     def _p_binop(self, l, op, r):
         assert ast.isloc(l)
         assert ast.isloc(r)
-        assert op.value in operators
-        app = [ast.map_value(val.symbol, ast.update_value(op, operators[op.value])), l, r]
+        if op.value in operators:
+            # Perform operator substitution
+            new_op = ast.update_value(op, operators[op.value])
+        else:
+            # Leave it
+            new_op = op
+        app = [ast.map_value(val.symbol, new_op), l, r]
         return ast.locmerge(l, r, app)
     def _p_exp(self, e):
         assert ast.isloc(e)
