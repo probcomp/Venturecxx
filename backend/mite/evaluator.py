@@ -198,6 +198,7 @@ class Regenerator(Evaluator):
       self.trace, sp_node.address, self)
 
     kernel = self.scaffold.kernel_at(sp, handle, addr)
+    log_regen_event("Application kernel was", kernel)
     if kernel is None:
       weight = 0
       value = self.retrieve_fragment(addr, sp, args)

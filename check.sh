@@ -20,7 +20,7 @@
 set -Ceu
 
 : ${PYTHON:=python}
-: ${NOSETESTS:=`which nosetests`}
+: ${NOSETESTS:=`which nosetests || :`}
 
 if [ ! -x "${NOSETESTS}" ]; then
     printf >&2 'unable to find nosetests\n'

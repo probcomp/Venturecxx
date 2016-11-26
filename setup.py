@@ -24,9 +24,19 @@ try:
     from setuptools.command.test import test as test_py
 except ImportError:
     from distutils.core import setup, Extension
+    from distutils.cmd import Command
     from distutils.command.build_py import build_py
     from distutils.command.sdist import sdist
-    from distutils.command.test import test as test_py
+
+    class test_py(Command):
+        def __init__(self, *args, **kwargs):
+            Command.__init__(self, *args, **kwargs)
+        def initialize_options(self): pass
+        def finalize_options(self): pass
+        def run(self): self.run_tests()
+        def run_tests(self): Command.run_tests(self)
+        def set_undefined_options(self, opt, val):
+            Command.set_undefined_options(self, opt, val)
 
 import os
 import subprocess
@@ -361,7 +371,6 @@ tests_require = [
     'nose>=1.3',
     'nose-testconfig>=0.9',
     'nose-cov>=1.6',
-    'flaky',
     'pexpect',
     'cython', # Because it has to be installed before pystan, and pip
               # does the wrong thing with ordering packages pulled in

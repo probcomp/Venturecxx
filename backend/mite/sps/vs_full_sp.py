@@ -25,6 +25,9 @@ class MakeFullSP(VentureSP):
     helper_trace.bind_global("the_sp", addr)
     return MadeFullSP(helper_trace)
 
+  def is_deterministic(self):
+    return True
+
 class WithHelperTrace(object):
   def __init__(self, helper_trace):
     self.helper_trace = helper_trace

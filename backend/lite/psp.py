@@ -484,6 +484,9 @@ class TypedPSP(PSP):
     self.f_type = f_type
     self.psp = psp
 
+  def __repr__(self):
+    return 'TypedPSP(%r, %r)' % (self.psp, self.f_type)
+
   def simulate(self,args):
     return self.f_type.wrap_return(
       self.psp.simulate(self.f_type.unwrap_args(args)))
@@ -649,6 +652,9 @@ class TypedLKernel(LKernel):
   def __init__(self, kernel, f_type):
     self.kernel = kernel
     self.f_type = f_type
+
+  def __repr__(self):
+    return 'TypedLKernel(%r, %r)' % (self.kernel, self.f_type)
 
   def forwardSimulate(self, trace, oldValue, args):
     return self.f_type.wrap_return(self.kernel.forwardSimulate(

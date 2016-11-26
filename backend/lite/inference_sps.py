@@ -137,11 +137,17 @@ class MadeActionOutputPSP(psp.DeterministicPSP):
     return self.desc
 
 def transition_oper_args_types(extra_args = None):
-  # ExpressionType reasonably approximates the mapping I want for
-  # scope and block IDs.
+  # XXX Forget the declared types for the transition operators because
+  # I have to do the dispatch in venture.lite.infer.dispatch first,
+  # before knowing which argument is actually which.  Fortunately,
+  # ExpressionType is appropriate for all the arguments of all the
+  # operators we have now, so just dropping the declared types on the
+  # floor should be OK.
+  if extra_args is None:
+    extra_args = []
   return [t.AnyType("subproblem"), t.AnyType("tag_value : object")] + \
-    (extra_args if extra_args is not None else []) + \
-    [t.IntegerType("transitions : int")]
+    [t.AnyType(e.name()) for e in extra_args] + \
+    [t.AnyType("transitions : int")]
 
 def transition_oper_type(extra_args = None, return_type=None, min_req_args=None, **kwargs):
   if return_type is None:
@@ -154,7 +160,7 @@ def transition_oper_type(extra_args = None, return_type=None, min_req_args=None,
 def par_transition_oper_type(extra_args = None, **kwargs):
   other_args = transition_oper_args_types(extra_args)
   return infer_action_maker_type(\
-    other_args + [t.BoolType("in_parallel : bool")],
+    other_args + [t.AnyType("in_parallel : bool")],
     min_req_args=len(other_args) - 2, **kwargs)
 
 def infer_action_type(return_type):
