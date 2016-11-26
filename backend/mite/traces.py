@@ -155,6 +155,11 @@ class AbstractTrace(ITrace):
       if isinstance(sp, CompoundSP):
         # Hack to avoid proposing applications of compound SPs
         return False
+      from venture.mite.sps.vs_full_sp import MadeFullSP
+      if isinstance(sp, MadeFullSP):
+        # Hack to avoid proposing applications of memoized SPs (which
+        # are the only vs_full SPs in the examples in the paper).
+        return False
       return not sp.is_deterministic()
     return [a for (a, exp, _) in self.all_contexts() if is_random_application(a, exp)]
 
