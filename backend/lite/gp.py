@@ -35,6 +35,7 @@ from venture.lite.sp import SPAux
 from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import dispatching_psp
+from venture.lite.sp_help import typed_nr
 from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import override
@@ -43,6 +44,9 @@ import venture.lite.mvnormal as mvnormal
 import venture.lite.types as t
 import venture.lite.value as v
 import venture.value.dicts as vv
+from venture.lite.env import VentureEnvironment
+from venture.lite.request import Request,ESR
+from venture.lite.address import emptyAddress
 
 def _gp_sample(mean, covariance, samples, xs, np_rng):
   mu, sigma = _gp_mvnormal(mean, covariance, samples, xs)
@@ -53,6 +57,10 @@ def _gp_logDensity(mean, covariance, samples, xs, os):
   logp = mvnormal.logpdf(np.asarray(os).reshape(len(xs),), mu, sigma) 
   # horrible hack - but necessary for structure learning:
   if np.isnan(logp):
+    return float("-inf")
+  # Edit 2016-11-25:  horrible hack, part 2, we need to reject proposal where LL
+  # is positive inf, too.
+  if np.isinf(logp):
     return float("-inf")
   return logp
 
@@ -111,6 +119,8 @@ def _gp_logDensityOfData(mean, covariance, samples):
   logp =  mvnormal.logpdf(os, mu, sigma)
   # horrible hack - but necessary for structure learning:
   if np.isnan(logp):
+    return float("-inf")
+  if np.isinf(logp):
     return float("-inf")
   return logp
 
@@ -197,6 +207,7 @@ class GPOutputPSP1(GPOutputPSP):
     return _gp_logDensity(self.mean, self.covariance, samples, [x], [o])
 
   def gradientOfLogDensity(self, o, args):
+    samples = args.spaux().samples
     x = args.operandValues()
     return _gp_gradientOfLogDensity(
       self.mean, self.covariance, samples, [x], [o])
@@ -413,13 +424,18 @@ def _cov_sp(F, argtypes):
 
 class MakeMakeGPMSPOutputPSP(DeterministicPSP):
     """
-    We need to say ((allocate_gpmem) f) instead of just (gpmem f) -- that is,
+    We need to say ((allocate_gpmem) f mean_func cov_func) instead of just
+    (gpmem f mean_func cov_func) -- that is,
     we need a separate gpmem-er for each f -- because the gpmem-er's SPAux will
     be used and updated by the f_probe and f_emu that it spits out.  We need a
     separate such aux for each f.
     """
     def simulate(self, args):
-        return VentureSPRecord(no_request(MakeGPMSPOutputPSP()))
+        return VentureSPRecord(typed_nr(MakeGPMSPOutputPSP(),
+        [t.AnyType(),
+        GPMeanType('meanfunction'), 
+        GPCovarianceType('covariance kernel')], gpType))
+
 
 class MakeGPMSPOutputPSP(DeterministicPSP):
     """"
@@ -451,7 +467,7 @@ class GPMDeterministicMakerAAALKernel(SimulationAAALKernel):
         return self.makerPSP.simulate(args)
     def weight(self, _trace, newValue, _args):
         (_f_compute, f_emu) = newValue.asPythonList()
-        answer = f_emu.sp.outputPSP.logDensityOfCounts(self.makerPSP.shared_aux)
+        answer = f_emu.sp.outputPSP.logDensityOfData(self.makerPSP.shared_aux)
         # print "gpmem LKernel weight = %s" % answer
         return answer
 

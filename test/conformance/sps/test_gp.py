@@ -442,3 +442,89 @@ def test_linear_gradient_2d(seed):
   ripl.observe('(normal baz 1)', -7)
   ripl.infer('(grad_ascent default one 0.1 10 10)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
+
+
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
+@stochasticTest
+def testBumpPrior(seed):
+  ripl = get_ripl(seed=seed)
+  expected_std = 100
+  ripl.set_mode('venture_script')
+  ripl.assume('zero_mean_function', 'gp_mean_const(0.)')
+  ripl.assume('bump_cov_function', 
+    'gp_cov_scale({:f}**2, gp_cov_bump(0.00001, 0.0001))'.format(expected_std)) 
+  ripl.assume('gp', 'make_gp(zero_mean_function, bump_cov_function)')
+  y_samples = ripl.sample('gp(linspace(-10, 10, 1000))')
+  assert abs(np.std(y_samples) - expected_std) < 5.
+
+
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
+@stochasticTest
+def testBumpPosterior_precondition(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.set_mode('venture_script')
+  expected_std = 100
+  ripl.assume('scale_factor', 'uniform_continuous(0, 120)')
+  ripl.assume('zero_mean_function', 'gp_mean_const(0.)')
+  ripl.assume('bump_cov_function', 
+    'gp_cov_scale(scale_factor**2, gp_cov_bump(0.00001, 0.0001))')
+  ripl.assume('gp', 'make_gp(zero_mean_function, bump_cov_function)')
+  y_samples = ripl.sample('gp(linspace(-10, 10, 1000))')
+  computed_std = np.std(y_samples)
+  assert not(abs(computed_std - expected_std) < 5.)
+
+
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
+@stochasticTest
+def testBumpPosterior(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.set_mode('venture_script')
+  expected_std = 100
+  ripl.assume('scale_factor', 'uniform_continuous(0, 120)')
+  ripl.assume('zero_mean_function', 'gp_mean_const(0.)')
+  ripl.assume('bump_cov_function', 
+    'gp_cov_scale(scale_factor**2, gp_cov_bump(0.00001, 0.0001))')
+  ripl.assume('gp', 'make_gp(zero_mean_function, bump_cov_function)')
+  yobs = np.random.normal(0, 100, (500,)).tolist()
+  ripl.observe('gp(linspace(-10.001, 10.001, 500))',
+    array(yobs))
+  ripl.infer("mh(default, one, 100)")
+  y_samples = ripl.sample('gp(linspace(-10.001, 10.001, 100))')
+  computed_std = np.std(y_samples)
+  assert abs(computed_std - expected_std) < 5.
+
+
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
+@stochasticTest
+def testBumpPosterior_precondition_smaller_range(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.set_mode('venture_script')
+  expected_std = 0.1 
+  ripl.assume('scale_factor', 'uniform_continuous(0, 5)')
+  ripl.assume('zero_mean_function', 'gp_mean_const(0.)')
+  ripl.assume('bump_cov_function', 
+    'gp_cov_scale(scale_factor**2, gp_cov_bump(0.00001, 0.0001))')
+  ripl.assume('gp', 'make_gp(zero_mean_function, bump_cov_function)')
+  y_samples = ripl.sample('gp(linspace(-3, 3, 1000))')
+  computed_std = np.std(y_samples)
+  assert not(abs(computed_std - expected_std) < 0.05)
+
+
+@broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
+@stochasticTest
+def testBumpPosterior_smaller_range(seed):
+  ripl = get_ripl(seed=seed)
+  ripl.set_mode('venture_script')
+  expected_std = 0.1 
+  ripl.assume('scale_factor', 'uniform_continuous(0., 5)')
+  ripl.assume('zero_mean_function', 'gp_mean_const(0.)')
+  ripl.assume('bump_cov_function', 
+    'gp_cov_scale(scale_factor**2, gp_cov_bump(0.00001, 0.0001))')
+  ripl.assume('gp', 'make_gp(zero_mean_function, bump_cov_function)')
+  ripl.execute_program('define input  = mapv((_) -> {normal(0,3)}, arange(10));')
+  ripl.execute_program('define output = mapv((_) -> {normal(0, %0.4f)}, arange(10));' % (expected_std,))
+  ripl.execute_program('observe gp(${input}) = output;')
+  ripl.infer("mh(default, one, 100)")
+  y_samples = ripl.sample('gp(linspace(-3.001, 3.001, 100))')
+  computed_std = np.std(y_samples)
+  assert abs(computed_std - expected_std) < 0.05

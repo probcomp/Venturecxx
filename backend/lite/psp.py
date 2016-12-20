@@ -674,6 +674,8 @@ class TypedLKernel(LKernel):
     dvalue_wrapped = self.f_type.gradient_type().wrap_return(dvalue)
     if dargs is 0:
       dargs_wrapped = [0] * len(args.operandValues())
+    elif isinstance(dargs, list) and all([darg==0 for darg in dargs]):
+      dargs_wrapped = [0] * len(dargs)
     else:
       dargs_wrapped = self.f_type.gradient_type().wrap_arg_list(dargs)
     return (dvalue_wrapped, dargs_wrapped)
