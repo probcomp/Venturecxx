@@ -1,6 +1,0 @@
-assume simplify = (source) -> {
-  cond(        
-    (source[0] == "+")(["+", simplify(source[1]), simplify(source[2])]),
-    (source[0] == "*")(simplify_product(source)),
-    else(source))
-};

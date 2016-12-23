@@ -122,7 +122,13 @@ def test_simplify_product_Cs_WNs_RIPL():
 def test_simplify_product_in_sum():
     ripl = get_ripl()
     ripl.set_mode("venture_script")
-    ripl.execute_program_from_file("examples/inverse_compilation/simplify.vnts")
+    ripl.execute_program("""
+	assume simplify = (source) -> {
+	  cond(        
+	    (source[0] == "+")(["+", simplify(source[1]), simplify(source[2])]),
+	    (source[0] == "*")(simplify_product(source)),
+	    else(source))
+	};""")
     ripl.assume("source", """
         ["+",
             ["*", ["WN", 1.0], ["*", ["C", 2.0], ["*", ["C", 3.0], ["WN", 4.0]]]],
