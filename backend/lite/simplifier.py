@@ -5,19 +5,19 @@ from venture.lite.sp_help import deterministic_typed
 import venture.lite.types as t
 import venture.lite.value as v
 # pattern matching rules
-def patcher_matching_WNxWN(kernel1, kernel2):
+def pattern_matching_WNxWN(kernel1, kernel2):
     if kernel1[0]=="WN" and kernel2[0]=="WN":
         return ["WN", kernel1[1] * kernel2[1]]
     else:
         None
 
-def patcher_matching_CxWN(kernel1, kernel2):
+def pattern_matching_CxWN(kernel1, kernel2):
     if kernel1[0]=="C" and kernel2[0]=="WN":
         return ["WN", kernel1[1] * kernel2[1]]
     else:
         None
 
-def patcher_matching_CxC(kernel1, kernel2):
+def pattern_matching_CxC(kernel1, kernel2):
     if kernel1[0]=="C" and kernel2[0]=="C":
         return ["C", kernel1[1] * kernel2[1]]
     else:
@@ -25,9 +25,9 @@ def patcher_matching_CxC(kernel1, kernel2):
 
 def get_pattern_matching_rules():
     return [
-        patcher_matching_WNxWN,
-        patcher_matching_CxWN,
-        patcher_matching_CxC
+        pattern_matching_WNxWN,
+        pattern_matching_CxWN,
+        pattern_matching_CxC
     ]
 
 def flatten_product(product_parse_tree):
