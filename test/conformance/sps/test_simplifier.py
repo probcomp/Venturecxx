@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import venture.lite.simplifier as simplifier
+import venture.lite.gp as gp
 
 #TODO clean up imports!
 from collections import OrderedDict
@@ -46,31 +46,31 @@ import venture.lite.value as v
 def test_pattern_WNxWN():
     kernel1= ["WN", 2.] 
     kernel2= ["WN", 3.] 
-    simplified_kernel = simplifier.patcher_matching_WNxWN(kernel1, kernel2)
+    simplified_kernel = gp.pattern_matching_WNxWN(kernel1, kernel2)
     assert ["WN", 6.] == simplified_kernel 
 
 def test_pattern_CxWN():
     kernel1= ["C", 4.] 
     kernel2= ["WN", 3.] 
-    simplified_kernel = simplifier.patcher_matching_CxWN(kernel1, kernel2)
+    simplified_kernel = gp.pattern_matching_CxWN(kernel1, kernel2)
     assert ["WN", 12.] == simplified_kernel 
 
 def test_pattern_CxC():
     kernel1= ["C", 2.] 
     kernel2= ["C", 3.] 
-    simplified_kernel = simplifier.patcher_matching_CxC(kernel1, kernel2)
+    simplified_kernel = gp.pattern_matching_CxC(kernel1, kernel2)
     assert ["C", 6.] == simplified_kernel 
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
 def test_flatten_product_base_case():
-    simplified_kernel = simplifier.flatten_product(["WN",3.])
+    simplified_kernel = gp.flatten_product(["WN",3.])
     assert [["WN", 3.]] == simplified_kernel 
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
 def test_flatten_product():
-    flattened_product = simplifier.flatten_product(["*",["*",["WN", 1.],["SE",\
+    flattened_product = gp.flatten_product(["*",["*",["WN", 1.],["SE",\
         2.]], ["*",["C", 3.],["WN", 4.]]])
     assert [["WN", 1.], ["SE", 2.],  ["C", 3.], ["WN", 4.]] == flattened_product
 
@@ -78,33 +78,33 @@ def test_flatten_product():
 @on_inf_prim("none")
 def test_parse_to_tree_simple_case():
     flat_product = [["WN",1.]]
-    parse_tree = simplifier.parse_to_tree(flat_product)
+    parse_tree = gp.parse_to_tree(flat_product)
     assert ["WN", 1.] == parse_tree
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
 def test_parse_to_tree():
     flat_product = [["WN", 1.], ["SE", 2.],  ["C", 3.], ["WN", 4.]]
-    parse_tree = simplifier.parse_to_tree(flat_product)
+    parse_tree = gp.parse_to_tree(flat_product)
     assert ["*", ["WN", 1.0], ["*", ["SE", 2.0], ["*", ["C", 3.0], ["WN", 4.0]]]] == parse_tree
 
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
 def test_simplify_product_base_case():
-    simplified_kernel = simplifier.simplify_product(["WN",3.])
+    simplified_kernel = gp.simplify_product(["WN",3.])
     assert ["WN",3.] == simplified_kernel 
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
 def test_simplify_product_simple_case():
-    simplified_kernel = simplifier.simplify_product(["*",["WN",3.], ["WN",2.]])
+    simplified_kernel = gp.simplify_product(["*",["WN",3.], ["WN",2.]])
     assert ["WN", 6.] == simplified_kernel 
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
 def test_simplify_product_Cs_WNs():
-    simplified_kernel = simplifier.simplify_product(["*", ["WN", 1.0], ["*", ["C", 2.0], ["*", ["C", 3.0], ["WN", 4.0]]]])
+    simplified_kernel = gp.simplify_product(["*", ["WN", 1.0], ["*", ["C", 2.0], ["*", ["C", 3.0], ["WN", 4.0]]]])
     assert ["WN", 24.] == simplified_kernel 
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
@@ -136,6 +136,22 @@ def test_simplify_product_in_sum():
         """)
     sampled_simplification = ripl.sample("simplify(source)")
     assert ["+",["WN", 24.], ["WN", 12.]] == sampled_simplification
+
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_product_heteroskedastic_RIPL():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.assume("source", """
+        ["*",
+            ["WN", 1.],
+            ["*",
+                ["*", ["LIN", 2.], 
+                      ["WN", 3.]],
+                ["WN", 4.]]]
+    """)
+    sampled_simplification = ripl.sample("simplify_product(source)")
+    assert ["*", ["LIN", 2.], ["WN", 12.]] == sampled_simplification
 
 #def test_create_gpmem_package_church():
 #  ripl = get_ripl()
