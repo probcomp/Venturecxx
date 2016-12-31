@@ -559,19 +559,19 @@ def pattern_matching_WNxWN(kernel1, kernel2):
     if kernel1[0]=="WN" and kernel2[0]=="WN":
         return ["WN", kernel1[1] * kernel2[1]]
     else:
-        None
+        return None
 
 def pattern_matching_CxWN(kernel1, kernel2):
     if kernel1[0]=="C" and kernel2[0]=="WN":
         return ["WN", kernel1[1] * kernel2[1]]
     else:
-        None
+        return None
 
 def pattern_matching_CxC(kernel1, kernel2):
     if kernel1[0]=="C" and kernel2[0]=="C":
         return ["C", kernel1[1] * kernel2[1]]
     else:
-        None
+        return None
 
 def get_pattern_matching_rules():
     return [
