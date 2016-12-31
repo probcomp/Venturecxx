@@ -573,11 +573,33 @@ def pattern_matching_CxC(kernel1, kernel2):
     else:
         return None
 
+def pattern_matching_SExWN(kernel1, kernel2):
+    if kernel1[0]=="SE" and kernel2[0]=="WN":
+        return ["WN", kernel2[1]]
+    else:
+        return None
+
+def pattern_matching_SExSE(kernel1, kernel2):
+    if kernel1[0]=="SE" and kernel2[0]=="SE":
+        return ["SE", (kernel1[1] * kernel2[1])/(kernel1[1] + kernel2[1])]
+    else:
+        return None
+
+def pattern_matching_PERxWN(kernel1, kernel2):
+    if kernel1[0]=="PER" and kernel2[0]=="WN":
+        return ["WN", kernel2[1]]
+    else:
+        return None
+
+
 def get_pattern_matching_rules():
     return [
         pattern_matching_WNxWN,
         pattern_matching_CxWN,
-        pattern_matching_CxC
+        pattern_matching_CxC,
+        pattern_matching_SExWN,
+        pattern_matching_SExSE,
+        pattern_matching_PERxWN
     ]
 
 def flatten_product(product_parse_tree):
@@ -609,13 +631,18 @@ def simplify_flat_product(flat_product):
     i = 0
     while i<len(sorted_product)-1:
         not_modified = True
-        for rule in get_pattern_matching_rules():
-           outcome = rule(sorted_product[i], sorted_product[i+1])  
-           if outcome is not None:
-               sorted_product[i] = outcome
-               del sorted_product[i+1]
-               not_modified = False
-               break
+        for j in range(i+1,len(sorted_product)):
+            for rule in get_pattern_matching_rules():
+               outcome = rule(sorted_product[i], sorted_product[j])  
+               if outcome is not None:
+                   sorted_product[i] = outcome
+                   del sorted_product[j]
+                   # hmm... isn't the next line introducing a bug?
+                   sorted_product = sorted(sorted_product)
+                   not_modified = False
+                   break
+            if not not_modified:
+                 break
         if not_modified:
             i+=1
     return sorted_product

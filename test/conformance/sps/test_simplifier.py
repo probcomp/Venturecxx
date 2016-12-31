@@ -39,7 +39,13 @@ import venture.lite.covariance as cov
 import venture.lite.gp as gp
 import venture.lite.value as v
 
-
+simplify_vnts_code = """
+	assume simplify = (source) -> {
+	  cond(        
+	    (source[0] == "+")(["+", simplify(source[1]), simplify(source[2])]),
+	    (source[0] == "*")(simplify_product(source)),
+	    else(source))
+	};"""
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
 @on_inf_prim("none")
@@ -122,13 +128,7 @@ def test_simplify_product_Cs_WNs_RIPL():
 def test_simplify_product_in_sum():
     ripl = get_ripl()
     ripl.set_mode("venture_script")
-    ripl.execute_program("""
-	assume simplify = (source) -> {
-	  cond(        
-	    (source[0] == "+")(["+", simplify(source[1]), simplify(source[2])]),
-	    (source[0] == "*")(simplify_product(source)),
-	    else(source))
-	};""")
+    ripl.execute_program(simplify_vnts_code)
     ripl.assume("source", """
         ["+",
             ["*", ["WN", 1.0], ["*", ["C", 2.0], ["*", ["C", 3.0], ["WN", 4.0]]]],
@@ -153,6 +153,61 @@ def test_simplify_product_heteroskedastic_RIPL():
     sampled_simplification = ripl.sample("simplify_product(source)")
     assert ["*", ["LIN", 2.], ["WN", 12.]] == sampled_simplification
 
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_product_SExWN_RIPL():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.assume("source", """
+        ["*",
+            ["WN", 3.],
+            ["SE", 2.]]
+    """)
+    sampled_simplification = ripl.sample("simplify_product(source)")
+    assert ["WN", 3.] == sampled_simplification
+
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_product_SExSE_RIPL():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.assume("source", """
+        ["*",
+            ["SE", 2.],
+            ["SE", 3.]]
+    """)
+    sampled_simplification = ripl.sample("simplify_product(source)")
+    assert ["SE", 6./5.] == sampled_simplification
+
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_product_WNxPER_RIPL():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.assume("source", """
+        ["*",
+            ["WN", 3.],
+            ["PER", 4., 5.]]
+    """)
+    sampled_simplification = ripl.sample("simplify_product(source)")
+    assert ["WN", 3.] == sampled_simplification
+
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_product_CxSExPERxWN_RIPL():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.assume("source", """
+        ["*", 
+            ["*",
+                ["*",
+                    ["WN", 1.],
+                    ["PER", 2., 3.]],
+                ["C", 4.]],
+             ["SE", 5.]]
+    """)
+    sampled_simplification = ripl.sample("simplify_product(source)")
+    assert ["WN", 4.] == sampled_simplification
 #def test_create_gpmem_package_church():
 #  ripl = get_ripl()
 #  prep_ripl(ripl)
