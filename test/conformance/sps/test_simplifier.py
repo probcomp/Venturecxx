@@ -41,17 +41,44 @@ import venture.lite.value as v
 
 # TODO: check, I am using cond correctly? Why can I not just use else?
 simplify_vnts_code = """
-    assume simplify_sum_of_products = (source) -> {
+    assume constant_threshold = 0.01;
+    assume simplify_sum_of_products = (source_code) -> {
 	  cond(        
-	    (source[0] == "+")(["+", simplify_sum_of_products(source[1]), simplify_sum_of_products(source[2])]),
-	    (source[0] == "*")(simplify_product(source)),
-	    (source[0] != "+" and source[0] != "*")(source),
+	    (source_code[0] == "+")(["+", simplify_sum_of_products(source_code[1]), simplify_sum_of_products(source_code[2])]),
+	    (source_code[0] == "*")(simplify_product(source_code)),
+	    (source_code[0] != "+" and source_code[0] != "*")(source_code),
 	    else("error"))
 	};
-	assume simplify = (source) -> {
-        source_simplified_products = simplify_sum_of_products (source);
-        simplify_sum(source_simplified_products)};
-        
+    assume remove_constants = (source_code) -> {
+      if(size(source_code) == 3){
+        if(source_code[0] == "+" and source_code[1][0] == "*"){
+	      cond(
+            (
+              source_code[1][1][0] == "C" and  
+              source_code[1][1][1] < constant_threshold 
+            )
+              (source_code[1][2]),
+            (
+              source_code[1][2][0] == "C" and 
+              source_code[1][2][1] < constant_threshold 
+            )
+              (source_code[1][1]),
+            (source_code[0] == "+" )
+	          ([source_code[0], remove_constants[source_code[1]], remove_constants[source_code[2]]]),
+            (source_code[0] == "*" )
+	          ([source_code[0], remove_constants[source_code[1]], remove_constants[source_code[2]]]),
+	        else("error")
+            )
+            }
+          else {source_code}
+          }
+          else {source_code}
+      };
+
+	assume simplify = (source_code) -> {
+        source_code_simplified_products = simplify_sum_of_products (source_code);
+        equivalent_source_code = simplify_sum(source_code_simplified_products);
+        simplify_non_identicial(equivalent_source_code)}
     ;"""
 
 @broken_in("puma", "Puma does not define the gaussian process builtins")
@@ -249,3 +276,40 @@ def test_simplify_sum_CplusC():
     """)
     sampled_simplification = ripl.sample("simplify(source)")
     assert ["C", 7.] == sampled_simplification
+
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_small_scaled_values():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.execute_program(simplify_vnts_code)
+    ripl.assume("source", """
+        ["+", 
+            ["*",
+                ["*",
+                    ["C", 1.5],
+                    ["PER", 2., 3.]],
+                ["C", 0.01]],
+             ["C", 1.5]]
+    """)
+    sampled_simplification = ripl.sample("simplify(source)")
+    assert ["SE", 5.] == sampled_simplification
+
+@broken_in("puma", "Puma does not define the gaussian process builtins")
+@on_inf_prim("none")
+def test_simplify_small_noise_values():
+    ripl = get_ripl()
+    ripl.set_mode("venture_script")
+    ripl.execute_program(simplify_vnts_code)
+    ripl.assume("source", """
+        ["+", 
+            ["*",
+                ["*",
+                    ["WN", 1.],
+                    ["PER", 2., 3.]],
+                ["C", 0.01]],
+             ["SE", 5.]]
+    """)
+    sampled_simplification = ripl.sample("simplify(source)")
+    assert ["SE", 5.] == sampled_simplification, """currently, this failes as
+    addition of simple WN kernels is not simplified""" 

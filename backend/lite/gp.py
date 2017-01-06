@@ -709,6 +709,10 @@ def simplify_sum_source(venture_parse_tree):
     parse_tree = unpack_venture_values(venture_parse_tree)
     return pack_venture_values(simplify_sum(parse_tree))
 
+def simplify_non_identicial(venture_parse_tree):
+    print "warning, null op" 
+    return venture_parse_tree
+
 registerBuiltinSP("simplify_product", deterministic_typed(simplify_product_source,
     [t.AnyType()],
     t.AnyType(),
@@ -718,4 +722,9 @@ registerBuiltinSP("simplify_sum", deterministic_typed(simplify_sum_source,
     [t.AnyType()],
     t.AnyType(),
     descr="Simplification and compiler optimization for source for GP structure (sums)"))
+
+registerBuiltinSP("simplify_non_identicial", deterministic_typed(simplify_non_identicial,
+    [t.AnyType()],
+    t.AnyType(),
+    descr="Compiler optimization for source for GP structure (sums)"))
 
