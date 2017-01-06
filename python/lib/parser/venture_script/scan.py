@@ -156,6 +156,8 @@ class Scanner(Plex.Scanner):
     underscore = Plex.Str('_')
     optsign = Plex.Opt(Plex.Any('+-'))
     name = (letter | underscore) + Plex.Rep(letter | underscore | digit)
+    oxford_comment_start = Plex.Str('[') + Plex.Opt(name) + Plex.Str('*')
+    oxford_comment_end = Plex.Str('*]')
     # XXX Hexadecimal, octal, binary?
     digits = Plex.Rep(digit)
     digits1 = Plex.Rep1(digit)
@@ -173,6 +175,8 @@ class Scanner(Plex.Scanner):
     lexicon = Plex.Lexicon([
         (whitespace,    Plex.IGNORE),
         (line_comment,  Plex.IGNORE),
+        (oxford_comment_start, Plex.IGNORE),
+        (oxford_comment_end, Plex.IGNORE),
         (Plex.Str('('), grammar.T_LROUND),
         (Plex.Str(')'), grammar.T_RROUND),
         (Plex.Str(','), grammar.T_COMMA),
