@@ -81,6 +81,8 @@ class VentureValue(object):
     if isinstance(thing, list):
       # TODO Arrays or lists?
       return VentureArray([VentureValue.fromStackDict(val) for val in thing])
+    elif isinstance(thing, VentureValue):
+      return thing
     else:
       t = thing["type"]
       if t not in stackable_types:
