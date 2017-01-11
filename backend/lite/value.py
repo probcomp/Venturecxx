@@ -624,13 +624,15 @@ class VenturePair(VentureValue):
     else:
       return [self.first] + self.rest.asPythonList()
   def asPossiblyImproperList(self):
-    if isinstance(self.rest, VenturePair):
-      (sublist, tail) = self.rest.asPossiblyImproperList()
-      return ([self.first] + sublist, tail)
-    elif isinstance(self.rest, VentureNil):
-      return ([self.first], None)
+    front = [self.first]
+    rest = self.rest
+    while isinstance(rest, VenturePair):
+      front.append(rest.first)
+      rest = rest.rest
+    if isinstance(rest, VentureNil):
+      return (front, None)
     else:
-      return ([self.first], self.rest)
+      return (front, rest)
 
 def pythonListToVentureList(l):
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
