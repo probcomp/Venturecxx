@@ -610,6 +610,7 @@ def pattern_matching_CplusC(kernel1, kernel2):
     else:
         return None
 
+
 def get_pattern_matching_rules(operator):
     if operator == "*": 
         return [
@@ -657,6 +658,18 @@ def simplify_sum(sum_parse_tree):
     return parse_to_tree(simplify_with_rules(flat_sum,
         get_pattern_matching_rules(operator)), operator)
 
+
+def simplify_other(sum_parse_tree):
+    unpacked_sum_parse_tree = unpack_venture_values(sum_parse_tree)
+    flat_sum = flatten_expression(unpacked_sum_parse_tree, "+")
+    new_flat_sum = []
+    for i,summand in enumerate(flat_sum):
+        flat_product = flatten_expression(summand, "*")
+        if not (flat_product[0][0]==["C"] and flat_product[0][1]<0.01):
+            new_flat_sum.append(parse_to_tree(flat_product, "*"))
+    return pack_venture_values(parse_to_tree(new_flat_sum, "+"))
+
+
 def simplify_with_rules(flat_expression, rules):
     sorted_expression = sorted(flat_expression) 
     if len(sorted_expression)==1:
@@ -664,7 +677,7 @@ def simplify_with_rules(flat_expression, rules):
     i = 0
     while i<len(sorted_expression)-1:
         not_modified = True
-        for j in range(i+1,len(sorted_expression)):
+        for j in range(i+1, len(sorted_expression)):
             for rule in rules:
                outcome = rule(sorted_expression[i], sorted_expression[j])  
                if outcome is not None:
@@ -710,8 +723,8 @@ def simplify_sum_source(venture_parse_tree):
     return pack_venture_values(simplify_sum(parse_tree))
 
 def simplify_non_identicial(venture_parse_tree):
-    print "warning, null op" 
-    return venture_parse_tree
+    parse_tree = unpack_venture_values(venture_parse_tree)
+    return pack_venture_values(simplify_non_indentical(parse_tree))
 
 registerBuiltinSP("simplify_product", deterministic_typed(simplify_product_source,
     [t.AnyType()],
@@ -723,7 +736,7 @@ registerBuiltinSP("simplify_sum", deterministic_typed(simplify_sum_source,
     t.AnyType(),
     descr="Simplification and compiler optimization for source for GP structure (sums)"))
 
-registerBuiltinSP("simplify_non_identicial", deterministic_typed(simplify_non_identicial,
+registerBuiltinSP("simplify_non_identicial", deterministic_typed(simplify_other,
     [t.AnyType()],
     t.AnyType(),
     descr="Compiler optimization for source for GP structure (sums)"))
