@@ -51,5 +51,6 @@ define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
         ["V", mapv(V, arange(${num_cols}))]);
       return(list(hist, end))
     })))}, arange(num_reps), num_cores);
-  action(make_plots(results))
+  data <- sample mapv((r) -> { mapv((c) -> { datum(r, c) }, arange($num_cols)) }, arange($num_rows));
+  action(make_plots(data, results))
 };

@@ -95,24 +95,25 @@ def layout(samples):
     return max([(w, h) for w in range(1, max_width) for h in range(1, max_height)],
                key = layout_quality)
 
-def plot_samples(samples):
+def plot_samples(data, samples):
     (block_width, block_height) = block_size(samples[0])
     (width, height) = layout(samples)
     plt.figure(figsize=(block_width * width, block_height * height))
     for (i, lw_trace) in enumerate(samples):
         if i >= width * height: break
         plt.subplot(height, width, i + 1)
+        lw_trace["data"] = data
         render_dpmm(lw_trace, show_assignments=True, show_V=True)
     plt.tight_layout()
     plt.savefig("results.png")
     plt.close()
 
-def make_plots(results):
+def make_plots(data, results):
     (histories, samples) = zip(*convert_from_venture_value(results))
     plot_histories(histories)
-    plot_samples(samples)
+    plot_samples(data, samples)
 
-make_plots_sp = deterministic_typed(make_plots, [t.Object], t.Nil)
+make_plots_sp = deterministic_typed(make_plots, [t.Array(t.Array(t.Number)), t.Object], t.Nil)
 
 def __venture_start__(ripl):
     ripl.bind_foreign_inference_sp("make_plots", make_plots_sp)
