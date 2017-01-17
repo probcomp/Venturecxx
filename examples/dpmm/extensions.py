@@ -91,7 +91,7 @@ def layout(samples):
         aspect_ratio = float(width * block_width)/float(height * block_height)
         discrepancy = abs(aspect_ratio - 16.0 / 9.0)
         capacity = width * height
-        return min(max_capacity, capacity) - 3 * discrepancy
+        return -abs(max_capacity - capacity) - 3 * discrepancy
     return max([(w, h) for w in range(1, max_width) for h in range(1, max_height)],
                key = layout_quality)
 
