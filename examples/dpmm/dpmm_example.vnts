@@ -1,0 +1,55 @@
+define dpmm_model = {
+  assume alpha     ~ gamma(1.0, 1.0) #concentration ;
+  assume assign    = make_crp(1.0);
+  assume z         = mem((row) ~> { assign() #cluster_assignment:row });
+  assume V         = mem((col) ~> { gamma(1.0, 1.0) #relative_variance:col });
+  assume component = mem((z, col) ~> { make_nig_normal(0.0, V(col), 1.0, 1.0) });
+  assume datum     = mem((row, col) ~> { component(z(row), col)() });
+};
+
+define data_gen = (row, col) -> {
+  if (int_div(row + col, 2) == 0) {
+    normal(-1000, 1)
+  } else {
+    normal(1000, 1)
+  }
+};
+
+define observations = (num_rows, num_cols) -> {
+  for_each(arange(num_rows), (r) -> {
+    for_each(arange(num_cols), (c) -> {
+      observe datum(integer(${r}), integer(${c})) = data_gen(r, c)
+    })
+  })
+};
+
+define infer_gibbs_mh = (num_rows, num_cols, num_sweeps) -> {
+  mapM((sweep_ct) -> {
+    ll <- global_log_likelihood;
+    repeat(10, mh(minimal_subproblem(/?concentration)));
+    for_each(arange(num_cols), (c) -> {
+      repeat(10, mh(minimal_subproblem(/?relative_variance==c))) });
+    for_each(arange(num_rows), (r) -> {
+      gibbs(minimal_subproblem(/?cluster_assignment==r)) });
+    return(ll)
+  }, arange(num_sweeps))
+};
+
+define query = (num_rows) -> {
+  mapM((row) -> { sample z(${row}) }, arange(rows))
+};
+
+define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
+  dpmm_model;
+  observations(num_rows, num_cols);
+  results <- parallel_mapv_action((i) -> {
+    first(run(in_model(run(fork_model()), {
+      hist <- infer_gibbs_mh(num_rows, num_cols, num_sweeps);
+      end <- sample dict(
+        ["alpha", alpha],
+        ["assignments", mapv(z, arange(${num_rows}))],
+        ["V", mapv(V, arange(${num_cols}))]);
+      return(list(hist, end))
+    })))}, arange(num_reps), num_cores);
+  action(make_plots(results))
+};
