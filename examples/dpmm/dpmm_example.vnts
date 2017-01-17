@@ -8,7 +8,7 @@ define dpmm_model = {
 };
 
 define data_gen = (row, col) -> {
-  if (int_div(row + col, 2) == 0) {
+  if (int_mod(row + col, 2) == 0) {
     normal(-1000, 1)
   } else {
     normal(1000, 1)
