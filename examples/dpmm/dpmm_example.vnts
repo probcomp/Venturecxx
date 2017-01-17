@@ -52,6 +52,7 @@ define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
   observations(num_rows, num_cols);
   results <- parallel_mapv_action((i) -> {
     first(run(in_model(run(fork_model()), {
+      likelihood_weight();
       hist <- infer_gibbs_mh(num_rows, num_cols, num_sweeps);
       end <- sample dict(
         ["alpha", alpha],
