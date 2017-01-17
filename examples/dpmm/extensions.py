@@ -121,7 +121,7 @@ def plot_samples(data, samples):
         lw_trace["data"] = data
         render_dpmm(lw_trace, show_assignments=True, show_V=True)
     plt.tight_layout()
-    plt.savefig("results.png")
+    plt.savefig("results-samples.png")
     plt.close()
 
 def make_plots(data, results):
