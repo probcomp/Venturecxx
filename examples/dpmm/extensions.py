@@ -69,7 +69,23 @@ def convert_from_venture_value(venture_value):
             'Venture value cannot be converted', str(venture_value))
 
 def plot_histories(histories):
-    print histories
+    unzipped = {}
+    for h in histories:
+        new = True
+        for item in h:
+            for (k, v) in item.iteritems():
+                if k not in unzipped:
+                    unzipped[k] = []
+                if new:
+                    unzipped[k].append([])
+                unzipped[k][-1].append(v)
+            new = False
+    for (k, hs) in unzipped.iteritems():
+        plt.figure()
+        for h in hs:
+            plt.plot(h)
+        plt.savefig("results-%s.png" % (k,))
+        plt.close()
 
 def block_size(lw_trace):
     num_rows = len(lw_trace["assignments"])
@@ -117,3 +133,7 @@ make_plots_sp = deterministic_typed(make_plots, [t.Array(t.Array(t.Number)), t.O
 
 def __venture_start__(ripl):
     ripl.bind_foreign_inference_sp("make_plots", make_plots_sp)
+    ripl.bind_foreign_inference_sp('unique',
+        deterministic_typed(lambda l: list(set(l)),
+                        [t.HomogeneousListType(t.ExpressionType())],
+                        t.HomogeneousListType(t.ExpressionType())))

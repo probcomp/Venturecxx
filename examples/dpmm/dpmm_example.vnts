@@ -23,16 +23,24 @@ define observations = (num_rows, num_cols) -> {
   })
 };
 
+define step_summary = (num_rows) -> {
+  lls <- global_log_likelihood;
+  assigns <- sample mapv(z, arange($num_rows));
+  return(dict(["logscore", lls[0]],
+              ["num_clusters", size(unique(assigns))]))
+};
+
 define infer_gibbs_mh = (num_rows, num_cols, num_sweeps) -> {
-  mapM((sweep_ct) -> {
-    ll <- global_log_likelihood;
+  init <- step_summary(num_rows);
+  rest <- mapM((sweep_ct) -> {
     repeat(10, mh(minimal_subproblem(/?concentration)));
     for_each(arange(num_cols), (c) -> {
       repeat(10, mh(minimal_subproblem(/?relative_variance==c))) });
     for_each(arange(num_rows), (r) -> {
       gibbs(minimal_subproblem(/?cluster_assignment==r)) });
-    return(ll)
-  }, arange(num_sweeps))
+    step_summary(num_rows)
+  }, arange(num_sweeps));
+  return(pair(init, rest))
 };
 
 define query = (num_rows) -> {
