@@ -100,7 +100,6 @@ def render_dpmm(lw_trace, row_names=None, col_names=None, selected_rows=None,
 
     hyper_labels = None
     alpha_text = None
-    fig = plt.gcf()
     if show_V:
         hyper_labels = ax.twiny()
         hyper_labels.set_xlim([-0.5, num_cols-0.5])
@@ -108,12 +107,11 @@ def render_dpmm(lw_trace, row_names=None, col_names=None, selected_rows=None,
         labels = ["V(%02d) = %.3f" % (i, v) for (i, v) in enumerate(lw_trace["V"])]
         hyper_labels.set_xticklabels(labels, rotation='vertical')
         if "alpha" in lw_trace:
-            # Only shift the title if there are V labels
-            alpha_text = fig.text(0.5, 0.95, "alpha: %5.3f" % (lw_trace["alpha"],),
-                                  horizontalalignment='center')
+            alpha_text = hyper_labels.set_xlabel("alpha: %5.3f" % (lw_trace["alpha"],))
 
     if "alpha" in lw_trace and not show_V:
-        alpha_text = fig.text(0.5, 0.95, "alpha: %5.3f" % (lw_trace["alpha"],),
-                              horizontalalignment='center')
+        no_hyper_labels = ax.twiny()
+        alpha_text = no_hyper_labels.set_xlabel("alpha: %5.3f" % (lw_trace["alpha"],))
+        no_hyper_labels.set_xticks([])
 
     return (ax, alpha_text, hyper_labels, assign_ticks, inverse(row_indexes))
