@@ -35,8 +35,9 @@ define observations = (num_rows, num_cols) -> {
 define step_summary = (num_rows) -> {
   lls <- global_log_likelihood;
   assigns <- sample mapv(z, arange($num_rows));
-  return(dict(["logscore", lls[0]],
-              ["num_clusters", size(unique(assigns))]))
+  return(dict(
+    ["logscore", lls[0]],
+    ["num_clusters", size(unique(assigns))]))
 };
 
 // The inference program: sequential scan of Gibbs on discerete
@@ -54,11 +55,9 @@ define infer_gibbs_mh = (num_rows, num_cols, num_sweeps) -> {
   return(pair(init, rest))
 };
 
-// Overall driver
-define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
-  dpmm_model;
-  observations(num_rows, num_cols);
-  results <- parallel_mapv_action((i) -> {
+// One replicate, as a suitable argument to mapv or parallel_mapv
+define replicate = (num_sweeps, num_rows, num_cols) -> {
+  (rep_id) -> {
     first(run(in_model(run(fork_model()), {
       likelihood_weight();
       hist <- infer_gibbs_mh(num_rows, num_cols, num_sweeps);
@@ -67,8 +66,16 @@ define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
         ["assignments", mapv(z, arange($num_rows))],
         ["V", mapv(V, arange($num_cols))]);
       return(list(hist, end))
-    })))}, arange(num_reps), num_cores);
+  })))}
+};
+
+// Overall driver
+define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
+  dpmm_model;
+  observations(num_rows, num_cols);
+  results <- parallel_mapv_action(replicate(num_sweeps, num_rows, num_cols),
+    arange(num_reps), num_cores);
   data <- sample mapv((r) -> { mapv((c) -> { datum(r, c) }, arange($num_cols)) },
-                      arange($num_rows));
+    arange($num_rows));
   action(make_plots(data, results))
 };
