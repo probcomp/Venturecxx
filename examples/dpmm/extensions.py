@@ -84,6 +84,9 @@ def plot_histories(histories):
         plt.figure()
         for h in hs:
             plt.plot(h)
+        plt.xlabel("Inference iterations")
+        plt.ylabel(k)
+        plt.tight_layout()
         plt.savefig("results-%s.png" % (k,))
         plt.close()
 
