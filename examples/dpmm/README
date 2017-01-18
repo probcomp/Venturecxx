@@ -31,8 +31,8 @@ first drafts of probabilistic programs often have bugs that even such
 a blunt test as this exposes.
 
 This program illustrates a fairly typical scaling pattern for the
-kinds of VentureScript programs we write around the lab.  It has
-four natural scaling parameters:
+kinds of VentureScript programs we write around the lab.  It has four
+natural scaling parameters, all of which we tend to want to increase:
 - The number of columns,
 - The number of rows (i.e., vectors to cluster),
 - The number of iterations of the inference operator to perform, and
