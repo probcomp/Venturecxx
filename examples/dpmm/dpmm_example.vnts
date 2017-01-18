@@ -1,3 +1,4 @@
+// A clustering model
 define dpmm_model = {
   assume alpha     ~ gamma(1.0, 1.0) #concentration ;
   assume assign    = make_crp(1.0);
@@ -7,6 +8,10 @@ define dpmm_model = {
   assume datum     = mem((row, col) ~> { component(z(row), col)() });
 };
 
+// Define a synthetic data source that make a checkerboard pattern of
+// large and small numbers with very low variance.  Clustering the
+// rows should bring the even-numbered ones together, and the
+// odd-numbered ones together.
 define data_gen = (row, col) -> {
   if (int_mod(row + col, 2) == 0) {
     normal(-1000, 1)
@@ -15,6 +20,7 @@ define data_gen = (row, col) -> {
   }
 };
 
+// Observe synthetic data on a complete rows x cols grid
 define observations = (num_rows, num_cols) -> {
   for_each(arange(num_rows), (r) -> {
     for_each(arange(num_cols), (c) -> {
@@ -23,6 +29,9 @@ define observations = (num_rows, num_cols) -> {
   })
 };
 
+// The items we want to collect at every Markov chain iteration:
+// - likelihood of the data
+// - how many distinct clusters there are (should converge to 2)
 define step_summary = (num_rows) -> {
   lls <- global_log_likelihood;
   assigns <- sample mapv(z, arange($num_rows));
@@ -30,6 +39,8 @@ define step_summary = (num_rows) -> {
               ["num_clusters", size(unique(assigns))]))
 };
 
+// The inference program: sequential scan of Gibbs on discerete
+// variables and repeated M-H on continuous ones.
 define infer_gibbs_mh = (num_rows, num_cols, num_sweeps) -> {
   init <- step_summary(num_rows);
   rest <- mapM((sweep_ct) -> {
@@ -43,10 +54,7 @@ define infer_gibbs_mh = (num_rows, num_cols, num_sweeps) -> {
   return(pair(init, rest))
 };
 
-define query = (num_rows) -> {
-  mapM((row) -> { sample z(${row}) }, arange(rows))
-};
-
+// Overall driver
 define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
   dpmm_model;
   observations(num_rows, num_cols);
@@ -60,6 +68,7 @@ define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
         ["V", mapv(V, arange($num_cols))]);
       return(list(hist, end))
     })))}, arange(num_reps), num_cores);
-  data <- sample mapv((r) -> { mapv((c) -> { datum(r, c) }, arange($num_cols)) }, arange($num_rows));
+  data <- sample mapv((r) -> { mapv((c) -> { datum(r, c) }, arange($num_cols)) },
+                      arange($num_rows));
   action(make_plots(data, results))
 };
