@@ -73,8 +73,11 @@ define replicate = (num_sweeps, num_rows, num_cols) -> {
 define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
   dpmm_model;
   observations(num_rows, num_cols);
+  // Compute experimental results in parallel across replicates
   results <- parallel_mapv_action(replicate(num_sweeps, num_rows, num_cols),
     arange(num_reps), num_cores);
+  // Or, in series
+  // results = mapv(replicate(num_sweeps, num_rows, num_cols), arange(num_reps));
   data <- sample mapv((r) -> { mapv((c) -> { datum(r, c) }, arange($num_cols)) },
     arange($num_rows));
   action(make_plots(data, results))

@@ -1,0 +1,68 @@
+Inference Sanity Check and Scaling Test
+---------------------------------------
+
+This directory contains an example of a program we might use as a
+first sanity check that some inference scheme applied to some model is
+not completely bonkers.  In this case, the model is a Bayesian
+clustering model over `num_cols`-dimensional real vectors, and the
+inference scheme is a fairly generic iterated sequential scan
+Metropolis-Hastings (proposing from the prior for continuous variables
+and Gibbs sampling by enumeration for discrete ones).
+
+The input data set is constructed to make the posterior extremely
+concentrated around an obvious "right" clustering, which one expects
+any reasonable inference scheme to quickly find.  To wit, each row is
+one of two kinds: either the even-numbered columns in that row are
+positive and the odd ones negative, or vice versa.  The actual data
+are generated from these prototypes by adding a little noise, with
+signal to noise ratio is about 1000:1.
+
+The actual test case consists of running some number of independent
+replicates of a Markov chain that iterates the inference operator some
+number of times, and collecting and plotting some diagnostics:
+- Visual renderings of a few samples at the end
+- Log score history
+- History of the number of clusters in each intermediate state
+- (Others could reasonably be added)
+
+This is enough information to determine whether this model+inference
+is or is not messing up on this (extreme) example.  Believe it or not,
+first drafts of probabilistic programs often have bugs that even such
+a blunt test as this exposes.
+
+This program illustrates a fairly typical scaling pattern for the
+kinds of VentureScript programs we write around the lab.  It has
+four natural scaling parameters:
+- The number of columns,
+- The number of rows (i.e., vectors to cluster),
+- The number of iterations of the inference operator to perform, and
+- The number of independent replicates to run.
+
+These represent very common types of knobs:
+
+- The number of replicates is a time/precision tradeoff: each costs
+  CPU and memory, but increasing them makes any aggregates computed
+  from them more stable (i.e., lowers variability due to the
+  randomness of each individual replicate).
+
+- The number of inference iterations is a time/accuracy tradeoff: each
+  costs CPU, but brings the probability distribution on answers closer
+  to the true posterior distribution of the model on the data.
+
+- The number of rows corresponds to the "available data".  Increasing
+  the number of rows tends to make the problem computationally harder
+  (e.g., in this case, one "inference iteration" actually loops over
+  all the rows), but inferentially easier, because patterns in the
+  data grow more obvious as they are repeated.
+
+- The number of columns is an instance of a relatively generic
+  "problem complexity" parameter.  Increasing this kind of parameter
+  tends to make the problem computationally harder and has an
+  ambiguous effect on its inferential ease or difficuly.
+
+A last comment about scaling: As one might imagine, the program is
+embarrassingly parallel in the independent replicates.  This example
+uses `parallel_mapv_action` to take advantage of this, on a
+shared-memory multi-core machine, by splitting the replicates up among
+the cores the program is invited to use.  The serial version is
+provided in a comment for completeness.
