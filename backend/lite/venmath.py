@@ -224,12 +224,12 @@ registerBuiltinSP("signum", unaryNum(signum,
     descr="signum(x) returns the sign of x " \
           "(1 if positive, -1 if negative, 0 if zero)."))
 
-def grad_logisitc(args, direction):
+def grad_logistic(args, direction):
   [x] = args
   (_, deriv) = T_logistic(x)
   return [direction * deriv]
 
-registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logisitc,
+registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logistic,
     descr="The logistic function: 1/(1+exp(-x))"))
 
 registerBuiltinSP("logit", unaryNum(logit,
