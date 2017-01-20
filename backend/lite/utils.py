@@ -259,6 +259,43 @@ def logit(x):
   """
   return log(x / (1 - x))
 
+def logit_exp(x):
+  """Logit of exp function, log e^x/(1 - e^x).  Inverse of log_logistic.
+
+  Maps log-space probabilities (-\infty, 0] into log-odds space in \R.
+  """
+  # log e^x/(1 - e^x)
+  # = -log (1 - e^x)/e^x
+  # = -log (e^{-x} - 1)
+  # = -log expm1(-x)
+  #
+  # If x <= -37, expm1(-x) = e^{-x}, so this reduces to x.
+  if x <= -37:
+    return x
+  else:
+    return -log(expm1(-x))
+
+def d_logit_exp(x):
+  """d/dx log e^x/(1 - e^x)"""
+  # d/dx -log expm1(-x)
+  #   = -d/dx log expm1(-x)
+  #   = -(d expm1(-x))/expm1(-x)
+  #   = -(-e^{-x})/expm1(-x)
+  #   = e^{-x}/(e^{-x} - 1)
+  #   = 1/(1 - e^x)
+  #   = -1/expm1(x)
+  #
+  # For x >= 37, 1 - e^x = -e^x in IEEE 754 double-precision
+  # arithmetic, so this reduces to -x.
+  if x >= 37:
+    return -x
+  else:
+    ex1 = expm1(x)
+    try:
+      return -1/ex1
+    except ZeroDivisionError:
+      return float('inf')
+
 def simulateLogGamma(shape, np_rng):
   """Sample from log of standard Gamma distribution with given shape."""
   if shape < 1:
