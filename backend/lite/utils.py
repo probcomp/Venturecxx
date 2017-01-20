@@ -279,7 +279,7 @@ def d_logit_exp(x):
   """d/dx log e^x/(1 - e^x)"""
   # d/dx -log expm1(-x)
   #   = -d/dx log expm1(-x)
-  #   = -(d expm1(-x))/expm1(-x)
+  #   = -(d/dx expm1(-x))/expm1(-x)
   #   = -(-e^{-x})/expm1(-x)
   #   = e^{-x}/(e^{-x} - 1)
   #   = 1/(1 - e^x)
