@@ -253,7 +253,7 @@ def d_log_logistic(x):
   return logistic(-x)
 
 def logit(x):
-  """Logit function, x/(1 - x).  Inverse of logistic.
+  """Logit function, log x/(1 - x).  Inverse of logistic.
 
   Maps direct-space probabilities in [0, 1] into log-odds space.
   """
