@@ -33,6 +33,9 @@ from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import T_logistic
 from venture.lite.utils import d_log_logistic
 from venture.lite.utils import exp
+from venture.lite.utils import expm1
+from venture.lite.utils import log
+from venture.lite.utils import log1p
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
@@ -160,9 +163,17 @@ registerBuiltinSP("exp", unaryNum(exp,
     sim_grad=lambda args, direction: [direction * exp(args[0])],
     descr="Returns the exp of its argument"))
 
-registerBuiltinSP("log", unaryNum(np.log,
+registerBuiltinSP("expm1", unaryNum(expm1,
+    sim_grad=lambda args, direction: [direction * exp(args[0])],
+    descr="Returns the exp of its argument, minus one"))
+
+registerBuiltinSP("log", unaryNum(log,
     sim_grad=lambda args, direction: [direction * (1 / float(args[0]))],
     descr="Returns the log of its argument"))
+
+registerBuiltinSP("log1p", unaryNum(log1p,
+    sim_grad=lambda args, direction: [direction * (1 / (1 + float(args[0])))],
+    descr="Returns the log of one plus its argument"))
 
 def grad_pow(args, direction):
   x, y = args
