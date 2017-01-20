@@ -180,8 +180,8 @@ registerBuiltinSP("log1p", unaryNum(log1p,
 def grad_pow(args, direction):
   x, y = args
   # Use np.log so we get NaN rather than exception in the case of
-  # computing d x^y = x^y (log x dy + dx/y) at x < 0 but we never use
-  # the dy component later.
+  # computing d x^y = x^y (log x dy + y/x dx) at x < 0 but we never
+  # use the dy component later.
   return [direction * y * math.pow(x, y - 1),
           direction * np.log(x) * math.pow(x, y)]
 
