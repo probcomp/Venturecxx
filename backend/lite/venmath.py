@@ -32,6 +32,7 @@ from venture.lite.sp_help import zero_gradient
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import T_logistic
 from venture.lite.utils import d_log_logistic
+from venture.lite.utils import d_logit_exp
 from venture.lite.utils import exp
 from venture.lite.utils import expm1
 from venture.lite.utils import log
@@ -39,6 +40,7 @@ from venture.lite.utils import log1p
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
+from venture.lite.utils import logit_exp
 import venture.lite.types as t
 import venture.lite.value as v
 
@@ -242,3 +244,11 @@ def grad_log_logistic(args, direction):
 registerBuiltinSP("log_logistic", unaryNum(log_logistic,
     sim_grad=grad_log_logistic,
     descr="The log of the logistic function: -log (1 + exp(-x))"))
+
+def grad_logit_exp(args, direction):
+  [x] = args
+  return [direction * d_logit_exp(x)]
+
+registerBuiltinSP("logit_exp", unaryNum(logit_exp,
+    sim_grad=grad_logit_exp,
+    descr="The logit of exp: -log (exp(-x) - 1)"))
