@@ -624,6 +624,31 @@ class TestInstructions(unittest.TestCase):
                          {'loc':j(0,4), 'value':v.sym('name')}]},
                     }}])
 
+    def test_assume_values(self):
+        full_loc = j(0,6,7,6,8,1,11,1,16,1)
+        self.run_test('assume (x, y) = z;', [
+            {
+                'loc': full_loc,
+                'value': {
+                    'instruction': {'loc': full_loc, 'value': 'evaluate'},
+                    'expression': {
+                        'loc': full_loc,
+                        'value': [
+                            {'loc': j(0,6), 'value': v.sym('assume_values')},
+                            {
+                                'loc': j(7,6),
+                                'value': [
+                                    {'loc': j(8,1), 'value': v.sym('x')},
+                                    {'loc': j(11,1), 'value': v.sym('y')},
+                                ],
+                            },
+                            {'loc': j(16,1), 'value': v.sym('z')},
+                        ],
+                    },
+                },
+            }
+        ])
+
     def test_predict(self):
         # Predict
         #

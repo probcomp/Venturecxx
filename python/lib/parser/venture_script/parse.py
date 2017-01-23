@@ -147,6 +147,12 @@ class Semantics(object):
         s = ast.map_value(val.symbol, n)
         app = [i, s, e]
         return ast.locmerge(i, e, app)
+    def p_directive_assume_vals(self, k, l, ns, r, eq, e):
+        assert ast.isloc(e)
+        i = ast.update_value(k, val.symbol('assume_values'))
+        assert all(ast.isloc(n) for n in ns)
+        app = [i, ast.locmerge(l, r, ns), e]
+        return ast.locmerge(i, e, app)
     def p_directive_assume_prog(self, k, dol, sym_exp, eq, e):
         assert ast.isloc(e)
         assert ast.isloc(sym_exp)
