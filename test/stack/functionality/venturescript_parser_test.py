@@ -466,6 +466,9 @@ class TestVentureScriptParserAtoms(unittest.TestCase):
         self.run_legacy_test('[1,2]',
             [[v.sym('array'), v.number(1), v.number(2)]],
             'two')
+        self.run_legacy_test('[1,2,]',
+            [[v.sym('array'), v.number(1), v.number(2)]],
+            'two')
         self.run_legacy_test('[1,2,    3]',
             [[v.sym('array'), v.number(1), v.number(2), v.number(3)]],
             'three')

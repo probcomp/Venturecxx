@@ -176,6 +176,7 @@ params(many)		::= params(params) T_COMMA(c) L_NAME(param).
 
 arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
+arraybody(somecomma)	::= arrayelts(es) T_COMMA(c).
 arrayelts(one)		::= expression(e).
 arrayelts(many)		::= arrayelts(es) T_COMMA(c) expression(e).
 

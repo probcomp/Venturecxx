@@ -464,6 +464,7 @@ class Semantics(object):
     # arraybody, arrayelts: Return list of located expressions.
     def p_arraybody_none(self):                 return []
     def p_arraybody_some(self, es):             return es
+    def p_arraybody_somecomma(self, es, c):     return es
     def p_arrayelts_one(self, e):               return [e]
     def p_arrayelts_many(self, es, c, e):       es.append(e); return es
 
