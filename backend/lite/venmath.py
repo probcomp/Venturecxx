@@ -134,6 +134,8 @@ registerBuiltinSP("int_mod", binaryNumInt(integer_mod,
 
 registerBuiltinSP("min",
     binaryNum(min, descr="min returns the minimum value of its arguments"))
+registerBuiltinSP("max",
+    binaryNum(max, descr="max returns the maximum value of its arguments"))
 
 registerBuiltinSP("floor", unaryNum(math.floor,
     sim_grad=zero_gradient,
