@@ -448,7 +448,7 @@ class LogNormalOutputPSP(RandomPSP):
     #    = e^y dmu + e^y (y - mu)/sigma dsigma
     #    = x dmu + x (log x - mu)/sigma dsigma
     mu, sigma = args.operandValues()
-    return [direction*x, direction*x*(log(x) - mu)/sigma]
+    return [direction*x, direction*(x*(log(x) - mu)/sigma)]
 
   def logDensity(self, x, args):
     # x = e^y, y = log x
