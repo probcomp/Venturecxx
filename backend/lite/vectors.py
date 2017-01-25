@@ -222,3 +222,9 @@ registerBuiltinSP("sum",
     [t.ArrayUnboxedType(t.NumberType())],
     t.NumberType(),
     descr="%s(v) returns the sum of the elements of the vector v."))
+
+registerBuiltinSP("append",
+  deterministic_typed(np.append,
+    [t.ArrayType(), t.ArrayType()],
+    t.ArrayType(),
+    descr="%s(a, b) returns the concatenation of a and b."))
