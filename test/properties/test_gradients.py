@@ -46,6 +46,7 @@ def testGradientOfLogDensity():
         "categorical",          # TODO
         "dict",
         "flip",                 # TODO: Implement ZeroType
+        "lognormal",            # bounded support: (0, +\infty)
         "inv_wishart",          # TODO
         "multivariate_normal",  # TODO
         "wishart",              # TODO
