@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -43,7 +45,13 @@ def remap_by_rep_count(items):
     Assumes the items consist of all the integers in [0, k)
     (presumably repeated).
     """
-    (uniq, rep_counts) = np.unique(items, return_counts=True)
+    rep_counts = OrderedDict()
+    for item in items:
+        if item in rep_counts:
+            rep_counts[item] += 1
+        else:
+            rep_counts[item] = 1
+    uniq = rep_counts.keys()
     # The sorted list of unique elements of items is (by assumption)
     # the identity permutation.
     remapping = inverse(sorted(uniq, key=rep_counts.__getitem__, reverse=True))
