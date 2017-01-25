@@ -18,6 +18,8 @@
 # For some reason, pylint can never find numpy members (presumably metaprogramming).
 # pylint: disable=no-member
 
+from __future__ import division
+
 import math
 import warnings
 
@@ -431,6 +433,113 @@ generic_normal = dispatching_psp(
     NormalvvOutputPSP()])
 
 registerBuiltinSP("normal", no_request(generic_normal))
+
+
+class LogNormalOutputPSP(RandomPSP):
+  def simulate(self, args):
+    mu, sigma = args.operandValues()
+    return exp(args.np_prng().normal(loc=mu, scale=sigma))
+
+  def gradientOfSimulate(self, args, x, direction):
+    # dy = dmu + (y - mu)/sigma dsigma
+    #  x = e^y
+    # dx = d(e^y)
+    #    = e^y dy
+    #    = e^y dmu + e^y (y - mu)/sigma dsigma
+    #    = x dmu + x (log x - mu)/sigma dsigma
+    mu, sigma = args.operandValues()
+    return [direction*x, direction*x*(log(x) - mu)/sigma]
+
+  def logDensity(self, x, args):
+    # x = e^y, y = log x
+    # log P(x) = log [P(y) dy/dx] = log [P(y) d/dx log x]
+    #   = log [P(y)/x]
+    #   = [-log x - log sigma - HALF_LOG2PI - (y - mu)^2/(2 sigma^2)]
+    #   = [-log x - log sigma - HALF_LOG2PI - (log x - mu)^2/(2 sigma^2)]
+    mu, sigma = args.operandValues()
+    logx = log(x)
+    deviation = logx - mu
+    return -logx - log(sigma) - HALF_LOG2PI \
+      - (deviation*deviation/(2*sigma*sigma))
+
+  def logDensityBound(self, x, args):
+    # d[-log x - log sigma - 0.5 log 2pi - (log x - mu)^2/(2 sigma^2)]
+    # = -1/x dx - 1/sigma dsigma - d[(log x - mu)^2/(2 sigma^2)]
+    # = -1/x dx - 1/sigma dsigma
+    #   - [2 sigma^2 d[(log x - mu)^2] - (log x - mu)^2 d(2 sigma^2)
+    #     / (2 sigma^2)^2
+    # = -1/x dx - 1/sigma dsigma
+    #   - [2 sigma^2 2 (log x - mu) d(log x - mu)
+    #         - (log x - mu)^2 2 d(sigma^2)]
+    #     / (4 sigma^4)
+    # = -1/x dx - 1/sigma dsigma
+    #   - [2 sigma^2 2 (log x - mu) (1/x dx - dmu)
+    #         - (log x - mu)^2 2 2 sigma dsigma]
+    #     / (4 sigma^4)
+    # = -1/x dx - 1/sigma dsigma
+    #   - [4 sigma^2 (log x - mu) (1/x dx - dmu)
+    #         - 4 sigma (log x - mu)^2 dsigma]
+    #     / (4 sigma^4)
+    # = -1/x dx - 1/sigma dsigma
+    #   - [(log x - mu) (1/x dx - dmu)
+    #         - (log x - mu)^2/sigma dsigma]
+    #     / sigma^2
+    # = [-1/x - (log x - mu)/(sigma^2 x)] dx
+    #   + (log x - mu)/sigma^2 dmu
+    #   + [-1/sigma + (log x - mu)^2/sigma^3] dsigma
+    #
+    # Hence for fixed mu and sigma, x is critical at
+    #
+    #   -1/x = (log x - mu)/(sigma^2 x),
+    #
+    # or
+    mu, sigma = args.operandValues()
+    if mu is not None and sigma is not None:
+      assert x is None
+      # Density is critical at
+      #
+      #         0 = -1/x - (log x - mu)/(sigma^2 x)
+      #         -1/x = (log x - mu)/(sigma^2 x)
+      #         -1 = (log x - mu)/sigma^2
+      #         -sigma^2 = log x - mu
+      #         mu - sigma^2 = log x
+      #         x = e^{mu - sigma^2}.
+      #
+      return sigma**2/2 - mu - log(sigma) - HALF_LOG2PI
+    elif x is not None and sigma is not None:
+      assert mu is None
+      # Density is critical at
+      #
+      #         0 = (log x - mu)/sigma^2
+      #         mu = log x.
+      #
+      return -log(x) - log(sigma) - HALF_LOG2PI
+    elif x is not None and mu is not None:
+      assert sigma is None
+      # Density is critical at
+      #
+      #         0 = -1/sigma + (log x - mu)^2/sigma^3
+      #         1/sigma = (log x - mu)^2/sigma^3
+      #         1 = (log x - mu)^2/sigma^2
+      #         sigma^2 = (log x - mu)^2
+      #         sigma = |log x - mu|.
+      #
+      logx = log(x)
+      return -logx - log(abs(logx - mu)) - HALF_LOG2PI - (1/2)
+    else:
+      raise NotImplementedError(
+        'This bivariate optimization left as an exercise for the reader.')
+
+  def gradientOfLogDensity(self, x, args):
+    raise NotImplementedError('My support is bounded!  Bad for gradients.')
+
+  def description(self, name):
+    return '  %s(mu, sigma) samples a normal distribution with mean mu' \
+      ' and standard deviation sigma, and yields its exponential.' % (name,)
+
+
+registerBuiltinSP('lognormal', typed_nr(LogNormalOutputPSP(),
+    [t.NumberType(), t.PositiveType()], t.PositiveType()))
 
 
 class VonMisesOutputPSP(RandomPSP):
