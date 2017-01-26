@@ -438,7 +438,7 @@ class Ripl():
                 # Do not support partially parsed options or param
                 # hashes, since they have too many possible key types
                 return value
-            elif key in ['symbol', 'label']:
+            elif key in ['symbol', 'label', 'file']:
                 return value
             elif key == 'value':
                 # I believe values are a subset of expressions

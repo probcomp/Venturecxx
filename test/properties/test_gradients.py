@@ -41,9 +41,18 @@ from test_sps import relevantSPs
 @gen_in_backend("none")
 def testGradientOfLogDensity():
   for (name,sp) in relevantSPs():
-    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
-                    "flip", "bernoulli"]: # TODO: Implement ZeroType
-      if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
+    if name not in [
+        "bernoulli",            # TODO: Implement ZeroType
+        "categorical",          # TODO
+        "dict",
+        "flip",                 # TODO: Implement ZeroType
+        "lognormal",            # bounded support: (0, +\infty)
+        "inv_wishart",          # TODO
+        "multivariate_normal",  # TODO
+        "wishart",              # TODO
+    ]:
+      # TODO Check the ones that are random when curried
+      if sp.outputPSP.isRandom():
         yield checkGradientOfLogDensity, name, sp
 
 def checkGradientOfLogDensity(name, sp):

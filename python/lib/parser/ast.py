@@ -45,27 +45,31 @@ def isloc(obj):
     return isinstance(obj, Located)
 
 def update_value(located, v):
-    "Return a new `Located` instance with the same location and a new value."
+    "Return new `Located` instance with same location and new value."
     return Located(located.loc, v)
 
 def map_value(f, located):
-    """Return a new `Located` instance with the same location and a computed value.
+    """Return `Located` instance with same location and mapped value.
 
-    The new value is computed by applying ``f`` to the value in ``located``."""
+    The new value is computed by applying ``f`` to the value in
+    ``located``.
+    """
     return Located(located.loc, f(located.value))
 
 def loclist(items):
-    """Create a `Located` list of `Located` items.  The list spans the items' total extent.
+    """Create `Located` list of `Located` items.
 
-Assumes the items are in ascending order of location.
-"""
+    The list spans the items' total extent.
+
+    Assumes the items are in ascending order of location.
+    """
     assert len(items) >= 1
     (start, _) = items[0].loc
     (_, end) = items[-1].loc
     return Located([start, end], items)
 
 def locmerge(lv0, lv1, v):
-    """Create a `Located` object with the given value.
+    """Create `Located` object with given value spanning two located items.
 
     The extent the result spans the extent of the two given `Located`
     objects, which must be in location order.
@@ -76,9 +80,10 @@ def locmerge(lv0, lv1, v):
     return Located([start, end], v)
 
 def as_legacy_dict(located):
-    """Convert a `Located` object to a legacy Python dict representation.
+    """Convert `Located` object to legacy Python dict representation.
 
-    New code should not use this."""
+    New code should not use this.
+    """
     if isinstance(located, Located):
         return {"value": as_legacy_dict(located.value), "loc": located.loc}
     elif isinstance(located, list) or isinstance(located, tuple):

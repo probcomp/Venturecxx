@@ -201,7 +201,6 @@ def test_beta_tail(seed):
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr='(beta .1 .1)')
 
-@broken_in("puma", "Issue #504")
 @on_inf_prim("none")
 @stochasticTest
 def test_beta_thagomizer(seed):

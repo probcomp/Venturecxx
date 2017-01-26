@@ -33,11 +33,17 @@ from venture.lite.sp_help import zero_gradient
 from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import T_logistic
 from venture.lite.utils import d_log_logistic
+from venture.lite.utils import d_logit_exp
 from venture.lite.utils import exp
+from venture.lite.utils import expm1
+from venture.lite.utils import log
+from venture.lite.utils import log1p
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
 from venture.lite.utils import logit
+from venture.lite.utils import logit_exp
 from venture.lite.utils import logsumexp
+
 import venture.lite.types as t
 import venture.lite.value as v
 
@@ -131,6 +137,8 @@ registerBuiltinSP("int_mod", binaryNumInt(integer_mod,
 
 registerBuiltinSP("min",
     binaryNum(min, descr="min returns the minimum value of its arguments"))
+registerBuiltinSP("max",
+    binaryNum(max, descr="max returns the maximum value of its arguments"))
 
 registerBuiltinSP("floor", unaryNum(math.floor,
     sim_grad=zero_gradient,
@@ -162,14 +170,25 @@ registerBuiltinSP("exp", unaryNum(exp,
     sim_grad=lambda args, direction: [direction * exp(args[0])],
     descr="Returns the exp of its argument"))
 
-registerBuiltinSP("log", unaryNum(np.log,
+registerBuiltinSP("expm1", unaryNum(expm1,
+    sim_grad=lambda args, direction: [direction * exp(args[0])],
+    descr="Returns the exp of its argument, minus one"))
+
+registerBuiltinSP("log", unaryNum(log,
     sim_grad=lambda args, direction: [direction * (1 / float(args[0]))],
     descr="Returns the log of its argument"))
 
+registerBuiltinSP("log1p", unaryNum(log1p,
+    sim_grad=lambda args, direction: [direction * (1 / (1 + float(args[0])))],
+    descr="Returns the log of one plus its argument"))
+
 def grad_pow(args, direction):
   x, y = args
+  # Use np.log so we get NaN rather than exception in the case of
+  # computing d x^y = x^y (log x dy + y/x dx) at x < 0 but we never
+  # use the dy component later.
   return [direction * y * math.pow(x, y - 1),
-          direction * math.log(x) * math.pow(x, y)]
+          direction * np.log(x) * math.pow(x, y)]
 
 registerBuiltinSP("pow", binaryNum(math.pow, sim_grad=grad_pow,
     descr="pow returns its first argument raised to the power " \
@@ -215,12 +234,12 @@ registerBuiltinSP("signum", unaryNum(signum,
     descr="signum(x) returns the sign of x " \
           "(1 if positive, -1 if negative, 0 if zero)."))
 
-def grad_logisitc(args, direction):
+def grad_logistic(args, direction):
   [x] = args
   (_, deriv) = T_logistic(x)
   return [direction * deriv]
 
-registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logisitc,
+registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logistic,
     descr="The logistic function: 1/(1+exp(-x))"))
 
 registerBuiltinSP("logit", unaryNum(logit,
@@ -233,6 +252,14 @@ def grad_log_logistic(args, direction):
 registerBuiltinSP("log_logistic", unaryNum(log_logistic,
     sim_grad=grad_log_logistic,
     descr="The log of the logistic function: -log (1 + exp(-x))"))
+
+def grad_logit_exp(args, direction):
+  [x] = args
+  return [direction * d_logit_exp(x)]
+
+registerBuiltinSP("logit_exp", unaryNum(logit_exp,
+    sim_grad=grad_logit_exp,
+    descr="The logit of exp: -log (exp(-x) - 1)"))
 
 registerBuiltinSP("logsumexp", deterministic_typed(logsumexp,
     [t.UArray(t.Number)], t.Number,

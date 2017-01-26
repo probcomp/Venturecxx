@@ -147,6 +147,16 @@ def scan_language_char(scanner, text):
         scanner.produce(grammar.L_LANGUAGE, result)
         scanner.begin('')
 
+def scan_comment_open(scanner, _text):
+    scanner.comment_level += 1
+    scanner.begin('BLOCK_COMMENT')
+
+def scan_comment_close(scanner, _text):
+    assert scanner.comment_level > 0
+    scanner.comment_level -= 1
+    if scanner.comment_level == 0:
+        scanner.begin('')
+
 class Scanner(Plex.Scanner):
     line_comment = Plex.Str('//') + Plex.Rep(Plex.AnyBut('\n'))
     whitespace = Plex.Any('\f\n\r\t ')
@@ -219,6 +229,7 @@ class Scanner(Plex.Scanner):
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
         (Plex.Str('@{') + name, scan_language),
+        (Plex.Str('/*'), scan_comment_open),
         (Plex.AnyChar,  -1),    # Invalid -- error.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
@@ -231,6 +242,11 @@ class Scanner(Plex.Scanner):
         Plex.State('LANGUAGE', [
             (Plex.AnyChar,      scan_language_char),
         ]),
+        Plex.State('BLOCK_COMMENT', [
+            (Plex.Str('/*'),    scan_comment_open),
+            (Plex.Str('*/'),    scan_comment_close),
+            (Plex.AnyChar,      Plex.IGNORE),
+        ]),
     ])
 
     def __init__(self, file, name, languages=None):
@@ -239,6 +255,7 @@ class Scanner(Plex.Scanner):
         self.string_start = None
         self.languages = {} if languages is None else languages
         self.current_language = None
+        self.comment_level = 0
 
     # Override produce so we can consistently record a position with
     # each token, and use the position as character offset from the

@@ -32,6 +32,7 @@ with valid domains will result in dangerous behavior.
 
 from collections import OrderedDict
 from copy import deepcopy
+from weakref import WeakKeyDictionary
 import math
 
 from scipy.special import digamma, gammaln
@@ -58,6 +59,9 @@ class CRPSPAux(SPAux):
     self.numTables = 0
     self.numCustomers = 0
 
+    # application node ---> most recently unincorporated table
+    self.cachedTables = WeakKeyDictionary()
+
   def copy(self):
     crp = CRPSPAux()
     crp.tableCounts = deepcopy(self.tableCounts)
@@ -65,6 +69,7 @@ class CRPSPAux(SPAux):
     crp.freeTables = self.freeTables.copy()
     crp.numTables = self.numTables
     crp.numCustomers = self.numCustomers
+    crp.cachedTables = WeakKeyDictionary(self.cachedTables)
     return crp
 
   def cts(self):
@@ -144,6 +149,8 @@ class CRPOutputPSP(RandomPSP):
         aux.freeTables.discard(table)
       else:
         aux.nextTable = max(table+1, aux.nextTable)
+    if args.node in aux.cachedTables:
+      del aux.cachedTables[args.node]
 
   def unincorporate(self, table, args):
     aux = args.spaux()
@@ -153,6 +160,7 @@ class CRPOutputPSP(RandomPSP):
       aux.numTables -= 1
       del aux.tableCounts[table]
       aux.freeTables.add(table)
+      aux.cachedTables[args.node] = table
 
   def logDensityOfData(self, aux):
     # For derivation see Section Chinese Restaraunt Process in
@@ -173,8 +181,27 @@ class CRPOutputPSP(RandomPSP):
 
   def enumerateValues(self, args):
     aux = args.spaux()
-    oldTables = [i for i in aux.tableCounts]
-    return oldTables + [aux.nextTable]
+    tables = aux.tableCounts.keys()
+    # If there were recently unincorporated applications that emptied
+    # tables, offer those as possibilities.  Otherwise, offer the next
+    # unseated table.
+    #
+    # XXX This ignores the free table set, which doesn't matter
+    # because the outputs will be fed only to logDensity, which cares
+    # only whether the table is currently empty or not.  But maybe for
+    # consistency we ought to share logic between this and the free
+    # table set for simulate.
+    #
+    # XXX This implementation will suggest to a multi-site proposal
+    # that there are more distinct possibilities than actually exist,
+    # if more than one table was emptied by recent unincorporations.
+    # This is Github issue #462:
+    # https://github.com/probcomp/Venturecxx/issues/462
+    if aux.cachedTables:
+      tables += sorted(aux.cachedTables.values())
+    else:
+      tables.append(aux.nextTable)
+    return tables
 
 registerBuiltinSP('make_crp', typed_nr(MakeCRPOutputPSP(),
     [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args=1))

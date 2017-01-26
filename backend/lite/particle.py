@@ -22,6 +22,7 @@ from collections import OrderedDict
 from venture.lite.node import Node
 from venture.lite.sp import VentureSPRecord
 from venture.lite.trace import Trace
+from venture.lite.utils import override
 from venture.lite.wttree import PMap
 from venture.lite.wttree import PSet
 import venture.lite.address as addr
@@ -41,6 +42,8 @@ class Particle(Trace):
     if type(trace) is Particle: self.initFromParticle(trace)
     elif type(trace) is Trace: self.initFromTrace(trace)
     else: raise Exception("Must init particle from trace or particle")
+    # Assumed by hasMadeSPRecordAt.
+    assert type(self.base) is Trace
 
   # Note: using "copy()" informally for both legit_copy and persistent_copy
   def initFromParticle(self, particle):
@@ -138,6 +141,12 @@ class Particle(Trace):
   def setValueAt(self, node, value):
     self.values = self.values.insert(node, value)
 
+  @override(Trace)
+  def hasMadeSPRecordAt(self, node):
+    # Nobody should call this because the base is always a Trace, not
+    # a Particle.
+    raise NotImplementedError('You should not be calling this!')
+
   def madeSPRecordAt(self, node):
     return VentureSPRecord(self.madeSPAt(node), self.madeSPAuxAt(node))
 
@@ -207,9 +216,14 @@ class Particle(Trace):
 
   def containsSPFamilyAt(self, node, id):
     makerNode = self.spRefAt(node).makerNode
+    assert makerNode in self.newMadeSPFamilies or \
+      self.base.hasMadeSPRecordAt(makerNode)
     if makerNode in self.newMadeSPFamilies:
       assert isinstance(self.newMadeSPFamilies.lookup(makerNode), PMap)
       if id in self.newMadeSPFamilies.lookup(makerNode):
+        return True
+      if self.base.hasMadeSPRecordAt(makerNode) and \
+         self.base.madeSPFamiliesAt(makerNode).containsFamily(id):
         return True
     elif self.base.madeSPFamiliesAt(makerNode).containsFamily(id): return True
     return False
