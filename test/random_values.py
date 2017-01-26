@@ -38,6 +38,8 @@ class DefaultRandomVentureValue(object):
     return v.VentureInteger(npr.choice(range(10)))
   def positive(self, **_kwargs):
     return v.VentureNumber(npr.uniform(0, 10)) # TODO Prevent zero
+  def nonpositive(self, **_kwargs):
+    return v.VentureNumber(log(npr.uniform(0, 1)))
   def probability(self, **_kwargs):
     return v.VentureNumber(npr.uniform(0, 1))
   def atom(self, **_kwargs):
