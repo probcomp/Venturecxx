@@ -35,10 +35,8 @@ conveniences, since those forms occur often in programmatically
 constructed expressions.
 """
 
+import __builtin__
 import numbers
-
-python_list = list
-python_dict = dict
 
 def number(v):
   """Construct a Venture (floating-point) number.
@@ -261,7 +259,7 @@ def app(*items):
   Note that the result will not be evaluated as an application if the
   first item is a symbol which is a macro name or special form.
   """
-  return python_list(items) # Application is a Python list
+  return __builtin__.list(items) # Application is a Python list
 
 def quote(v):
   """Construct a Venture quotation form.
@@ -332,13 +330,13 @@ def is_val(obj):
 
   Only checks the top level, not recursively."""
   # Python lists are ok, because those represent arrays.
-  return is_basic_val(obj) or isinstance(obj, python_list)
+  return is_basic_val(obj) or isinstance(obj, __builtin__.list)
 
 def is_basic_val(obj):
   """Checks whether ``obj`` is a valid unannotated literal Venture object.
 
   Only checks the top level, not recursively."""
-  return isinstance(obj, python_dict) and "type" in obj and "value" in obj
+  return isinstance(obj, __builtin__.dict) and "type" in obj and "value" in obj
 
 def basic_val_type(obj):
   """Returns the type of the Venture object ``obj``.
