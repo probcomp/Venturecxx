@@ -274,7 +274,7 @@ class VentureInteger(VentureValue):
     if other == 0:
       return self
     else:
-      raise "Cannot move %s by a non-zero displacement" % (self,)
+      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
   def expressionFor(self):
     return self.number
 
@@ -345,7 +345,7 @@ class VentureAtom(VentureValue):
     if other == 0:
       return self
     else:
-      raise "Cannot move %s by a non-zero displacement" % (self,)
+      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
   def expressionFor(self):
     return v.quote(self) # TODO Is this right?
 
@@ -370,7 +370,7 @@ class VentureBool(VentureValue):
     if other == 0:
       return self
     else:
-      raise "Cannot move %s by a non-zero displacement" % (self,)
+      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
   def expressionFor(self):
     return v.symbol("true") if self.boolean else v.symbol("false")
 
@@ -394,7 +394,7 @@ class VentureSymbol(VentureValue):
     if other == 0:
       return self
     else:
-      raise "Cannot move %s by a non-zero displacement" % (self,)
+      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
 
@@ -422,7 +422,7 @@ class VentureString(VentureValue):
     if other == 0:
       return self
     else:
-      raise "Cannot move %s by a non-zero displacement" % (self,)
+      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
   def expressionFor(self):
     return v.quote(self.asStackDict(None))
 
@@ -464,7 +464,7 @@ class VentureNil(VentureValue):
     if other == 0:
       return self
     else:
-      raise "Cannot move %s by a non-zero displacement" % (self,)
+      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
 
   def lookup(self, index):
     raise VentureValueError("Index out of bounds: too long by %s" % index)
