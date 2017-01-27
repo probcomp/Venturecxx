@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import OrderedDict
+import typing as tp
 
 from venture.lite.exception import VentureError
 from venture.lite.value import VentureValue
@@ -24,16 +25,19 @@ from venture.lite.value import registerVentureType
 from venture.lite.types import VentureType
 from venture.lite.types import standard_venture_type
 
+T = tp.TypeVar('T')
+
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
 # should be consistent.
 # Binding a symbol to the Python value None has the effect of making
 # the symbol behave as if unbound, shadowing existing bindings; this
 # behavior is used in the implementation of letrec.
-class VentureEnvironment(VentureValue):
+class VentureEnvironment(VentureValue, tp.Generic[T]):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
+    # type: (VentureEnvironment, tp.List[str], tp.List[T]) -> None
     self.outerEnv = outerEnv
-    self.frame = OrderedDict()
+    self.frame = OrderedDict() # type: OrderedDict[str, T]
     if ids:
       for sym in ids:
         assert isinstance(sym, str)

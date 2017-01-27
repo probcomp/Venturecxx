@@ -23,6 +23,7 @@ from collections import OrderedDict
 from numbers import Number
 import hashlib
 import operator
+from typing import Union
 
 import numpy as np # type: ignore
 
@@ -170,7 +171,8 @@ this."""
   return v1.dot(v2)
 
 class VentureNumber(VentureValue):
-  def __init__(self,number):
+  def __init__(self, number):
+    # type: (Union[int, long, float]) -> None
     if not isinstance(number, Number):
       raise VentureTypeError(
         "%s is of %s, not Number" % (str(number), type(number)))
