@@ -217,7 +217,7 @@ def matrix(vs):
 
   Venture matrices are self-evaluating.
   """
-  import numpy as np
+  import numpy as np # type: ignore
   return val("matrix", np.asarray(vs))
 
 def symmetric_matrix(vs):
@@ -228,7 +228,7 @@ def symmetric_matrix(vs):
 
   Venture symmetric matrices are self-evaluating.
   """
-  import numpy as np
+  import numpy as np # type: ignore
   return val("symmetric_matrix", np.asarray(vs))
 
 def sp(v, aux=None):

@@ -24,7 +24,7 @@ from numbers import Number
 import hashlib
 import operator
 
-import numpy as np
+import numpy as np # type: ignore
 
 from venture.lite.exception import VentureTypeError
 from venture.lite.exception import VentureValueError
