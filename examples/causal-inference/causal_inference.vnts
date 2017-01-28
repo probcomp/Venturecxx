@@ -1,0 +1,45 @@
+assume get_causal_ordering = (list_of_nodes) -> {
+    if(size(list_of_nodes)==1) {
+        list_of_nodes}
+    else {
+        if(size(list_of_nodes)==2){// well, [1] + [2] is [3] whereas 
+                                   // [1] + [2,3] shows the desired behaviour
+                                   // namely [1,2,3]. Therefore, we need another
+                                   // condition to catch this.
+            if(flip()) {list_of_nodes} else {[list_of_nodes[1], list_of_nodes[0]]}}
+        else {                  
+            random_index ~ uniform_discrete(0, size(list_of_nodes));
+            popped =  pop(list_of_nodes, random_index);
+            [popped[0]] + get_causal_ordering(popped[1])}}
+    
+};
+
+
+
+assume causal_ordering = get_causal_ordering(arange(number_nodes));
+
+assume find = (list, item) -> {find_helper(to_list(list), item, 0)};
+assume find_helper = (list, item, index) -> {
+       if(list[0]==item)
+            {index}
+       else
+            {find_helper(rest(list), item, index + 1)}
+    
+};
+
+assume edge = mem((parent, child) -> {
+   causal_ordering_parent = integer(find(causal_ordering, parent));
+   causal_ordering_child = integer(find(causal_ordering, child));
+   if (causal_ordering_parent >= causal_ordering_child){
+            False
+        }
+   else {
+            flip() 
+        }
+    });
+
+assume DAG = mapv((i) -> {
+        mapv((j) -> {edge(real(i),real(j))}, arange(number_nodes))},
+        arange(number_nodes));
+
+
