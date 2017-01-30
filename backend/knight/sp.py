@@ -2,6 +2,7 @@ from typing import Callable
 from typing import Tuple
 
 import venture.lite.value as vv 
+from venture.lite.builtin import builtInSPs
 from venture.lite.env import VentureEnvironment
 import venture.lite.sp as sp
 from venture.lite.sp_use import MockArgs
@@ -47,3 +48,11 @@ class SPFromLite(SP):
     else:
       ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
       return (0, Datum(ans))
+
+def init_env():
+  # type: () -> VentureEnvironment[vv.VentureValue]
+  env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
+  for name, sp in builtInSPs().iteritems():
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      env.addBinding(name, SPFromLite(sp))
+  return VentureEnvironment(env)

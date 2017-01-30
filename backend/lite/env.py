@@ -44,6 +44,7 @@ class VentureEnvironment(VentureValue, tp.Generic[T]):
     if ids and nodes: self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
+    # type: (str, T) -> None
     if not isinstance(sym, str):
       raise VentureError("Symbol '%s' must be a string, not %s" % (str(sym), type(sym)))
     if sym in self.frame:

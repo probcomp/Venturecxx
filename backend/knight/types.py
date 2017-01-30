@@ -19,10 +19,10 @@ class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
 class Trace(object):
   def subexpr_subtrace(self, index):
     # type: (int) -> Trace
-    pass
+    return self
   def application_subtrace(self):
     # type: () -> Trace
-    pass
+    return self
   def root_constrained(self):
     # type: () -> bool
     pass

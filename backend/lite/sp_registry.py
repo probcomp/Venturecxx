@@ -23,12 +23,16 @@
 # - Trace construction involves additional activity (e.g., Venture SP
 #   Records)
 
+from typing import Dict
+from venture.lite.sp import SP
+
 _builtInSPsList = []
 
 def registerBuiltinSP(name, sp):
   _builtInSPsList.append([name, sp])
 
 def builtInSPs():
+  # type: () -> Dict[str, SP]
   return dict(_builtInSPsList)
 
 def builtInSPsIter():
