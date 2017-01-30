@@ -61,7 +61,7 @@ class SPAux(object):
 
 class SP(object):
   def __init__(self, requestPSP, outputPSP):
-    from psp import PSP
+    from venture.lite.psp import PSP
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
     assert isinstance(requestPSP, PSP)
