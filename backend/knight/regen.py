@@ -30,6 +30,8 @@ def regen(exp, env, trace):
     return (0, exp.val)
   if isinstance(exp, Var):
     return (0, env.findSymbol(exp.name))
+  if isinstance(exp, Lam):
+    return (0, CompoundSP(exp.params, exp.body, env))
 
 def regen_list(exps, env, trace):
   # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, List[vv.VentureValue]]
@@ -44,12 +46,11 @@ def regen_list(exps, env, trace):
 
 def r_apply(oper, args, trace):
   # type: (SP, List[vv.VentureValue], Trace) -> Tuple[float, vv.VentureValue]
-  reg = oper.regenerator()
-  (appw, res) = reg(args, trace)
+  (appw, res) = oper.regenerate(args, trace)
   if isinstance(res, Datum):
     return (appw, res.datum)
   elif isinstance(res, Request):
     (recurw, val) = regen(res.exp, res.env, res.trace)
     return (appw + recurw, val)
 
-print regen(App([Lit(vv.VentureNumber(1)), Lit(vv.VentureNumber(2))]), VentureEnvironment(), Trace())
+print regen(App([Lam(["x"], Var("x")), Lit(vv.VentureNumber(2))]), VentureEnvironment(), Trace())
