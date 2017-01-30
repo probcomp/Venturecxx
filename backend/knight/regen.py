@@ -25,7 +25,7 @@ class Trace(object):
     pass
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
-Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment), ('trace', Trace)])
+Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]), ('trace', Trace)])
 
 RegenResult = Union[Datum, Request]
 
@@ -35,7 +35,7 @@ class SP(vv.VentureValue):
     raise NotImplementedError
 
 def regen(exp, env, trace):
-  # type: (Exp, VentureEnvironment, Trace) -> Tuple[float, vv.VentureValue]
+  # type: (Exp, VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, vv.VentureValue]
   if isinstance(exp, App):
     (subw, subvals) = regen_list(exp.subs, env, trace)
     oper = subvals[0]
@@ -48,7 +48,7 @@ def regen(exp, env, trace):
     return (0, env.findSymbol(exp.name))
 
 def regen_list(exps, env, trace):
-  # type: (List[Exp], VentureEnvironment, Trace) -> Tuple[float, List[vv.VentureValue]]
+  # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, List[vv.VentureValue]]
   # This is mapM (\e -> regen(e, env, trace)) in the Writer (Sum Double) monad.
   w = 0.0
   anss = []
