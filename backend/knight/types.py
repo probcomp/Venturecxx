@@ -23,6 +23,12 @@ class Trace(object):
   def application_subtrace(self):
     # type: () -> Trace
     pass
+  def root_constrained(self):
+    # type: () -> bool
+    pass
+  def get_at_root(self):
+    # type: () -> vv.VentureValue
+    pass
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]), ('trace', Trace)])

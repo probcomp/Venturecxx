@@ -16,19 +16,26 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import numbers
+from typing import Any
+from typing import Callable
+from typing import Type
+from typing import TypeVar
 
 import numpy as np
-import numpy.linalg as npla
 import scipy.special as ss
 
 import venture.lite.mvnormal as mvnormal
 
+C = TypeVar('C')
+FuncT = TypeVar('FuncT', bound=Callable[..., Any])
+
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
 def override(interface_class):
+  # type: (Type[C]) -> Callable[[FuncT], FuncT]
   def overrider(method):
+    # type: (FuncT) -> FuncT
     assert method.__name__ in dir(interface_class)
-    return method
+    return method # type: ignore
   return overrider
 
 def log(x): return float('-inf') if x == 0 else math.log(x)
