@@ -3,6 +3,8 @@ from typing import Tuple
 
 import venture.lite.value as vv 
 from venture.lite.env import VentureEnvironment
+from venture.lite.sp_use import MockArgs
+from venture.lite.psp import NullRequestPSP
 
 from venture.knight.types import Exp
 from venture.knight.types import RegenResult
@@ -25,3 +27,18 @@ class CompoundSP(SP):
     env = VentureEnvironment(self.env, self.params, args)
     req = Request(self.body, env, trace)
     return (0, req)
+
+class SPFromLite(SP):
+  def __init__(self, lite_sp):
+    self.lite_sp = lite_sp
+    assert isinstance(lite_sp.requestPSP, NullRequestPSP)
+    self.aux = lite_sp.constructSPAux()
+
+  def regenerate(self, args, trace):
+    if trace.root_constrained():
+      v = trace.get_at_root()
+      w = self.lite_sp.outputPSP.logDensity(v, MockArgs(args, self.aux))
+      return (w, v)
+    else:
+      ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
+      return (0, ans)
