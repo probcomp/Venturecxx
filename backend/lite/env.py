@@ -64,6 +64,7 @@ class VentureEnvironment(VentureValue, tp.Generic[T]):
     self.frame[sym] = val
 
   def findSymbol(self,sym):
+    # type: (str) -> T
     if sym in self.frame: ret = self.frame[sym]
     elif not self.outerEnv: ret = None
     else: ret = self.outerEnv.findSymbol(sym)

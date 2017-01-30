@@ -44,6 +44,8 @@ def regen(exp, env, trace):
     return (subw + appw, val)
   if isinstance(exp, Lit):
     return (0, exp.val)
+  if isinstance(exp, Var):
+    return (0, env.findSymbol(exp.name))
 
 def regen_list(exps, env, trace):
   # type: (List[Exp], VentureEnvironment, Trace) -> Tuple[float, List[vv.VentureValue]]
