@@ -7,32 +7,16 @@ from typing import Union
 import venture.lite.value as vv 
 from venture.lite.env import VentureEnvironment
 
-class Exp(object): pass
-
-# Make classes so that I can inherit from Exp.
-# Pylint misunderstands typing.List pylint: disable=unsubscriptable-object, invalid-sequence-index
-class App(NamedTuple('App', [('subs', List[Exp])]), Exp): pass
-class Var(NamedTuple('Var', [('name', str)]), Exp): pass
-class Lit(NamedTuple('Lit', [('val', vv.VentureValue)]), Exp): pass
-class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
-
-class Trace(object):
-  def subexpr_subtrace(self, index):
-    # type: (int) -> Trace
-    pass
-  def application_subtrace(self):
-    # type: () -> Trace
-    pass
-
-Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
-Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]), ('trace', Trace)])
-
-RegenResult = Union[Datum, Request]
-
-class SP(vv.VentureValue):
-  def regenerator(self):
-    # type: () -> Callable[[List[vv.VentureValue], Trace], Tuple[float, RegenResult]]
-    raise NotImplementedError
+from venture.knight.types import Exp
+from venture.knight.types import App
+from venture.knight.types import Lit
+from venture.knight.types import Var
+from venture.knight.types import Lam
+from venture.knight.types import Trace
+from venture.knight.types import Datum
+from venture.knight.types import Request
+from venture.knight.sp import SP
+from venture.knight.sp import CompoundSP
 
 def regen(exp, env, trace):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, vv.VentureValue]
