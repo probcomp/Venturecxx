@@ -23,7 +23,9 @@ from collections import OrderedDict
 from numbers import Number
 import hashlib
 import operator
+from typing import Tuple
 from typing import Union
+from typing import TYPE_CHECKING
 
 import numpy as np # type: ignore
 
@@ -32,6 +34,9 @@ from venture.lite.exception import VentureValueError
 from venture.lite.mlens import MLens
 import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
+
+if TYPE_CHECKING:
+  from venture.lite.types import VentureType
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -488,10 +493,12 @@ class VentureNil(VentureValue):
   def asPossiblyImproperList(self):
     return ([], None)
   def asPythonList(self, _elt_type=None):
+    # type: (VentureType) -> List[object]
     return []
 
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
+    # type: (Tuple[Union[int, VentureValue], Union[int, VentureValue]]) -> None
     # TODO Maybe I need to be careful about tangent and cotangent
     # spaces after all.  A true pair needs to have a venture value
     # inside; a pair that represents the cotangent of something needs
@@ -623,6 +630,7 @@ class VenturePair(VentureValue):
   def isValidCompoundForm(self):
     return self.rest.isValidCompoundForm()
   def asPythonList(self, elt_type=None):
+    # type: (VentureType) -> List[object]
     if elt_type is not None:
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
@@ -725,6 +733,9 @@ class VentureArray(VentureValue):
 
   def isValidCompoundForm(self): return True
   def asPythonList(self, elt_type=None):
+    # type: (VentureType) -> List[object]
+    # I don't think there is any way to tell mypy that the output is a
+    # list of VentureValue if the input is None
     return self.getArray(elt_type)
 
 class VentureArrayUnboxed(VentureValue):
@@ -844,6 +855,7 @@ and O(n) copy."""
 
   def isValidCompoundForm(self): return False
   def asPythonList(self, elt_type=None):
+    # type: (VentureType) -> List[object]
     return self.getArray(elt_type)
 
 class VentureSimplex(VentureValue):

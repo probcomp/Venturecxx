@@ -49,6 +49,17 @@ class SPFromLite(SP):
       ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
       return (0, Datum(ans))
 
+class RegenerateSP(SP):
+  def regenerate(self, args, _trace):
+    # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
+    (oper, subargs, trace) = args
+    assert isinstance(oper, SP)
+    assert isinstance(subargs, (vv.VenturePair, vv.VentureNil, vv.VentureArray, vv.VentureArrayUnboxed, vv.VentureSimplex))
+    assert isinstance(trace, Trace)
+    from venture.knight.regen import r_apply
+    (w, val) = r_apply(oper, subargs.asPythonList(), trace)
+    return (w, Datum(vv.VenturePair((vv.VentureNumber(w), val))))
+
 def init_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]

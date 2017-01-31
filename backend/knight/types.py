@@ -16,7 +16,7 @@ class Var(NamedTuple('Var', [('name', str)]), Exp): pass
 class Lit(NamedTuple('Lit', [('val', vv.VentureValue)]), Exp): pass
 class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
 
-class Trace(object):
+class Trace(vv.VentureValue):
   def subexpr_subtrace(self, index):
     # type: (int) -> Trace
     return self
