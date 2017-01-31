@@ -68,14 +68,14 @@ class SubtraceSP(SP):
 class TraceHasSP(SP):
   def regenerate(self, args, constraints, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
-    (trace) = args
+    (trace,) = args
     assert isinstance(trace, Trace)
     return (0, Datum(vv.VentureBool(trace.has())))
 
 class TraceGetSP(SP):
   def regenerate(self, args, constraints, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
-    (trace) = args
+    (trace,) = args
     assert isinstance(trace, Trace)
     return (0, Datum(trace.get()))
 

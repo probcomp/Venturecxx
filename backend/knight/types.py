@@ -77,8 +77,11 @@ def stack_dict_to_exp(form):
 
 def convert_lambda_terms(exp):
   # type: (App) -> Exp
+  if len(exp.subs) < 1:
+    return exp
   if isinstance(exp.subs[0], Var):
     if exp.subs[0].name == "make_csp":
+      assert len(exp.subs) == 3
       return Lam(extract_quoted_param_list(exp.subs[1]), extract_quoted(exp.subs[2]))
     else:
       return exp

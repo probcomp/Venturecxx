@@ -364,6 +364,7 @@ class VentureAtom(VentureValue):
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
+    # type: (bool) -> None
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
     self.boolean = bool(boolean)
   def __repr__(self):
