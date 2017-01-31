@@ -55,7 +55,8 @@ class Trace(vv.VentureValue):
     self.value = value
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
-Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]), ('trace', Trace)])
+Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]),
+                                 ('constraints', Trace), ('interventions', Trace)])
 
 RegenResult = Union[Datum, Request]
 

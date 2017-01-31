@@ -17,8 +17,8 @@ from venture.knight.types import Request
 from venture.knight.types import Trace
 
 class SP(vv.VentureValue):
-  def regenerate(self, args, trace):
-    # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     raise NotImplementedError
 
 class CompoundSP(SP):
@@ -28,10 +28,10 @@ class CompoundSP(SP):
     self.body = body
     self.env = env
 
-  def regenerate(self, args, trace):
-    # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     env = VentureEnvironment(self.env, self.params, args)
-    req = Request(self.body, env, trace)
+    req = Request(self.body, env, constraints, interventions)
     return (0, req)
 
 class SPFromLite(SP):
@@ -41,10 +41,10 @@ class SPFromLite(SP):
     assert isinstance(lite_sp.requestPSP, NullRequestPSP)
     self.aux = lite_sp.constructSPAux()
 
-  def regenerate(self, args, trace):
-    # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
-    if trace.has():
-      v = trace.get()
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    if constraints.has():
+      v = constraints.get()
       w = self.lite_sp.outputPSP.logDensity(v, MockArgs(args, self.aux))
       return (w, Datum(v))
     else:
@@ -52,20 +52,21 @@ class SPFromLite(SP):
       return (0, Datum(ans))
 
 class RegenerateSP(SP):
-  def regenerate(self, args, _trace):
-    # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
-    (oper, subargs, trace) = args
+  def regenerate(self, args, _constraints, _interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (oper, subargs, constraints, interventions) = args
     assert isinstance(oper, SP)
     assert isinstance(subargs, (vv.VenturePair, vv.VentureNil, vv.VentureArray, \
                                 vv.VentureArrayUnboxed, vv.VentureSimplex))
-    assert isinstance(trace, Trace)
+    assert isinstance(constraints, Trace)
+    assert isinstance(interventions, Trace)
     # Pylint misunderstands typing.List
     # pylint: disable=unsubscriptable-object, invalid-sequence-index
     lst = cast(List[vv.VentureValue], subargs.asPythonList())
     for arg in lst:
       assert isinstance(arg, vv.VentureValue)
     from venture.knight.regen import r_apply
-    (w, val) = r_apply(oper, lst, trace)
+    (w, val) = r_apply(oper, lst, constraints, interventions)
     return (w, Datum(vv.VenturePair((vv.VentureNumber(w), val))))
 
 def init_env():

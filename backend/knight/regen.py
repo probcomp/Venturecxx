@@ -18,13 +18,14 @@ from venture.knight.types import Request
 from venture.knight.sp import SP
 from venture.knight.sp import CompoundSP
 
-def regen(exp, env, trace):
-  # type: (Exp, VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, vv.VentureValue]
+def regen(exp, env, constraints, interventions):
+  # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
   if isinstance(exp, App):
-    (subw, subvals) = regen_list(exp.subs, env, trace)
+    (subw, subvals) = regen_list(exp.subs, env, constraints, interventions)
     oper = subvals[0]
     assert isinstance(oper, SP)
-    (appw, val) = r_apply(oper, subvals[1:], trace.application_subtrace())
+    (appw, val) = r_apply(oper, subvals[1:],
+                          constraints.application_subtrace(), interventions.application_subtrace())
     return (subw + appw, val)
   if isinstance(exp, Lit):
     return (0, exp.val)
@@ -33,22 +34,22 @@ def regen(exp, env, trace):
   if isinstance(exp, Lam):
     return (0, CompoundSP(exp.params, exp.body, env))
 
-def regen_list(exps, env, trace):
-  # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, List[vv.VentureValue]]
+def regen_list(exps, env, constraints, interventions):
+  # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, List[vv.VentureValue]]
   # This is mapM (\e -> regen(e, env, trace)) in the Writer (Sum Double) monad.
   w = 0.0
   anss = []
   for (i, e) in enumerate(exps):
-    (dw, ans) = regen(e, env, trace.subexpr_subtrace(i))
+    (dw, ans) = regen(e, env, constraints.subexpr_subtrace(i), interventions.subexpr_subtrace(i))
     w += dw
     anss.append(ans)
   return (w, anss)
 
-def r_apply(oper, args, trace):
-  # type: (SP, List[vv.VentureValue], Trace) -> Tuple[float, vv.VentureValue]
-  (appw, res) = oper.regenerate(args, trace)
+def r_apply(oper, args, constraints, interventions):
+  # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
+  (appw, res) = oper.regenerate(args, constraints, interventions)
   if isinstance(res, Datum):
     return (appw, res.datum)
   elif isinstance(res, Request):
-    (recurw, val) = regen(res.exp, res.env, res.trace)
+    (recurw, val) = regen(res.exp, res.env, res.constraints, res.interventions)
     return (appw + recurw, val)
