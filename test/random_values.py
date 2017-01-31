@@ -22,6 +22,7 @@ import numpy.random as npr
 from venture.lite import value as v
 from venture.lite import types as t
 from venture.lite.utils import normalizeList
+from venture.lite.utils import log
 from venture.lite import env as env
 
 class DefaultRandomVentureValue(object):
