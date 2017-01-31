@@ -20,6 +20,13 @@ from venture.knight.sp import CompoundSP
 
 def regen(exp, env, constraints, interventions):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
+  if interventions.has():
+    return (0, interventions.get())
+  else:
+    return do_regen(exp, env, constraints, interventions)
+
+def do_regen(exp, env, constraints, interventions):
+  # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
   if isinstance(exp, App):
     (subw, subvals) = regen_list(exp.subs, env, constraints, interventions)
     oper = subvals[0]
