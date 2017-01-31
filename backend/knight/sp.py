@@ -57,6 +57,36 @@ class GetCurrentTraceSP(SP):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     return (0, Datum(interventions))
 
+class SubtraceSP(SP):
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (trace, key) = args
+    assert isinstance(trace, Trace)
+    ans = trace.subtrace(key)
+    return (0, Datum(ans))
+
+class TraceHasSP(SP):
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (trace) = args
+    assert isinstance(trace, Trace)
+    return (0, Datum(vv.VentureBool(trace.has())))
+
+class TraceGetSP(SP):
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (trace) = args
+    assert isinstance(trace, Trace)
+    return (0, Datum(trace.get()))
+
+class TraceSetSP(SP):
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (trace, val) = args
+    assert isinstance(trace, Trace)
+    trace.set(val)
+    return (0, Datum(vv.VentureNil()))
+
 class RegenerateSP(SP):
   def regenerate(self, args, _constraints, _interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
@@ -83,4 +113,8 @@ def init_env():
       env.addBinding(name, SPFromLite(sp))
   env.addBinding("regenerate", RegenerateSP())
   env.addBinding("get_current_trace", GetCurrentTraceSP())
+  env.addBinding("subtrace", SubtraceSP())
+  env.addBinding("trace_has", TraceHasSP())
+  env.addBinding("trace_get", TraceGetSP())
+  env.addBinding("trace_set", TraceSetSP())
   return VentureEnvironment(env)

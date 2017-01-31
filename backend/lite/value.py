@@ -459,6 +459,7 @@ class VentureForeignBlob(VentureValue):
 
 class VentureNil(VentureValue):
   def __init__(self):
+    # type: () -> None
     pass
   def __repr__(self):
     return "Nil"
