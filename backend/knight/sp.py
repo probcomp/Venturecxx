@@ -52,6 +52,11 @@ class SPFromLite(SP):
     interventions.set(ans)
     return (w, Datum(ans))
 
+class GetCurrentTraceSP(SP):
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    return (0, Datum(interventions))
+
 class RegenerateSP(SP):
   def regenerate(self, args, _constraints, _interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
@@ -77,4 +82,5 @@ def init_env():
     if isinstance(sp.requestPSP, NullRequestPSP):
       env.addBinding(name, SPFromLite(sp))
   env.addBinding("regenerate", RegenerateSP())
+  env.addBinding("get_current_trace", GetCurrentTraceSP())
   return VentureEnvironment(env)
