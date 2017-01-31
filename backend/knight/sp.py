@@ -1,5 +1,7 @@
 from typing import Callable
 from typing import Tuple
+from typing import List
+from typing import cast
 
 import venture.lite.value as vv 
 from venture.lite.builtin import builtInSPs
@@ -56,8 +58,12 @@ class RegenerateSP(SP):
     assert isinstance(oper, SP)
     assert isinstance(subargs, (vv.VenturePair, vv.VentureNil, vv.VentureArray, vv.VentureArrayUnboxed, vv.VentureSimplex))
     assert isinstance(trace, Trace)
+    # Pylint misunderstands typing.List pylint: disable=unsubscriptable-object, invalid-sequence-index
+    lst = cast(List[vv.VentureValue], subargs.asPythonList())
+    for arg in lst:
+      assert isinstance(arg, vv.VentureValue)
     from venture.knight.regen import r_apply
-    (w, val) = r_apply(oper, subargs.asPythonList(), trace)
+    (w, val) = r_apply(oper, lst, trace)
     return (w, Datum(vv.VenturePair((vv.VentureNumber(w), val))))
 
 def init_env():
