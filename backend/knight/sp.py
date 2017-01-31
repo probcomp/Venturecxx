@@ -43,8 +43,8 @@ class SPFromLite(SP):
 
   def regenerate(self, args, trace):
     # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
-    if trace.root_constrained():
-      v = trace.get_at_root()
+    if trace.has():
+      v = trace.get()
       w = self.lite_sp.outputPSP.logDensity(v, MockArgs(args, self.aux))
       return (w, Datum(v))
     else:

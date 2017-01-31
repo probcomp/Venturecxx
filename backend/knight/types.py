@@ -41,14 +41,18 @@ class Trace(vv.VentureValue):
     # type: () -> Trace
     return self.subtrace(vv.VentureSymbol("app"))
 
-  def root_constrained(self):
+  def has(self):
     # type: () -> bool
     return self.value is not None
 
-  def get_at_root(self):
+  def get(self):
     # type: () -> vv.VentureValue
     assert self.value is not None
     return self.value
+
+  def set(self, value):
+    # type: (vv.VentureValue) -> None
+    self.value = value
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]), ('trace', Trace)])
