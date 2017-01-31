@@ -260,7 +260,8 @@ class VentureNumber(VentureValue):
 
 class VentureInteger(VentureValue):
   def __init__(self,number):
-    assert isinstance(number, Number)
+    # type: (Union[int, long, float]) -> None
+    assert isinstance(number, (int, long, float))
     self.number = int(number)
   def __repr__(self):
     if hasattr(self, "number"):
@@ -388,6 +389,7 @@ class VentureBool(VentureValue):
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol):
+    # type: (str) -> None
     self.symbol = symbol
   def __repr__(self):
     return "Symbol(%s)" % self.symbol

@@ -1,8 +1,11 @@
+from collections import OrderedDict
+
 from typing import Callable
 from typing import List
 from typing import NamedTuple
 from typing import Tuple
 from typing import Union
+from typing import Optional
 from typing import cast
 
 import venture.lite.value as vv 
@@ -19,18 +22,33 @@ class Lit(NamedTuple('Lit', [('val', vv.VentureValue)]), Exp): pass
 class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
 
 class Trace(vv.VentureValue):
+  def __init__(self):
+    # type: () -> None
+    self.value = None # type: Optional[vv.VentureValue]
+    self.subtraces = OrderedDict() # type: OrderedDict[vv.VentureValue, Trace]
+
+  def subtrace(self, key):
+    # type: (vv.VentureValue) -> Trace
+    if key not in self.subtraces:
+      self.subtraces[key] = Trace()
+    return self.subtraces[key]
+
   def subexpr_subtrace(self, index):
     # type: (int) -> Trace
-    return self
+    return self.subtrace(vv.VentureInteger(index))
+
   def application_subtrace(self):
     # type: () -> Trace
-    return self
+    return self.subtrace(vv.VentureSymbol("app"))
+
   def root_constrained(self):
     # type: () -> bool
-    pass
+    return self.value is not None
+
   def get_at_root(self):
     # type: () -> vv.VentureValue
-    pass
+    assert self.value is not None
+    return self.value
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]), ('trace', Trace)])
