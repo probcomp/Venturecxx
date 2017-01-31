@@ -10,7 +10,8 @@ from venture.lite.env import VentureEnvironment
 class Exp(object): pass
 
 # Make classes so that I can inherit from Exp.
-# Pylint misunderstands typing.List pylint: disable=unsubscriptable-object, invalid-sequence-index
+# Pylint misunderstands typing.List
+# pylint: disable=unsubscriptable-object, invalid-sequence-index
 class App(NamedTuple('App', [('subs', List[Exp])]), Exp): pass
 class Var(NamedTuple('Var', [('name', str)]), Exp): pass
 class Lit(NamedTuple('Lit', [('val', vv.VentureValue)]), Exp): pass

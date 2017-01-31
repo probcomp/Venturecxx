@@ -56,9 +56,11 @@ class RegenerateSP(SP):
     # type: (List[vv.VentureValue], Trace) -> Tuple[float, RegenResult]
     (oper, subargs, trace) = args
     assert isinstance(oper, SP)
-    assert isinstance(subargs, (vv.VenturePair, vv.VentureNil, vv.VentureArray, vv.VentureArrayUnboxed, vv.VentureSimplex))
+    assert isinstance(subargs, (vv.VenturePair, vv.VentureNil, vv.VentureArray, \
+                                vv.VentureArrayUnboxed, vv.VentureSimplex))
     assert isinstance(trace, Trace)
-    # Pylint misunderstands typing.List pylint: disable=unsubscriptable-object, invalid-sequence-index
+    # Pylint misunderstands typing.List
+    # pylint: disable=unsubscriptable-object, invalid-sequence-index
     lst = cast(List[vv.VentureValue], subargs.asPythonList())
     for arg in lst:
       assert isinstance(arg, vv.VentureValue)
