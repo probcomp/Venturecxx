@@ -103,7 +103,7 @@ class RegenerateSP(SP):
       assert isinstance(arg, vv.VentureValue)
     from venture.knight.regen import r_apply
     (w, val) = r_apply(oper, lst, constraints, interventions)
-    return (w, Datum(vv.VenturePair((vv.VentureNumber(w), val))))
+    return (0, Datum(vv.VenturePair((vv.VentureNumber(w), val))))
 
 def init_env():
   # type: () -> VentureEnvironment[vv.VentureValue]

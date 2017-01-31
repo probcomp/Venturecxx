@@ -54,6 +54,13 @@ def regen_list(exps, env, constraints, interventions):
 
 def r_apply(oper, args, constraints, interventions):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
+  if interventions.has():
+    return (0, interventions.get())
+  else:
+    return do_r_apply(oper, args, constraints, interventions)
+
+def do_r_apply(oper, args, constraints, interventions):
+  # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
   (appw, res) = oper.regenerate(args, constraints, interventions)
   if isinstance(res, Datum):
     return (appw, res.datum)
