@@ -44,12 +44,13 @@ class SPFromLite(SP):
   def regenerate(self, args, constraints, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     if constraints.has():
-      v = constraints.get()
-      w = self.lite_sp.outputPSP.logDensity(v, MockArgs(args, self.aux))
-      return (w, Datum(v))
+      ans = constraints.get()
+      w = self.lite_sp.outputPSP.logDensity(ans, MockArgs(args, self.aux))
     else:
       ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
-      return (0, Datum(ans))
+      w = 0
+    interventions.set(ans)
+    return (w, Datum(ans))
 
 class RegenerateSP(SP):
   def regenerate(self, args, _constraints, _interventions):
