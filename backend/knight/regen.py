@@ -17,7 +17,6 @@ from venture.knight.types import Datum
 from venture.knight.types import Request
 from venture.knight.sp import SP
 from venture.knight.sp import CompoundSP
-from venture.knight.sp import init_env
 
 def regen(exp, env, trace):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace) -> Tuple[float, vv.VentureValue]
@@ -53,6 +52,3 @@ def r_apply(oper, args, trace):
   elif isinstance(res, Request):
     (recurw, val) = regen(res.exp, res.env, res.trace)
     return (appw + recurw, val)
-
-print regen(App([Lam(["x"], Var("x")), Lit(vv.VentureNumber(2))]), init_env(), Trace())
-print regen(App([Var("normal"), Lit(vv.VentureNumber(2)), Lit(vv.VentureNumber(1))]), init_env(), Trace())

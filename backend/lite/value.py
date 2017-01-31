@@ -53,6 +53,7 @@ class VentureValue(object):
   def getBool(self):
     raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self):
+    # type: () -> str
     raise VentureTypeError("Cannot convert %s to symbol" % type(self))
   def getString(self):
     raise VentureTypeError("Cannot convert %s to string" % type(self))
@@ -84,6 +85,10 @@ class VentureValue(object):
     raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
+    # type: (object) -> VentureValue
+    # XXX The precise type is a recursive union of lists,
+    # VentureValues, and dicts with specific keys.  That seems
+    # annoying to represent, so "object" will do for now.
     if isinstance(thing, list):
       # TODO Arrays or lists?
       return VentureArray([VentureValue.fromStackDict(val) for val in thing])
@@ -387,6 +392,7 @@ class VentureSymbol(VentureValue):
   def __repr__(self):
     return "Symbol(%s)" % self.symbol
   def getSymbol(self):
+    # type: () -> str
     return self.symbol
   def asStackDict(self, _trace=None):
     return v.symbol(self.symbol)
@@ -413,6 +419,7 @@ class VentureString(VentureValue):
   def __repr__(self):
     return "Strng(%s)" % self.strng
   def getSymbol(self):
+    # type: () -> str
     return self.strng
   def getString(self):
     return self.strng

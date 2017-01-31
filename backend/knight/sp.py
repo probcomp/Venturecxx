@@ -74,4 +74,5 @@ def init_env():
   for name, sp in builtInSPs().iteritems():
     if isinstance(sp.requestPSP, NullRequestPSP):
       env.addBinding(name, SPFromLite(sp))
+  env.addBinding("regenerate", RegenerateSP())
   return VentureEnvironment(env)
