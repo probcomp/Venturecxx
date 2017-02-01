@@ -60,6 +60,15 @@ def prep_ripl(ripl):
                 t.StringType(),
                 min_req_args=1)
             )
+    ripl.bind_foreign_inference_sp("get_cmi_queries",
+            deterministic_typed(get_cmi_queries,
+                [ 
+                t.ArrayUnboxedType(t.StringType()),
+                t.StringType(),
+                ],
+                t.ArrayUnboxedType(t.StringType()),
+                min_req_args=1)
+            )
     ripl.execute_program_from_file("examples/causal-inference/causal_inference.vnts") 
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
@@ -76,7 +85,9 @@ def test_create_obervation_function_crash():
     ripl.assume("number_nodes", 3)
     prep_ripl(ripl)
     ripl.execute_program("""
-        assume observation_function = make_observation_function("precomputed_v_structure");""")
+        assume observation_function =
+            make_observation_function("precomputed_v_structure", "[ ]",
+            "non_existing.bdb");""")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
@@ -85,45 +96,54 @@ def test_obervations_crash():
     ripl.assume("number_nodes", 3)
     prep_ripl(ripl)
     ripl.execute_program("""
-        assume observation_function = make_observation_function("precomputed_v_structure");""")
+        assume observation_function =
+            make_observation_function("precomputed_v_structure", "[ ]",
+            "non_existing.bdb");""")
     ripl.observe("observation_function(DAG)", True)
 
-#@broken_in('puma', "Puma does not define the gaussian process builtins")
-#@on_inf_prim('none')
-#def test_inference_crash():
-#    ripl = get_ripl()
-#    ripl.assume("number_nodes", 3)
-#    prep_ripl(ripl)
-#    ripl.execute_program("""
-#        assume observation_function = make_observation_function("precomputed_v_structure");""")
-#    ripl.observe("observation_function(DAG)", True)
-#    ripl.infer("mh(default, all, 1)")
-#
-#@broken_in('puma', "Puma does not define the gaussian process builtins")
-#@on_inf_prim('none')
-#def test_inference_independent_mh_2_nodes():
-#    ripl = get_ripl()
-#    ripl.assume("number_nodes", 2)
-#    prep_ripl(ripl)
-#    ripl.execute_program("""
-#        assume observation_function = make_observation_function("precomputed_independent_nodes");""")
-#    ripl.observe("observation_function(DAG)", True)
-#    ripl.infer("mh(default, all, 100)")
-#    sample = ripl.sample("dag_to_dot_notation(DAG)")
-#    assert sample == ""
 
-#@broken_in('puma', "Puma does not define the gaussian process builtins")
-#@on_inf_prim('none')
-#def test_inference_simple_link_mh_2_nodes():
-#    ripl = get_ripl()
-#    ripl.assume("number_nodes", 2)
-#    prep_ripl(ripl)
-#    ripl.execute_program("""
-#        assume observation_function = make_observation_function("precomputed_simple_link_2_nodes");""")
-#    ripl.observe("observation_function(DAG)", True)
-#    ripl.infer("mh(default, all, 100)")
-#    sample = ripl.sample("dag_to_dot_notation(DAG)")
-#    assert (sample == "(0)-->(1), ") or (sample == "(1)-->(0), ")
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
+def test_inference_crash():
+    ripl = get_ripl()
+    ripl.assume("number_nodes", 3)
+    prep_ripl(ripl)
+    ripl.execute_program("""
+        assume observation_function =
+            make_observation_function("precomputed_v_structure", "[ ]",
+            "non_existing.bdb");""")
+    ripl.observe("observation_function(DAG)", True)
+    ripl.infer("mh(default, all, 1)")
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
+def test_inference_independent_mh_2_nodes():
+    ripl = get_ripl()
+    ripl.assume("number_nodes", 2)
+    prep_ripl(ripl)
+    ripl.execute_program("""
+        assume observation_function =
+            make_observation_function("precomputed_independent_nodes", "[ ]",
+            "non_existing.bdb");""")
+    ripl.observe("observation_function(DAG)", True)
+    ripl.infer("mh(default, all, 100)")
+    sample = ripl.sample("dag_to_dot_notation(DAG)")
+    assert sample == ""
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
+def test_inference_simple_link_mh_2_nodes():
+    ripl = get_ripl()
+    ripl.assume("number_nodes", 2)
+    prep_ripl(ripl)
+    ripl.execute_program("""
+        assume observation_function =
+            make_observation_function("precomputed_simple_link_2_nodes", "[ ]",
+            "non_existing.bdb");""")
+    ripl.observe("observation_function(DAG)", True)
+    ripl.infer("mh(default, all, 100)")
+    sample = ripl.sample("dag_to_dot_notation(DAG)")
+    assert (sample == "(0)-->(1), ") or (sample == "(1)-->(0), ")
 #    
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
@@ -132,7 +152,9 @@ def test_inference_simple_link_mh_3_nodes():
     ripl.assume("number_nodes", 3)
     prep_ripl(ripl)
     ripl.execute_program("""
-        assume observation_function = make_observation_function("precomputed_simple_link");""")
+        assume observation_function =
+            make_observation_function("precomputed_simple_link", "[ ]",
+            "non_existing.bdb");""")
     ripl.observe("observation_function(DAG)", True)
     ripl.infer("mh(default, all, 50)")
     sample = ripl.sample("dag_to_dot_notation(DAG)")
@@ -146,8 +168,35 @@ def test_inference_v_struct_mh():
     ripl.assume("number_nodes", 3)
     prep_ripl(ripl)
     ripl.execute_program("""
-        assume observation_function = make_observation_function("precomputed_v_structure");""")
+        assume observation_function =
+            make_observation_function("precomputed_v_structure", "[ ]",
+            "non_existing.bdb");""")
     ripl.observe("observation_function(DAG)", True)
     ripl.infer("mh(default, all, 50)")
     sample = ripl.sample("dag_to_dot_notation(DAG)")
     assert (sample == "(0)-->(2), (1)-->(2), ") or (sample == "(1)-->(2), (2)-->(2), ")
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
+def test_cmi_crash():
+    ripl = get_ripl()
+    ripl.assume("number_nodes", 3)
+    prep_ripl(ripl)
+    ripl.execute_program("""
+        assume observation_function =
+            make_observation_function("precomputed_v_structure", "[ ]",
+            "non_existing.bdb");""")
+    ripl.observe("observation_function(DAG)", True)
+    list_of_queries = ripl.infer("""return(get_cmi_queries(["node_0", "node_1", "node_2"], "causal_population"))""")
+
+@broken_in('puma', "Puma does not define the gaussian process builtins")
+@on_inf_prim('none')
+def test_cmi_correct_length():
+    ripl = get_ripl()
+    ripl.assume("number_nodes", 3)
+    prep_ripl(ripl)
+    ripl.execute_program("""
+        assume observation_function = make_observation_function("precomputed_v_structure");""")
+    ripl.observe("observation_function(DAG)", True)
+    list_of_queries = ripl.infer("""return(get_cmi_queries(["node_0", "node_1", "node_2"], "causal_population"))""")
+    assert len(list_of_queries) == 6 

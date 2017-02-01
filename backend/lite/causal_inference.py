@@ -47,6 +47,76 @@ def get_independencies(dag):
     pgmpy_independencies_object = b_net_model.get_independencies()
     return pgmpy_independencies_object.independencies
 
+
+def create_cmi_query(column1, column2, population_name, evidence=None, number_models=30,
+                         threshold=0.05, number_of_samples=100):
+    """ Creat queries needed for CMI """
+
+    query_dict= {
+        "column1": column1,
+        "column2": column2,
+        "population_name": population_name,
+        "evidence": evidence,
+        "number_models": number_models,
+        "number_of_samples": number_of_samples,
+        "threshold": threshold,
+        }
+    if not evidence:
+        drop_existing_table = "DROP TABLE IF EXISTS 'mi({column1}, {column2})';".format(**query_dict)
+        create_mi_table = """
+            CREATE TABLE  'mi({column1}, {column2})' AS
+            SIMULATE
+                MUTUAL INFORMATION OF {column1} WITH {column2}
+                USING {number_of_samples} SAMPLES
+                AS 'mi' FROM MODELS OF {population_name};""".format(**query_dict)
+        get_probability = """SELECT COUNT(mi)*1.0/{number_models} AS value
+            FROM 'mi({column1}, {column2})' WHERE temp>{threshold}""".format(**query_dict)
+    else:
+        drop_existing_table = "DROP TABLE IF EXISTS 'mi({column1}, {column2} | {evidence})';".format(**query_dict)
+        create_mi_table = """
+            CREATE TABLE  'mi({column1}, {column2})' AS
+            SIMULATE
+                MUTUAL INFORMATION OF {column1} WITH {column2}
+                GIVEN ({evidence})
+                USING {number_of_samples} SAMPLES
+                AS 'mi' FROM MODELS OF {population_name};""".format(**query_dict)
+        get_probability = """SELECT COUNT(mi)*1.0/{number_models} AS value
+            FROM 'mi({column1}, {column2} | {evidence})' WHERE temp>{threshold}""".format(**query_dict)
+
+
+    return [drop_existing_table, create_mi_table, get_probability]
+
+
+def get_all_possible_dependencies(list_of_all_nodes):
+    statements_mutual_information = []
+    for i,node in enumerate(list_of_all_nodes):
+        for other_node in list_of_all_nodes[i:]:
+            if node!=other_node :
+                statements_mutual_information.append((node, other_node))
+                
+    statements_conditional_mutual_information = []
+    for mi_statement in statements_mutual_information:
+        for node in list_of_all_nodes:
+            if node!=mi_statement[0] and node!=mi_statement[1]:
+     			statements_conditional_mutual_information.append((
+                        mi_statement, node))
+    
+    return statements_mutual_information +\
+		statements_conditional_mutual_information
+
+def get_cmi_queries(list_of_all_nodes, population_name):
+    list_of_dependencies = get_all_possible_dependencies(list_of_all_nodes)
+    cmi_queries = []
+    for dependence in list_of_dependencies:
+        if  isinstance(dependence[0], basestring):
+            cmi_queries.append(create_cmi_query(dependence[0], dependence[1],
+                population_name))
+        else:
+            cmi_queries.append(create_cmi_query(dependence[0][0],
+                dependence[0][1], population_name,
+                evidence=dependence[1]))
+    return cmi_queries
+
 class PopulationSPAux(SPAux):
   def __init__(self):
     self.field = {} 
@@ -69,6 +139,7 @@ class PopulationSP(SP):
 
 
 class BDBPopulationOutputPSP(RandomPSP):
+
   def __init__(self, population_name):
     self.population_name = population_name
 
