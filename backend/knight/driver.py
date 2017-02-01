@@ -16,11 +16,11 @@ def top_eval(form):
   stack_dict = cast(object, _modify_expression(desugar_expression(VentureScriptParser.instance().parse_expression(form))))
   return regen(stack_dict_to_exp(stack_dict), init_env(), Trace(), Trace())
 
-print top_eval("((x) -> { x })(2)")
-print top_eval("normal(2, 1)")
-print top_eval("get_current_trace()")
-print top_eval("trace_has(get_current_trace())") # False
-print top_eval("{ t = get_current_trace(); _ = trace_set(t, 5); trace_get(t) }") # 5
+print top_eval("((x) -> { x })(2)") # (0, 2)
+print top_eval("normal(2, 1)") # (0, x) where x ~ normal(2, 1)
+print top_eval("get_current_trace()") # (0, Some trace)
+print top_eval("trace_has(get_current_trace())") # (0, False)
+print top_eval("{ t = get_current_trace(); _ = trace_set(t, 5); trace_get(t) }") # (0, 5)
 print top_eval("""{
   t1 = get_current_trace();
   t2 = get_current_trace();
