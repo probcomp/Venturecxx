@@ -74,7 +74,7 @@ normal_normal_regnerator = """
 }"""
 
 print top_eval("""{
-regenerator = %s;
-normal_normal = sp(regenerator);
-normal_normal(0, 1, 1)
-}""" % (normal_normal_regnerator,))
+  regenerator = %s;
+  normal_normal = sp(regenerator);
+  normal_normal(0, 1, 1)
+}""" % (normal_normal_regnerator,)) # (0, List(0 . x)) where x ~ normal(0, 2)
