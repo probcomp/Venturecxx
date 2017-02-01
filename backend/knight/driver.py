@@ -73,12 +73,14 @@ normal_normal_regnerator = """
   }}}
 }"""
 
+# Running a synthetic SP
 print top_eval("""{
   regenerator = %s;
   normal_normal = sp(regenerator);
   normal_normal(0, 1, 1)
 }""" % (normal_normal_regnerator,)) # (0, x) where x ~ normal(0, 2)
 
+# Tracing a synthetic SP
 print top_eval("""{
   regenerator = %s;
   normal_normal = sp(regenerator);
@@ -88,3 +90,15 @@ print top_eval("""{
   _ = regenerate(model, [], t1, t2);
   list(trace_get(subtrace(subtrace(t2, "app"), "x")), trace_get(subtrace(t2, "app")))
 }""" % (normal_normal_regnerator,)) # (0, List(x, y)) where x ~ normal(0, 100) and y ~ normal(x, 1)
+
+# Constraining a synthetic SP
+print top_eval("""{
+  regenerator = %s;
+  normal_normal = sp(regenerator);
+  model = () ~> { normal_normal(0, 1, 1) };
+  t1 = get_current_trace();
+  _ = trace_set(subtrace(t1, "app"), 5);
+  t2 = get_current_trace();
+  res = regenerate(model, [], t1, t2);
+  list(first(res), trace_get(subtrace(subtrace(t2, "app"), "x")), trace_get(subtrace(t2, "app")))
+}""" % (normal_normal_regnerator,)) # (0, List(-7.52, x, 5)) where x ~ normal(2.5, 1/sqrt(2))
