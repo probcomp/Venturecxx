@@ -658,6 +658,7 @@ class VenturePair(VentureValue):
       return (front, rest)
 
 def pythonListToVentureList(l):
+  # type: (List) -> Union[VenturePair, VentureNil]
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
 def pythonListToImproperVentureList(tail, *l):

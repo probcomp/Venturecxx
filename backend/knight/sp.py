@@ -105,6 +105,22 @@ class RegenerateSP(SP):
     (score, val) = r_apply(oper, lst, constraints, interventions)
     return (0, Datum(vv.VenturePair((vv.VentureNumber(score), val))))
 
+class MakeSPSP(SP):
+  def regenerate(self, args, _constraints, _interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (regenerator,) = args
+    assert isinstance(regenerator, SP)
+    return (0, Datum(MadeSP(regenerator)))
+
+class MadeSP(SP):
+  def __init__(self, regenerator_sp):
+    # type: (SP) -> None
+    self.regenerator_sp = regenerator_sp
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    new_args = [vv.pythonListToVentureList(args), constraints, interventions]
+    return self.regenerator_sp.regenerate(new_args, Trace(), Trace())
+
 def init_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
@@ -117,4 +133,5 @@ def init_env():
   env.addBinding("trace_has", TraceHasSP())
   env.addBinding("trace_get", TraceGetSP())
   env.addBinding("trace_set", TraceSetSP())
+  env.addBinding("sp", MakeSPSP())
   return VentureEnvironment(env)

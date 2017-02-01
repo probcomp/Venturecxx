@@ -38,3 +38,43 @@ print top_eval("""{
   _ = trace_set(t2, 1);
   res = regenerate(normal, [0, 1], t1, t2);
   list(res, trace_get(t2)) }""") # (0, List(List(0 . 1), 1))
+
+normal_normal_regnerator = """
+(args, constraints, interventions) -> {
+  mu = args[0];
+  sig1 = args[1];
+  sig2 = args[2];
+  if (trace_has(interventions)) {
+    pair(0, trace_get(interventions))
+  } else { if (trace_has(subtrace(interventions, "x"))) {
+    regenerate(normal, [trace_get(subtrace(interventions, "x")), sig2],
+               constraints, interventions)
+  } else { // interventions trace is empty
+    if (trace_has(constraints) && not(trace_has(subtrace(constraints, "x")))) {
+      val = trace_get(constraints);
+      prec1 = 1 / (sig1 ** 2);
+      prec2 = 1 / (sig2 ** 2);
+      post_mu = (mu * prec1 + val * prec2) / (prec1 + prec2);
+      post_prec = prec1 + prec2;
+      post_sig = sqrt(1 / post_prec);
+      _ = regenerate(normal, [post_mu, post_sig],
+                     subtrace(constraints, "x"), subtrace(interventions, "x"));
+      regenerate(normal, [mu, sqrt(sig1**2 + sig2**2)],
+                 constraints, interventions)
+  } else {
+    pack = regenerate(normal, [mu, sig1],
+                      subtrace(constraints, "x"), subtrace(interventions, "x"));
+    score = first(pack);
+    val = rest(pack);
+    pack2 = regenerate(normal, [val, sig2], constraints, interventions);
+    score2 = first(pack2);
+    val2 = rest(pack2);
+    pair(score + score2, val2)
+  }}}
+}"""
+
+print top_eval("""{
+regenerator = %s;
+normal_normal = sp(regenerator);
+normal_normal(0, 1, 1)
+}""" % (normal_normal_regnerator,))
