@@ -45,12 +45,12 @@ class SPFromLite(SP):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     if constraints.has():
       ans = constraints.get()
-      w = self.lite_sp.outputPSP.logDensity(ans, MockArgs(args, self.aux))
+      score = self.lite_sp.outputPSP.logDensity(ans, MockArgs(args, self.aux))
     else:
       ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
-      w = 0
+      score = 0
     interventions.set(ans)
-    return (w, Datum(ans))
+    return (score, Datum(ans))
 
 class GetCurrentTraceSP(SP):
   def regenerate(self, args, constraints, interventions):
@@ -102,8 +102,8 @@ class RegenerateSP(SP):
     for arg in lst:
       assert isinstance(arg, vv.VentureValue)
     from venture.knight.regen import r_apply
-    (w, val) = r_apply(oper, lst, constraints, interventions)
-    return (0, Datum(vv.VenturePair((vv.VentureNumber(w), val))))
+    (score, val) = r_apply(oper, lst, constraints, interventions)
+    return (0, Datum(vv.VenturePair((vv.VentureNumber(score), val))))
 
 def init_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
