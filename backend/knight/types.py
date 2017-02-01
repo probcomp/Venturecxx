@@ -39,7 +39,7 @@ class Trace(vv.VentureValue):
 
   def application_subtrace(self):
     # type: () -> Trace
-    return self.subtrace(vv.VentureSymbol("app"))
+    return self.subtrace(vv.VentureString("app"))
 
   def has(self):
     # type: () -> bool
@@ -53,6 +53,9 @@ class Trace(vv.VentureValue):
   def set(self, value):
     # type: (vv.VentureValue) -> None
     self.value = value
+
+  def __repr__(self):
+    return "Trace(%r, %r)" % (self.value, self.subtraces)
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]),

@@ -18,7 +18,7 @@ def top_eval(form):
 
 print top_eval("((x) -> { x })(2)") # (0, 2)
 print top_eval("normal(2, 1)") # (0, x) where x ~ normal(2, 1)
-print top_eval("get_current_trace()") # (0, Some trace)
+print top_eval("get_current_trace()") # (0, An empty trace)
 print top_eval("trace_has(get_current_trace())") # (0, False)
 print top_eval("{ t = get_current_trace(); _ = trace_set(t, 5); trace_get(t) }") # (0, 5)
 print top_eval("""{
@@ -78,3 +78,13 @@ print top_eval("""{
   normal_normal = sp(regenerator);
   normal_normal(0, 1, 1)
 }""" % (normal_normal_regnerator,)) # (0, x) where x ~ normal(0, 2)
+
+print top_eval("""{
+  regenerator = %s;
+  normal_normal = sp(regenerator);
+  model = () ~> { normal_normal(0, 100, 1) };
+  t1 = get_current_trace();
+  t2 = get_current_trace();
+  _ = regenerate(model, [], t1, t2);
+  list(trace_get(subtrace(subtrace(t2, "app"), "x")), trace_get(subtrace(t2, "app")))
+}""" % (normal_normal_regnerator,)) # (0, List(x, y)) where x ~ normal(0, 100) and y ~ normal(x, 1)
