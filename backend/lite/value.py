@@ -45,6 +45,7 @@ class VentureValue(object):
   """Base class of all Venture values."""
   ### "natural" representation and conversions
   def getNumber(self):
+    # type: () -> float
     raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self):
     raise VentureTypeError("Cannot convert %s to integer" % type(self))
@@ -193,6 +194,7 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self):
+    # type: () -> float
     return self.number
   def getInteger(self):
     return int(self.number)
@@ -271,6 +273,7 @@ class VentureInteger(VentureValue):
   def getInteger(self):
     return self.number
   def getNumber(self):
+    # type: () -> float
     return float(self.number)
   def getBool(self):
     return self.number

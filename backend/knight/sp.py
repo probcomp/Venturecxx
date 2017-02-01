@@ -119,7 +119,17 @@ class MadeSP(SP):
   def regenerate(self, args, constraints, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     new_args = [vv.pythonListToVentureList(args), constraints, interventions]
-    return self.regenerator_sp.regenerate(new_args, Trace(), Trace())
+    # XXX Should I invoke the trampoline here, on these fresh traces,
+    # or propagate requests to my caller?
+    from venture.knight.regen import r_apply
+    (score, res) = r_apply(self.regenerator_sp, new_args, Trace(), Trace())
+    assert isinstance(res, vv.VenturePair)
+    subscore = res.first
+    assert isinstance(subscore, vv.VentureNumber)
+    val = res.rest
+    assert isinstance(val, vv.VentureValue) # Ban gradients' symbolic zeroes here.
+    # XXX Is adding the right thing to do with these scores?
+    return (score + subscore.getNumber(), Datum(val))
 
 def init_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
