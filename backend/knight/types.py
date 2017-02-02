@@ -1,6 +1,8 @@
 from collections import OrderedDict
+from contextlib import contextmanager
 
 from typing import Callable
+from typing import Iterator
 from typing import List
 from typing import NamedTuple
 from typing import Tuple
@@ -26,20 +28,36 @@ class Trace(vv.VentureValue):
     # type: () -> None
     self.value = None # type: Optional[vv.VentureValue]
     self.subtraces = OrderedDict() # type: OrderedDict[vv.VentureValue, Trace]
+    self._reified = False
 
+  @contextmanager
   def subtrace(self, key):
-    # type: (vv.VentureValue) -> Trace
+    # type: (vv.VentureValue) -> Iterator[Trace]
     if key not in self.subtraces:
       self.subtraces[key] = Trace()
-    return self.subtraces[key]
+    try:
+      yield self.subtraces[key]
+    finally:
+      if not self.subtraces[key]._reified and \
+         not self.subtraces[key].has() and \
+         not self.subtraces[key].subtraces:
+        del self.subtraces[key]
 
+  @contextmanager
   def subexpr_subtrace(self, index):
-    # type: (int) -> Trace
-    return self.subtrace(vv.VentureInteger(index))
+    # type: (int) -> Iterator[Trace]
+    with self.subtrace(vv.VentureInteger(index)) as t:
+      yield t
 
+  @contextmanager
   def application_subtrace(self):
-    # type: () -> Trace
-    return self.subtrace(vv.VentureString("app"))
+    # type: () -> Iterator[Trace]
+    with self.subtrace(vv.VentureString("app")) as t:
+      yield t
+
+  def reify(self):
+    # type: () -> None
+    self._reified = True
 
   def has(self):
     # type: () -> bool
