@@ -123,6 +123,19 @@ print top_eval("""{
   list(trace_get(subtrace(t2, "x")), t4)
 }""" % (normal_normal_regnerator,)) # (0, List(x, a trace)) where x ~ normal(0, 1)
 
+# Test another trace of a mechanism
+print top_eval("""{
+  regenerator = %s;
+  normal_normal = sp(regenerator);
+  t1 = get_current_trace();
+  t2 = get_current_trace();
+  _ = trace_set(t1, 5);
+  t3 = get_current_trace();
+  t4 = get_current_trace();
+  res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  list(res, trace_get(subtrace(t2, "x")), t4)
+}""" % (normal_normal_regnerator,)) # (0, List(List(0, -7.52 . 5), x, a trace)) where x ~ normal(2.5, 1/sqrt(2))
+
 # Test intervening on a traced mechanism
 # Compare the test case "constraining a synthetic SP"
 print top_eval("""{
@@ -134,6 +147,6 @@ print top_eval("""{
   t3 = get_current_trace();
   t4 = get_current_trace();
   _ = trace_set(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(t4, "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), 1), "app"), 7);
-  _ = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  list(trace_get(subtrace(t2, "x")), t4)
-}""" % (normal_normal_regnerator,)) # (0, (List(7, a trace)))
+  res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  list(res, trace_get(subtrace(t2, "x")), t4)
+}""" % (normal_normal_regnerator,)) # (0, List(List(0, -7.52 . 5), 7, a trace))
