@@ -73,7 +73,10 @@ class Trace(vv.VentureValue):
     self.value = value
 
   def __repr__(self):
-    return "Trace(%r, %r)" % (self.value, self.subtraces)
+    if self.subtraces:
+      return "Trace(%r, %r)" % (self.value, list(self.subtraces.iteritems()))
+    else:
+      return "Trace(%r)" % (self.value,)
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]),
