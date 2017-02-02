@@ -102,3 +102,11 @@ print top_eval("""{
   res = regenerate(model, [], t1, t2);
   list(first(res), trace_get(subtrace(subtrace(t2, "app"), "x")), trace_get(subtrace(t2, "app")))
 }""" % (normal_normal_regnerator,)) # (0, List(-7.52, x, 5)) where x ~ normal(2.5, 1/sqrt(2))
+
+# Test generic regenerator_of
+print top_eval("""{
+  t1 = get_current_trace();
+  t2 = get_current_trace();
+  _ = trace_set(t2, 1);
+  res = regenerate(sp(regenerator_of(normal)), [0, 1], t1, t2);
+  list(res, trace_get(t2)) }""") # (0, List(List(0 . 1), 1))

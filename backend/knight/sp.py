@@ -12,6 +12,8 @@ from venture.lite.psp import NullRequestPSP
 
 from venture.knight.types import Datum
 from venture.knight.types import Exp
+from venture.knight.types import App
+from venture.knight.types import Var
 from venture.knight.types import RegenResult
 from venture.knight.types import Request
 from venture.knight.types import Trace
@@ -20,6 +22,15 @@ class SP(vv.VentureValue):
   def regenerate(self, args, constraints, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     raise NotImplementedError
+
+  def regenerator_of(self):
+    # type: () -> SP
+    params = ["args", "constraints", "interventions"]
+    body = App([Var("regenerate"), Var("self"), Var("args"),
+                Var("constraints"), Var("interventions")])
+    env = init_env()
+    env.addBinding("self", self)
+    return CompoundSP(params, body, env)
 
 class CompoundSP(SP):
   def __init__(self, params, body, env):
@@ -131,7 +142,15 @@ class MadeSP(SP):
     # XXX Is adding the right thing to do with these scores?
     return (score + subscore.getNumber(), Datum(val))
 
-def init_env():
+class RegeneratorOfSP(SP):
+  def regenerate(self, args, constraints, interventions):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (sub_sp,) = args
+    assert isinstance(sub_sp, SP)
+    ans = sub_sp.regenerator_of()
+    return (0, Datum(ans))
+
+def make_global_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
   for name, sp in builtInSPs().iteritems():
@@ -144,4 +163,11 @@ def init_env():
   env.addBinding("trace_get", TraceGetSP())
   env.addBinding("trace_set", TraceSetSP())
   env.addBinding("sp", MakeSPSP())
-  return VentureEnvironment(env)
+  env.addBinding("regenerator_of", RegeneratorOfSP())
+  return env
+
+the_global_env = make_global_env()
+
+def init_env():
+  # type: () -> VentureEnvironment[vv.VentureValue]
+  return VentureEnvironment(the_global_env)

@@ -421,6 +421,7 @@ class VentureSymbol(VentureValue):
 # self-evaluating
 class VentureString(VentureValue):
   def __init__(self,strng):
+    # type: (str) -> VentureString
     self.strng = strng
   def __repr__(self):
     return "Strng(%s)" % self.strng
