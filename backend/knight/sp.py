@@ -141,6 +141,9 @@ class MadeSP(SP):
     assert isinstance(val, vv.VentureValue) # Ban gradients' symbolic zeroes here.
     # XXX Is adding the right thing to do with these scores?
     return (score + subscore.getNumber(), Datum(val))
+  def regenerator_of(self):
+    # type: () -> SP
+    return self.regenerator_sp
 
 class RegeneratorOfSP(SP):
   def regenerate(self, args, constraints, interventions):

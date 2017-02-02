@@ -110,3 +110,15 @@ print top_eval("""{
   _ = trace_set(t2, 1);
   res = regenerate(sp(regenerator_of(normal)), [0, 1], t1, t2);
   list(res, trace_get(t2)) }""") # (0, List(List(0 . 1), 1))
+
+# Test tracing a mechanism
+print top_eval("""{
+  regenerator = %s;
+  normal_normal = sp(regenerator);
+  t1 = get_current_trace();
+  t2 = get_current_trace();
+  t3 = get_current_trace();
+  t4 = get_current_trace();
+  _ = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  t4
+}""" % (normal_normal_regnerator,)) # (0, x) where x ~ normal(0, 2)
