@@ -57,8 +57,8 @@ normal_normal_regnerator = """
       post_mu = (mu * prec1 + val * prec2) / (prec1 + prec2);
       post_prec = prec1 + prec2;
       post_sig = sqrt(1 / post_prec);
-      _ = regenerate(normal, [post_mu, post_sig],
-                     subtrace(constraints, "x"), subtrace(interventions, "x"));
+      post_sample ~ normal(post_mu, post_sig);
+      _ = trace_set(subtrace(interventions, "x"), post_sample);
       regenerate(normal, [mu, sqrt(sig1**2 + sig2**2)],
                  constraints, interventions)
   } else {
@@ -120,5 +120,20 @@ print top_eval("""{
   t3 = get_current_trace();
   t4 = get_current_trace();
   _ = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  t4
-}""" % (normal_normal_regnerator,)) # (0, x) where x ~ normal(0, 2)
+  list(trace_get(subtrace(t2, "x")), t4)
+}""" % (normal_normal_regnerator,)) # (0, List(x, a trace)) where x ~ normal(0, 1)
+
+# Test intervening on a traced mechanism
+# Compare the test case "constraining a synthetic SP"
+print top_eval("""{
+  regenerator = %s;
+  normal_normal = sp(regenerator);
+  t1 = get_current_trace();
+  _ = trace_set(t1, 5);
+  t2 = get_current_trace();
+  t3 = get_current_trace();
+  t4 = get_current_trace();
+  _ = trace_set(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(subtrace(t4, "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), "app"), 1), "app"), 7);
+  _ = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  list(trace_get(subtrace(t2, "x")), t4)
+}""" % (normal_normal_regnerator,)) # (0, (List(7, a trace)))
