@@ -168,14 +168,12 @@ class PopulationSP(SP):
 
 class BDBPopulationOutputPSP(RandomPSP):
 
-  def __init__(self, population_name, metamodel_name, bdb_file_path,
-      list_of_all_nodes):
+  def __init__(self, population_name, metamodel_name, bdb_file_path):
     self.population_name = population_name 
     self.metamodel_name = metamodel_name
     self.bdb_file_path = bdb_file_path 
-    self.list_of_all_nodes = list_of_all_nodes
 
-  def _query_bdb(self, list_of_cmi_queries): 
+  def _query_bdb(self, list_of_cmi_queries, list_of_all_nodes): 
     if self.metamodel_name.startswith("precomputed"):
         result_dict_p_cmi_queries = precomputed_CMIs[self.metamodel_name]
     else:
@@ -184,7 +182,7 @@ class BDBPopulationOutputPSP(RandomPSP):
         population_id = bayeslite.core.bayesdb_get_population(bdb, self.population_name)
         generator_id = bayeslite.core.bayesdb_get_generator(bdb, population_id, self.metamodel_name)
         number_models = len(bayeslite.core.bayesdb_generator_modelnos(bdb,
-        generator_id))
+            generator_id))
         #print >> sys.stderr, "self.list_of_cmi_queries"
         #print >> sys.stderr, self.list_of_cmi_queries
         #print >> sys.stderr, "self.list_of_all_nodes"
@@ -197,7 +195,7 @@ class BDBPopulationOutputPSP(RandomPSP):
             query(bdb, cmi_query) # Drop table if exists
         result_dict_p_cmi_queries = {}
         for cmi_probability_dict_key, probability_cmi in get_cmi_probabilities(
-            self.list_of_all_nodes, number_models):
+            list_of_all_nodes, number_models):
             #print >> sys.stderr, "------------------------" 
             #print >> sys.stderr, "probability_cmi"
             #print >> sys.stderr,probability_cmi
@@ -217,15 +215,17 @@ class BDBPopulationOutputPSP(RandomPSP):
 
   def logDensity(self,value,args):
     spaux = args.spaux()
+    dag = args.operandValues()[0]
+    list_of_all_nodes = args.operandValues()[1]
 
     if not spaux.result_dict_p_cmi_queries:
-        spaux.result_dict_p_cmi_queries  = self._query_bdb(spaux.list_of_cmi_queries)
+        spaux.result_dict_p_cmi_queries  =\
+            self._query_bdb(spaux.list_of_cmi_queries, list_of_all_nodes)
     result_dict_p_cmi_queries = spaux.result_dict_p_cmi_queries
 
     if result_dict_p_cmi_queries:
-        dag = args.operandValues()[0]
         independence_keys = []
-        for independence in get_independencies(dag, self.list_of_all_nodes):
+        for independence in get_independencies(dag, list_of_all_nodes):
             #print >> sys.stderr, "independence" 
             #print >> sys.stderr, independence
             split_by_mid = independence.latex_string().split("\mid")
@@ -279,10 +279,11 @@ class MakerBDBPopulationOutputPSP(DeterministicMakerAAAPSP):
     population_name = args.operandValues()[0]
     metamodel_name = args.operandValues()[1]
     bdb_file_path = args.operandValues()[2]
-    list_of_all_nodes = args.operandValues()[3]
     output = TypedPSP(BDBPopulationOutputPSP(population_name, metamodel_name,
-        bdb_file_path, list_of_all_nodes),
-      SPType([t.ArrayUnboxedType(t.ArrayUnboxedType(t.BoolType()))], t.ArrayUnboxedType(t.StringType())))
+        bdb_file_path),
+      SPType([t.ArrayUnboxedType(t.ArrayUnboxedType(t.BoolType())),
+          t.ArrayUnboxedType(t.StringType())],
+          t.ArrayUnboxedType(t.StringType())))
     return VentureSPRecord(PopulationSP(NullRequestPSP(), output))
 
 

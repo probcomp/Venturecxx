@@ -57,7 +57,6 @@ def prep_ripl(ripl):
             t.StringType(),
             t.StringType(),
             t.StringType(),
-            t.ArrayUnboxedType(t.StringType()),
         ],
         SPType([], t.ArrayUnboxedType(t.StringType()))))
     ripl.bind_foreign_sp("dag_to_dot_notation",
@@ -97,7 +96,7 @@ def test_create_obervation_function_crash():
     ripl.execute_program("""
         assume observation_function =
             make_observation_function("non_existing_population_name",
-            "precomputed_v_structure", "non_existing.bdb", ["x", "y", "z"]);""")
+            "precomputed_v_structure", "non_existing.bdb");""")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
@@ -108,8 +107,8 @@ def test_obervations_crash():
     ripl.execute_program("""
         assume observation_function = make_observation_function(
             "non_existing_population_name",
-            "precomputed_v_structure", "non_existing.bdb", ["x", "y", "z"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "precomputed_v_structure", "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y", "z"]) = []""")
 
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
@@ -121,8 +120,8 @@ def test_inference_fixed_cmi_crash():
     ripl.execute_program("""
         assume observation_function = make_observation_function(
             "non_existing_population_name",
-            "precomputed_v_structure", "non_existing.bdb", ["x", "y", "z"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "precomputed_v_structure", "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y", "z"]) = []""")
     ripl.infer("mh(default, all, 1)")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
@@ -135,8 +134,8 @@ def test_inference_fixed_cmi_independent_mh_2_nodes():
         assume observation_function = make_observation_function(
             "non_existing_population_name",
             "precomputed_independent_nodes",
-            "non_existing.bdb", ["x", "y"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y"]) = []""")
     ripl.infer("mh(default, all, 150)")
     sample = ripl.sample("""dag_to_dot_notation(DAG, ["x", "y"])""")
     assert sample == ""
@@ -151,8 +150,8 @@ def test_inference_fixed_cmi_simple_link_mh_2_nodes():
         assume observation_function = make_observation_function(
             "non_existing_population_name",
             "precomputed_simple_link_2_nodes",
-            "non_existing.bdb", ["x", "y"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y"]) = []""")
     ripl.infer("mh(default, all, 150)")
     sample = ripl.sample("""dag_to_dot_notation(DAG, ["x", "y"])""")
     assert (sample == "(x)-->(y), ") or (sample == "(y)-->(x), ")
@@ -167,8 +166,8 @@ def test_inference_fixed_cmi_simple_link_mh_3_nodes():
         assume observation_function = make_observation_function(
             "non_existing_population_name",
             "precomputed_simple_link",
-            "non_existing.bdb", ["x", "y", "z"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y", "z"]) = []""")
     ripl.infer("mh(default, all, 150)")
     sample = ripl.sample("""dag_to_dot_notation(DAG, ["x", "y", "z"])""")
     assert (sample == "(x)-->(z), ") or (sample == "(z)-->(x), ")
@@ -184,8 +183,8 @@ def test_inference_fixed_cmi_v_struct_mh():
         assume observation_function = make_observation_function(
             "non_existing_population_name",
             "precomputed_v_structure",
-            "non_existing.bdb", ["x", "y", "z"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y", "z"]) = []""")
     ripl.infer("mh(default, all, 50)")
     sample = ripl.sample("""dag_to_dot_notation(DAG, ["x", "y", "z"])""")
     assert (sample == "(x)-->(z), (y)-->(z), ") or (sample == "(y)-->(z), (x)-->(z), ")
@@ -200,8 +199,8 @@ def test_cmi_crash():
         assume observation_function = make_observation_function(
             "non_existing_population_name",
             "precomputed_v_structure",
-            "non_existing.bdb", ["x", "y", "z"]);""")
-    ripl.execute_program("observe observation_function(DAG) = []")
+            "non_existing.bdb");""")
+    ripl.execute_program("""observe observation_function(DAG, ["x", "y", "z"]) = []""")
     list_of_queries = ripl.infer("""return(get_cmi_queries(["x", "y", "z"], "causal_population"))""")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
@@ -228,11 +227,11 @@ def test_obs_function_with_cmi_crash():
         assume observation_function = make_observation_function(
             "non_existing_population_name",
             "precomputed_v_structure",
-            "non_existing.bdb", 
-            ${list_of_nodes});
+            "non_existing.bdb"
+            );
         """)
     ripl.execute_program("""
-        observe observation_function(DAG) = list_of_cmi_queries;""")
+        observe observation_function(DAG, ${list_of_nodes}) = list_of_cmi_queries;""")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
@@ -249,10 +248,10 @@ def test_causal_inference_crash():
         assume observation_function = make_observation_function(
                                       "commonp",
                                       "commonm",
-                                      "examples/causal-inference/common_faithful.bdb", 
-                                      ${list_of_nodes});""")
+                                      "examples/causal-inference/common_faithful.bdb"
+                                      );""")
     ripl.execute_program("""
-        observe observation_function(DAG) = list_of_cmi_queries;""")
+        observe observation_function(DAG, ${list_of_nodes}) = list_of_cmi_queries;""")
     ripl.infer("mh(default, all, 1)")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
@@ -270,10 +269,10 @@ def test_inference_independent_mh_2_nodes():
         assume observation_function = make_observation_function(
                                       "commonp",
                                       "commonm",
-                                      "examples/causal-inference/common_faithful.bdb", 
-                                      ${list_of_nodes});""")
+                                      "examples/causal-inference/common_faithful.bdb"
+                                      );""")
     ripl.execute_program("""
-        observe observation_function(DAG) = list_of_cmi_queries;""")
+        observe observation_function(DAG, ${list_of_nodes}) = list_of_cmi_queries;""")
     ripl.infer("mh(default, all, 100)")
 
     n_samples = 10
@@ -299,10 +298,10 @@ def test_inference_simple_link_mh_2_nodes():
         assume observation_function = make_observation_function(
                                       "commonp",
                                       "commonm",
-                                      "examples/causal-inference/common_faithful.bdb", 
-                                      ${list_of_nodes});""")
+                                      "examples/causal-inference/common_faithful.bdb"
+                                      );""")
     ripl.execute_program("""
-        observe observation_function(DAG) = list_of_cmi_queries;""")
+        observe observation_function(DAG, ${list_of_nodes}) = list_of_cmi_queries;""")
     ripl.infer("mh(default, all, 10)")
 
     n_samples = 10
