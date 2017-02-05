@@ -146,12 +146,12 @@ def get_cmi_probabilities(list_of_all_nodes, number_models):
 class PopulationSPAux(SPAux):
   def __init__(self):
     self.result_dict_p_cmi_queries = {} 
-    self.observations_made = False 
+    self.list_of_cmi_queries = [] 
 
   def copy(self):
     aux = PopulationSPAux()
     aux.result_dict_p_cmi_queries = self.result_dict_p_cmi_queries
-    aux.observations_made = self.observations_made 
+    aux.list_of_cmi_queries = self.list_of_cmi_queries
     return aux
 
 
@@ -169,14 +169,13 @@ class PopulationSP(SP):
 class BDBPopulationOutputPSP(RandomPSP):
 
   def __init__(self, population_name, metamodel_name, bdb_file_path,
-      list_of_cmi_queries, list_of_all_nodes):
+      list_of_all_nodes):
     self.population_name = population_name 
     self.metamodel_name = metamodel_name
     self.bdb_file_path = bdb_file_path 
-    self.list_of_cmi_queries = list_of_cmi_queries
     self.list_of_all_nodes = list_of_all_nodes
 
-  def _query_bdb(self): 
+  def _query_bdb(self, list_of_cmi_queries): 
     if self.metamodel_name.startswith("precomputed"):
         result_dict_p_cmi_queries = precomputed_CMIs[self.metamodel_name]
     else:
@@ -192,7 +191,7 @@ class BDBPopulationOutputPSP(RandomPSP):
         #print >> sys.stderr, self.list_of_all_nodes
         #print >> sys.stderr, "number_models"
         #print >> sys.stderr, number_models
-        for cmi_query in self.list_of_cmi_queries:
+        for cmi_query in list_of_cmi_queries:
             print "Running the following query:"
             print cmi_query
             query(bdb, cmi_query) # Drop table if exists
@@ -220,7 +219,7 @@ class BDBPopulationOutputPSP(RandomPSP):
     spaux = args.spaux()
 
     if not spaux.result_dict_p_cmi_queries:
-        spaux.result_dict_p_cmi_queries  = self._query_bdb()
+        spaux.result_dict_p_cmi_queries  = self._query_bdb(spaux.list_of_cmi_queries)
     result_dict_p_cmi_queries = spaux.result_dict_p_cmi_queries
 
     if result_dict_p_cmi_queries:
@@ -264,18 +263,15 @@ class BDBPopulationOutputPSP(RandomPSP):
 
   def incorporate(self, value, args):
     spaux = args.spaux()
-    spaux.observations_made = value
+    spaux.list_of_cmi_queries = value
+    
 
   def unincorporate(self, value, args):
     pass
 
   def simulate(self,args):
-    result_dict_p_cmi_queries = args.spaux().result_dict_p_cmi_queries
-    if result_dict_p_cmi_queries:
-        return True
-    else:
-        return False
-    
+    list_of_cmi_queries = args.spaux().result_dict_p_cmi_queries
+    return list_of_cmi_queries
 
 
 class MakerBDBPopulationOutputPSP(DeterministicMakerAAAPSP):
@@ -283,11 +279,10 @@ class MakerBDBPopulationOutputPSP(DeterministicMakerAAAPSP):
     population_name = args.operandValues()[0]
     metamodel_name = args.operandValues()[1]
     bdb_file_path = args.operandValues()[2]
-    list_of_cmi_queries = args.operandValues()[3]
-    list_of_all_nodes = args.operandValues()[4]
+    list_of_all_nodes = args.operandValues()[3]
     output = TypedPSP(BDBPopulationOutputPSP(population_name, metamodel_name,
-        bdb_file_path, list_of_cmi_queries, list_of_all_nodes),
-      SPType([t.ArrayUnboxedType(t.ArrayUnboxedType(t.BoolType()))], t.BoolType()))
+        bdb_file_path, list_of_all_nodes),
+      SPType([t.ArrayUnboxedType(t.ArrayUnboxedType(t.BoolType()))], t.ArrayUnboxedType(t.StringType())))
     return VentureSPRecord(PopulationSP(NullRequestPSP(), output))
 
 
