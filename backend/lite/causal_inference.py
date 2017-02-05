@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+from pgmpy.models import BayesianModel
+
 import venture.lite.types as t
 import venture.lite.value as v
 from venture.lite.sp_help import deterministic_typed
@@ -9,47 +12,44 @@ from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import TypedPSP
-
 from venture.lite.psp import NullRequestPSP
-
-
 from venture.lite.psp import RandomPSP
 from venture.lite.sp_help import typed_nr
-import numpy as np
 
-from pgmpy.models import BayesianModel
+import bayeslite
+from bayeslite import bayesdb_open
+from iventure.utils_bql import query
 
 import sys
 sys.path.insert(0, '/scratch/ulli/Venturecxx/examples/causal-inference')
 
 from precomputed_cmi import precomputed_CMIs
 
-def dag_to_dot_notation(dag):
+def dag_to_dot_notation(dag, list_of_node_names):
     output_str = ""
     for i in range(len(dag)): 
         for j in range(len(dag)):
             if dag[i][j]:
-                output_str+="(%d)-->(%d), " % (i,j,)
+                output_str+="(%s)-->(%s), " % (list_of_node_names[i], list_of_node_names[j],)
     return output_str
 
 
-def get_independencies(dag):
+def get_independencies(dag, list_of_node_names):
     # convert to pgmpy representation
-    nodes_pgmpy = ["node_%d" % (i,) for i in range(len(dag))]
     edges_pgmpy = []
     for i in range(len(dag)):
         for j in range(len(dag)):
             if dag[i][j]:
-                edges_pgmpy.append(("node_%d" % (i,), "node_%d" % (j,)))
+                edges_pgmpy.append((list_of_node_names[i], list_of_node_names[j]))
     b_net_model = BayesianModel()
-    b_net_model.add_nodes_from(nodes_pgmpy) 
+    b_net_model.add_nodes_from(list_of_node_names) 
     b_net_model.add_edges_from(edges_pgmpy) 
     pgmpy_independencies_object = b_net_model.get_independencies()
     return pgmpy_independencies_object.independencies
 
 
 def create_cmi_query(column1, column2, population_name, evidence=None, number_models=30,
-                         threshold=0.05, number_of_samples=100):
+                         number_of_samples=100):
     """ Creat queries needed for CMI """
 
     query_dict= {
@@ -59,32 +59,44 @@ def create_cmi_query(column1, column2, population_name, evidence=None, number_mo
         "evidence": evidence,
         "number_models": number_models,
         "number_of_samples": number_of_samples,
-        "threshold": threshold,
         }
     if not evidence:
-        drop_existing_table = "DROP TABLE IF EXISTS 'mi({column1}, {column2})';".format(**query_dict)
-        create_mi_table = """
-            CREATE TABLE  'mi({column1}, {column2})' AS
+        drop_existing_table = """DROP TABLE IF EXISTS mi_{column1}_{column2};""".format(**query_dict)
+        create_mi_table = """CREATE TABLE  mi_{column1}_{column2} AS
             SIMULATE
                 MUTUAL INFORMATION OF {column1} WITH {column2}
                 USING {number_of_samples} SAMPLES
-                AS 'mi' FROM MODELS OF {population_name};""".format(**query_dict)
-        get_probability = """SELECT COUNT(mi)*1.0/{number_models} AS value
-            FROM 'mi({column1}, {column2})' WHERE temp>{threshold}""".format(**query_dict)
+                AS mi FROM MODELS OF {population_name};""".format(**query_dict)
     else:
-        drop_existing_table = "DROP TABLE IF EXISTS 'mi({column1}, {column2} | {evidence})';".format(**query_dict)
-        create_mi_table = """
-            CREATE TABLE  'mi({column1}, {column2})' AS
+        drop_existing_table = """DROP TABLE IF EXISTS mi_{column1}_{column2}_given_{evidence};""".format(**query_dict)
+        create_mi_table = """CREATE TABLE  mi_{column1}_{column2}_given_{evidence} AS
             SIMULATE
                 MUTUAL INFORMATION OF {column1} WITH {column2}
                 GIVEN ({evidence})
                 USING {number_of_samples} SAMPLES
-                AS 'mi' FROM MODELS OF {population_name};""".format(**query_dict)
-        get_probability = """SELECT COUNT(mi)*1.0/{number_models} AS value
-            FROM 'mi({column1}, {column2} | {evidence})' WHERE temp>{threshold}""".format(**query_dict)
+                AS mi FROM MODELS OF {population_name};""".format(**query_dict)
 
+        
+    return [drop_existing_table, create_mi_table]
 
-    return [drop_existing_table, create_mi_table, get_probability]
+def get_probability_of_cmi_query(column1, column2, number_models, evidence=None,
+    threshold=0.1):
+
+    query_dict= {
+        "column1": column1,
+        "column2": column2,
+        "evidence": evidence,
+        "number_models": number_models,
+        "threshold": threshold,
+        }
+    if evidence:
+        get_probability_query = """SELECT COUNT(mi)*1.0/{number_models} AS value
+            FROM mi_{column1}_{column2}_given_{evidence} WHERE mi>{threshold}""".format(**query_dict)
+    else:
+        get_probability_query = """SELECT COUNT(mi)*1.0/{number_models} AS value
+            FROM mi_{column1}_{column2} WHERE mi>{threshold}""".format(**query_dict)
+
+    return get_probability_query
 
 
 def get_all_possible_dependencies(list_of_all_nodes):
@@ -109,21 +121,37 @@ def get_cmi_queries(list_of_all_nodes, population_name):
     cmi_queries = []
     for dependence in list_of_dependencies:
         if  isinstance(dependence[0], basestring):
-            cmi_queries.append(create_cmi_query(dependence[0], dependence[1],
+            cmi_queries.extend(create_cmi_query(dependence[0], dependence[1],
                 population_name))
         else:
-            cmi_queries.append(create_cmi_query(dependence[0][0],
+            cmi_queries.extend(create_cmi_query(dependence[0][0],
                 dependence[0][1], population_name,
                 evidence=dependence[1]))
     return cmi_queries
 
+def get_cmi_probabilities(list_of_all_nodes, number_models):
+    list_of_dependencies = get_all_possible_dependencies(list_of_all_nodes)
+    cmi_probabilities = []
+    for dependence in list_of_dependencies:
+        if  isinstance(dependence[0], basestring):
+            cmi_probabilities.append((dependence,
+                get_probability_of_cmi_query(dependence[0], dependence[1], number_models)))
+        else:
+            cmi_probabilities.append((dependence,
+                get_probability_of_cmi_query(dependence[0][0], dependence[0][1],
+                number_models, evidence=dependence[1])))
+    return cmi_probabilities
+
+
 class PopulationSPAux(SPAux):
   def __init__(self):
-    self.field = {} 
+    self.result_dict_p_cmi_queries = {} 
+    self.observations_made = False 
 
   def copy(self):
     aux = PopulationSPAux()
-    aux.field = self.field
+    aux.result_dict_p_cmi_queries = self.result_dict_p_cmi_queries
+    aux.observations_made = self.observations_made 
     return aux
 
 
@@ -134,39 +162,73 @@ class PopulationSP(SP):
     return PopulationSPAux()
 
   def show(self,spaux):
-    return spaux.field
+    return spaux.result_dict_p_cmi_queries
 
 
 
 class BDBPopulationOutputPSP(RandomPSP):
 
-  def __init__(self, population_name):
-    self.population_name = population_name
+  def __init__(self, population_name, metamodel_name, bdb_file_path,
+      list_of_cmi_queries, list_of_all_nodes):
+    self.population_name = population_name 
+    self.metamodel_name = metamodel_name
+    self.bdb_file_path = bdb_file_path 
+    self.list_of_cmi_queries = list_of_cmi_queries
+    self.list_of_all_nodes = list_of_all_nodes
 
-  def incorporate(self, value, args):
-    spaux = args.spaux()
-    spaux.field = value
-
-  def unincorporate(self, value, args):
-    pass
-
-  def simulate(self,args):
-    field = args.spaux().field
-    if field:
-        return True
+  def _query_bdb(self): 
+    if self.metamodel_name.startswith("precomputed"):
+        result_dict_p_cmi_queries = precomputed_CMIs[self.metamodel_name]
     else:
-        return False
-    
+        #print >> sys.stderr, "########################" 
+        bdb = bayesdb_open(self.bdb_file_path)
+        population_id = bayeslite.core.bayesdb_get_population(bdb, self.population_name)
+        generator_id = bayeslite.core.bayesdb_get_generator(bdb, population_id, self.metamodel_name)
+        number_models = len(bayeslite.core.bayesdb_generator_modelnos(bdb,
+        generator_id))
+        #print >> sys.stderr, "self.list_of_cmi_queries"
+        #print >> sys.stderr, self.list_of_cmi_queries
+        #print >> sys.stderr, "self.list_of_all_nodes"
+        #print >> sys.stderr, self.list_of_all_nodes
+        #print >> sys.stderr, "number_models"
+        #print >> sys.stderr, number_models
+        for cmi_query in self.list_of_cmi_queries:
+            print "Running the following query:"
+            print cmi_query
+            query(bdb, cmi_query) # Drop table if exists
+        result_dict_p_cmi_queries = {}
+        for cmi_probability_dict_key, probability_cmi in get_cmi_probabilities(
+            self.list_of_all_nodes, number_models):
+            #print >> sys.stderr, "------------------------" 
+            #print >> sys.stderr, "probability_cmi"
+            #print >> sys.stderr,probability_cmi
+            result = query(bdb, probability_cmi)["value"].loc[0]
+            if result==1.:
+                result -= 0.00000001 #in case it's exactly 1.
+            elif result==0.: 
+                result += 0.00000001 #in case it's exactly 0.
+            #print >> sys.stderr, "result"
+            #print >> sys.stderr, result
+            result_dict_p_cmi_queries[cmi_probability_dict_key] = result
+            
+        #print >> sys.stderr, "result_dict_p_cmi_queries"
+        #print >> sys.stderr, result_dict_p_cmi_queries 
+        # TODO close stream for bdb file
+    return result_dict_p_cmi_queries 
+
   def logDensity(self,value,args):
-    if self.population_name.startswith("precomputed"):
-        probability_of_depencies = precomputed_CMIs[self.population_name]
-    else: 
-        raise ValueError("Stubbed - make sure string indicates precomputed CMI")
-        probability_of_depencies = args.spaux().field
-    if probability_of_depencies:
+    spaux = args.spaux()
+
+    if not spaux.result_dict_p_cmi_queries:
+        spaux.result_dict_p_cmi_queries  = self._query_bdb()
+    result_dict_p_cmi_queries = spaux.result_dict_p_cmi_queries
+
+    if result_dict_p_cmi_queries:
         dag = args.operandValues()[0]
         independence_keys = []
-        for independence in get_independencies(dag):
+        for independence in get_independencies(dag, self.list_of_all_nodes):
+            #print >> sys.stderr, "independence" 
+            #print >> sys.stderr, independence
             split_by_mid = independence.latex_string().split("\mid")
             if split_by_mid[-1]==" ":
                 split_by_independence = split_by_mid[0].split(" \perp ")
@@ -180,20 +242,51 @@ class BDBPopulationOutputPSP(RandomPSP):
                 independence_keys.append(((split_by_independence[0].strip(), split_by_independence[1].strip()), split_by_mid[-1].strip()))
 
         logpdf = 0
-        for key in probability_of_depencies.keys():
+        #print >> sys.stderr, "independence_keys" 
+        #print >> sys.stderr, independence_keys
+        for key in result_dict_p_cmi_queries.keys():
             if key in independence_keys:
-                logpdf += np.log(1- probability_of_depencies[key])
+                #print >> sys.stderr, "flipped key" 
+                #print >> sys.stderr, key
+                logpdf += np.log(1- result_dict_p_cmi_queries[key])
             else:
-                logpdf += np.log(probability_of_depencies[key])
+                #print >> sys.stderr, "kept key" 
+                #print >> sys.stderr, key
+                logpdf += np.log(result_dict_p_cmi_queries[key])
     else:
         logpdf = 0
+    #print >> sys.stderr, "DAG:"
+    #print >> sys.stderr, dag_to_dot_notation(dag, self.list_of_all_nodes)
+    #print >> sys.stderr, "np.exp(logpdf)"
+    #print >> sys.stderr, np.exp(logpdf)
+    #print >> sys.stderr, "########################" 
     return logpdf 
+
+  def incorporate(self, value, args):
+    spaux = args.spaux()
+    spaux.observations_made = value
+
+  def unincorporate(self, value, args):
+    pass
+
+  def simulate(self,args):
+    result_dict_p_cmi_queries = args.spaux().result_dict_p_cmi_queries
+    if result_dict_p_cmi_queries:
+        return True
+    else:
+        return False
+    
 
 
 class MakerBDBPopulationOutputPSP(DeterministicMakerAAAPSP):
   def simulate(self, args):
     population_name = args.operandValues()[0]
-    output = TypedPSP(BDBPopulationOutputPSP(population_name),
+    metamodel_name = args.operandValues()[1]
+    bdb_file_path = args.operandValues()[2]
+    list_of_cmi_queries = args.operandValues()[3]
+    list_of_all_nodes = args.operandValues()[4]
+    output = TypedPSP(BDBPopulationOutputPSP(population_name, metamodel_name,
+        bdb_file_path, list_of_cmi_queries, list_of_all_nodes),
       SPType([t.ArrayUnboxedType(t.ArrayUnboxedType(t.BoolType()))], t.BoolType()))
     return VentureSPRecord(PopulationSP(NullRequestPSP(), output))
 
