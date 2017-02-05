@@ -55,10 +55,8 @@ def __venture_start__(ripl):
             t.StringType(),
             t.StringType(),
             t.StringType(),
-            t.ArrayUnboxedType(t.StringType()),
-            t.ArrayUnboxedType(t.StringType()),
         ],
-        SPType([], t.BoolType())))
+        SPType([], t.ArrayUnboxedType(t.StringType()))))
     ripl.bind_foreign_sp("dag_to_dot_notation",
             deterministic_typed(dag_to_dot_notation,
                 [ 
