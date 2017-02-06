@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
@@ -27,11 +28,20 @@ from venture.lite.causal_inference import get_cmi_queries
 def plot_posterior_dags(list_dags):
     df = pd.DataFrame({"DAG":list_dags})
     df["DAG"] = df["DAG"].replace({"":"no edge"})
-    df["DAG"].value_counts("DAG").plot(kind="bar")
-    plt.xlabel("DAG")
-    plt.ylabel("Probability of DAG")
+    ax = df["DAG"].value_counts("DAG").plot(kind="bar")
+    ax.set_xlabel("DAG", fontsize=12)
+    ax.set_ylabel("Probability of DAG", fontsize=12)
+    ax.set_title("Posterior over possible DAG structures", fontsize=15)
+    xlabels = [l.get_text() for l in ax.xaxis.get_ticklabels()]
+    ax.set_xticklabels(xlabels, fontsize=12)
+    plt.tick_params(axis='y', which='major', labelsize=12)
+    plt.tick_params(axis='y', which='minor', labelsize=12)
+
 
 def __venture_start__(ripl):
+
+    sns.set_context("paper")
+
     ripl.bind_foreign_inference_sp("plot_posterior_dags",
             deterministic_typed(plot_posterior_dags,
                 [ 
@@ -75,3 +85,12 @@ def __venture_start__(ripl):
                 t.ArrayUnboxedType(t.StringType()),
                 min_req_args=1)
             )
+
+    ripl.execute_program("""
+        assume find = (list, item) -> {find_helper(to_list(list), item, 0)};
+        assume find_helper = (list, item, index) -> {
+               if(list[0]==item)
+                    {index}
+               else
+                    {find_helper(rest(list), item, index + 1)}};
+     """)
