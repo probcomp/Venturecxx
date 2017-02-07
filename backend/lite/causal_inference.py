@@ -214,13 +214,18 @@ class BDBPopulationOutputPSP(RandomPSP):
     return result_dict_p_cmi_queries 
 
   def logDensity(self,value,args):
+
     spaux = args.spaux()
     dag = args.operandValues()[0]
     list_of_all_nodes = args.operandValues()[1]
-
+    list_of_cmi_queries = value
+    #print >> sys.stderr, "-------------- logDensity -------------"
+    #print >> sys.stderr, "spaux.result_dict_p_cmi_queries"
+    #print >> sys.stderr, spaux.result_dict_p_cmi_queries
+    #print >> sys.stderr, "---------------------------"
     if not spaux.result_dict_p_cmi_queries:
         spaux.result_dict_p_cmi_queries  =\
-            self._query_bdb(spaux.list_of_cmi_queries, list_of_all_nodes)
+            self._query_bdb(list_of_cmi_queries, list_of_all_nodes)
     result_dict_p_cmi_queries = spaux.result_dict_p_cmi_queries
 
     if result_dict_p_cmi_queries:
@@ -263,8 +268,19 @@ class BDBPopulationOutputPSP(RandomPSP):
 
   def incorporate(self, value, args):
     spaux = args.spaux()
-    spaux.list_of_cmi_queries = value
+    if value and not spaux.result_dict_p_cmi_queries:
+        spaux = args.spaux()
+        spaux.list_of_cmi_queries = value
+        list_of_all_nodes = args.operandValues()[1]
+        #print >> sys.stderr, "######## incorporate ######"
+        #print >> sys.stderr,  "value"
+        #print >> sys.stderr,  value
+        #print >> sys.stderr,  "spaux.result_dict_p_cmi_queries"
+        #print >> sys.stderr,  spaux.result_dict_p_cmi_queries
+        #print >> sys.stderr, "########################" 
+        spaux.result_dict_p_cmi_queries = self._query_bdb(value, list_of_all_nodes)
     
+
 
   def unincorporate(self, value, args):
     pass
@@ -285,6 +301,4 @@ class MakerBDBPopulationOutputPSP(DeterministicMakerAAAPSP):
           t.ArrayUnboxedType(t.StringType())],
           t.ArrayUnboxedType(t.StringType())))
     return VentureSPRecord(PopulationSP(NullRequestPSP(), output))
-
-
 
