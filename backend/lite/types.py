@@ -35,6 +35,9 @@ class VentureType(object):
   """Base class of all Venture types.
 
 See the "Types" section of doc/type-system.md."""
+  def asPython(self, vthing):
+    raise NotImplementedError
+
   def asPythonNoneable(self, vthing):
     if vthing is None:
       return None
