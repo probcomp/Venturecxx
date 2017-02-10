@@ -1,15 +1,15 @@
 from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import cast
 
-import venture.lite.value as vv # Pylint doesn't understand type comments pylint: disable=unused-import
 from venture.parser.venture_script.parse import VentureScriptParser
-from venture.sivm.macro_system import desugar_expression
 from venture.sivm.core_sivm import _modify_expression
+from venture.sivm.macro_system import desugar_expression
+import venture.lite.value as vv # Pylint doesn't understand type comments pylint: disable=unused-import
 
-from venture.knight.types import Trace
-from venture.knight.types import stack_dict_to_exp
 from venture.knight.regen import regen
 from venture.knight.sp import init_env
+from venture.knight.types import Trace
+from venture.knight.types import stack_dict_to_exp
 
 def top_eval(form):
   # type: (str) -> Tuple[float, vv.VentureValue]

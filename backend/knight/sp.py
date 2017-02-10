@@ -1,21 +1,21 @@
-from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import List
+from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import cast
 
-import venture.lite.value as vv 
 from venture.lite.builtin import builtInSPs
 from venture.lite.env import VentureEnvironment
-import venture.lite.sp as sp # pylint: disable=unused-import
-from venture.lite.sp_use import MockArgs
 from venture.lite.psp import NullRequestPSP
+from venture.lite.sp_use import MockArgs
+import venture.lite.sp as sp # pylint: disable=unused-import
+import venture.lite.value as vv
 
+from venture.knight.types import App
 from venture.knight.types import Datum
 from venture.knight.types import Exp # pylint: disable=unused-import
-from venture.knight.types import App
-from venture.knight.types import Var
 from venture.knight.types import RegenResult # pylint: disable=unused-import
 from venture.knight.types import Request
 from venture.knight.types import Trace
+from venture.knight.types import Var
 
 class SP(vv.VentureValue):
   def regenerate(self, args, constraints, interventions):

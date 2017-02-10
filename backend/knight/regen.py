@@ -1,19 +1,19 @@
 from typing import List # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import Tuple # pylint: disable=unused-import
 
-import venture.lite.value as vv # pylint: disable=unused-import
 from venture.lite.env import VentureEnvironment # pylint: disable=unused-import
+import venture.lite.value as vv # pylint: disable=unused-import
 
-from venture.knight.types import Exp # pylint: disable=unused-import
-from venture.knight.types import App
-from venture.knight.types import Lit
-from venture.knight.types import Var
-from venture.knight.types import Lam
-from venture.knight.types import Trace # pylint: disable=unused-import
-from venture.knight.types import Datum
-from venture.knight.types import Request
-from venture.knight.sp import SP
 from venture.knight.sp import CompoundSP
+from venture.knight.sp import SP
+from venture.knight.types import App
+from venture.knight.types import Datum
+from venture.knight.types import Exp # pylint: disable=unused-import
+from venture.knight.types import Lam
+from venture.knight.types import Lit
+from venture.knight.types import Request
+from venture.knight.types import Trace # pylint: disable=unused-import
+from venture.knight.types import Var
 
 def regen(exp, env, constraints, interventions):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]

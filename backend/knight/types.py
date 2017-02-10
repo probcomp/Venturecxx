@@ -4,12 +4,12 @@ from contextlib import contextmanager
 from typing import Iterator # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import List
 from typing import NamedTuple
-from typing import Union
 from typing import Optional # pylint: disable=unused-import
+from typing import Union
 from typing import cast
 
-import venture.lite.value as vv 
 from venture.lite.env import VentureEnvironment
+import venture.lite.value as vv
 
 class Exp(object): pass
 
