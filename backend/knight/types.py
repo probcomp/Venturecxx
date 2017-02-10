@@ -1,13 +1,11 @@
 from collections import OrderedDict
 from contextlib import contextmanager
 
-from typing import Callable
-from typing import Iterator
+from typing import Iterator # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import List
 from typing import NamedTuple
-from typing import Tuple
 from typing import Union
-from typing import Optional
+from typing import Optional # pylint: disable=unused-import
 from typing import cast
 
 import venture.lite.value as vv 

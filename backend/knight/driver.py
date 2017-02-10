@@ -1,7 +1,7 @@
-from typing import Tuple
+from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import cast
 
-import venture.lite.value as vv 
+import venture.lite.value as vv # Pylint doesn't understand type comments pylint: disable=unused-import
 from venture.parser.venture_script.parse import VentureScriptParser
 from venture.sivm.macro_system import desugar_expression
 from venture.sivm.core_sivm import _modify_expression
