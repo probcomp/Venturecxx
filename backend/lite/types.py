@@ -188,6 +188,25 @@ class PositiveType(VentureType):
     return base("positive", **kwargs)
   def gradient_type(self): return NumberType()
 
+class NonpositiveType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
+  def asVentureValue(self, thing):
+    assert thing <= 0
+    return vv.VentureNumber(thing)
+  def asPython(self, vthing):
+    ans = vthing.getNumber()
+    if ans <= 0:
+      return ans
+    else:
+      raise vv.VentureTypeError("Number is positive %s" % ans)
+  def __contains__(self, vthing):
+    return isinstance(vthing, vv.VentureNumber) and vthing.getNumber() <= 0
+  def name(self): return self._name or "<nonpositive>"
+  def distribution(self, base, **kwargs):
+    return base("nonpositive", **kwargs)
+  def gradient_type(self): return NumberType()
+
 class NilType(VentureType):
   def __init__(self, name=None):
     self._name = name
