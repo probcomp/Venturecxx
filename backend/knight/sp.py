@@ -18,15 +18,15 @@ from venture.knight.types import Trace
 from venture.knight.types import Var
 
 class SP(vv.VentureValue):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     raise NotImplementedError
 
   def regenerator_of(self):
     # type: () -> SP
-    params = ["args", "constraints", "interventions"]
+    params = ["args", "target", "interventions"]
     body = App([Var("regenerate"), Var("self"), Var("args"),
-                Var("constraints"), Var("interventions")])
+                Var("target"), Var("interventions")])
     env = init_env()
     env.addBinding("self", self)
     return CompoundSP(params, body, env)
@@ -38,10 +38,10 @@ class CompoundSP(SP):
     self.body = body
     self.env = env
 
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     env = VentureEnvironment(self.env, self.params, args)
-    req = Request(self.body, env, constraints, interventions)
+    req = Request(self.body, env, target, interventions)
     return (0, req)
 
 class SPFromLite(SP):
@@ -51,10 +51,10 @@ class SPFromLite(SP):
     assert isinstance(lite_sp.requestPSP, NullRequestPSP)
     self.aux = lite_sp.constructSPAux()
 
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
-    if constraints.has():
-      ans = constraints.get()
+    if target.has():
+      ans = target.get()
       score = self.lite_sp.outputPSP.logDensity(ans, MockArgs(args, self.aux))
     else:
       ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
@@ -63,12 +63,12 @@ class SPFromLite(SP):
     return (score, Datum(ans))
 
 class GetCurrentTraceSP(SP):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     return (0, Datum(interventions))
 
 class SubtraceSP(SP):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     (trace, key) = args
     assert isinstance(trace, Trace)
@@ -77,21 +77,21 @@ class SubtraceSP(SP):
       return (0, Datum(ans))
 
 class TraceHasSP(SP):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     (trace,) = args
     assert isinstance(trace, Trace)
     return (0, Datum(vv.VentureBool(trace.has())))
 
 class TraceGetSP(SP):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     (trace,) = args
     assert isinstance(trace, Trace)
     return (0, Datum(trace.get()))
 
 class TraceSetSP(SP):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     (trace, val) = args
     assert isinstance(trace, Trace)
@@ -99,13 +99,13 @@ class TraceSetSP(SP):
     return (0, Datum(vv.VentureNil()))
 
 class RegenerateSP(SP):
-  def regenerate(self, args, _constraints, _interventions):
+  def regenerate(self, args, _target, _interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
-    (oper, subargs, constraints, interventions) = args
+    (oper, subargs, target, interventions) = args
     assert isinstance(oper, SP)
     assert isinstance(subargs, (vv.VenturePair, vv.VentureNil, vv.VentureArray, \
                                 vv.VentureArrayUnboxed, vv.VentureSimplex))
-    assert isinstance(constraints, Trace)
+    assert isinstance(target, Trace)
     assert isinstance(interventions, Trace)
     # Pylint misunderstands typing.List
     # pylint: disable=unsubscriptable-object, invalid-sequence-index
@@ -113,11 +113,11 @@ class RegenerateSP(SP):
     for arg in lst:
       assert isinstance(arg, vv.VentureValue)
     from venture.knight.regen import r_apply
-    (score, val) = r_apply(oper, lst, constraints, interventions)
+    (score, val) = r_apply(oper, lst, target, interventions)
     return (0, Datum(vv.VenturePair((vv.VentureNumber(score), val))))
 
 class MakeSPSP(SP):
-  def regenerate(self, args, _constraints, _interventions):
+  def regenerate(self, args, _target, _interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     (regenerator,) = args
     assert isinstance(regenerator, SP)
@@ -127,9 +127,9 @@ class MadeSP(SP):
   def __init__(self, regenerator_sp):
     # type: (SP) -> None
     self.regenerator_sp = regenerator_sp
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
-    new_args = [vv.pythonListToVentureList(args), constraints, interventions]
+    new_args = [vv.pythonListToVentureList(args), target, interventions]
     # XXX Should I invoke the trampoline here, on these fresh traces,
     # or propagate requests to my caller?
     from venture.knight.regen import r_apply
@@ -146,7 +146,7 @@ class MadeSP(SP):
     return self.regenerator_sp
 
 class RegeneratorOfSP(SP):
-  def regenerate(self, args, constraints, interventions):
+  def regenerate(self, args, target, interventions):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     (sub_sp,) = args
     assert isinstance(sub_sp, SP)
