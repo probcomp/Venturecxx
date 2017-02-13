@@ -15,21 +15,21 @@ from venture.knight.types import Request
 from venture.knight.types import Trace # pylint: disable=unused-import
 from venture.knight.types import Var
 
-def regen(exp, env, target, interventions):
+def regen(exp, env, target, mechanism):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
-  if interventions.has():
-    return (0, interventions.get())
+  if mechanism.has():
+    return (0, mechanism.get())
   else:
-    return do_regen(exp, env, target, interventions)
+    return do_regen(exp, env, target, mechanism)
 
-def do_regen(exp, env, target, interventions):
+def do_regen(exp, env, target, mechanism):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
   if isinstance(exp, App):
-    (sub_score, subvals) = regen_list(exp.subs, env, target, interventions)
+    (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
     oper = subvals[0]
     assert isinstance(oper, SP)
     with target.application_subtrace() as c2:
-      with interventions.application_subtrace() as i2:
+      with mechanism.application_subtrace() as i2:
         (app_score, val) = r_apply(oper, subvals[1:], c2, i2)
         return (sub_score + app_score, val)
   if isinstance(exp, Lit):
@@ -39,31 +39,31 @@ def do_regen(exp, env, target, interventions):
   if isinstance(exp, Lam):
     return (0, CompoundSP(exp.params, exp.body, env))
 
-def regen_list(exps, env, target, interventions):
+def regen_list(exps, env, target, mechanism):
   # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, List[vv.VentureValue]]
   # This is mapM (\e -> regen(e, env, trace)) in the Writer (Sum Double) monad.
   score = 0.0
   anss = []
   for (i, e) in enumerate(exps):
     with target.subexpr_subtrace(i) as c2:
-      with interventions.subexpr_subtrace(i) as i2:
+      with mechanism.subexpr_subtrace(i) as i2:
         (dscore, ans) = regen(e, env, c2, i2)
         score += dscore
         anss.append(ans)
   return (score, anss)
 
-def r_apply(oper, args, target, interventions):
+def r_apply(oper, args, target, mechanism):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
-  if interventions.has():
-    return (0, interventions.get())
+  if mechanism.has():
+    return (0, mechanism.get())
   else:
-    return do_r_apply(oper, args, target, interventions)
+    return do_r_apply(oper, args, target, mechanism)
 
-def do_r_apply(oper, args, target, interventions):
+def do_r_apply(oper, args, target, mechanism):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
-  (app_score, res) = oper.regenerate(args, target, interventions)
+  (app_score, res) = oper.regenerate(args, target, mechanism)
   if isinstance(res, Datum):
     return (app_score, res.datum)
   elif isinstance(res, Request):
-    (recur_score, val) = regen(res.exp, res.env, res.target, res.interventions)
+    (recur_score, val) = regen(res.exp, res.env, res.target, res.mechanism)
     return (app_score + recur_score, val)

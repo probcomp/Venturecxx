@@ -20,7 +20,7 @@ class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]),
-                                 ('target', Trace), ('interventions', Trace)])
+                                 ('target', Trace), ('mechanism', Trace)])
 
 RegenResult = Union[Datum, Request]
 

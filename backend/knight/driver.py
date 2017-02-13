@@ -40,16 +40,16 @@ print top_eval("""{
   list(res, trace_get(t2)) }""") # (0, List(List(0 . 1), 1))
 
 normal_normal_regnerator = """
-(args, target, interventions) -> {
+(args, target, mechanism) -> {
   mu = args[0];
   sig1 = args[1];
   sig2 = args[2];
-  if (trace_has(interventions)) {
-    pair(0, trace_get(interventions))
-  } else { if (trace_has(subtrace(interventions, "x"))) {
-    regenerate(normal, [trace_get(subtrace(interventions, "x")), sig2],
-               target, interventions)
-  } else { // interventions trace is empty
+  if (trace_has(mechanism)) {
+    pair(0, trace_get(mechanism))
+  } else { if (trace_has(subtrace(mechanism, "x"))) {
+    regenerate(normal, [trace_get(subtrace(mechanism, "x")), sig2],
+               target, mechanism)
+  } else { // mechanism trace is empty
     if (trace_has(target) && not(trace_has(subtrace(target, "x")))) {
       val = trace_get(target);
       prec1 = 1 / (sig1 ** 2);
@@ -58,15 +58,15 @@ normal_normal_regnerator = """
       post_prec = prec1 + prec2;
       post_sig = sqrt(1 / post_prec);
       post_sample ~ normal(post_mu, post_sig);
-      _ = trace_set(subtrace(interventions, "x"), post_sample);
+      _ = trace_set(subtrace(mechanism, "x"), post_sample);
       regenerate(normal, [mu, sqrt(sig1**2 + sig2**2)],
-                 target, interventions)
+                 target, mechanism)
   } else {
     pack = regenerate(normal, [mu, sig1],
-                      subtrace(target, "x"), subtrace(interventions, "x"));
+                      subtrace(target, "x"), subtrace(mechanism, "x"));
     score = first(pack);
     val = rest(pack);
-    pack2 = regenerate(normal, [val, sig2], target, interventions);
+    pack2 = regenerate(normal, [val, sig2], target, mechanism);
     score2 = first(pack2);
     val2 = rest(pack2);
     pair(score + score2, val2)
