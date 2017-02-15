@@ -17,6 +17,8 @@ class App(NamedTuple('App', [('subs', List[Exp])]), Exp): pass
 class Var(NamedTuple('Var', [('name', str)]), Exp): pass
 class Lit(NamedTuple('Lit', [('val', vv.VentureValue)]), Exp): pass
 class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
+class Seq(NamedTuple('Seq', [('subs', List[Exp])]), Exp): pass
+class Def(NamedTuple('Def', [('name', str), ('expr', Exp)]), Exp): pass
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]),

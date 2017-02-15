@@ -2,16 +2,18 @@ from typing import List # Pylint doesn't understand type comments pylint: disabl
 from typing import Tuple # pylint: disable=unused-import
 
 from venture.lite.env import VentureEnvironment # pylint: disable=unused-import
-import venture.lite.value as vv # pylint: disable=unused-import
+import venture.lite.value as vv
 
 from venture.knight.sp import CompoundSP
 from venture.knight.sp import SP
 from venture.knight.types import App
 from venture.knight.types import Datum
+from venture.knight.types import Def
 from venture.knight.types import Exp # pylint: disable=unused-import
 from venture.knight.types import Lam
 from venture.knight.types import Lit
 from venture.knight.types import Request
+from venture.knight.types import Seq
 from venture.knight.types import Trace # pylint: disable=unused-import
 from venture.knight.types import Var
 
@@ -38,6 +40,20 @@ def do_regen(exp, env, target, mechanism):
     return (0, env.findSymbol(exp.name))
   if isinstance(exp, Lam):
     return (0, CompoundSP(exp.params, exp.body, env))
+  if isinstance(exp, Seq):
+    # This can also be emulated by applying a procedure that returns
+    # the last argument (since the language is strict).
+    (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
+    if len(exp.subs) > 0:
+      return (sub_score, subvals[-1])
+    else:
+      return (sub_score, vv.VentureNil())
+  if isinstance(exp, Def):
+    with target.definition_subtrace() as t2:
+      with mechanism.definition_subtrace() as m2:
+        (sub_score, subval) = regen(exp.expr, env, t2, m2)
+        env.addBinding(exp.name, subval)
+        return (sub_score, vv.VentureNil())
 
 def regen_list(exps, env, target, mechanism):
   # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, List[vv.VentureValue]]
