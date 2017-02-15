@@ -155,3 +155,16 @@ def generate_binary_data(N):
 
     #TODO: Plotting
 
+    sns.countplot(y="a", hue="b", data=df);
+    plt.figure()
+    sns.countplot(y="b", hue="a", data=df);
+    plt.figure()
+    sns.countplot(y="c", hue="d", data=df);
+    plt.figure()
+    sns.countplot(y="d", hue="c", data=df);
+
+    plt.figure()
+    sns.countplot(y="g", hue="e", data=df);
+    plt.figure()
+    sns.countplot(y="g", hue="f", data=df);
+
