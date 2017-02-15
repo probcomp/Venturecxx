@@ -148,17 +148,21 @@ def logWeightsToNormalizedDirect(logs):
     # If all the logs are -inf, force 0 instead of NaN.
     return [0 for _ in logs]
 
-def sampleLogCategorical(logs, np_rng):
+def sampleLogCategorical(logs, np_rng, os=None):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
     return simulateCategorical([math.exp(log - the_max) for log in logs],
-      np_rng, os=None)
+      np_rng, os=os)
   else:
     # normalizeList, as written above, will actually do the right
     # thing with this, namely treat all impossible options as equally
     # impossible.
-    return simulateCategorical([0 for _ in logs], np_rng, os=None)
+    return simulateCategorical([0 for _ in logs], np_rng, os=os)
+
+def logDensityLogCategorical(val,log_ps,os=None):
+  if os is None: os = range(len(log_ps))
+  return logsumexp([log_pi for (log_pi, oi) in zip(log_ps, os) if oi == val]) - logsumexp(log_ps)
 
 def logDensityMVNormal(x, mu, sigma):
   return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))

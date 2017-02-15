@@ -36,9 +36,11 @@ from venture.lite.sp_registry import registerBuiltinSP
 from venture.lite.utils import d_log_logistic
 from venture.lite.utils import log
 from venture.lite.utils import log1p
+from venture.lite.utils import logDensityLogCategorical
 from venture.lite.utils import logDensityCategorical
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logit
+from venture.lite.utils import sampleLogCategorical
 from venture.lite.utils import simulateCategorical
 from venture.lite.value import VentureInteger
 import venture.lite.types as t
@@ -241,6 +243,47 @@ class CategoricalOutputPSP(DiscretePSP):
 
 registerBuiltinSP("categorical", typed_nr(CategoricalOutputPSP(),
   [t.SimplexType(), t.ArrayType()], t.AnyType(), min_req_args=1))
+
+
+class LogCategoricalOutputPSP(DiscretePSP):
+  # (log_categorical log_ps outputs)
+  def simulate(self, args):
+    vals = args.operandValues()
+    if len(vals) == 1: # Default values to choose from
+      return sampleLogCategorical(vals[0], args.np_prng(),
+        [VentureInteger(i) for i in range(len(vals[0]))])
+    else:
+      if len(vals[0]) != len(vals[1]):
+        raise VentureValueError("Categorical passed different length arguments.")
+      ps, os = vals
+      return sampleLogCategorical(ps, args.np_prng(), os)
+
+  def logDensity(self, val, args):
+    vals = args.operandValues()
+    if len(vals) == 1: # Default values to choose from
+      return logDensityLogCategorical(val, vals[0],
+        [VentureInteger(i) for i in range(len(vals[0]))])
+    else:
+      return logDensityLogCategorical(val,*vals)
+
+  def enumerateValues(self, args):
+    vals = args.operandValues()
+    indexes = [i for i, p in enumerate(vals[0]) if p > 0]
+    if len(vals) == 1:
+      return indexes
+    else:
+      return [vals[1][i] for i in indexes]
+
+  def description(self, name):
+    return '  %s(log_weights, objects) samples a categorical with the given '\
+      'weights, interpreted in log space. In the one argument case, returns the index of the chosen '\
+      'option as an integer; in the two argument case returns the item at that '\
+      'index in the second argument. It is an error if the two arguments '\
+      'have different length.' % name
+
+
+registerBuiltinSP("log_categorical", typed_nr(LogCategoricalOutputPSP(),
+  [t.Array(t.Number), t.ArrayType()], t.AnyType(), min_req_args=1))
 
 
 class UniformDiscreteOutputPSP(DiscretePSP):
