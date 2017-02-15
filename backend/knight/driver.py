@@ -1,3 +1,5 @@
+import argparse
+
 from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import cast
 
@@ -15,6 +17,23 @@ def top_eval(form):
   # type: (str) -> Tuple[float, vv.VentureValue]
   stack_dict = cast(object, _modify_expression(desugar_expression(VentureScriptParser.instance().parse_expression(form))))
   return regen(stack_dict_to_exp(stack_dict), init_env(), Trace(), Trace())
+
+def doit(args):
+  # type: (argparse.Namespace) -> None
+  if args.eval:
+    for exp in args.eval:
+      print top_eval(exp)
+
+def main():
+  # type: () -> None
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-e', '--eval', action='append', help="execute the given expression")
+  parser.add_argument('-f', '--file', action='append', help="execute the given file")
+  args = parser.parse_args()
+  doit(args)
+
+if __name__ == '__main__':
+  main()
 
 print top_eval("((x) -> { x })(2)") # (0, 2)
 print top_eval("normal(2, 1)") # (0, x) where x ~ normal(2, 1)
