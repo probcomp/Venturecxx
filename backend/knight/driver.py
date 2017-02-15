@@ -35,23 +35,6 @@ def main():
 if __name__ == '__main__':
   main()
 
-print top_eval("""{
-  t1 = get_current_trace();
-  t2 = get_current_trace();
-  res = regenerate(normal, [0, 1], t1, t2);
-  list(res, trace_get(t2)) }""") # (0, List(List(0 . x), x)) where x ~ normal(0, 1)
-print top_eval("""{
-  t1 = get_current_trace();
-  _ = trace_set(t1, 1);
-  t2 = get_current_trace();
-  res = regenerate(normal, [0, 1], t1, t2);
-  list(res, trace_get(t2)) }""") # (0, List(List(-1.41 . 1), 1))
-print top_eval("""{
-  t1 = get_current_trace();
-  t2 = get_current_trace();
-  _ = trace_set(t2, 1);
-  res = regenerate(normal, [0, 1], t1, t2);
-  list(res, trace_get(t2)) }""") # (0, List(List(0 . 1), 1))
 
 normal_normal_regnerator = """
 (args, target, mechanism) -> {
