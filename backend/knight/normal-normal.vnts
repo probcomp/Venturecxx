@@ -1,0 +1,34 @@
+define regenerator = (args, target, mechanism) -> {
+  mu = args[0];
+  sig1 = args[1];
+  sig2 = args[2];
+  if (trace_has(mechanism)) {
+    pair(0, trace_get(mechanism))
+  } else { if (trace_has(subtrace(mechanism, "x"))) {
+    regenerate(normal, [trace_get(subtrace(mechanism, "x")), sig2],
+               target, mechanism)
+  } else { // mechanism trace is empty
+    if (trace_has(target) && not(trace_has(subtrace(target, "x")))) {
+      val = trace_get(target);
+      prec1 = 1 / (sig1 ** 2);
+      prec2 = 1 / (sig2 ** 2);
+      post_mu = (mu * prec1 + val * prec2) / (prec1 + prec2);
+      post_prec = prec1 + prec2;
+      post_sig = sqrt(1 / post_prec);
+      post_sample ~ normal(post_mu, post_sig);
+      _ = trace_set(subtrace(mechanism, "x"), post_sample);
+      regenerate(normal, [mu, sqrt(sig1**2 + sig2**2)],
+                 target, mechanism)
+  } else {
+    pack = regenerate(normal, [mu, sig1],
+                      subtrace(target, "x"), subtrace(mechanism, "x"));
+    score = first(pack);
+    val = rest(pack);
+    pack2 = regenerate(normal, [val, sig2], target, mechanism);
+    score2 = first(pack2);
+    val2 = rest(pack2);
+    pair(score + score2, val2)
+  }}}
+};
+
+define normal_normal = sp(regenerator);

@@ -53,6 +53,11 @@ def toplevel(forms):
 def doit(args):
   # type: (argparse.Namespace) -> None
   forms = ""
+  if args.file:
+    for fname in args.file:
+      with open(fname) as f:
+        forms += ""
+        forms += f.read()
   if args.eval:
     forms += " ".join(args.eval)
   print toplevel(forms)
@@ -102,13 +107,6 @@ normal_normal_regnerator = """
     pair(score + score2, val2)
   }}}
 }"""
-
-# Running a synthetic SP
-print top_eval("""{
-  regenerator = %s;
-  normal_normal = sp(regenerator);
-  normal_normal(0, 1, 1)
-}""" % (normal_normal_regnerator,)) # (0, x) where x ~ normal(0, 2)
 
 # Tracing a synthetic SP
 print top_eval("""{

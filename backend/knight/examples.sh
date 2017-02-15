@@ -23,3 +23,7 @@ python -m venture.knight.driver -e '{
   _ = trace_set(t2, 1);
   res = regenerate(normal, [0, 1], t1, t2);
   list(res, trace_get(t2)) }' # (0, List(List(0 . 1), 1))
+
+# Running a synthetic SP
+python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
+  -e 'normal_normal(0, 1, 1)' # (0, x) where x ~ normal(0, 2)
