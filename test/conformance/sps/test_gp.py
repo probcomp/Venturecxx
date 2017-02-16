@@ -56,7 +56,6 @@ def testGP1():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
-@on_inf_prim('none') # Gets run in the misc build
 def testGPMean1(seed):
   ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
@@ -71,7 +70,6 @@ def testGPMean1(seed):
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
-@on_inf_prim('none') # Gets run in the misc build
 def testGPMean2(seed):
   ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
