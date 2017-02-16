@@ -1,0 +1,24 @@
+define infer_reject = (sp, args, log_bound, target) ~> {
+  t1 = get_current_trace();
+  res = regenerate(sp, args, target, t1);
+  score = first(res);
+  if (log(uniform_continuous(0, 1)) < score - log_bound) {
+    t1
+  } else {
+    infer_reject(sp, args, log_bound, target)
+  }
+};
+
+define infer_resampling = (sp, args, target, num_p) ~> {
+  particles = mapv((i) ~> {
+    t1 = get_current_trace();
+    res = regenerate(sp, args, target, t1);
+    score = first(res);
+    list(score, t1)
+  }, arange(num_p));
+  log_categorical(map(first, particles), map(second, particles))
+};
+
+define infer_ssrmh = (sp, args, target, init_mech, steps) ~> {
+
+};
