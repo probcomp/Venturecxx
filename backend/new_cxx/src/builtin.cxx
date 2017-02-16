@@ -164,7 +164,6 @@ map<string, SP*> initBuiltInSPs()
   m["array"] = new SP(new NullRequestPSP(), new ArrayOutputPSP());
   m["prepend"] = new SP(new NullRequestPSP(), new PrependOutputPSP());
   m["append"] = new SP(new NullRequestPSP(), new AppendOutputPSP());
-  m["concat"] = new SP(new NullRequestPSP(), new ConcatOutputPSP());
   m["is_array"] = new SP(new NullRequestPSP(), new IsArrayOutputPSP());
   m["to_array"] = new SP(new NullRequestPSP(), new ToArrayOutputPSP());
   m["pair"] = new SP(new NullRequestPSP(), new PairOutputPSP());
