@@ -56,6 +56,7 @@ def testGP1():
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
+@on_inf_prim('none') # Gets run in the misc build
 def testGPMean1(seed):
   ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
@@ -70,6 +71,7 @@ def testGPMean1(seed):
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @statisticalTest
+@on_inf_prim('none') # Gets run in the misc build
 def testGPMean2(seed):
   ripl = get_ripl(seed=seed)
   prep_ripl(ripl)
@@ -142,6 +144,7 @@ def testGPAux():
   check_firsts(ripl.infer('(extract_stats gp)'), {1.0, 3.0})
 
 @in_backend('none')
+@on_inf_prim('none') # Gets run in the misc build
 def testNormalParameters():
   obs_inputs = np.array([1.3, -2.0, 0.0])
   obs_outputs = np.array([5.0, 2.3, 8.0])
@@ -161,6 +164,7 @@ def testNormalParameters():
 
 @in_backend('none')
 @statisticalTest
+@on_inf_prim('none') # Gets run in the misc build
 def testOneSample(seed):
   np_rng = npr.RandomState(seed)
   obs_inputs  = np.array([1.3, -2.0, 0.0])
@@ -187,6 +191,7 @@ def testOneSample(seed):
 
 @in_backend('none')
 @statisticalTest
+@on_inf_prim('none') # Gets run in the misc build
 def testTwoSamples_low_covariance(seed):
   np_rng = npr.RandomState(seed)
   obs_inputs  = np.array([1.3, -2.0, 0.0])
@@ -217,6 +222,7 @@ def testTwoSamples_low_covariance(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_gradients(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('mu_0', '(normal 0 1)')
@@ -235,6 +241,7 @@ def test_gradients(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('mh')
 def test_2d(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('mu_0', '(normal 0 1)')
@@ -250,6 +257,7 @@ def test_2d(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_2d_gradients(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -267,6 +275,7 @@ def test_2d_gradients(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_arglebargle(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -284,6 +293,7 @@ def test_arglebargle(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_2d_arglebargle(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -305,6 +315,7 @@ def test_2d_arglebargle(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_deltoid_gradient(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -328,6 +339,7 @@ def test_deltoid_gradient(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_deltoid_gradient_simulate(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -356,6 +368,7 @@ def test_deltoid_gradient_simulate(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_bump_gradient(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -379,6 +392,7 @@ def test_bump_gradient(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_bump_gradient_simulate(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -407,6 +421,7 @@ def test_bump_gradient_simulate(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_linear_gradient(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
@@ -424,6 +439,7 @@ def test_linear_gradient(seed):
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
+@on_inf_prim('grad_ascent')
 def test_linear_gradient_2d(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume('gs_expon_1',
