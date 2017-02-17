@@ -61,7 +61,8 @@ class SPFromLite(SP):
     else:
       ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
       score = 0
-    mechanism.set(ans)
+    if self.lite_sp.outputPSP.isRandom():
+      mechanism.set(ans)
     return (score, Datum(ans))
 
 class GetCurrentTraceSP(SP):
