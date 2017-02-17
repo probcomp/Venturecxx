@@ -8,6 +8,8 @@ from venture.lite.psp import NullRequestPSP
 from venture.lite.sp_use import MockArgs
 import venture.lite.sp as sp # pylint: disable=unused-import
 import venture.lite.value as vv
+import venture.lite.inference_sps as inf
+import venture.engine.inference # For effect on the inference sp registry
 
 from venture.knight.types import App
 from venture.knight.types import Datum
@@ -157,6 +159,9 @@ def make_global_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
   for name, sp in builtInSPs().iteritems():
+    if isinstance(sp.requestPSP, NullRequestPSP):
+      env.addBinding(name, SPFromLite(sp))
+  for name, sp in inf.inferenceSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
       env.addBinding(name, SPFromLite(sp))
   env.addBinding("regenerate", RegenerateSP())
