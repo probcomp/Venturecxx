@@ -18,6 +18,7 @@
 from nose.tools import assert_raises
 
 from venture.exception import VentureException
+from venture.test.config import config
 from venture.test.config import get_ripl
 
 def test_bernoulli_range_error():
@@ -25,31 +26,55 @@ def test_bernoulli_range_error():
     ripl.sample('bernoulli(0.0)')
     ripl.sample('bernoulli(0.5)')
     ripl.sample('bernoulli(1.0)')
-    with assert_raises(VentureException):
-        ripl.sample('bernoulli(-0.1)')
-    with assert_raises(VentureException):
-        ripl.sample('bernoulli(1.1)')
+    if config["get_ripl"] != "puma":
+        with assert_raises(VentureException):
+            ripl.sample('bernoulli(-0.1)')
+        with assert_raises(VentureException):
+            ripl.sample('bernoulli(1.1)')
+    else:
+        # Puma raises the wrong exception due to Issue #666.
+        with assert_raises(RuntimeError):
+            ripl.sample('bernoulli(-0.1)')
+        with assert_raises(RuntimeError):
+            ripl.sample('bernoulli(1.1)')
 
 def test_flip_range_error():
     ripl = get_ripl(init_mode='venture_script')
     ripl.sample('flip(0.0)')
     ripl.sample('flip(0.5)')
     ripl.sample('flip(1.0)')
-    with assert_raises(VentureException):
-        ripl.sample('flip(-0.1)')
-    with assert_raises(VentureException):
-        ripl.sample('flip(1.1)')
+    if config["get_ripl"] != "puma":
+        with assert_raises(VentureException):
+            ripl.sample('flip(-0.1)')
+        with assert_raises(VentureException):
+            ripl.sample('flip(1.1)')
+    else:
+        # Puma raises the wrong exception due to Issue #666.
+        with assert_raises(RuntimeError):
+            ripl.sample('flip(-0.1)')
+        with assert_raises(RuntimeError):
+            ripl.sample('flip(1.1)')
 
 def test_log_bernoulli_range_error():
     ripl = get_ripl(init_mode='venture_script')
     ripl.sample('log_bernoulli(-1.0)')
     ripl.sample('log_bernoulli(0.0)')
-    with assert_raises(VentureException):
-        ripl.sample('log_bernoulli(1.0)')
+    if config["get_ripl"] != "puma":
+        with assert_raises(VentureException):
+            ripl.sample('log_bernoulli(1.0)')
+    else:
+        # Puma raises the wrong exception due to Issue #666.
+        with assert_raises(RuntimeError):
+            ripl.sample('log_bernoulli(1.0)')
 
 def test_log_flip_range_error():
     ripl = get_ripl(init_mode='venture_script')
     ripl.sample('log_flip(-1.0)')
     ripl.sample('log_flip(0.0)')
-    with assert_raises(VentureException):
-        ripl.sample('log_flip(1.0)')
+    if config["get_ripl"] != "puma":
+        with assert_raises(VentureException):
+            ripl.sample('log_flip(1.0)')
+    else:
+        # Puma raises the wrong exception due to Issue #666.
+        with assert_raises(RuntimeError):
+            ripl.sample('log_flip(1.0)')

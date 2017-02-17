@@ -56,6 +56,21 @@ double VentureValue::getProbability() const
   }
 }
 
+double VentureValue::getNonPositive() const
+{
+  double x;
+  if (hasDouble()) {
+    x = getDouble();
+  } else {
+    cannotConvertType(this,"non-positive"); assert(false); throw "no return";
+  }
+  if (x <= 0) {
+    return x;
+  } else {
+    throw "Number is positive " + toString();
+  }
+}
+
 int VentureValue::getAtom() const
 {
   cannotConvertType(this,"atom"); assert(false); throw "no return";
