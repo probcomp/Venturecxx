@@ -25,3 +25,7 @@ define extract_weight = (mechanism) -> {
 define particle_sampler = (num_p) -> { () ~> {
   extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
 } };
+
+define rejection_sampler = () ~> {
+  extract_weight(infer_reject(flip_coins, [5], 0, constrain_coin_flipper_trace(5)))
+};
