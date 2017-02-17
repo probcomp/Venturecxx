@@ -1,0 +1,12 @@
+define replicate = (n, f) ~> {
+  if (n <= 0) { list() } else {
+    pair(f(), replicate(n-1, f))
+  }
+};
+
+define trace_of = (sp, args) ~> {
+  t1 = get_current_trace();
+  t2 = get_current_trace();
+  res = regenerate(sp, args, t1, t2);
+  list(first(res), t2)
+};
