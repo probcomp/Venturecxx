@@ -17,3 +17,11 @@ define constrain_coin_flipper_trace = (n) -> {
   _ = constrain_coin_flipper_rec(n, subtrace(subtrace(subtrace(t1, "app"), "app"), "app"));
   t1
 };
+
+define extract_weight = (mechanism) -> {
+  trace_get(subtrace(subtrace(mechanism, 1), "app"))
+};
+
+define particle_sampler = (num_p) -> { () ~> {
+  extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
+} };

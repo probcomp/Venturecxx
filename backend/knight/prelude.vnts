@@ -4,6 +4,14 @@ define replicate = (n, f) ~> {
   }
 };
 
+define map = (f, l) -> {
+  if (is_pair(l)) {
+    pair(f(first(l)), map(f, rest(l)))
+  } else {
+    list()
+  }
+};
+
 define trace_of = (sp, args) ~> {
   t1 = get_current_trace();
   t2 = get_current_trace();

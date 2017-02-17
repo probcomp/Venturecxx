@@ -10,15 +10,15 @@ define infer_reject = (sp, args, log_bound, target) ~> {
 };
 
 define infer_resampling = (sp, args, target, num_p) ~> {
-  particles = mapv((i) ~> {
+  particles = replicate(num_p, () ~> {
     t1 = get_current_trace();
     res = regenerate(sp, args, target, t1);
     score = first(res);
     list(score, t1)
-  }, arange(num_p));
+  });
   log_categorical(map(first, particles), map(second, particles))
 };
 
 define infer_ssrmh = (sp, args, target, init_mech, steps) ~> {
-
+  0
 };
