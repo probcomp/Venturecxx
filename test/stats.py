@@ -48,7 +48,7 @@ For example, here is one way to test a coin flipping device:
   from venture.test.stats import statisticalTest, reportKnownDiscrete
 
   @statisticalTest
-  def test_flip_coins():
+  def test_flip_coins(seed):
     observed = ... # Flip a bunch of coins and count the heads and tails
     expected = [("heads", 0.5), ("tails", 0.5)]
     return reportKnownDiscrete(expected, observed)
