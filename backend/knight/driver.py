@@ -1,4 +1,6 @@
 import argparse
+import resource
+import sys
 
 from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import cast
@@ -69,6 +71,22 @@ def main():
   parser.add_argument('-f', '--file', action='append', help="execute the given file")
   args = parser.parse_args()
   doit(args)
+
+# Raise Python's recursion limit, per
+# http://log.brandonthomson.com/2009/07/increase-pythons-recursion-limit.html
+# The reason to do this is that Venture is not tail recursive, and the
+# repeat inference function are written as recursive functions in
+# Venture.
+
+# Try to increase max stack size from 8MB to 512MB
+(soft, hard) = resource.getrlimit(resource.RLIMIT_STACK)
+if hard > -1:
+    new_soft = max(soft, min(2**29, hard))
+else:
+    new_soft = max(soft, 2**29)
+resource.setrlimit(resource.RLIMIT_STACK, (new_soft, hard))
+# Set a large recursion depth limit
+sys.setrecursionlimit(max(10**6, sys.getrecursionlimit()))
 
 if __name__ == '__main__':
   main()
