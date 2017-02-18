@@ -585,3 +585,14 @@ def p_p_plot_2samp(observed1, observed2):
 inf.registerBuiltinInferenceSP("p_p_plot_2samp", deterministic_typed(p_p_plot_2samp,
   [t.Array(t.Number), t.Array(t.Number)], t.Nil, descr="""\
 Render a P-P plot comparing the two observed samples."""))
+
+def p_p_plot_2samp_to_file(filename, observed1, observed2):
+  import matplotlib.pyplot as plt
+  plt.figure()
+  plots.p_p_plot_2samp(observed1, observed2, show=False)
+  plt.savefig(filename)
+  plt.close()
+
+inf.registerBuiltinInferenceSP("p_p_plot_2samp_to_file", deterministic_typed(p_p_plot_2samp_to_file,
+  [t.String, t.Array(t.Number), t.Array(t.Number)], t.Nil, descr="""\
+Render a P-P plot comparing the two observed samples and save it in the given file."""))
