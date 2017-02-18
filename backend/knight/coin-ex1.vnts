@@ -29,3 +29,11 @@ define particle_sampler = (num_p) -> { () ~> {
 define rejection_sampler = () ~> {
   extract_weight(infer_reject(flip_coins, [5], 0, constrain_coin_flipper_trace(5)))
 };
+
+define analytic_sampler = () ~> {
+  beta(6, 1)
+};
+
+p_p_plot_2samp_to_file("particles.png", replicate(50, particle_sampler(20)), replicate(500, analytic_sampler));
+
+p_p_plot_2samp_to_file("rejection.png", replicate(50, rejection_sampler), replicate(500, analytic_sampler));
