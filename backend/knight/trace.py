@@ -61,6 +61,10 @@ class Trace(vv.VentureValue):
     # type: (vv.VentureValue) -> None
     self.value = value
 
+  def clear(self):
+    # type: () -> None
+    self.value = None
+
   def __repr__(self):
     if self.subtraces:
       return "Trace(%r, %r)" % (self.value, list(self.subtraces.iteritems()))

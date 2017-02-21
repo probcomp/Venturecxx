@@ -101,6 +101,14 @@ class TraceSetSP(SP):
     trace.set(val)
     return (0, Datum(vv.VentureNil()))
 
+class TraceClearSP(SP):
+  def regenerate(self, args, target, mechanism):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (trace,) = args
+    assert isinstance(trace, Trace)
+    trace.clear()
+    return (0, Datum(vv.VentureNil()))
+
 class RegenerateSP(SP):
   def regenerate(self, args, _target, _mechanism):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
@@ -171,6 +179,7 @@ def make_global_env():
   env.addBinding("trace_has", TraceHasSP())
   env.addBinding("trace_get", TraceGetSP())
   env.addBinding("trace_set", TraceSetSP())
+  env.addBinding("trace_clear", TraceClearSP())
   env.addBinding("sp", MakeSPSP())
   env.addBinding("regenerator_of", RegeneratorOfSP())
   return env
