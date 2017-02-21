@@ -279,7 +279,7 @@ def test_log_beta_small(seed):
     # A single sample is rounded to zero with probability < 10^-150.
     assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(20)
 @stochasticTest
 def test_log_beta_bernoulli_small(seed):
     a = 0.5
@@ -312,7 +312,7 @@ def test_log_beta_smaller(seed):
     # 0 is coarse enough that we plausibly get zero here.
     #assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(20)
 @stochasticTest
 def test_log_beta_bernoulli_smaller(seed):
     a = 0.001
@@ -344,7 +344,7 @@ def test_log_odds_beta_small(seed):
     assert all(not math.isinf(sample) for sample in samples)
     assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(20)
 @stochasticTest
 def test_log_odds_beta_bernoulli_small(seed):
     a = 0.5
@@ -374,7 +374,7 @@ def test_log_odds_beta_smaller(seed):
     assert all(not math.isinf(sample) for sample in samples)
     assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(20)
 @stochasticTest
 def test_log_odds_beta_bernoulli_smaller(seed):
     a = 0.001
