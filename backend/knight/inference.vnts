@@ -19,6 +19,26 @@ define infer_resampling = (sp, args, target, num_p) ~> {
   log_categorical(map(first, particles), map(second, particles))
 };
 
-define infer_ssrmh = (sp, args, target, init_mech, steps) ~> {
-  0
+define infer_ssrmh = (sp, args, target, init_mech, mech_sites, steps) ~> {
+  _ = replicate(steps, () ~> {
+    // TODO Compute the sites from the mechanism trace, and include the correction
+    // If the number of possible control paths is small enough, that can be accomplished
+    // by filtering an input sites list that is expected to be exhaustive
+    site = uniform_choose(mech_sites);
+    old_val = trace_get(subtrace_at(init_mech, site));
+    old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
+    old_score = first(res);
+    _ = trace_clear(subtrace_at(init_mech, site)); // Expecting init_mech to store only random choices
+    new_res = regenerate(sp, args, target, init_mech);
+    new_score = first(new_res);
+    if (log_uniform(0, 1) < new_score - old_score) {
+      // Accept
+      init_mech
+    } else {
+      // Reject
+      trace_set(subtrace_at(init_mech, site), old_val);
+      init_mech
+    }
+  });
+  init_mech
 };
