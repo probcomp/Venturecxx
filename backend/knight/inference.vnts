@@ -24,14 +24,14 @@ define infer_ssrmh = (sp, args, target, init_mech, mech_sites, steps) ~> {
     // TODO Compute the sites from the mechanism trace, and include the correction
     // If the number of possible control paths is small enough, that can be accomplished
     // by filtering an input sites list that is expected to be exhaustive
-    site = uniform_choose(mech_sites);
+    site = uniform_categorical(mech_sites);
     old_val = trace_get(subtrace_at(init_mech, site));
     old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
-    old_score = first(res);
+    old_score = first(old_res);
     _ = trace_clear(subtrace_at(init_mech, site)); // Expecting init_mech to store only random choices
     new_res = regenerate(sp, args, target, init_mech);
     new_score = first(new_res);
-    if (log_uniform(0, 1) < new_score - old_score) {
+    if (log(uniform_continuous(0, 1)) < new_score - old_score) {
       // Accept
       init_mech
     } else {
