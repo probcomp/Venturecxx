@@ -23,6 +23,7 @@ import scipy.special
 
 from venture.lite.exception import VentureValueError
 from venture.lite.lkernel import PosteriorAAALKernel
+from venture.lite.orderedset import OrderedSet
 from venture.lite.psp import DeterministicMakerAAAPSP
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import RandomPSP
@@ -284,6 +285,30 @@ class LogCategoricalOutputPSP(DiscretePSP):
 
 registerBuiltinSP("log_categorical", typed_nr(LogCategoricalOutputPSP(),
   [t.Array(t.Number), t.ArrayType()], t.AnyType(), min_req_args=1))
+
+
+class UniformCategoricalOutputPSP(DiscretePSP):
+  # (uniform_categorical outputs)
+  def simulate(self, args):
+    vals = args.operandValues()[0]
+    ps = [1 for _ in vals]
+    return simulateCategorical(ps, args.np_prng(), vals)
+
+  def logDensity(self, val, args):
+    vals = args.operandValues()[0]
+    ps = [1 for _ in vals]
+    return logDensityCategorical(val, ps, vals)
+
+  def enumerateValues(self, args):
+    return list(OrderedSet(args.operandValues()))
+
+  def description(self, name):
+    return '  %s(objects) chooses one of the given objects uniformly '\
+      'at random.' % name
+
+
+registerBuiltinSP("uniform_categorical", typed_nr(UniformCategoricalOutputPSP(),
+  [t.ArrayType()], t.AnyType()))
 
 
 class UniformDiscreteOutputPSP(DiscretePSP):
