@@ -59,7 +59,10 @@ class SPFromLite(SP):
       ans = target.get()
       score = self.lite_sp.outputPSP.logDensity(ans, MockArgs(args, self.aux))
     else:
-      ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
+      if mechanism.has():
+        ans = mechanism.get()
+      else:
+        ans = self.lite_sp.outputPSP.simulate(MockArgs(args, self.aux))
       score = 0
     if self.lite_sp.outputPSP.isRandom():
       mechanism.set(ans)
