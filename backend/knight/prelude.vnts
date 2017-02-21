@@ -18,3 +18,11 @@ define trace_of = (sp, args) ~> {
   res = regenerate(sp, args, t1, t2);
   list(first(res), t2)
 };
+
+define subtrace_at = (trace, site) -> {
+  if (is_pair(site)) {
+    subtrace_at(subtrace(trace, first(site)), rest(site))
+  } else {
+    trace
+  }
+};
