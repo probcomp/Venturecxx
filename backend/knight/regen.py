@@ -19,10 +19,15 @@ from venture.knight.types import Var
 
 def regen(exp, env, target, mechanism):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
+  desired_val = None
   if mechanism.has():
-    return (0, mechanism.get())
-  else:
-    return do_regen(exp, env, target, mechanism)
+    desired_val = mechanism.get()
+  (score, val) = do_regen(exp, env, target, mechanism)
+  if desired_val is not None:
+    val = desired_val
+    if mechanism.has():
+      mechanism.set(desired_val)
+  return (score, val)
 
 def do_regen(exp, env, target, mechanism):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
@@ -70,10 +75,15 @@ def regen_list(exps, env, target, mechanism):
 
 def r_apply(oper, args, target, mechanism):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
+  desired_val = None
   if mechanism.has():
-    return (0, mechanism.get())
-  else:
-    return do_r_apply(oper, args, target, mechanism)
+    desired_val = mechanism.get()
+  (score, val) = do_r_apply(oper, args, target, mechanism)
+  if desired_val is not None:
+    val = desired_val
+    if mechanism.has():
+      mechanism.set(desired_val)
+  return (score, val)
 
 def do_r_apply(oper, args, target, mechanism):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
