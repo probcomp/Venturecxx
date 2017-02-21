@@ -36,7 +36,7 @@ define infer_ssrmh = (sp, args, target, init_mech, mech_sites, steps) ~> {
       init_mech
     } else {
       // Reject
-      trace_set(subtrace_at(init_mech, site), old_val);
+      _ = trace_set(subtrace_at(init_mech, site), old_val);
       init_mech
     }
   });

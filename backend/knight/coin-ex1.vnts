@@ -41,7 +41,7 @@ define ssrmh_sampler = (num_steps) -> { () ~> {
   extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site), num_steps))
 } };
 
-p_p_plot_2samp_to_file("ssrmh.png", replicate(5, ssrmh_sampler(2)), replicate(100, analytic_sampler));
+p_p_plot_2samp_to_file("ssrmh.png", replicate(50, ssrmh_sampler(20)), replicate(500, analytic_sampler));
 
 p_p_plot_2samp_to_file("particles.png", replicate(50, particle_sampler(20)), replicate(500, analytic_sampler));
 
