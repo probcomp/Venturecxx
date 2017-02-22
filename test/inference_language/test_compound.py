@@ -132,6 +132,7 @@ def test_compound_assume_inf_happening():
     assert ripl.sample("b") != previous_value, "inferred for second part didn't work"
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("any")
 @statisticalTest
 @skipWhenDoingParticleGibbs("Issue #531")
 def test_compound_assume_inf_first_element(seed):
@@ -156,6 +157,7 @@ def test_compound_assume_inf_first_element(seed):
     return reportKnownGaussian(5, 1, post_samples)
 
 @broken_in("puma", "Does not have refs: Issue #224.")
+@on_inf_prim("any")
 @statisticalTest
 @skipWhenRejectionSampling("Rejection takes too long to solve this")
 @skipWhenDoingParticleGibbs("Issue #531")
@@ -183,6 +185,7 @@ def test_compound_assume_inf_second_element(seed):
     post_samples = collectSamples(ripl, "predictive")
     return reportKnownGaussian(-15, 1, post_samples)
 
+@on_inf_prim("any")
 @statisticalTest
 @skipWhenDoingParticleGibbs("Issue #531")
 def test_model_without_compound_assume(seed):
