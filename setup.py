@@ -261,6 +261,7 @@ lemonade = 'external/lemonade/dist'
 grammars = [
     'python/lib/parser/church_prime/grammar.y',
     'python/lib/parser/venture_script/grammar.y',
+    'backend/knight/parser/grammar.y',
 ]
 
 def sha256_file(pathname):
