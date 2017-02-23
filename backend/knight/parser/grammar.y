@@ -34,18 +34,17 @@
 metaprob(top)		::= statements(ss).
 
 statements(one)		::= statement(s).
-statements(many)	::= statements(ss) T_SEMI(semi) statement(s).
+statements(many)	::= statements(ss) T_SEMI statement(s).
 
-statement(assign)	::= L_NAME(n) T_EQDEF(eq) expression(e).
+statement(assign)	::= L_NAME(n) T_EQDEF expression(e).
 statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
 				T_EQDEF(eq) expression(e).
 statement(none)		::= expression(e).
 
 expression(top)		::= arrow(e).
 
-arrow(one)		::= L_NAME(param) T_RARR(op) expression(body).
-arrow(tuple)		::= T_LROUND(po) arraybody(params) T_RROUND(pc)
-				T_RARR(op) expression(body).
+arrow(tuple)		::= T_LROUND arraybody(params) T_RROUND
+				T_RARR expression(body).
 arrow(none)		::= boolean_or(e).
 
 boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) boolean_and(r).
@@ -79,10 +78,9 @@ unary(none)		::= exponential(e).
 exponential(pow)	::= applicative(l) K_POW|T_POW(op) exponential(r).
 exponential(none)	::= applicative(e).
 
-applicative(app)	::= applicative(fn) T_LROUND(o) arglist(args)
-				T_RROUND(c).
-applicative(lookup)	::= applicative(a) T_LSQUARE(o) expression(index)
-				T_RSQUARE(c).
+applicative(app)	::= applicative(fn) T_LROUND arglist(args) T_RROUND.
+applicative(lookup)	::= applicative(a) T_LSQUARE expression(index)
+				T_RSQUARE.
 applicative(none)	::= primary(e).
 
 arglist(none)		::= .
@@ -91,62 +89,37 @@ args(one)		::= tagged(arg).
 args(many)		::= args(args) T_COMMA tagged(arg).
 
 tagged(none)		::= expression(e).
-tagged(kw)		::= L_NAME(name) T_COLON(colon) expression(e).
+tagged(kw)		::= L_NAME(name) T_COLON expression(e).
 
-primary(paren)		::= T_LROUND(o) arraybody(es) T_RROUND(c).
-primary(brace)		::= T_LCURLY(o) statements(ss) T_RCURLY(c).
-primary(if)		::= K_IF(k) T_LROUND(po) expression(p) T_RROUND(pc)
-				T_LCURLY(co) statements(c) T_RCURLY(cc)
-				K_ELSE(ke)
-				T_LCURLY(ao) statements(a) T_RCURLY(ac).
+primary(paren)		::= T_LROUND expression(e) T_RROUND.
+primary(brace)		::= T_LCURLY statements(ss) T_RCURLY.
+primary(if)		::= K_IF T_LROUND expression(p) T_RROUND
+				T_LCURLY statements(c) T_RCURLY
+				K_ELSE
+				T_LCURLY statements(a) T_RCURLY.
 primary(qquote)		::= T_LOXFORD(o) statements(b) T_ROXFORD(c).
 primary(unquote)	::= T_LDOLLAR(op) primary(e).
-primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
+primary(array)		::= T_LSQUARE arraybody(a) T_RSQUARE.
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
-primary(qsymbol)        ::= T_QUOTE(o) L_NAME(s) T_QUOTE(c).
+primary(qsymbol)        ::= T_QUOTE L_NAME(s) T_QUOTE.
 
 paramlist(none)		::= .
 paramlist(some)		::= params(params).
 params(one)		::= L_NAME(param).
-params(many)		::= params(params) T_COMMA(c) L_NAME(param).
+params(many)		::= params(params) T_COMMA L_NAME(param).
 
 arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
-arraybody(somecomma)	::= arrayelts(es) T_COMMA(c).
+arraybody(somecomma)	::= arrayelts(es) T_COMMA.
 arrayelts(one)		::= expression(e).
-arrayelts(many)		::= arrayelts(es) T_COMMA(c) expression(e).
+arrayelts(many)		::= arrayelts(es) T_COMMA expression(e).
 
-literal(true)		::= T_TRUE(t).
-literal(false)		::= T_FALSE(f).
+literal(true)		::= T_TRUE.
+literal(false)		::= T_FALSE.
 literal(integer)	::= L_INTEGER(v).
 literal(real)		::= L_REAL(v).
 literal(string)		::= L_STRING(v).
-literal(json)		::= L_TAG(t) json(v) T_GT(c).
-literal(json_error)	::= L_TAG(t) error T_GT(c).
-
-json(string)		::= L_STRING(v).
-json(integer)		::= L_INTEGER(v).
-json(real)		::= REAL(v).
-json(list)		::= json_list(l).
-json(dict)		::= json_dict(d).
-
-json_list(empty)	::= T_LSQUARE T_RSQUARE.
-json_list(nonempty)	::= T_LSQUARE json_list_terms(ts) T_RSQUARE.
-json_list(error1)	::= T_LSQUARE json_list_terms(ts) error T_RSQUARE.
-json_list(error)	::= T_LSQUARE error T_RSQUARE.
-json_list_terms(one)	::= json(t).
-json_list_terms(many)	::= json_list_terms(ts) T_COMMA json(t).
-json_list_terms(error)	::= error T_COMMA json(t).
-
-json_dict(empty)	::= T_LCURLY T_RCURLY.
-json_dict(nonempty)	::= T_LCURLY json_dict_entries(es) T_RCURLY.
-json_dict(error)	::= T_LCURLY json_dict_entries(es) error T_RCURLY.
-json_dict_entries(one)	::= json_dict_entry(e).
-json_dict_entries(many)	::= json_dict_entries(es) T_COMMA json_dict_entry(e).
-json_dict_entries(error)::= error T_COMMA json_dict_entry(e).
-json_dict_entry(e)	::= T_STRING(key) T_COLON json(value).
-json_dict_entry(error)	::= error T_COLON json(value).
 
 /*
  * Allow all keywords to be treated as names where unambiguous.
