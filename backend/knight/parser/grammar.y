@@ -41,7 +41,12 @@ statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
 				T_EQDEF(eq) expression(e).
 statement(none)		::= expression(e).
 
-expression(top)		::= boolean_or(e).
+expression(top)		::= arrow(e).
+
+arrow(one)		::= L_NAME(param) T_RARR(op) expression(body).
+arrow(tuple)		::= T_LROUND(po) arraybody(params) T_RROUND(pc)
+				T_RARR(op) expression(body).
+arrow(none)		::= boolean_or(e).
 
 boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) boolean_and(r).
 boolean_or(none)	::= boolean_and(e).
@@ -94,9 +99,6 @@ primary(if)		::= K_IF(k) T_LROUND(po) expression(p) T_RROUND(pc)
 				T_LCURLY(co) statements(c) T_RCURLY(cc)
 				K_ELSE(ke)
 				T_LCURLY(ao) statements(a) T_RCURLY(ac).
-primary(arrow_one)	::= L_NAME(param) T_RARR(op) expression(body).
-primary(arrow_tuple)	::= T_LROUND(po) arraybody(params) T_RROUND(pc)
-				T_RARR(op) expression(body).
 primary(qquote)		::= T_LOXFORD(o) statements(b) T_ROXFORD(c).
 primary(unquote)	::= T_LDOLLAR(op) primary(e).
 primary(array)		::= T_LSQUARE(o) arraybody(a) T_RSQUARE(c).
