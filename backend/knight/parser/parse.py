@@ -148,6 +148,9 @@ class Semantics(object):
     def p_tagged_none(self, e):         return e
     def p_tagged_kw(self, name, e):     return e
 
+    def p_primary_paren(self, items):
+        assert len(items) == 1
+        return items[0]
     def p_primary_brace(self, ss):
         assert isinstance(ss, Seq)
         return ss
