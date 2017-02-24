@@ -1,4 +1,4 @@
-define infer_reject = (sp, args, log_bound, target) ~> {
+infer_reject = (sp, args, log_bound, target) ~> {
   t1 = get_current_trace();
   res = regenerate(sp, args, target, t1);
   score = first(res);
@@ -9,7 +9,7 @@ define infer_reject = (sp, args, log_bound, target) ~> {
   }
 };
 
-define infer_resampling = (sp, args, target, num_p) ~> {
+infer_resampling = (sp, args, target, num_p) ~> {
   particles = replicate(num_p, () ~> {
     t1 = get_current_trace();
     res = regenerate(sp, args, target, t1);
@@ -19,7 +19,7 @@ define infer_resampling = (sp, args, target, num_p) ~> {
   log_categorical(map(first, particles), map(second, particles))
 };
 
-define infer_ssrmh = (sp, args, target, init_mech, mech_sites, steps) ~> {
+infer_ssrmh = (sp, args, target, init_mech, mech_sites, steps) ~> {
   _ = replicate(steps, () ~> {
     // TODO Compute the sites from the mechanism trace, and include the correction
     // If the number of possible control paths is small enough, that can be accomplished

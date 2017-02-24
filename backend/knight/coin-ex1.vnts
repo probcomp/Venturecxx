@@ -1,9 +1,9 @@
-define flip_coins = (n) ~> {
+flip_coins = (n) ~> {
   weight = beta(1, 1);
   replicate(n, () ~> { flip(weight) })
 };
 
-define constrain_coin_flipper_rec = (n, trace) -> {
+constrain_coin_flipper_rec = (n, trace) -> {
   _ = trace_set(subtrace(subtrace(subtrace(trace, 1), "app"), "app"), true);
   if (n > 0) {
     constrain_coin_flipper_rec((n-1), subtrace(subtrace(subtrace(trace, 2), "app"), "app"))
@@ -12,29 +12,29 @@ define constrain_coin_flipper_rec = (n, trace) -> {
   }
 };
 
-define constrain_coin_flipper_trace = (n) -> {
+constrain_coin_flipper_trace = (n) -> {
   t1 = get_current_trace();
   _ = constrain_coin_flipper_rec(n, subtrace(subtrace(subtrace(t1, "app"), "app"), "app"));
   t1
 };
 
-define extract_weight = (mechanism) -> {
+extract_weight = (mechanism) -> {
   trace_get(subtrace(subtrace(mechanism, 1), "app"))
 };
 
-define particle_sampler = (num_p) -> { () ~> {
+particle_sampler = (num_p) -> { () ~> {
   extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
 } };
 
-define rejection_sampler = () ~> {
+rejection_sampler = () ~> {
   extract_weight(infer_reject(flip_coins, [5], 0, constrain_coin_flipper_trace(5)))
 };
 
-define analytic_sampler = () ~> {
+analytic_sampler = () ~> {
   beta(6, 1)
 };
 
-define ssrmh_sampler = (num_steps) -> { () ~> {
+ssrmh_sampler = (num_steps) -> { () ~> {
   t2 = get_current_trace();
   _ = regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
   beta_site = list(1, "app");

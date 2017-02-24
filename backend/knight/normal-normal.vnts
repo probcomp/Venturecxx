@@ -1,4 +1,4 @@
-define regenerator = (args, target, mechanism) -> {
+regenerator = (args, target, mechanism) -> {
   mu = args[0];
   sig1 = args[1];
   sig2 = args[2];
@@ -31,4 +31,4 @@ define regenerator = (args, target, mechanism) -> {
   }}}
 };
 
-define normal_normal = sp(regenerator);
+normal_normal = sp(regenerator);

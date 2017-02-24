@@ -1,10 +1,10 @@
-define replicate = (n, f) ~> {
+replicate = (n, f) ~> {
   if (n <= 0) { list() } else {
     pair(f(), replicate(n-1, f))
   }
 };
 
-define map = (f, l) -> {
+map = (f, l) -> {
   if (is_pair(l)) {
     pair(f(first(l)), map(f, rest(l)))
   } else {
@@ -12,14 +12,14 @@ define map = (f, l) -> {
   }
 };
 
-define trace_of = (sp, args) ~> {
+trace_of = (sp, args) ~> {
   t1 = get_current_trace();
   t2 = get_current_trace();
   res = regenerate(sp, args, t1, t2);
   list(first(res), t2)
 };
 
-define subtrace_at = (trace, site) -> {
+subtrace_at = (trace, site) -> {
   if (is_pair(site)) {
     subtrace_at(subtrace(trace, first(site)), rest(site))
   } else {
