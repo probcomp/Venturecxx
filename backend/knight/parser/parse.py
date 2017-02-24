@@ -87,12 +87,12 @@ class Semantics(object):
         return e
 
     def _p_binop(self, l, op, r):
-        if op.name in operators:
+        if op in operators:
             # Perform operator substitution
-            new_op = Var(operators[op.name])
+            new_op = Var(operators[op])
         else:
             # Leave it
-            new_op = op
+            new_op = Var(op)
         return App([new_op, l, r])
     def _p_exp(self, e):
         return e
