@@ -31,7 +31,7 @@
  *   name, `true' or `false' would mean the boolean.
  */
 
-metaprob(top)		::= statements(ss).
+metaprob(top)		::= statements(ss) T_SEMI.
 
 statements(one)		::= statement(s).
 statements(many)	::= statements(ss) T_SEMI statement(s).
