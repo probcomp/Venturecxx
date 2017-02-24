@@ -62,7 +62,8 @@ def doit(args):
         forms += ""
         forms += f.read()
   if args.eval:
-    forms += " ".join(args.eval)
+    forms += "; ".join(args.eval)
+    forms += ";"
   print toplevel(forms)
 
 def main():
