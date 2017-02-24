@@ -4,7 +4,7 @@ flip_coins = (n) ~> {
 };
 
 constrain_coin_flipper_rec = (n, trace) -> {
-  _ = trace_set(subtrace(subtrace(subtrace(trace, 1), "app"), "app"), true);
+  trace_set(subtrace(subtrace(subtrace(trace, 1), "app"), "app"), true);
   if (n > 0) {
     constrain_coin_flipper_rec((n-1), subtrace(subtrace(subtrace(trace, 2), "app"), "app"))
   } else {
@@ -14,7 +14,7 @@ constrain_coin_flipper_rec = (n, trace) -> {
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = get_current_trace();
-  _ = constrain_coin_flipper_rec(n, subtrace(subtrace(subtrace(t1, "app"), "app"), "app"));
+  constrain_coin_flipper_rec(n, subtrace(subtrace(subtrace(t1, "app"), "app"), "app"));
   t1
 };
 
@@ -36,7 +36,7 @@ analytic_sampler = () ~> {
 
 ssrmh_sampler = (num_steps) -> { () ~> {
   t2 = get_current_trace();
-  _ = regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
+  regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
   beta_site = list(0, "def", "app");
   extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site), num_steps))
 } };
