@@ -5,9 +5,11 @@ from typing import cast
 from venture.lite.builtin import builtInSPs
 from venture.lite.env import VentureEnvironment
 from venture.lite.psp import NullRequestPSP
+from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_use import MockArgs
 import venture.lite.sp as sp # pylint: disable=unused-import
 import venture.lite.value as vv
+import venture.lite.types as t
 import venture.lite.inference_sps as inf
 import venture.engine.inference # For effect on the inference sp registry
 
@@ -185,6 +187,14 @@ def make_global_env():
   env.addBinding("trace_clear", TraceClearSP())
   env.addBinding("sp", MakeSPSP())
   env.addBinding("regenerator_of", RegeneratorOfSP())
+  lite_and_sp = deterministic_typed(lambda a, b: a and b,
+      [t.Bool, t.Bool], t.Bool,
+      descr="non-short-circuiting and")
+  env.addBinding("and", SPFromLite(lite_and_sp))
+  lite_or_sp = deterministic_typed(lambda a, b: a or b,
+      [t.Bool, t.Bool], t.Bool,
+      descr="non-short-circuiting or")
+  env.addBinding("or", SPFromLite(lite_or_sp))
   return env
 
 the_global_env = make_global_env()
