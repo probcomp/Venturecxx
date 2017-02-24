@@ -19,7 +19,7 @@ constrain_coin_flipper_trace = (n) -> {
 };
 
 extract_weight = (mechanism) -> {
-  trace_get(subtrace(subtrace(mechanism, 1), "app"))
+  trace_get(subtrace_at(mechanism, list(0, "def", "app")))
 };
 
 particle_sampler = (num_p) -> { () ~> {
@@ -37,7 +37,7 @@ analytic_sampler = () ~> {
 ssrmh_sampler = (num_steps) -> { () ~> {
   t2 = get_current_trace();
   _ = regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
-  beta_site = list(1, "app");
+  beta_site = list(0, "def", "app");
   extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site), num_steps))
 } };
 
