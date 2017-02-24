@@ -18,6 +18,8 @@ from venture.knight.types import Exp # pylint: disable=unused-import
 from venture.knight.types import Seq
 from venture.knight.types import stack_dict_to_exp
 
+from venture.knight.parser import parse
+
 def top_eval(form):
   # type: (str) -> Tuple[float, vv.VentureValue]
   stack_dict = cast(object, _modify_expression(desugar_expression(VentureScriptParser.instance().parse_expression(form))))
@@ -48,8 +50,7 @@ def instr_to_exp(instr):
 
 def toplevel(forms):
   # type: (str) -> Tuple[float, vv.VentureValue]
-  instrs = VentureScriptParser.instance().parse_instructions(forms)
-  exp = Seq(map(instr_to_exp, instrs))
+  exp = parse.parse_string(forms)
   return regen(exp, init_env(), Trace(), Trace())
 
 def doit(args):

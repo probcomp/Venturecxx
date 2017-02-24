@@ -100,7 +100,10 @@ class Semantics(object):
     # expression: Return expression.
     p_expression_top = _p_exp
     def p_arrow_tuple(self, params, body):
-        return Lam(params, body)
+        assert isinstance(params, list)
+        for p in params:
+            assert isinstance(p, Var)
+        return Lam([p.name for p in params], body)
 
     p_arrow_none = _p_exp
     p_boolean_or_or = _p_binop
@@ -163,7 +166,7 @@ class Semantics(object):
     def p_primary_literal(self, l):
         return l
     def p_primary_symbol(self, s):
-        return s
+        return Var(s)
     def p_primary_qsymbol(self, s):
         return Lit(vv.VentureSymbol(s))
 

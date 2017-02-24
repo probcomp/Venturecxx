@@ -59,6 +59,7 @@ def do_regen(exp, env, target, mechanism):
         (sub_score, subval) = regen(exp.expr, env, t2, m2)
         env.addBinding(exp.name, subval)
         return (sub_score, vv.VentureNil())
+  assert False, "Unknown expression type %s" % (exp,)
 
 def regen_list(exps, env, target, mechanism):
   # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, List[vv.VentureValue]]
