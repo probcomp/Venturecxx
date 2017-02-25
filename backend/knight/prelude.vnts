@@ -12,6 +12,24 @@ map = (f, l) -> {
   }
 };
 
+for_each = (f, l) -> {
+  if (is_pair(l)) {
+    f(first(l));
+    for_each(f, rest(l))
+  } else {
+    "done"
+  }
+};
+
+for_each2 = (f, l1, l2) -> {
+  if (is_pair(l1) && is_pair(l2)) {
+    f(first(l1), first(l2));
+    for_each2(f, rest(l1), rest(l2))
+  } else {
+    "done"
+  }
+};
+
 trace_of = (sp, args) ~> {
   t1 = get_current_trace();
   t2 = get_current_trace();

@@ -19,26 +19,23 @@ infer_resampling = (sp, args, target, num_p) ~> {
   log_categorical(map(first, particles), map(second, particles))
 };
 
-infer_ssrmh = (sp, args, target, init_mech, mech_sites, steps) ~> {
-  replicate(steps, () ~> {
-    // TODO Compute the sites from the mechanism trace, and include the correction
-    // If the number of possible control paths is small enough, that can be accomplished
-    // by filtering an input sites list that is expected to be exhaustive
-    site = uniform_categorical(mech_sites);
-    old_val = trace_get(subtrace_at(init_mech, site));
-    old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
-    old_score = first(old_res);
-    trace_clear(subtrace_at(init_mech, site)); // Expecting init_mech to store only random choices
-    new_res = regenerate(sp, args, target, init_mech);
-    new_score = first(new_res);
-    if (log(uniform_continuous(0, 1)) < new_score - old_score) {
-      // Accept
-      init_mech
-    } else {
-      // Reject
-      trace_set(subtrace_at(init_mech, site), old_val);
-      init_mech
-    }
-  });
-  init_mech
+rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
+  // Expect the target + mech_sites to form a complete "subproblem",
+  // with target acting as the absorbing border and sites acting as
+  // the regeneration graph.  If there is a gap between the sites
+  // and the target, the weights will come out wrong.
+  old_vals = map((s) -> { trace_get(subtrace_at(init_mech, s)) }, mech_sites);
+  old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
+  old_score = first(old_res);
+  for_each((s) -> { trace_clear(subtrace_at(init_mech, s)) }, mech_sites);
+  new_res = regenerate(sp, args, target, init_mech);
+  new_score = first(new_res);
+  if (log(uniform_continuous(0, 1)) < new_score - old_score) {
+    // Accept
+    init_mech
+  } else {
+    // Reject
+    for_each2((s, v) -> { trace_set(subtrace_at(init_mech, s), v) }, mech_sites, old_vals);
+    init_mech
+  }
 };

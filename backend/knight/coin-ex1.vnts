@@ -38,7 +38,10 @@ ssrmh_sampler = (num_steps) -> { () ~> {
   t2 = get_current_trace();
   regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
   beta_site = list(0, "def", "app");
-  extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site), num_steps))
+  replicate(num_steps, () ~> {
+    rmh_step(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site))
+  });
+  extract_weight(t2)
 } };
 
 p_p_plot_2samp_to_file("ssrmh.png", replicate(50, ssrmh_sampler(20)), replicate(500, analytic_sampler));
