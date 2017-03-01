@@ -61,7 +61,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
     input_trace
   } else {
     // Reject
-    trace_set(subtrace_at(input_trace, site), old_v);
+    trace_set(subtrace_at(input_trace, site), old_val);
     input_trace
   }
 };
