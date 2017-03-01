@@ -160,6 +160,9 @@ class MadeSP(SP):
     assert isinstance(res, vv.VenturePair)
     subscore = res.first
     assert isinstance(subscore, vv.VentureNumber), "%s is not a number" % (subscore,)
+    # !? mypy doesn't understand asserts with error messages:
+    # https://github.com/python/mypy/issues/2937
+    assert isinstance(subscore, vv.VentureNumber)
     val = res.rest
     assert isinstance(val, vv.VentureValue) # Ban gradients' symbolic zeroes here.
     # XXX Is adding the right thing to do with these scores?
