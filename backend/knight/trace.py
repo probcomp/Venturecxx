@@ -65,6 +65,18 @@ class Trace(vv.VentureValue):
     # type: () -> None
     self.value = None
 
+  def sites(self):
+    # type: () -> [vv.VentureValue]
+    # Actually a Venture List of VentureValues, but I haven't coded
+    # Venture Lists to be an appropriate generic type.
+    ans = []
+    if self.has():
+      ans.append(vv.VentureNil())
+    for k, d in self.subtraces.iteritems():
+      for site in d.sites():
+        ans.append(vv.VenturePair((k, site)))
+    return ans
+
   def __repr__(self):
     if self.subtraces:
       return "Trace(%r, %r)" % (self.value, list(self.subtraces.iteritems()))
