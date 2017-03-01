@@ -21,7 +21,8 @@ class Trace(vv.VentureValue):
     try:
       yield self.subtraces[key]
     finally:
-      if not self.subtraces[key]._reified and \
+      if key in self.subtraces and \
+         not self.subtraces[key]._reified and \
          not self.subtraces[key].has() and \
          not self.subtraces[key].subtraces:
         del self.subtraces[key]
