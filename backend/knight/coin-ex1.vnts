@@ -45,3 +45,8 @@ p_p_plot_2samp_to_file("custom_rmh.png", replicate(50, custom_rmh_sampler(20)), 
 p_p_plot_2samp_to_file("particles.png", replicate(50, particle_sampler(20)), replicate(500, analytic_sampler));
 
 p_p_plot_2samp_to_file("rejection.png", replicate(50, rejection_sampler), replicate(500, analytic_sampler));
+
+p_p_plot_2samp_to_file("mh-comparison.png", replicate(50, ssrmh_sampler(3)), replicate(50, custom_rmh_sampler(3)));
+
+// This takes one and a half minutes on my laptop
+p_p_plot_2samp_to_file("ssrmh.png", replicate(50, ssrmh_sampler(20)), replicate(500, analytic_sampler));
