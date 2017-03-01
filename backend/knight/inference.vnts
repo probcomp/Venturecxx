@@ -39,3 +39,29 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
     init_mech
   }
 };
+
+ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
+  candidates = trace_sites(input_trace) - constraint_addresses;
+  site = uniform_choose(candidates);
+  cons1 = get_current_trace();
+  trace_set(cons1, site);
+  res1 = regenerate(uniform_choose, [candidates], cons1, get_current_trace());
+  old_logp = first(res1);
+  old_val = trace_get(subtrace_at(input_trace, site));
+  old_res = regenerate(sp, args, input_trace, get_current_trace());
+  old_score = first(old_res);
+  trace_clear(subtrace_at(input_trace, site));
+  new_res = regenerate(sp, args, input_trace, input_trace);
+  new_score = first(new_res);
+  new_candidates = trace_sites(input_trace) - constraint_addresses;
+  res2 = regenerate(uniform_choose, [new_candidates], cons1, get_current_trace());
+  new_logp = first(res2);
+  if (log(uniform_continuous(0, 1)) < new_score - old_score + old_logp - new_logp) {
+    // Accept
+    input_trace
+  } else {
+    // Reject
+    trace_set(subtrace_at(input_trace, site), old_v);
+    input_trace
+  }
+};
