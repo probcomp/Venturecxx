@@ -36,6 +36,10 @@ custom_rmh_sampler = (num_steps) -> { () ~> {
   extract_weight(t2)
 } };
 
+ssrmh_sampler = (num_steps) -> { () ~> {
+  extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
+} };
+
 p_p_plot_2samp_to_file("custom_rmh.png", replicate(50, custom_rmh_sampler(20)), replicate(500, analytic_sampler));
 
 p_p_plot_2samp_to_file("particles.png", replicate(50, particle_sampler(20)), replicate(500, analytic_sampler));

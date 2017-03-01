@@ -65,3 +65,10 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
     input_trace
   }
 };
+
+infer_ssrmh = (sp, args, target, num_steps) ~> {
+  t2 = get_current_trace();
+  regenerate(sp, args, target, t2);
+  step = (t) ~> { ssrmh_step(sp, args, t2, trace_sites(target)) };
+  iterate(num_steps, step, t2)
+};

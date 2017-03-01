@@ -1,3 +1,9 @@
+iterate = (n, f, a) ~> {
+  if (n <= 0) { a } else {
+    iterate(n-1, f, f(a))
+  }
+};
+
 replicate = (n, f) ~> {
   if (n <= 0) { list() } else {
     pair(f(), replicate(n-1, f))
