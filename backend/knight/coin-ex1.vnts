@@ -26,7 +26,7 @@ analytic_sampler = () ~> {
   beta(6, 1)
 };
 
-ssrmh_sampler = (num_steps) -> { () ~> {
+custom_rmh_sampler = (num_steps) -> { () ~> {
   t2 = get_current_trace();
   regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
   beta_site = list(0, "def", "app");
@@ -36,7 +36,7 @@ ssrmh_sampler = (num_steps) -> { () ~> {
   extract_weight(t2)
 } };
 
-p_p_plot_2samp_to_file("ssrmh.png", replicate(50, ssrmh_sampler(20)), replicate(500, analytic_sampler));
+p_p_plot_2samp_to_file("custom_rmh.png", replicate(50, custom_rmh_sampler(20)), replicate(500, analytic_sampler));
 
 p_p_plot_2samp_to_file("particles.png", replicate(50, particle_sampler(20)), replicate(500, analytic_sampler));
 
