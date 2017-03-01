@@ -152,7 +152,7 @@ class MadeSP(SP):
     (score, res) = r_apply(self.regenerator_sp, new_args, Trace(), Trace())
     assert isinstance(res, vv.VenturePair)
     subscore = res.first
-    assert isinstance(subscore, vv.VentureNumber)
+    assert isinstance(subscore, vv.VentureNumber), "%s is not a number" % (subscore,)
     val = res.rest
     assert isinstance(val, vv.VentureValue) # Ban gradients' symbolic zeroes here.
     # XXX Is adding the right thing to do with these scores?
