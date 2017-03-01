@@ -66,10 +66,10 @@ class Trace(vv.VentureValue):
     self.value = None
 
   def sites(self):
-    # type: () -> [vv.VentureValue]
+    # type: () -> List[vv.VentureValue]
     # Actually a Venture List of VentureValues, but I haven't coded
     # Venture Lists to be an appropriate generic type.
-    ans = []
+    ans = [] # type: List[vv.VentureValue]
     if self.has():
       ans.append(vv.VentureNil())
     for k, d in self.subtraces.iteritems():
