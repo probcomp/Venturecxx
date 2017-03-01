@@ -4,6 +4,26 @@ replicate = (n, f) ~> {
   }
 };
 
+range = (n) ~> {
+  if (n <= 1) { list(0) } else {
+    pair(n-1, range(n-1))
+  }
+};
+
+replicate2 = sp((args, target, mechanism) ~> {
+  n = args[0];
+  f = args[1];
+  score_box = get_current_trace();
+  trace_set(score_box, 0.0);
+  doit = (k) ~> {
+    res = regenerate(f, [], subtrace(target, k), subtrace(mechanism, k));
+    trace_set(score_box, trace_get(score_box) + first(res));
+    rest(res)
+  };
+  res = map(doit, range(n));
+  pair(trace_get(score_box), res)
+});
+
 map = (f, l) -> {
   if (is_pair(l)) {
     pair(f(first(l)), map(f, rest(l)))

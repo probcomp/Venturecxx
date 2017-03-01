@@ -1,20 +1,12 @@
 flip_coins = (n) ~> {
   weight = beta(1, 1);
-  replicate(n, () ~> { flip(weight) })
-};
-
-constrain_coin_flipper_rec = (n, trace) -> {
-  trace_set(subtrace_at(trace, list(1, "app", 0, "app")), true);
-  if (n > 0) {
-    constrain_coin_flipper_rec((n-1), subtrace_at(trace, list(2, "app", 0, "app", 0)))
-  } else {
-    "done"
-  }
+  replicate2(n, () ~> { flip(weight) })
 };
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = get_current_trace();
-  constrain_coin_flipper_rec(n, subtrace_at(t1, list(1, "app", 0, "app", 0)));
+  for_each((k) -> { trace_set(subtrace_at(t1, list(1, "app", k, 0, "app")), true) },
+    range(5));
   t1
 };
 
