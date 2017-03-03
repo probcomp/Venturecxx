@@ -11,7 +11,7 @@ constrain_coin_flipper_trace = (n) -> {
 };
 
 extract_weight = (mechanism) -> {
-  trace_get(mechanism[0, "def", "app"])
+  @mechanism[0, "def", "app"]
 };
 
 particle_sampler = (num_p) -> { () ~> {

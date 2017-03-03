@@ -23,11 +23,11 @@ replicate2 = sp((args, target, mechanism) ~> {
   score_box := 0.0;
   doit = (k) ~> {
     res = regenerate(f, [], target[k], mechanism[k]);
-    score_box := trace_get(score_box) + first(res);
+    score_box := @score_box + first(res);
     rest(res)
   };
   res = map(doit, range(n));
-  pair(trace_get(score_box), res)
+  pair(@score_box, res)
 });
 
 map = (f, l) -> {

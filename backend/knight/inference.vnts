@@ -24,7 +24,7 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
   // with target acting as the absorbing border and sites acting as
   // the regeneration graph.  If there is a gap between the sites
   // and the target, the weights will come out wrong.
-  old_vals = map((s) -> { trace_get(subtrace_at(init_mech, s)) }, mech_sites);
+  old_vals = map((s) -> { @subtrace_at(init_mech, s) }, mech_sites);
   old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
   old_score = first(old_res);
   for_each((s) -> { trace_clear(subtrace_at(init_mech, s)) }, mech_sites);
@@ -47,7 +47,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   cons1 := site;
   res1 = regenerate(uniform_categorical, [candidates], cons1, get_current_trace());
   old_logp = first(res1);
-  old_val = trace_get(subtrace_at(input_trace, site));
+  old_val = @subtrace_at(input_trace, site);
   old_res = regenerate(sp, args, input_trace, get_current_trace());
   old_score = first(old_res);
   trace_clear(subtrace_at(input_trace, site));
