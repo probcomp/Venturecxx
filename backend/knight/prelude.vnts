@@ -63,10 +63,10 @@ trace_of = (sp, args) ~> {
   list(first(res), t2)
 };
 
-subtrace_at = (trace, site) -> {
-  if (is_pair(site)) {
-    subtrace_at(lookup(trace, first(site)), rest(site))
+lookup_chain = (coll, key) -> {
+  if (is_pair(key)) {
+    lookup_chain(lookup(coll, first(key)), rest(key))
   } else {
-    trace
+    coll
   }
 };

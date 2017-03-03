@@ -142,7 +142,7 @@ class Semantics(object):
     def p_applicative_app(self, fn, args):
         return App([fn] + args)
     def p_applicative_lookup(self, a, index):
-        return App([Var('subtrace_at'), a, App([Var('list')] + index)])
+        return App([Var('lookup_chain'), a, App([Var('list')] + index)])
     def p_applicative_none(self, e):
         return e
 
