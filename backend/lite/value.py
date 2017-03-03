@@ -23,8 +23,8 @@ from collections import OrderedDict
 from numbers import Number
 import hashlib
 import operator
-from typing import Tuple
-from typing import Union
+from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
+from typing import Union # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import TYPE_CHECKING
 
 import numpy as np # type: ignore
@@ -36,7 +36,7 @@ import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
 
 if TYPE_CHECKING:
-  from venture.lite.types import VentureType
+  from venture.lite.types import VentureType # Pylint doesn't understand type comments pylint: disable=unused-import
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
