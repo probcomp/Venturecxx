@@ -81,7 +81,7 @@ class Semantics(object):
     # statement: Return an expression
     def p_statement_assign(self, n, e):
         return Def(n, e)
-    def p_statement_letvalues(self, l, po, names, pc, eq, e):
+    def p_statement_letvalues(self, po, pattern, pc, eq, e):
         raise Exception("Multivalue bindings not supported yet")
     def p_statement_tr_assign(self, l, r):
         return App([Var('trace_set'), l, r])
@@ -178,15 +178,6 @@ class Semantics(object):
         return Var(s)
     def p_primary_qsymbol(self, s):
         return Lit(vv.VentureSymbol(s))
-
-    # paramlist, params: Return list of strings.
-    def p_paramlist_none(self):                 return []
-    def p_paramlist_some(self, params):         return params
-    def p_params_one(self, param):
-        return [param]
-    def p_params_many(self, params, param):
-        params.append(param)
-        return params
 
     # arraybody, arrayelts: Return list of expressions.
     def p_arraybody_none(self):                 return []

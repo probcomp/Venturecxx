@@ -37,7 +37,7 @@ statements(one)		::= statement(s).
 statements(many)	::= statements(ss) T_SEMI statement(s).
 
 statement(assign)	::= L_NAME(n) T_EQDEF expression(e).
-statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
+statement(letvalues)	::= T_LROUND(po) arraybody(pattern) T_RROUND(pc)
 				T_EQDEF(eq) expression(e).
 statement(tr_assign)	::= boolean_or(l) T_COLON T_EQDEF expression(r).
 statement(none)		::= expression(e).
@@ -107,11 +107,6 @@ primary(array)		::= T_LSQUARE arraybody(a) T_RSQUARE.
 primary(literal)	::= literal(l).
 primary(symbol)		::= L_NAME(s).
 primary(qsymbol)        ::= T_QUOTE L_NAME(s) T_QUOTE.
-
-paramlist(none)		::= .
-paramlist(some)		::= params(params).
-params(one)		::= L_NAME(param).
-params(many)		::= params(params) T_COMMA L_NAME(param).
 
 arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
