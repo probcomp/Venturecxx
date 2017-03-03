@@ -137,7 +137,6 @@ literal(string)		::= L_STRING(v).
 	K_GT
 	K_IF
 	K_LE
-	K_LET
 	K_LT
 	K_MUL
 	K_NEQ

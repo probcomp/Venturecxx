@@ -50,7 +50,6 @@ keywords = {                    # XXX Use a perfect hash.
     'gt': grammar.K_GT,
     'if': grammar.K_IF,
     'le': grammar.K_LE,
-    'let': grammar.K_LET,
     'lt': grammar.K_LT,
     'mul': grammar.K_MUL,
     'neq': grammar.K_NEQ,
