@@ -39,6 +39,7 @@ statements(many)	::= statements(ss) T_SEMI statement(s).
 statement(assign)	::= L_NAME(n) T_EQDEF expression(e).
 statement(letvalues)	::= K_LET(l) T_LROUND(po) paramlist(names) T_RROUND(pc)
 				T_EQDEF(eq) expression(e).
+statement(tr_assign)	::= boolean_or(l) T_COLON T_EQDEF expression(r).
 statement(none)		::= expression(e).
 
 expression(top)		::= arrow(e).

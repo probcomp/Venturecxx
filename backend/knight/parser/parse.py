@@ -82,6 +82,8 @@ class Semantics(object):
         return Def(n, e)
     def p_statement_letvalues(self, l, po, names, pc, eq, e):
         raise Exception("Multivalue bindings not supported yet")
+    def p_statement_tr_assign(self, l, r):
+        return App([Var('trace_set'), l, r])
     def p_statement_none(self, e):
         return e
 
