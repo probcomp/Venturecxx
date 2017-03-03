@@ -67,7 +67,7 @@ def regen_list(exps, env, target, mechanism):
   # This is mapM (\e -> regen(e, env, trace)) in the Writer (Sum Double) monad,
   # except for handling splice expressions
   score = 0.0
-  anss = []
+  anss = [] # type: List[vv.VentureValue]
   for (i, e) in enumerate(exps):
     with target.subexpr_subtrace(i) as c2:
       with mechanism.subexpr_subtrace(i) as i2:
