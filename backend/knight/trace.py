@@ -78,6 +78,12 @@ class Trace(vv.VentureValue):
         ans.append(vv.VenturePair((k, site)))
     return ans
 
+  def lookup(self, key):
+    # type: (vv.VentureValue) -> Trace
+    with self.subtrace(key) as ans:
+      ans.reify()
+      return ans
+
   def __repr__(self):
     if self.subtraces:
       return "Trace(%r, %r)" % (self.value, list(self.subtraces.iteritems()))

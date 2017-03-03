@@ -183,8 +183,9 @@ def make_global_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
   for name, sp in builtInSPs().iteritems():
-    if isinstance(sp.requestPSP, NullRequestPSP):
-      env.addBinding(name, SPFromLite(sp))
+    if name not in ["lookup"]:
+      if isinstance(sp.requestPSP, NullRequestPSP):
+        env.addBinding(name, SPFromLite(sp))
   for name, sp in inf.inferenceSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
       env.addBinding(name, SPFromLite(sp))
@@ -206,6 +207,13 @@ def make_global_env():
       [t.Bool, t.Bool], t.Bool,
       descr="non-short-circuiting or")
   env.addBinding("or", SPFromLite(lite_or_sp))
+  # venture.lite.types.HomogeneousMappingType is not extensible to
+  # include traces, but I want lookup to accept them.  Change the type
+  # declaration.
+  updated_lookup_sp = deterministic_typed(lambda xs, x: xs.lookup(x),
+      [t.AnyType("<mapping l v>"), t.AnyType("k")],
+      t.AnyType("v"))
+  env.addBinding("lookup", SPFromLite(updated_lookup_sp))
   return env
 
 the_global_env = make_global_env()
