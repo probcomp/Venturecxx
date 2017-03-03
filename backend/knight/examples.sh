@@ -25,11 +25,11 @@ python -m venture.knight.driver -e '{
   list(res, trace_get(t2)) }' # (0, List(List(0 . 1), 1))
 
 # Running a synthetic SP
-python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
+python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e 'normal_normal(0, 1, 1)' # (0, x) where x ~ normal(0, 2)
 
 # Tracing a synthetic SP
-python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
+python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   model = () ~> { normal_normal(0, 100, 1) };
   t1 = get_current_trace();
@@ -40,7 +40,7 @@ python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
 }' # (0, List(x, y)) where x ~ normal(0, 100) and y ~ normal(x, 1)
 
 # Constraining a synthetic SP
-python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
+python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   model = () ~> { normal_normal(0, 1, 1) };
   t1 = get_current_trace();
@@ -60,7 +60,7 @@ python -m venture.knight.driver -e '{
   list(res, trace_get(t2)) }' # (0, List(List(0 . 1), 1))
 
 # Test tracing a mechanism
-python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
+python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   t1 = get_current_trace();
   t2 = get_current_trace();
@@ -71,7 +71,7 @@ python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
 }' # (0, List(x, a trace)) where x ~ normal(0, 1)
 
 # Test another trace of a mechanism
-python -m venture.knight.driver -f backend/knight/normal-normal.vnts \
+python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   t1 = get_current_trace();
   t2 = get_current_trace();

@@ -79,7 +79,7 @@ exponential(pow)	::= applicative(l) K_POW|T_POW(op) exponential(r).
 exponential(none)	::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND arglist(args) T_RROUND.
-applicative(lookup)	::= applicative(a) T_LSQUARE expression(index)
+applicative(lookup)	::= applicative(a) T_LSQUARE arraybody(index)
 				T_RSQUARE.
 applicative(none)	::= primary(e).
 

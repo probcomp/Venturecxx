@@ -65,7 +65,7 @@ trace_of = (sp, args) ~> {
 
 subtrace_at = (trace, site) -> {
   if (is_pair(site)) {
-    subtrace_at(subtrace(trace, first(site)), rest(site))
+    subtrace_at(lookup(trace, first(site)), rest(site))
   } else {
     trace
   }

@@ -25,7 +25,6 @@ from venture.knight.parser import grammar
 from venture.knight.parser import scan
 from venture.knight.types import App
 from venture.knight.types import Def
-from venture.knight.types import Exp
 from venture.knight.types import Lam
 from venture.knight.types import Lit
 from venture.knight.types import Seq
@@ -136,7 +135,7 @@ class Semantics(object):
     def p_applicative_app(self, fn, args):
         return App([fn] + args)
     def p_applicative_lookup(self, a, index):
-        return App([Var('lookup'), a, index])
+        return App([Var('subtrace_at'), a, App([Var('list')] + index)])
     def p_applicative_none(self, e):
         return e
 
