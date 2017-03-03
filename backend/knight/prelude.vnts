@@ -22,9 +22,9 @@ replicate2 = sp((args, target, mechanism) ~> {
   score_box = get_current_trace();
   score_box := 0.0;
   doit = (k) ~> {
-    res = regenerate(f, [], target[k], mechanism[k]);
-    score_box := @score_box + first(res);
-    rest(res)
+    (dscore, ans) = regenerate(f, [], target[k], mechanism[k]);
+    score_box := @score_box + dscore;
+    ans
   };
   res = map(doit, range(n));
   pair(@score_box, res)
@@ -59,8 +59,8 @@ for_each2 = (f, l1, l2) -> {
 trace_of = (sp, args) ~> {
   t1 = get_current_trace();
   t2 = get_current_trace();
-  res = regenerate(sp, args, t1, t2);
-  list(first(res), t2)
+  (score, _) = regenerate(sp, args, t1, t2);
+  list(score, t2)
 };
 
 lookup_chain = (coll, key) -> {

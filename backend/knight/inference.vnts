@@ -1,7 +1,6 @@
 infer_reject = (sp, args, log_bound, target) ~> {
   t1 = get_current_trace();
-  res = regenerate(sp, args, target, t1);
-  score = first(res);
+  (score, _) = regenerate(sp, args, target, t1);
   if (log(uniform_continuous(0, 1)) < score - log_bound) {
     t1
   } else {
@@ -12,8 +11,7 @@ infer_reject = (sp, args, log_bound, target) ~> {
 infer_resampling = (sp, args, target, num_p) ~> {
   particles = replicate(num_p, () ~> {
     t1 = get_current_trace();
-    res = regenerate(sp, args, target, t1);
-    score = first(res);
+    (score, _) = regenerate(sp, args, target, t1);
     list(score, t1)
   });
   log_categorical(map(first, particles), map(second, particles))
@@ -25,11 +23,9 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
   // the regeneration graph.  If there is a gap between the sites
   // and the target, the weights will come out wrong.
   old_vals = map((s) -> { @init_mech[*s] }, mech_sites);
-  old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
-  old_score = first(old_res);
+  (old_score, _) = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
   for_each((s) -> { trace_clear(init_mech[*s]) }, mech_sites);
-  new_res = regenerate(sp, args, target, init_mech);
-  new_score = first(new_res);
+  (new_score, _2) = regenerate(sp, args, target, init_mech);
   if (log(uniform_continuous(0, 1)) < new_score - old_score) {
     // Accept
     init_mech
@@ -45,17 +41,13 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   site = uniform_categorical(candidates);
   cons1 = get_current_trace();
   cons1 := site;
-  res1 = regenerate(uniform_categorical, [candidates], cons1, get_current_trace());
-  old_logp = first(res1);
+  (old_logp, _) = regenerate(uniform_categorical, [candidates], cons1, get_current_trace());
   old_val = @input_trace[*site];
-  old_res = regenerate(sp, args, input_trace, get_current_trace());
-  old_score = first(old_res);
+  (old_score, _2) = regenerate(sp, args, input_trace, get_current_trace());
   trace_clear(input_trace[*site]);
-  new_res = regenerate(sp, args, input_trace, input_trace);
-  new_score = first(new_res);
+  (new_score, _3) = regenerate(sp, args, input_trace, input_trace);
   new_candidates = set_difference(trace_sites(input_trace), constraint_addresses);
-  res2 = regenerate(uniform_categorical, [new_candidates], cons1, get_current_trace());
-  new_logp = first(res2);
+  (new_logp, _4) = regenerate(uniform_categorical, [new_candidates], cons1, get_current_trace());
   if (log(uniform_continuous(0, 1)) < new_score - old_score + old_logp - new_logp) {
     // Accept
     input_trace
