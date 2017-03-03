@@ -27,7 +27,7 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
   old_vals = map((s) -> { @init_mech[*s] }, mech_sites);
   old_res = regenerate(sp, args, target, init_mech); // Expecting init_mech to be complete
   old_score = first(old_res);
-  for_each((s) -> { trace_clear(subtrace_at(init_mech, s)) }, mech_sites);
+  for_each((s) -> { trace_clear(init_mech[*s]) }, mech_sites);
   new_res = regenerate(sp, args, target, init_mech);
   new_score = first(new_res);
   if (log(uniform_continuous(0, 1)) < new_score - old_score) {
@@ -35,7 +35,7 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
     init_mech
   } else {
     // Reject
-    for_each2((s, v) -> { subtrace_at(init_mech, s) := v }, mech_sites, old_vals);
+    for_each2((s, v) -> { init_mech[*s] := v }, mech_sites, old_vals);
     init_mech
   }
 };
@@ -47,10 +47,10 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   cons1 := site;
   res1 = regenerate(uniform_categorical, [candidates], cons1, get_current_trace());
   old_logp = first(res1);
-  old_val = @subtrace_at(input_trace, site);
+  old_val = @input_trace[*site];
   old_res = regenerate(sp, args, input_trace, get_current_trace());
   old_score = first(old_res);
-  trace_clear(subtrace_at(input_trace, site));
+  trace_clear(input_trace[*site]);
   new_res = regenerate(sp, args, input_trace, input_trace);
   new_score = first(new_res);
   new_candidates = set_difference(trace_sites(input_trace), constraint_addresses);
@@ -61,7 +61,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
     input_trace
   } else {
     // Reject
-    subtrace_at(input_trace, site) := old_val;
+    input_trace[*site] := old_val;
     input_trace
   }
 };
