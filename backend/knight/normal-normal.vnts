@@ -18,12 +18,8 @@ regenerator = (args, target, mechanism) -> {
       regenerate(normal, [mu, sqrt(sig1**2 + sig2**2)],
                  target, mechanism)
   } else {
-    pack = regenerate(normal, [mu, sig1], target["x"], mechanism["x"]);
-    score = first(pack);
-    val = rest(pack);
-    pack2 = regenerate(normal, [val, sig2], target, mechanism);
-    score2 = first(pack2);
-    val2 = rest(pack2);
+    (score, val) = regenerate(normal, [mu, sig1], target["x"], mechanism["x"]);
+    (score2, val2) = regenerate(normal, [val, sig2], target, mechanism);
     pair(score + score2, val2)
   }}}
 };

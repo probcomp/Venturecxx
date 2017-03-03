@@ -92,7 +92,7 @@ def match_bind(pat, val, env):
       vals = [val.get_at(k) for k in keys]
     else:
       vals = val.asPythonList()
-    for (p, v) in zip(pat, vals):
+    for (p, v) in zip(pat.subs, vals):
       match_bind(p, v, env)
   else:
     raise Exception("Invalid binding expression %s", pat)

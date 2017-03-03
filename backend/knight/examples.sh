@@ -7,22 +7,22 @@ python -m venture.knight.driver -e '{ t = get_current_trace(); t := 5; @t }' # (
 python -m venture.knight.driver -e '{
   t1 = get_current_trace();
   t2 = get_current_trace();
-  res = regenerate(normal, [0, 1], t1, t2);
-  list(res, @t2) }' # (0, List(List(0 . x), x)) where x ~ normal(0, 1)
+  (score, x) = regenerate(normal, [0, 1], t1, t2);
+  list(score, x, @t2) }' # (0, List(0, x, x)) where x ~ normal(0, 1)
 
 python -m venture.knight.driver -e '{
   t1 = get_current_trace();
   t1 := 1;
   t2 = get_current_trace();
-  res = regenerate(normal, [0, 1], t1, t2);
-  list(res, @t2) }' # (0, List(List(-1.41 . 1), 1))
+  (score, x) = regenerate(normal, [0, 1], t1, t2);
+  list(score, x, @t2) }' # (0, List(-1.41, 1, 1))
 
 python -m venture.knight.driver -e '{
   t1 = get_current_trace();
   t2 = get_current_trace();
   t2 := 1;
-  res = regenerate(normal, [0, 1], t1, t2);
-  list(res, @t2) }' # (0, List(List(0 . 1), 1))
+  (score, x) = regenerate(normal, [0, 1], t1, t2);
+  list(score, x, @t2) }' # (0, List(0, 1, 1))
 
 # Running a synthetic SP
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
@@ -46,9 +46,9 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t1 = get_current_trace();
   t1[0, "app"] := 5;
   t2 = get_current_trace();
-  res = regenerate(model, [], t1, t2);
+  (score, _) = regenerate(model, [], t1, t2);
   subt = t2[0, "app"];
-  list(first(res), @subt["x"], @subt)
+  list(score, @subt["x"], @subt)
 }' # (0, List(-7.52, x, 5)) where x ~ normal(2.5, 1/sqrt(2))
 
 # Test generic regenerator_of
@@ -56,8 +56,8 @@ python -m venture.knight.driver -e '{
   t1 = get_current_trace();
   t2 = get_current_trace();
   t2 := 1;
-  res = regenerate(sp(regenerator_of(normal)), [0, 1], t1, t2);
-  list(res, @t2) }' # (0, List(List(0 . 1), 1))
+  (score, x) = regenerate(sp(regenerator_of(normal)), [0, 1], t1, t2);
+  list(score, x, @t2) }' # (0, List(0, 1, 1))
 
 # Test tracing a mechanism
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
@@ -78,9 +78,9 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t1 := 5;
   t3 = get_current_trace();
   t4 = get_current_trace();
-  res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  list(res, @t2["x"], t4)
-}' # (0, List(List(0, -7.52 . 5), x, a trace)) where x ~ normal(2.5, 1/sqrt(2))
+  (out_score, subres) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  list(out_score, subres, @t2["x"], t4)
+}' # (0, List(0, -7.52, 5, x, a trace)) where x ~ normal(2.5, 1/sqrt(2))
 
 # Test intervening on a traced mechanism
 # Compare the test case "constraining a synthetic SP"
@@ -92,6 +92,6 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t3 = get_current_trace();
   t4 = get_current_trace();
   t4[3, "app", 0, "app", 0, "app", 5, "def", "app"] := 7;
-  res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  list(res, @t2["x"], t4)
+  (out_score, subres) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  list(out_score, subres, @t2["x"], t4)
 }' # (0, List(List(0, -7.52 . 5), 7, a trace))

@@ -137,7 +137,7 @@ class RegenerateSP(SP):
       assert isinstance(arg, vv.VentureValue)
     from venture.knight.regen import r_apply
     (score, val) = r_apply(oper, lst, target, mechanism)
-    return (0, Datum(vv.VenturePair((vv.VentureNumber(score), val))))
+    return (0, Datum(vv.pythonListToVentureList([vv.VentureNumber(score), val])))
 
 class MakeSPSP(SP):
   def regenerate(self, args, _target, _mechanism):
