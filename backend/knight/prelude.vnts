@@ -22,7 +22,7 @@ replicate2 = sp((args, target, mechanism) ~> {
   score_box = get_current_trace();
   trace_set(score_box, 0.0);
   doit = (k) ~> {
-    res = regenerate(f, [], subtrace(target, k), subtrace(mechanism, k));
+    res = regenerate(f, [], target[k], mechanism[k]);
     trace_set(score_box, trace_get(score_box) + first(res));
     rest(res)
   };

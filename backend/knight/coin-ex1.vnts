@@ -5,13 +5,13 @@ flip_coins = (n) ~> {
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = get_current_trace();
-  for_each((k) -> { trace_set(subtrace_at(t1, list(1, "app", k, 0, "app")), true) },
+  for_each((k) -> { trace_set(t1[1, "app", k, 0, "app"], true) },
     range(5));
   t1
 };
 
 extract_weight = (mechanism) -> {
-  trace_get(subtrace_at(mechanism, list(0, "def", "app")))
+  trace_get(mechanism[0, "def", "app"])
 };
 
 particle_sampler = (num_p) -> { () ~> {

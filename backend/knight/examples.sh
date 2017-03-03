@@ -35,8 +35,8 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t1 = get_current_trace();
   t2 = get_current_trace();
   regenerate(model, [], t1, t2);
-  subt = subtrace(subtrace(t2, 0), "app");
-  list(trace_get(subtrace(subt, "x")), trace_get(subt))
+  subt = t2[0, "app"];
+  list(trace_get(subt["x"]), trace_get(subt))
 }' # (0, List(x, y)) where x ~ normal(0, 100) and y ~ normal(x, 1)
 
 # Constraining a synthetic SP
@@ -47,8 +47,8 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   trace_set(subtrace(subtrace(t1, 0), "app"), 5);
   t2 = get_current_trace();
   res = regenerate(model, [], t1, t2);
-  subt = subtrace(subtrace(t2, 0), "app");
-  list(first(res), trace_get(subtrace(subt, "x")), trace_get(subt))
+  subt = t2[0, "app"];
+  list(first(res), trace_get(subt["x"]), trace_get(subt))
 }' # (0, List(-7.52, x, 5)) where x ~ normal(2.5, 1/sqrt(2))
 
 # Test generic regenerator_of
@@ -67,7 +67,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t3 = get_current_trace();
   t4 = get_current_trace();
   regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  list(trace_get(subtrace(t2, "x")), t4)
+  list(trace_get(t2["x"]), t4)
 }' # (0, List(x, a trace)) where x ~ normal(0, 1)
 
 # Test another trace of a mechanism
@@ -79,7 +79,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t3 = get_current_trace();
   t4 = get_current_trace();
   res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  list(res, trace_get(subtrace(t2, "x")), t4)
+  list(res, trace_get(t2["x"]), t4)
 }' # (0, List(List(0, -7.52 . 5), x, a trace)) where x ~ normal(2.5, 1/sqrt(2))
 
 # Test intervening on a traced mechanism
@@ -91,7 +91,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t2 = get_current_trace();
   t3 = get_current_trace();
   t4 = get_current_trace();
-  trace_set(subtrace_at(t4, list(3, "app", 0, "app", 0, "app", 6, "def", "app")), 7);
+  trace_set(t4[3, "app", 0, "app", 0, "app", 6, "def", "app"], 7);
   res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
-  list(res, trace_get(subtrace(t2, "x")), t4)
+  list(res, trace_get(t2["x"]), t4)
 }' # (0, List(List(0, -7.52 . 5), 7, a trace))
