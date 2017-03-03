@@ -117,7 +117,9 @@ arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
 arraybody(somecomma)	::= arrayelts(es) T_COMMA.
 arrayelts(one)		::= expression(e).
+arrayelts(splice)	::= T_MUL expression(e).
 arrayelts(many)		::= arrayelts(es) T_COMMA expression(e).
+arrayelts(many_splice)	::= arrayelts(es) T_COMMA T_MUL expression(e).
 
 literal(true)		::= T_TRUE.
 literal(false)		::= T_FALSE.

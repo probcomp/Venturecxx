@@ -28,6 +28,7 @@ from venture.knight.types import Def
 from venture.knight.types import Lam
 from venture.knight.types import Lit
 from venture.knight.types import Seq
+from venture.knight.types import Spl
 from venture.knight.types import Var
 
 operators = {
@@ -192,7 +193,9 @@ class Semantics(object):
     def p_arraybody_some(self, es):             return es
     def p_arraybody_somecomma(self, es):        return es
     def p_arrayelts_one(self, e):               return [e]
+    def p_arrayelts_splice(self, e):            return [Spl(e)]
     def p_arrayelts_many(self, es, e):          es.append(e); return es
+    def p_arrayelts_many_splice(self, es, e):   es.append(Spl(e)); return es
 
     # literal: Return `Lit'.
     def p_literal_true(self):

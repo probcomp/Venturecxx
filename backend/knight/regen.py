@@ -14,6 +14,7 @@ from venture.knight.types import Lam
 from venture.knight.types import Lit
 from venture.knight.types import Request
 from venture.knight.types import Seq
+from venture.knight.types import Spl
 from venture.knight.types import Trace # pylint: disable=unused-import
 from venture.knight.types import Var
 
@@ -63,15 +64,21 @@ def do_regen(exp, env, target, mechanism):
 
 def regen_list(exps, env, target, mechanism):
   # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, List[vv.VentureValue]]
-  # This is mapM (\e -> regen(e, env, trace)) in the Writer (Sum Double) monad.
+  # This is mapM (\e -> regen(e, env, trace)) in the Writer (Sum Double) monad,
+  # except for handling splice expressions
   score = 0.0
   anss = []
   for (i, e) in enumerate(exps):
     with target.subexpr_subtrace(i) as c2:
       with mechanism.subexpr_subtrace(i) as i2:
-        (dscore, ans) = regen(e, env, c2, i2)
-        score += dscore
-        anss.append(ans)
+        if isinstance(e, Spl):
+          (dscore, ans) = regen(e.sub, env, c2, i2)
+          score += dscore
+          anss += ans.asPythonList()
+        else:
+          (dscore, ans) = regen(e, env, c2, i2)
+          score += dscore
+          anss.append(ans)
   return (score, anss)
 
 def r_apply(oper, args, target, mechanism):

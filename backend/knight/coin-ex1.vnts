@@ -41,6 +41,7 @@ ssrmh_sampler = (num_steps) -> { () ~> {
 } };
 
 draw_plots = (num_samples) ~> {
+  // This takes three minutes on my laptop with 50 samples
   p_p_plot_2samp_to_file("custom_rmh.png", replicate(num_samples, custom_rmh_sampler(20)), replicate(10 * num_samples, analytic_sampler));
 
   p_p_plot_2samp_to_file("particles.png", replicate(num_samples, particle_sampler(20)), replicate(10 * num_samples, analytic_sampler));
