@@ -84,6 +84,14 @@ class Trace(vv.VentureValue):
       ans.reify()
       return ans
 
+  def get_at(self, key):
+    # type: (List[vv.VentureValue]) -> vv.VentureValue
+    if len(key) == 0:
+      return self.get()
+    else:
+      with self.subtrace(key[0]) as s:
+        return s.get_at(key[1:])
+
   def __repr__(self):
     if self.subtraces:
       return "Trace(%r, %r)" % (self.value, list(self.subtraces.iteritems()))

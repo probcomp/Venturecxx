@@ -37,8 +37,8 @@ statements(one)		::= statement(s).
 statements(many)	::= statements(ss) T_SEMI statement(s).
 
 statement(assign)	::= L_NAME(n) T_EQDEF expression(e).
-statement(letvalues)	::= T_LROUND(po) arraybody(pattern) T_RROUND(pc)
-				T_EQDEF(eq) expression(e).
+statement(letvalues)	::= T_LROUND arraybody(pattern) T_RROUND
+				T_EQDEF expression(e).
 statement(tr_assign)	::= boolean_or(l) T_COLON T_EQDEF expression(r).
 statement(none)		::= expression(e).
 

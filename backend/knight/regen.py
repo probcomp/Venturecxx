@@ -84,8 +84,18 @@ def regen_list(exps, env, target, mechanism):
 
 def match_bind(pat, val, env):
   # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None
-  assert isinstance(pat, Var)
-  env.addBinding(pat.name, val)
+  if isinstance(pat, Var):
+    env.addBinding(pat.name, val)
+  elif isinstance(pat, Seq):
+    if isinstance(val, Trace):
+      keys = sorted(val.sites())
+      vals = [val.get_at(k) for k in keys]
+    else:
+      vals = val.asPythonList()
+    for (p, v) in zip(pat, vals):
+      match_bind(p, v, env)
+  else:
+    raise Exception("Invalid binding expression %s", pat)
 
 def r_apply(oper, args, target, mechanism):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
