@@ -76,8 +76,11 @@ unary(pos)		::= T_ADD(op) unary(e).
 unary(neg)		::= T_SUB(op) unary(e).
 unary(none)		::= exponential(e).
 
-exponential(pow)	::= applicative(l) K_POW|T_POW(op) exponential(r).
-exponential(none)	::= applicative(e).
+exponential(pow)	::= accessing(l) K_POW|T_POW(op) exponential(r).
+exponential(none)	::= accessing(e).
+
+accessing(one)		::= T_AT applicative(e).
+accessing(none)		::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND arglist(args) T_RROUND.
 applicative(lookup)	::= applicative(a) T_LSQUARE arraybody(index)

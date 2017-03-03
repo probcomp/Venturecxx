@@ -128,11 +128,15 @@ class Semantics(object):
     p_unary_none = _p_exp
     p_exponential_pow = _p_binop
     p_exponential_none = _p_exp
+    p_accessing_none = _p_exp
 
     def p_unary_pos(self, op, e):
         return self._p_binop(Lit(0), op, e)
     def p_unary_neg(self, op, e):
         return self._p_binop(Lit(0), op, e)
+
+    def p_accessing_one(self, e):
+        return App([Var('trace_get'), e])
 
     def p_applicative_app(self, fn, args):
         return App([fn] + args)
