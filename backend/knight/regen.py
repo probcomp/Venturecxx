@@ -1,3 +1,4 @@
+from typing import cast
 from typing import List # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import Tuple # pylint: disable=unused-import
 
@@ -74,7 +75,7 @@ def regen_list(exps, env, target, mechanism):
         if isinstance(e, Spl):
           (dscore, ans) = regen(e.sub, env, c2, i2)
           score += dscore
-          anss += ans.asPythonList()
+          anss += cast(List[vv.VentureValue], ans.asPythonList())
         else:
           (dscore, ans) = regen(e, env, c2, i2)
           score += dscore
