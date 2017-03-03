@@ -125,6 +125,7 @@ class PSP(object):
       type(self))
 
   def isRandom(self):
+    # type: () -> bool
     """Return whether this PSP is stochastic or not.  This is important
     because only nodes whose operators are random PSPs can be
     principal.
