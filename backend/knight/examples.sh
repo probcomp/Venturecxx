@@ -91,7 +91,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
   t2 = get_current_trace();
   t3 = get_current_trace();
   t4 = get_current_trace();
-  t4[3, "app", 0, "app", 0, "app", 6, "def", "app"] := 7;
+  t4[3, "app", 0, "app", 0, "app", 5, "def", "app"] := 7;
   res = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
   list(res, @t2["x"], t4)
 }' # (0, List(List(0, -7.52 . 5), 7, a trace))
