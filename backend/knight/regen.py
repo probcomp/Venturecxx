@@ -85,7 +85,8 @@ def regen_list(exps, env, target, mechanism):
 def match_bind(pat, val, env):
   # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None
   if isinstance(pat, Var):
-    env.addBinding(pat.name, val)
+    if pat.name != '_':
+      env.addBinding(pat.name, val)
   elif isinstance(pat, Seq):
     if isinstance(val, Trace):
       keys = sorted(val.sites())
