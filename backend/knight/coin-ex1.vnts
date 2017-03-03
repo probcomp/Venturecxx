@@ -5,7 +5,7 @@ flip_coins = (n) ~> {
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = get_current_trace();
-  for_each((k) -> { trace_set(t1[1, "app", k, 0, "app"], true) },
+  for_each((k) -> { t1[1, "app", k, 0, "app"] := true },
     range(5));
   t1
 };

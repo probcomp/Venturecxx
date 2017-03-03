@@ -20,10 +20,10 @@ replicate2 = sp((args, target, mechanism) ~> {
   n = args[0];
   f = args[1];
   score_box = get_current_trace();
-  trace_set(score_box, 0.0);
+  score_box := 0.0;
   doit = (k) ~> {
     res = regenerate(f, [], target[k], mechanism[k]);
-    trace_set(score_box, trace_get(score_box) + first(res));
+    score_box := trace_get(score_box) + first(res);
     rest(res)
   };
   res = map(doit, range(n));

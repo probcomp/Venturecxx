@@ -35,7 +35,7 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
     init_mech
   } else {
     // Reject
-    for_each2((s, v) -> { trace_set(subtrace_at(init_mech, s), v) }, mech_sites, old_vals);
+    for_each2((s, v) -> { subtrace_at(init_mech, s) := v }, mech_sites, old_vals);
     init_mech
   }
 };
@@ -44,7 +44,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   candidates = set_difference(trace_sites(input_trace), constraint_addresses);
   site = uniform_categorical(candidates);
   cons1 = get_current_trace();
-  trace_set(cons1, site);
+  cons1 := site;
   res1 = regenerate(uniform_categorical, [candidates], cons1, get_current_trace());
   old_logp = first(res1);
   old_val = trace_get(subtrace_at(input_trace, site));
@@ -61,7 +61,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
     input_trace
   } else {
     // Reject
-    trace_set(subtrace_at(input_trace, site), old_val);
+    subtrace_at(input_trace, site) := old_val;
     input_trace
   }
 };
