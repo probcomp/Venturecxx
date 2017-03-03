@@ -58,7 +58,7 @@ def do_regen(exp, env, target, mechanism):
     with target.definition_subtrace() as t2:
       with mechanism.definition_subtrace() as m2:
         (sub_score, subval) = regen(exp.expr, env, t2, m2)
-        env.addBinding(exp.name, subval)
+        match_bind(exp.pat, subval, env)
         return (sub_score, vv.VentureNil())
   assert False, "Unknown expression type %s" % (exp,)
 
@@ -80,6 +80,11 @@ def regen_list(exps, env, target, mechanism):
           score += dscore
           anss.append(ans)
   return (score, anss)
+
+def match_bind(pat, val, env):
+  # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None
+  assert isinstance(pat, Var)
+  env.addBinding(pat.name, val)
 
 def r_apply(oper, args, target, mechanism):
   # type: (SP, List[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
