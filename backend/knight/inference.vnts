@@ -12,7 +12,7 @@ infer_resampling = (sp, args, target, num_p) ~> {
   particles = replicate(num_p, () ~> {
     t1 = get_current_trace();
     (score, _) = regenerate(sp, args, target, t1);
-    list(score, t1)
+    (score, t1)
   });
   log_categorical(map(first, particles), map(second, particles))
 };

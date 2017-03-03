@@ -27,7 +27,7 @@ replicate2 = sp((args, target, mechanism) ~> {
     ans
   };
   res = map(doit, range(n));
-  list(@score_box, res)
+  (@score_box, res)
 });
 
 map = (f, l) -> {
@@ -60,7 +60,7 @@ trace_of = (sp, args) ~> {
   t1 = get_current_trace();
   t2 = get_current_trace();
   (score, _) = regenerate(sp, args, t1, t2);
-  list(score, t2)
+  (score, t2)
 };
 
 lookup_chain = (coll, key) -> {
