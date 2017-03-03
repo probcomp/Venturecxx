@@ -174,6 +174,10 @@ class VentureValue(object):
   def isValidCompoundForm(self):
     return False
 
+  def asPythonList(self, _elt_type=None):
+    # type: (VentureType) -> List[object]
+    raise VentureTypeError("Cannot view %s as a Python list" % type(self))
+
 def vv_dot_product(v1, v2):
   """Dot product of venture values taking into account that either may be
 a symbolic zero.  TODO: Introduce the VentureZero value to uniformize
