@@ -27,7 +27,7 @@ replicate2 = sp((args, target, mechanism) ~> {
     ans
   };
   res = map(doit, range(n));
-  pair(@score_box, res)
+  list(@score_box, res)
 });
 
 map = (f, l) -> {

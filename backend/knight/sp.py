@@ -157,13 +157,11 @@ class MadeSP(SP):
     # or propagate requests to my caller?
     from venture.knight.regen import r_apply
     (score, res) = r_apply(self.regenerator_sp, new_args, Trace(), Trace())
-    assert isinstance(res, vv.VenturePair)
-    subscore = res.first
+    (subscore, val) = res.asPythonList()
     assert isinstance(subscore, vv.VentureNumber), "%s is not a number" % (subscore,)
     # !? mypy doesn't understand asserts with error messages:
     # https://github.com/python/mypy/issues/2937
     assert isinstance(subscore, vv.VentureNumber)
-    val = res.rest
     assert isinstance(val, vv.VentureValue) # Ban gradients' symbolic zeroes here.
     # XXX Is adding the right thing to do with these scores?
     return (score + subscore.getNumber(), Datum(val))

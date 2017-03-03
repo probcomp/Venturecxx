@@ -3,7 +3,7 @@ regenerator = (args, target, mechanism) -> {
   sig1 = args[1];
   sig2 = args[2];
   if (trace_has(mechanism)) {
-    pair(0, @mechanism)
+    list(0, @mechanism)
   } else { if (trace_has(mechanism["x"])) {
     regenerate(normal, [@mechanism["x"], sig2], target, mechanism)
   } else { // mechanism trace is empty
@@ -20,7 +20,7 @@ regenerator = (args, target, mechanism) -> {
   } else {
     (score, val) = regenerate(normal, [mu, sig1], target["x"], mechanism["x"]);
     (score2, val2) = regenerate(normal, [val, sig2], target, mechanism);
-    pair(score + score2, val2)
+    list(score + score2, val2)
   }}}
 };
 
