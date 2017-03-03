@@ -29,6 +29,7 @@ from venture.knight.types import Lam
 from venture.knight.types import Lit
 from venture.knight.types import Seq
 from venture.knight.types import Spl
+from venture.knight.types import Tup
 from venture.knight.types import Var
 
 operators = {
@@ -155,8 +156,10 @@ class Semantics(object):
     def p_tagged_kw(self, name, e):     return e
 
     def p_primary_paren(self, items):
-        assert len(items) == 1
-        return items[0]
+        if len(items) == 1:
+            return items[0]
+        else:
+            return Tup(items)
     def p_primary_brace(self, ss):
         assert isinstance(ss, Seq)
         return ss

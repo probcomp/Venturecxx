@@ -17,6 +17,7 @@ from venture.knight.types import Request
 from venture.knight.types import Seq
 from venture.knight.types import Spl
 from venture.knight.types import Trace # pylint: disable=unused-import
+from venture.knight.types import Tup
 from venture.knight.types import Var
 
 def regen(exp, env, target, mechanism):
@@ -55,6 +56,13 @@ def do_regen(exp, env, target, mechanism):
       return (sub_score, subvals[-1])
     else:
       return (sub_score, vv.VentureNil())
+  if isinstance(exp, Tup):
+    (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
+    if len(exp.subs) == 1:
+      # Grouping parens
+      return (sub_score, subvals[0])
+    else:
+      return (sub_score, vv.pythonListToVentureList(subvals))
   if isinstance(exp, Def):
     with target.definition_subtrace() as t2:
       with mechanism.definition_subtrace() as m2:
@@ -87,7 +95,7 @@ def match_bind(pat, val, env):
   if isinstance(pat, Var):
     if pat.name != '_':
       env.addBinding(pat.name, val)
-  elif isinstance(pat, Seq):
+  elif isinstance(pat, Seq) or isinstance(pat, Tup):
     if isinstance(val, Trace):
       keys = sorted(val.sites())
       vals = [val.get_at(k) for k in keys]
