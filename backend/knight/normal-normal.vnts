@@ -3,16 +3,14 @@ regenerator = (args, target, mechanism) -> {
   sig1 = args[1];
   sig2 = args[2];
   if (trace_has(mechanism)) {
-    pair(0, trace_get(mechanism))
+    pair(0, @mechanism)
   } else { if (trace_has(mechanism["x"])) {
-    regenerate(normal, [trace_get(mechanism["x"]), sig2],
-               target, mechanism)
+    regenerate(normal, [@mechanism["x"], sig2], target, mechanism)
   } else { // mechanism trace is empty
     if (trace_has(target) && not(trace_has(target["x"]))) {
-      val = trace_get(target);
       prec1 = 1 / (sig1 ** 2);
       prec2 = 1 / (sig2 ** 2);
-      post_mu = (mu * prec1 + val * prec2) / (prec1 + prec2);
+      post_mu = (mu * prec1 + @target * prec2) / (prec1 + prec2);
       post_prec = prec1 + prec2;
       post_sig = sqrt(1 / post_prec);
       post_sample ~ normal(post_mu, post_sig);
