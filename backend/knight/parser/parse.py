@@ -182,15 +182,6 @@ class Semantics(object):
     def p_primary_qsymbol(self, s):
         return Lit(vv.VentureSymbol(s))
 
-    # arraybody, arrayelts: Return list of expressions.
-    def p_arraybody_none(self):                 return []
-    def p_arraybody_some(self, es):             return es
-    def p_arraybody_somecomma(self, es):        return es
-    def p_arrayelts_one(self, e):               return [e]
-    def p_arrayelts_splice(self, e):            return [Spl(e)]
-    def p_arrayelts_many(self, es, e):          es.append(e); return es
-    def p_arrayelts_many_splice(self, es, e):   es.append(Spl(e)); return es
-
     # literal: Return `Lit'.
     def p_literal_true(self):
         return Lit(vv.VentureBool(True))
@@ -202,6 +193,15 @@ class Semantics(object):
         return Lit(vv.VentureNumber(v))
     def p_literal_string(self, v):
         return Lit(vv.VentureString(v))
+
+    # arraybody, arrayelts: Return list of expressions.
+    def p_arraybody_none(self):                 return []
+    def p_arraybody_some(self, es):             return es
+    def p_arraybody_somecomma(self, es):        return es
+    def p_arrayelts_one(self, e):               return [e]
+    def p_arrayelts_splice(self, e):            return [Spl(e)]
+    def p_arrayelts_many(self, es, e):          es.append(e); return es
+    def p_arrayelts_many_splice(self, es, e):   es.append(Spl(e)); return es
 
 def parse(f, context):
     scanner = scan.Scanner(f, context)
