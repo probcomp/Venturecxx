@@ -47,32 +47,25 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 
 # Test generic regenerator_of
 python -m venture.knight.driver -e '{
-  t1 = get_current_trace();
-  t2 = get_current_trace();
-  t2 := 1;
-  (score, x) = regenerate(sp(regenerator_of(normal)), [0, 1], t1, t2);
+  t2 = T{1};
+  (score, x) = regenerate(sp(regenerator_of(normal)), [0, 1], T{}, t2);
   (score, x, @t2) }' # (0, List(0, 1, 1))
 
 # Test tracing a mechanism
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
-  t1 = get_current_trace();
-  t2 = get_current_trace();
-  t3 = get_current_trace();
-  t4 = get_current_trace();
-  regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  t2 = T{};
+  t4 = T{};
+  regenerate(regenerator_of(normal_normal), [[0, 1, 1], T{}, t2], T{}, t4);
   (@t2["x"], t4)
 }' # (0, List(x, a trace)) where x ~ normal(0, 1)
 
 # Test another trace of a mechanism
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
-  t1 = get_current_trace();
-  t2 = get_current_trace();
-  t1 := 5;
-  t3 = get_current_trace();
-  t4 = get_current_trace();
-  (out_score, (in_score, y)) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  t2 = T{};
+  t4 = T{};
+  (out_score, (in_score, y)) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], T{5}, t2], T{}, t4);
   (out_score, in_score, y, @t2["x"], t4)
 }' # (0, List(0, -7.52, 5, x, a trace)) where x ~ normal(2.5, 1/sqrt(2))
 
@@ -80,12 +73,9 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 # Compare the test case "constraining a synthetic SP"
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
-  t1 = get_current_trace();
-  t1 := 5;
-  t2 = get_current_trace();
-  t3 = get_current_trace();
+  t2 = T{};
   t4 = get_current_trace();
   t4[3, "app", 0, "app", 0, "app", 5, "def", "app"] := 7;
-  (out_score, (in_score, y)) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], t1, t2], t3, t4);
+  (out_score, (in_score, y)) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], T{5}, t2], T{}, t4);
   (out_score, in_score, y, @t2["x"], t4)
 }' # (0, List(List(0, -7.52 . 5), 7, a trace))
