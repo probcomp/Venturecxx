@@ -78,6 +78,7 @@ def do_regen(exp, env, target, mechanism):
           with ans.subtrace(k_val) as a2:
             # TODO: Implement basic trace literal splicing here
             a2.set(v_val)
+    return (score, ans)
   if isinstance(exp, Tup):
     (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
     if len(exp.subs) == 1:
