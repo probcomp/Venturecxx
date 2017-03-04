@@ -112,7 +112,7 @@ trace(unfilled)		::= T_LTRACE entrylist(es) T_RCURLY.
 trace(none)		::= name(e).
 
 entrylist(none)		::= .
-entrylist(some)		::= entries(e).
+entrylist(some)		::= entries(es).
 entries(one)		::= name(n) T_EQDEF expression(e).
 entries(many)		::= entries(es) T_COMMA name(n) T_EQDEF expression(e).
 
