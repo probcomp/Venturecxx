@@ -186,10 +186,12 @@ class Semantics(object):
         return Tra(None, es)
     p_trace_none = _p_exp
 
-    def p_entrylist_none(self):         return []
-    def p_entrylist_some(self, es):     return es
-    def p_entries_one(self, n, e):      return [(n, e)]
-    def p_entries_many(self, es, n, e): es.append((n, e)); return es
+    def p_entrylist_none(self):                 return []
+    def p_entrylist_some(self, es):             return es
+    def p_entries_one(self, n, e):              return [(n, e)]
+    def p_entries_one_splice(self, n, e):       return [(n, Spl(e))]
+    def p_entries_many(self, es, n, e):         es.append((n, e)); return es
+    def p_entries_many_splice(self, es, n, e):  es.append((n, Spl(e))); return es
 
     def p_name_unquote(self, op, e):
         raise Exception("quasiquotation is not supported yet")

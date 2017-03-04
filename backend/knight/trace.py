@@ -72,6 +72,14 @@ class Trace(vv.VentureValue):
     # type: () -> None
     self.value = None
 
+  def update(self, trace):
+    # type: (Trace) -> None
+    if trace.has():
+      self.set(trace.get())
+    for k, d in trace.subtraces.iteritems():
+      with self.subtrace(k) as s:
+        s.update(d)
+
   def sites(self):
     # type: () -> List[vv.VentureValue]
     # Actually a Venture List of VentureValues, but I haven't coded

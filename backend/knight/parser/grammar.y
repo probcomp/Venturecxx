@@ -114,7 +114,9 @@ trace(none)		::= name(e).
 entrylist(none)		::= .
 entrylist(some)		::= entries(es).
 entries(one)		::= name(n) T_EQDEF expression(e).
+entries(one_splice)	::= name(n) T_EQDEF T_MUL expression(e).
 entries(many)		::= entries(es) T_COMMA name(n) T_EQDEF expression(e).
+entries(many_splice)	::= entries(es) T_COMMA name(n) T_EQDEF T_MUL expression(e).
 
 name(unquote)		::= T_LDOLLAR(op) primary(e).
 name(symbol)		::= L_NAME(s).

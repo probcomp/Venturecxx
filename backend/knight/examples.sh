@@ -38,8 +38,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   model = () ~> { normal_normal(0, 1, 1) };
-  t1 = get_current_trace();
-  t1[0, "app"] := 5;
+  t1 = T{ 0 = *T{ app = 5 } };
   t2 = T{};
   (score, _) = regenerate(model, [], t1, t2);
   subt = t2[0, "app"];

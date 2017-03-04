@@ -73,11 +73,16 @@ def do_regen(exp, env, target, mechanism):
       score += k_score
       with target.subtrace(k_val) as t2:
         with mechanism.subtrace(k_val) as m2:
-          (v_score, v_val) = regen(v, env, t2, m2)
-          score += v_score
-          with ans.subtrace(k_val) as a2:
-            # TODO: Implement basic trace literal splicing here
-            a2.set(v_val)
+          if isinstance(v, Spl):
+            (v_score, v_trace) = regen(v.sub, env, t2, m2)
+            score += v_score
+            with ans.subtrace(k_val) as a2:
+              a2.update(v_trace)
+          else:
+            (v_score, v_val) = regen(v, env, t2, m2)
+            score += v_score
+            with ans.subtrace(k_val) as a2:
+              a2.set(v_val)
     return (score, ans)
   if isinstance(exp, Tup):
     (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
