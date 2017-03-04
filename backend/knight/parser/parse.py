@@ -29,6 +29,7 @@ from venture.knight.types import Lam
 from venture.knight.types import Lit
 from venture.knight.types import Seq
 from venture.knight.types import Spl
+from venture.knight.types import Tra
 from venture.knight.types import Tup
 from venture.knight.types import Var
 
@@ -175,7 +176,20 @@ class Semantics(object):
         return App([Var("array")] + a)
     def p_primary_qsymbol(self, s):
         return Lit(vv.VentureSymbol(s))
-    p_primary_name = _p_exp
+    p_primary_none = _p_exp
+
+    def p_trace_one(self, e):
+        return Tra(e, [])
+    def p_trace_filled(self, e, es):
+        return Tra(e, es)
+    def p_trace_unfilled(self, es):
+        return Tra(None, es)
+    p_trace_none = _p_exp
+
+    def p_entrylist_none(self):         return []
+    def p_entrylist_some(self, es):     return es
+    def p_entries_one(self, n, e):      return [(n, e)]
+    def p_entries_many(self, es, n, e): es.append((n, e)); return es
 
     def p_name_unquote(self, op, e):
         raise Exception("quasiquotation is not supported yet")

@@ -104,7 +104,17 @@ primary(if)		::= K_IF T_LROUND expression(p) T_RROUND
 primary(qquote)		::= T_LOXFORD(o) statements(b) T_ROXFORD(c).
 primary(array)		::= T_LSQUARE arraybody(a) T_RSQUARE.
 primary(qsymbol)        ::= T_QUOTE L_NAME(s) T_QUOTE.
-primary(name)		::= name(e).
+primary(none)		::= trace(e).
+
+trace(one)		::= T_LTRACE expression(e) T_RCURLY.
+trace(filled)		::= T_LTRACE expression(e) T_COMMA entrylist(es) T_RCURLY.
+trace(unfilled)		::= T_LTRACE entrylist(es) T_RCURLY.
+trace(none)		::= name(e).
+
+entrylist(none)		::= .
+entrylist(some)		::= entries(e).
+entries(one)		::= name(n) T_EQDEF expression(e).
+entries(many)		::= entries(es) T_COMMA name(n) T_EQDEF expression(e).
 
 name(unquote)		::= T_LDOLLAR(op) primary(e).
 name(symbol)		::= L_NAME(s).
