@@ -170,17 +170,19 @@ class Semantics(object):
         # - Make a Quasi syntax and interpret it somewhere
         # - Make it App([Var("quasiquote"), ...]) and interpret that somewhere
         raise Exception("quasiquotation is not supported yet")
-    def p_primary_unquote(self, op, e):
-        raise Exception("quasiquotation is not supported yet")
     def p_primary_array(self, a):
         assert isinstance(a, list)
         return App([Var("array")] + a)
-    def p_primary_literal(self, l):
-        return l
-    def p_primary_symbol(self, s):
-        return Var(s)
     def p_primary_qsymbol(self, s):
         return Lit(vv.VentureSymbol(s))
+    p_primary_name = _p_exp
+
+    def p_name_unquote(self, op, e):
+        raise Exception("quasiquotation is not supported yet")
+    def p_name_symbol(self, s):
+        return Var(s)
+    def p_name_literal(self, l):
+        return l
 
     # literal: Return `Lit'.
     def p_literal_true(self):

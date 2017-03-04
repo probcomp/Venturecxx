@@ -102,11 +102,13 @@ primary(if)		::= K_IF T_LROUND expression(p) T_RROUND
 				K_ELSE
 				T_LCURLY statements(a) T_RCURLY.
 primary(qquote)		::= T_LOXFORD(o) statements(b) T_ROXFORD(c).
-primary(unquote)	::= T_LDOLLAR(op) primary(e).
 primary(array)		::= T_LSQUARE arraybody(a) T_RSQUARE.
-primary(literal)	::= literal(l).
-primary(symbol)		::= L_NAME(s).
 primary(qsymbol)        ::= T_QUOTE L_NAME(s) T_QUOTE.
+primary(name)		::= name(e).
+
+name(unquote)		::= T_LDOLLAR(op) primary(e).
+name(symbol)		::= L_NAME(s).
+name(literal)		::= literal(l).
 
 literal(true)		::= T_TRUE.
 literal(false)		::= T_FALSE.
