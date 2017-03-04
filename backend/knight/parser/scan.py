@@ -189,6 +189,7 @@ class Scanner(Plex.Scanner):
         (Plex.Str('*'),  grammar.T_MUL),
         (Plex.Str('**'), grammar.T_POW),
         (Plex.Str('@'), grammar.T_AT),
+        (Plex.Str('T{'), grammar.T_LTRACE),
         (name,          scan_name),
         (integer,       scan_integer),
         (real,          scan_real),
