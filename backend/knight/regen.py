@@ -16,6 +16,7 @@ from venture.knight.types import Lit
 from venture.knight.types import Request
 from venture.knight.types import Seq
 from venture.knight.types import Spl
+from venture.knight.types import Tra
 from venture.knight.types import Trace # pylint: disable=unused-import
 from venture.knight.types import Tup
 from venture.knight.types import Var
@@ -56,6 +57,27 @@ def do_regen(exp, env, target, mechanism):
       return (sub_score, subvals[-1])
     else:
       return (sub_score, vv.VentureNil())
+  if isinstance(exp, Tra):
+    # A trace literal
+    score = 0.0
+    ans = None
+    with mechanism.literal_subtrace() as t:
+      t.reify()
+      ans = t
+    if exp.top is not None:
+      (top_score, val) = regen(exp.top, env, target, mechanism)
+      score += top_score
+      ans.set(val)
+    for i, (k, v) in enumerate(exp.entries):
+      (k_score, k_val) = quasi_regen(k, env, target, mechanism, i)
+      score += k_score
+      with target.subtrace(k_val) as t2:
+        with mechanism.subtrace(k_val) as m2:
+          (v_score, v_val) = regen(v, env, t2, m2)
+          score += v_score
+          with ans.subtrace(k_val) as a2:
+            # TODO: Implement basic trace literal splicing here
+            a2.set(v_val)
   if isinstance(exp, Tup):
     (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
     if len(exp.subs) == 1:
@@ -89,6 +111,17 @@ def regen_list(exps, env, target, mechanism):
           score += dscore
           anss.append(ans)
   return (score, anss)
+
+def quasi_regen(exp, _env, _target, _mechanism, _i):
+  # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace, int) -> Tuple[float, vv.VentureValue]
+  """Regen an expression that is not supposed to be evaluated, but allow
+room for unquoting (in principle, at least)."""
+  if isinstance(exp, Lit):
+    return (0, exp.val)
+  if isinstance(exp, Var):
+    return (0, vv.VentureString(exp.name))
+  # TODO: Implement unquote here
+  assert False, "Invalid quoted expression %s" % (exp,)
 
 def match_bind(pat, val, env):
   # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None

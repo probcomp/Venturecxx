@@ -45,6 +45,12 @@ class Trace(vv.VentureValue):
     with self.subtrace(vv.VentureString("def")) as t:
       yield t
 
+  @contextmanager
+  def literal_subtrace(self):
+    # type: () -> Iterator[Trace]
+    with self.subtrace(vv.VentureString("lit")) as t:
+      yield t
+
   def reify(self):
     # type: () -> None
     self._reified = True
