@@ -109,14 +109,20 @@ primary(none)		::= trace(e).
 trace(one)		::= T_LTRACE expression(e) T_RCURLY.
 trace(filled)		::= T_LTRACE expression(e) T_COMMA entrylist(es) T_RCURLY.
 trace(unfilled)		::= T_LTRACE entrylist(es) T_RCURLY.
-trace(none)		::= name(e).
+trace(none)		::= addr(e).
 
 entrylist(none)		::= .
 entrylist(some)		::= entries(es).
-entries(one)		::= name(n) T_EQDEF expression(e).
-entries(one_splice)	::= name(n) T_EQDEF T_MUL expression(e).
-entries(many)		::= entries(es) T_COMMA name(n) T_EQDEF expression(e).
-entries(many_splice)	::= entries(es) T_COMMA name(n) T_EQDEF T_MUL expression(e).
+entries(one)		::= addr(a) T_EQDEF expression(e).
+entries(one_splice)	::= addr(a) T_EQDEF T_MUL expression(e).
+entries(many)		::= entries(es) T_COMMA addr(a) T_EQDEF expression(e).
+entries(many_splice)	::= entries(es) T_COMMA addr(a) T_EQDEF T_MUL expression(e).
+
+addr(no)		::= name(e).
+addr(yes)		::= T_ASTART addr_entries(ks) T_AEND.
+
+addr_entries(one)	::= name(n).
+addr_entries(many)	::= addr_entries(a) T_DIV name(n).
 
 name(unquote)		::= T_LDOLLAR(op) primary(e).
 name(symbol)		::= L_NAME(s).

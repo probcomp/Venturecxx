@@ -188,10 +188,16 @@ class Semantics(object):
 
     def p_entrylist_none(self):                 return []
     def p_entrylist_some(self, es):             return es
-    def p_entries_one(self, n, e):              return [(n, e)]
-    def p_entries_one_splice(self, n, e):       return [(n, Spl(e))]
-    def p_entries_many(self, es, n, e):         es.append((n, e)); return es
-    def p_entries_many_splice(self, es, n, e):  es.append((n, Spl(e))); return es
+    def p_entries_one(self, a, e):              return [(a, e)]
+    def p_entries_one_splice(self, a, e):       return [(a, Spl(e))]
+    def p_entries_many(self, es, a, e):         es.append((a, e)); return es
+    def p_entries_many_splice(self, es, a, e):  es.append((a, Spl(e))); return es
+
+    p_addr_no = _p_exp
+    def p_addr_yes(self, ks):
+        return Adr(ks)
+    def p_addr_entries_one(self, n):            return [n]
+    def p_addr_entries_many(self, a, n):        a.append(n); return a
 
     def p_name_unquote(self, op, e):
         raise Exception("quasiquotation is not supported yet")
