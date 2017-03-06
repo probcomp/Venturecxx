@@ -7,6 +7,7 @@ import venture.lite.value as vv
 
 from venture.knight.sp import CompoundSP
 from venture.knight.sp import SP
+from venture.knight.trace import subtrace_at
 from venture.knight.types import Adr
 from venture.knight.types import App
 from venture.knight.types import Datum
@@ -74,19 +75,25 @@ def do_regen(exp, env, target, mechanism):
       score += top_score
       ans.set(val)
     for i, (k, v) in enumerate(exp.entries):
-      (k_score, k_val) = quasi_regen(k, env, target, mechanism, i)
+      addr = []
+      if isinstance(k, Spl):
+        (k_score, k_val) = quasi_regen(k.sub, env, target, mechanism, i)
+        addr = k_val.asPythonList()
+      else:
+        (k_score, k_val) = quasi_regen(k, env, target, mechanism, i)
+        addr = [k_val]
       score += k_score
-      with target.subtrace(k_val) as t2:
-        with mechanism.subtrace(k_val) as m2:
+      with subtrace_at(target, addr) as t2:
+        with subtrace_at(mechanism, addr) as m2:
           if isinstance(v, Spl):
             (v_score, v_trace) = regen(v.sub, env, t2, m2)
             score += v_score
-            with ans.subtrace(k_val) as a2:
+            with subtrace_at(ans, addr) as a2:
               a2.update(v_trace)
           else:
             (v_score, v_val) = regen(v, env, t2, m2)
             score += v_score
-            with ans.subtrace(k_val) as a2:
+            with subtrace_at(ans, addr) as a2:
               a2.set(v_val)
     return (score, ans)
   if isinstance(exp, Tup):

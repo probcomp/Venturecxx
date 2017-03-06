@@ -196,9 +196,14 @@ class Semantics(object):
     def p_spl_expression_splice(self, e):
         return Spl(e)
 
+    p_spl_addr_none = _p_exp
+    def p_spl_addr_splice(self, e):
+        return Spl(e)
+
     p_addr_no = _p_exp
     def p_addr_yes(self, ks):
         return Adr(ks)
+
     def p_addr_entries_one(self, n):            return [n]
     def p_addr_entries_many(self, a, n):        a.append(n); return a
 

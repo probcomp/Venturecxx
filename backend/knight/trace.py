@@ -111,3 +111,12 @@ class Trace(vv.VentureValue):
       return "Trace(%r, %r)" % (self.value, list(self.subtraces.iteritems()))
     else:
       return "Trace(%r)" % (self.value,)
+
+@contextmanager
+def subtrace_at(trace, keys):
+  if len(keys) == 0:
+    yield trace
+  else:
+    with trace.subtrace(keys[0]) as t2:
+      with subtrace_at(t2, keys[1:]) as s:
+        yield s

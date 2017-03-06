@@ -113,11 +113,14 @@ trace(none)		::= addr(e).
 
 entrylist(none)		::= .
 entrylist(some)		::= entries(es).
-entries(one)		::= addr(a) T_EQDEF spl_expression(e).
-entries(many)		::= entries(es) T_COMMA addr(a) T_EQDEF spl_expression(e).
+entries(one)		::= spl_addr(a) T_EQDEF spl_expression(e).
+entries(many)		::= entries(es) T_COMMA spl_addr(a) T_EQDEF spl_expression(e).
 
 spl_expression(none)	::= expression(e).
 spl_expression(splice)	::= T_MUL expression(e).
+
+spl_addr(none)		::= addr(e).
+spl_addr(splice)	::= T_MUL addr(e).
 
 addr(no)		::= name(e).
 addr(yes)		::= T_ASTART addr_entries(ks) T_AEND.
