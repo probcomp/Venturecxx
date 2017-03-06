@@ -7,6 +7,7 @@ import venture.lite.value as vv
 
 from venture.knight.sp import CompoundSP
 from venture.knight.sp import SP
+from venture.knight.types import Adr
 from venture.knight.types import App
 from venture.knight.types import Datum
 from venture.knight.types import Def
@@ -57,6 +58,10 @@ def do_regen(exp, env, target, mechanism):
       return (sub_score, subvals[-1])
     else:
       return (sub_score, vv.VentureNil())
+  if isinstance(exp, Adr):
+    # An address literal
+    (score, ks) = quasi_regen_list(exp.keys, env, target, mechanism)
+    return (score, vv.pythonListToVentureList(ks))
   if isinstance(exp, Tra):
     # A trace literal
     score = 0.0
@@ -118,7 +123,7 @@ def regen_list(exps, env, target, mechanism):
           anss.append(ans)
   return (score, anss)
 
-def quasi_regen(exp, _env, _target, _mechanism, _i):
+def quasi_regen(exp, env, target, mechanism, i):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace, int) -> Tuple[float, vv.VentureValue]
   """Regen an expression that is not supposed to be evaluated, but allow
 room for unquoting (in principle, at least)."""
@@ -126,8 +131,22 @@ room for unquoting (in principle, at least)."""
     return (0, exp.val)
   if isinstance(exp, Var):
     return (0, vv.VentureString(exp.name))
+  if isinstance(exp, Adr):
+    with target.subtrace(i) as t2:
+      with mechanism.subtrace(i) as m2:
+        (score, ks) = quasi_regen_list(exp.keys, env, t2, m2)
+        return (score, vv.pythonListToVentureList(ks))
   # TODO: Implement unquote here
   assert False, "Invalid quoted expression %s" % (exp,)
+
+def quasi_regen_list(exps, env, target, mechanism):
+  score = 0.0
+  vals = []
+  for (i, exp) in enumerate(exps):
+    (sub_score, sub_val) = quasi_regen(exp, env, target, mechanism, i)
+    score += sub_score
+    vals.append(sub_val)
+  return (0, vals)
 
 def match_bind(pat, val, env):
   # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None

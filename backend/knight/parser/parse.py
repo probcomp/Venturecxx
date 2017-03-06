@@ -23,6 +23,7 @@ import venture.lite.value as vv
 
 from venture.knight.parser import grammar
 from venture.knight.parser import scan
+from venture.knight.types import Adr
 from venture.knight.types import App
 from venture.knight.types import Def
 from venture.knight.types import Lam
