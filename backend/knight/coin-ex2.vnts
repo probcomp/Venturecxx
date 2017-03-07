@@ -1,0 +1,34 @@
+flip_coins = (n) ~> {
+  tricky = flip(0.5);
+  weight = if (tricky) {beta(1, 1)} else {exactly(0.5)};
+  replicate2(n, () ~> { flip(weight) })
+};
+
+constrain_coin_flipper_trace = (n) -> {
+  t1 = T{};
+  for_each((k) -> { t1[2, "app", k, 0, "app"] := true },
+    range(5));
+  t1
+};
+
+extract_weight = (mechanism) -> {
+  @mechanism[1, "def", "app", 0, "app"]
+};
+
+particle_sampler = (num_p) -> { () ~> {
+  extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
+} };
+
+rejection_sampler = () ~> {
+  extract_weight(infer_reject(flip_coins, [5], constrain_coin_flipper_trace(5), 0))
+};
+
+ssrmh_sampler = (num_steps) -> { () ~> {
+  extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
+} };
+
+draw_plots = (num_samples) ~> {
+  p_p_plot_2samp_to_file("particles.png", replicate(num_samples, particle_sampler(20)), replicate(num_samples, rejection_sampler));
+
+  p_p_plot_2samp_to_file("ssrmh.png", replicate(num_samples, ssrmh_sampler(20)), replicate(num_samples, rejection_sampler))
+};
