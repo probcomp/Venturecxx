@@ -74,8 +74,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   t2 = T{};
-  t4 = get_current_trace();
-  t4[3, "app", 0, "app", 0, "app", 5, "def", "app"] := 7;
+  t4 = T{ *A/3/app/0/app/0/app/5/def/app/. = 7 };
   (out_score, (in_score, y)) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], T{5}, t2], T{}, t4);
   (out_score, in_score, y, @t2["x"], t4)
 }' # (0, List(List(0, -7.52 . 5), 7, a trace))
