@@ -79,9 +79,12 @@ unary(none)		::= exponential(e).
 exponential(pow)	::= accessing(l) K_POW|T_POW(op) exponential(r).
 exponential(none)	::= accessing(e).
 
-accessing(get)		::= T_AT applicative(e).
-accessing(del)		::= K_DEL applicative(e).
-accessing(none)		::= applicative(e).
+accessing(get)		::= T_AT testing(e).
+accessing(del)		::= K_DEL testing(e).
+accessing(none)		::= testing(e).
+
+testing(one)		::= applicative(e) K_HAS.
+testing(none)		::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND arglist(args) T_RROUND.
 applicative(lookup)	::= applicative(a) T_LSQUARE arraybody(index)
@@ -161,6 +164,7 @@ arrayelts(many_splice)	::= arrayelts(es) T_COMMA T_MUL expression(e).
 	K_EQ
 	K_GE
 	K_GT
+	K_HAS
 	K_IF
 	K_LE
 	K_LT

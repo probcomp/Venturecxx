@@ -133,6 +133,7 @@ class Semantics(object):
     p_exponential_pow = _p_binop
     p_exponential_none = _p_exp
     p_accessing_none = _p_exp
+    p_testing_none = _p_exp
 
     def p_unary_pos(self, op, e):
         return self._p_binop(Lit(0), op, e)
@@ -143,6 +144,9 @@ class Semantics(object):
         return App([Var('trace_get'), e])
     def p_accessing_del(self, e):
         return App([Var('trace_clear'), e])
+
+    def p_testing_one(self, e):
+        return App([Var('trace_has'), e])
 
     def p_applicative_app(self, fn, args):
         return App([fn] + args)
