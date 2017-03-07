@@ -93,7 +93,7 @@ args(one)		::= tagged(arg).
 args(many)		::= args(args) T_COMMA tagged(arg).
 
 tagged(none)		::= expression(e).
-tagged(kw)		::= L_NAME(name) T_COLON expression(e).
+tagged(kw)		::= L_NAME(name) T_EQDEF expression(e).
 
 primary(paren)		::= T_LROUND arraybody(items) T_RROUND.
 primary(brace)		::= T_LCURLY statements(ss) T_RCURLY.
