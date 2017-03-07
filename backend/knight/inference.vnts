@@ -1,10 +1,10 @@
-infer_reject = (sp, args, log_bound, target) ~> {
+infer_reject = (sp, args, target, log_bound) ~> {
   t1 = get_current_trace();
   (score, _) = regenerate(sp, args, target, t1);
   if (log(uniform_continuous(0, 1)) < score - log_bound) {
     t1
   } else {
-    infer_reject(sp, args, log_bound, target)
+    infer_reject(sp, args, target, log_bound)
   }
 };
 

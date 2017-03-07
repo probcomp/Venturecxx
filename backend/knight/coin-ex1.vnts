@@ -19,7 +19,7 @@ particle_sampler = (num_p) -> { () ~> {
 } };
 
 rejection_sampler = () ~> {
-  extract_weight(infer_reject(flip_coins, [5], 0, constrain_coin_flipper_trace(5)))
+  extract_weight(infer_reject(flip_coins, [5], constrain_coin_flipper_trace(5), 0))
 };
 
 analytic_sampler = () ~> {
