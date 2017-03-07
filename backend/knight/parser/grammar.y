@@ -79,7 +79,8 @@ unary(none)		::= exponential(e).
 exponential(pow)	::= accessing(l) K_POW|T_POW(op) exponential(r).
 exponential(none)	::= accessing(e).
 
-accessing(one)		::= T_AT applicative(e).
+accessing(get)		::= T_AT applicative(e).
+accessing(del)		::= K_DEL applicative(e).
 accessing(none)		::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND arglist(args) T_RROUND.
@@ -154,6 +155,7 @@ arrayelts(many_splice)	::= arrayelts(es) T_COMMA T_MUL expression(e).
 %fallback L_NAME
 	K_ADD
 	K_AND
+	K_DEL
 	K_DIV
 	K_ELSE
 	K_EQ

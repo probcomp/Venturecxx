@@ -44,6 +44,7 @@ keywords = {                    # XXX Use a perfect hash.
     'add': grammar.K_ADD,
     'and': grammar.K_AND,
     'div': grammar.K_DIV,
+    'del': grammar.K_DEL,
     'else': grammar.K_ELSE,
     'eq': grammar.K_EQ,
     'ge': grammar.K_GE,

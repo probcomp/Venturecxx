@@ -139,8 +139,10 @@ class Semantics(object):
     def p_unary_neg(self, op, e):
         return self._p_binop(Lit(0), op, e)
 
-    def p_accessing_one(self, e):
+    def p_accessing_get(self, e):
         return App([Var('trace_get'), e])
+    def p_accessing_del(self, e):
+        return App([Var('trace_clear'), e])
 
     def p_applicative_app(self, fn, args):
         return App([fn] + args)
