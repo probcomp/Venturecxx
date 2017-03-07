@@ -4,7 +4,7 @@ flip_coins = (n) ~> {
 };
 
 constrain_coin_flipper_trace = (n) -> {
-  t1 = get_current_trace();
+  t1 = T{};
   for_each((k) -> { t1[1, "app", k, 0, "app"] := true },
     range(5));
   t1
@@ -27,9 +27,9 @@ analytic_sampler = () ~> {
 };
 
 custom_rmh_sampler = (num_steps) -> { () ~> {
-  t2 = get_current_trace();
+  t2 = T{};
   regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
-  beta_site = list(0, "def", "app");
+  beta_site = A/0/def/app/.;
   replicate(num_steps, () ~> {
     rmh_step(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site))
   });

@@ -19,8 +19,7 @@ range = (n) ~> {
 replicate2 = sp((args, target, mechanism) ~> {
   n = args[0];
   f = args[1];
-  score_box = get_current_trace();
-  score_box := 0.0;
+  score_box = T{0.0};
   doit = (k) ~> {
     (dscore, ans) = regenerate(f, [], target[k], mechanism[k]);
     score_box := @score_box + dscore;
@@ -57,9 +56,8 @@ for_each2 = (f, l1, l2) -> {
 };
 
 trace_of = (sp, args) ~> {
-  t1 = get_current_trace();
-  t2 = get_current_trace();
-  (score, _) = regenerate(sp, args, t1, t2);
+  t2 = T{};
+  (score, _) = regenerate(sp, args, T{}, t2);
   (score, t2)
 };
 

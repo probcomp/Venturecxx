@@ -10,7 +10,7 @@ infer_reject = (sp, args, log_bound, target) ~> {
 
 infer_resampling = (sp, args, target, num_p) ~> {
   particles = replicate(num_p, () ~> {
-    t1 = get_current_trace();
+    t1 = T{};
     (score, _) = regenerate(sp, args, target, t1);
     (score, t1)
   });
@@ -39,15 +39,14 @@ rmh_step = (sp, args, target, init_mech, mech_sites) ~> {
 ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   candidates = set_difference(trace_sites(input_trace), constraint_addresses);
   site = uniform_categorical(candidates);
-  cons1 = get_current_trace();
-  cons1 := site;
-  (old_logp, _) = regenerate(uniform_categorical, [candidates], cons1, get_current_trace());
+  cons1 = T{site};
+  (old_logp, _) = regenerate(uniform_categorical, [candidates], cons1, T{});
   old_val = @input_trace[*site];
-  (old_score, _) = regenerate(sp, args, input_trace, get_current_trace());
+  (old_score, _) = regenerate(sp, args, input_trace, T{});
   trace_clear(input_trace[*site]);
   (new_score, _) = regenerate(sp, args, input_trace, input_trace);
   new_candidates = set_difference(trace_sites(input_trace), constraint_addresses);
-  (new_logp, _) = regenerate(uniform_categorical, [new_candidates], cons1, get_current_trace());
+  (new_logp, _) = regenerate(uniform_categorical, [new_candidates], cons1, T{});
   if (log(uniform_continuous(0, 1)) < new_score - old_score + old_logp - new_logp) {
     // Accept
     input_trace
@@ -59,7 +58,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
 };
 
 infer_ssrmh = (sp, args, target, num_steps) ~> {
-  t2 = get_current_trace();
+  t2 = T{};
   regenerate(sp, args, target, t2);
   step = (t) ~> { ssrmh_step(sp, args, t2, trace_sites(target)) };
   iterate(num_steps, step, t2)
