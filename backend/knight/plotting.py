@@ -39,5 +39,17 @@ def plot_particles(filename):
         ax.set_xlabel("weight")
         ax.set_ylabel("num samples")
 
-plot_particles('particles.txt')
+def plot_rejection(filename):
+    with open(filename, 'r') as f:
+        chains = [[float(num) for num in line.strip().strip('[]').split(',')]
+                  for line in f.readlines()]
+    plt.figure()
+    ax = plt.gca()
+    ax.hist([chain[0] for chain in chains])
+    ax.set_xlim([0,1])
+    ax.set_title("Rejection sampling")
+    ax.set_xlabel("weight")
+    ax.set_ylabel("num samples")
+
+plot_rejection('rejection.txt')
 plt.show()

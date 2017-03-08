@@ -48,3 +48,9 @@ dump_particle_samples = (num_replicates, num_p) ~> {
       num_p, extract_weight))
   })
 };
+
+dump_rejection_samples = (num_samples) ~> {
+  replicate(num_samples, () ~> {
+    print(list(rejection_sampler()))
+  })
+};
