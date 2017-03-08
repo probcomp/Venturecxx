@@ -136,9 +136,9 @@ class Semantics(object):
     p_testing_none = _p_exp
 
     def p_unary_pos(self, op, e):
-        return self._p_binop(Lit(0), op, e)
+        return self._p_binop(Lit(vv.VentureInteger(0)), op, e)
     def p_unary_neg(self, op, e):
-        return self._p_binop(Lit(0), op, e)
+        return self._p_binop(Lit(vv.VentureInteger(0)), op, e)
 
     def p_accessing_get(self, e):
         return App([Var('trace_get'), e])
