@@ -79,7 +79,6 @@ infer_rolling_resample = (sp, args, target, num_p, query) ~> {
     (score, t1)
   };
   current = T{ score=-1/0, t=T{} };
-  print(current);
   step = () ~> {
     (score, t) = particle();
     weights = [@current["score"], score];

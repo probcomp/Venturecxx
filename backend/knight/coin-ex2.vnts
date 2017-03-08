@@ -43,7 +43,6 @@ dump_mcmc_samples = (num_chains, num_steps) ~> {
 
 dump_particle_samples = (num_replicates, num_p) ~> {
   replicate(num_replicates, () ~> {
-    print("Trying");
     print(infer_rolling_resample(
       flip_coins, [5], constrain_coin_flipper_trace(5),
       num_p, extract_weight))
