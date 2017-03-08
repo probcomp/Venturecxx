@@ -33,3 +33,10 @@ draw_plots = (num_samples) ~> {
 
   p_p_plot_2samp_to_file("ssrmh.png", replicate(num_samples, ssrmh_sampler(20)), replicate(num_samples, rejection_sampler))
 };
+
+dump_mcmc_samples = (num_chains, num_steps) ~> {
+  replicate(num_chains, () ~> {
+    print(infer_mcmc(flip_coins, [5], constrain_coin_flipper_trace(5),
+                     num_steps, extract_weight))
+  })
+};

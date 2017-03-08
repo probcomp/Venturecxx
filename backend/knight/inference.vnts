@@ -63,3 +63,11 @@ infer_ssrmh = (sp, args, target, num_steps) ~> {
   step = (t) ~> { ssrmh_step(sp, args, t2, trace_sites(target)) };
   iterate(num_steps, step, t2)
 };
+
+infer_mcmc = (sp, args, target, num_steps, query) ~> {
+  t2 = T{};
+  regenerate(sp, args, target, t2);
+  first_val = query(t2);
+  step = (t) ~> { ssrmh_step(sp, args, t2, trace_sites(target)); query(t2) };
+  pair(first_val, map(step, range(num_steps)))
+};
