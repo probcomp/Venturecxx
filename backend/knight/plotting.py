@@ -12,7 +12,7 @@ def plot_mcmc(filename, rejection_file=None):
 
     plot_schedule = [0, int(num_steps/4), int(num_steps/2),
                      int(3*num_steps/4), num_steps]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8,12))
     for i, step in enumerate(plot_schedule):
         ax = fig.add_subplot(len(plot_schedule), 1, i+1)
         ax.hist([chain[step] for chain in chains],
@@ -24,6 +24,7 @@ def plot_mcmc(filename, rejection_file=None):
         ax.set_ylabel("% of samples")
         if rejection_file is not None:
             do_plot_rejection(rejection_file, ax)
+    plt.tight_layout()
 
 def plot_particles(filename, rejection_file=None):
     with open(filename, 'r') as f:
@@ -34,7 +35,7 @@ def plot_particles(filename, rejection_file=None):
 
     plot_schedule = [0, int((num_steps-1)/4), int((num_steps-1)/2),
                      int(3*(num_steps-1)/4), num_steps-1]
-    fig = plt.figure()
+    fig = plt.figure(figsize=(8,12))
     for i, step in enumerate(plot_schedule):
         ax = fig.add_subplot(len(plot_schedule), 1, i+1)
         ax.hist([chain[step] for chain in chains],
@@ -49,6 +50,7 @@ def plot_particles(filename, rejection_file=None):
         ax.set_ylabel("% of samples")
         if rejection_file is not None:
             do_plot_rejection(rejection_file, ax)
+    plt.tight_layout()
 
 def do_plot_rejection(filename, ax=None):
     with open(filename, 'r') as f:
