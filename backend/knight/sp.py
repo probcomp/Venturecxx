@@ -57,7 +57,6 @@ class SPFromLite(SP):
 
   def regenerate(self, args, target, mechanism):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
-    assert isinstance(args, list)
     for a in args:
       assert isinstance(a, vv.VentureValue)
     if target.has():
