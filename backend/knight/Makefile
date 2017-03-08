@@ -19,6 +19,9 @@ mcmc-500-20.txt: coin-ex2.vnts
 particles-20-20-50.png: particles-20-20.txt rejection-50.txt plotting.py
 	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<", "rejection-50.txt"); plt.savefig("$@")'
 
+particles-20-20-500.png: particles-20-20.txt rejection-500.txt plotting.py
+	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<", "rejection-500.txt"); plt.savefig("$@")'
+
 particles-500-20-500.png: particles-500-20.txt rejection-500.txt plotting.py
 	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<", "rejection-500.txt"); plt.savefig("$@")'
 
