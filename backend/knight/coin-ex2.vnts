@@ -27,6 +27,7 @@ ssrmh_sampler = (num_steps) -> { () ~> {
   extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
 } };
 
+// 4 minutes at 50 samples
 draw_plots = (num_samples) ~> {
   p_p_plot_2samp_to_file("particles.png", replicate(num_samples, particle_sampler(20)), replicate(num_samples, rejection_sampler));
 
