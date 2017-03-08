@@ -279,6 +279,11 @@ class VentureInteger(VentureValue):
       return "VentureInteger(%s)" % self.number
     else:
       return "VentureInteger(uninitialized)"
+  def __str__(self):
+    if hasattr(self, "number"):
+      return str(self.number)
+    else:
+      return "VentureInteger(uninitialized)"
   def getInteger(self):
     return self.number
   def getNumber(self):
@@ -381,6 +386,8 @@ class VentureBool(VentureValue):
     self.boolean = bool(boolean)
   def __repr__(self):
     return "Bool(%s)" % self.boolean
+  def __str__(self):
+    return str(self.boolean)
   def getBool(self):
     return self.boolean
   def asStackDict(self, _trace=None):
@@ -406,6 +413,8 @@ class VentureSymbol(VentureValue):
     self.symbol = symbol
   def __repr__(self):
     return "Symbol(%s)" % self.symbol
+  def __str__(self):
+    return self.symbol
   def getSymbol(self):
     # type: () -> str
     return self.symbol
@@ -434,6 +443,8 @@ class VentureString(VentureValue):
     self.strng = strng
   def __repr__(self):
     return "Strng(%s)" % self.strng
+  def __str__(self):
+    return self.string
   def getSymbol(self):
     # type: () -> str
     return self.strng
