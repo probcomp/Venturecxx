@@ -71,3 +71,21 @@ infer_mcmc = (sp, args, target, num_steps, query) ~> {
   step = (t) ~> { ssrmh_step(sp, args, t2, trace_sites(target)); query(t2) };
   pair(first_val, map(step, range(num_steps)))
 };
+
+infer_rolling_resample = (sp, args, target, num_p, query) ~> {
+  particle = () ~> {
+    t1 = T{};
+    (score, _) = regenerate(sp, args, target, t1);
+    (score, t1)
+  };
+  current = T{ score=-1/0, t=T{} };
+  print(current);
+  step = () ~> {
+    (score, t) = particle();
+    weights = [@current["score"], score];
+    current["t"] := log_categorical(weights, [@current["t"], t]);
+    current["score"] := logsumexp(weights);
+    query(@current["t"])
+  };
+  replicate(num_p, step)
+};
