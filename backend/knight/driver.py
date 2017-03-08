@@ -67,9 +67,9 @@ def doit(args):
   if args.profile:
     import cProfile
     loc = {"toplevel":toplevel, "forms":forms}
-    cProfile.runctx("print toplevel(forms)", {}, loc, sort='cumtime')
+    cProfile.runctx("toplevel(forms)", {}, loc, sort='cumtime')
   else:
-    print toplevel(forms)
+    toplevel(forms)
 
 def main():
   # type: () -> None
