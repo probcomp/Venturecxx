@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 bins = np.linspace(0, 1, 50)
 
-def plot_mcmc(filename):
+def plot_mcmc(filename, rejection_file=None):
     with open(filename, 'r') as f:
         chains = [[float(num) for num in line.strip().strip('[]').split(',')]
                   for line in f.readlines()]
@@ -22,9 +22,10 @@ def plot_mcmc(filename):
         ax.set_title("M-H step %d" % (step,))
         ax.set_xlabel("weight")
         ax.set_ylabel("% of samples")
-        do_plot_rejection('rejection.txt', ax)
+        if rejection_file is not None:
+            do_plot_rejection(rejection_file, ax)
 
-def plot_particles(filename):
+def plot_particles(filename, rejection_file=None):
     with open(filename, 'r') as f:
         chains = [[float(num) for num in line.strip().strip('[]').split(',')]
                   for line in f.readlines()]
@@ -46,7 +47,8 @@ def plot_particles(filename):
             ax.set_title("With %d particles" % (step+1,))
         ax.set_xlabel("weight")
         ax.set_ylabel("% of samples")
-        do_plot_rejection('rejection.txt', ax)
+        if rejection_file is not None:
+            do_plot_rejection(rejection_file, ax)
 
 def do_plot_rejection(filename, ax=None):
     with open(filename, 'r') as f:
@@ -67,6 +69,6 @@ def plot_rejection(filename):
     ax.set_ylabel("num samples")
 
 # plot_mcmc('mcmc.txt')
-plot_particles('particles.txt')
+# plot_particles('particles.txt')
 # plot_rejection('rejection.txt')
-plt.show()
+# plt.show()
