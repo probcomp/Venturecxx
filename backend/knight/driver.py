@@ -64,13 +64,19 @@ def doit(args):
   if args.eval:
     forms += "; ".join(args.eval)
     forms += ";"
-  print toplevel(forms)
+  if args.profile:
+    import cProfile
+    loc = {"toplevel":toplevel, "forms":forms}
+    cProfile.runctx("print toplevel(forms)", {}, loc, sort='cumtime')
+  else:
+    print toplevel(forms)
 
 def main():
   # type: () -> None
   parser = argparse.ArgumentParser()
   parser.add_argument('-e', '--eval', action='append', help="execute the given expression")
   parser.add_argument('-f', '--file', action='append', help="execute the given file")
+  parser.add_argument('-p', '--profile', action='store_true', help="Print implementation profile after running")
   args = parser.parse_args()
   doit(args)
 
