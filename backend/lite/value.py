@@ -180,6 +180,11 @@ class VentureNumber(VentureValue):
       return "VentureNumber(%s)" % self.number
     else:
       return "VentureNumber(uninitialized)"
+  def __str__(self):
+    if hasattr(self, "number"):
+      return str(self.number)
+    else:
+      return "VentureNumber(uninitialized)"
   def getNumber(self):
     return self.number
   def getInteger(self):
@@ -504,6 +509,13 @@ class VenturePair(VentureValue):
       return "VentureList(%r)" % list_
     else:
       return "VentureList(%r . %r)" % (list_, tail)
+  def __str__(self):
+    (list_, tail) = self.asPossiblyImproperList()
+    base = ", ".join([str(l) for l in list_])
+    if tail is None:
+      return "[" + base + "]"
+    else:
+      return "[" + base + " . " + str(tail) + "]"
 
   def getPair(self):
     return (self.first,self.rest)
