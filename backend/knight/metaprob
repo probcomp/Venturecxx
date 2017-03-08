@@ -1,0 +1,4 @@
+#!/usr/bin/env python
+
+import venture.knight.driver as driver
+driver.main()

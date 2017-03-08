@@ -442,7 +442,7 @@ setup (
         ],
     },
     ext_modules = ext_modules,
-    scripts = ['script/venture', 'script/vendoc'],
+    scripts = ['script/venture', 'script/vendoc', 'backend/knight/metaprob'],
     cmdclass={
         'build_py': local_build_py,
         'sdist': local_sdist,
