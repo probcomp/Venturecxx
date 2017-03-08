@@ -1,31 +1,31 @@
-python -m venture.knight.driver -e '((x) -> { x })(2)' # (0, 2)
-python -m venture.knight.driver -e 'normal(2, 1)' # (0, x) where x ~ normal(2, 1)
-python -m venture.knight.driver -e 'get_current_trace()' # (0, An empty trace)
-python -m venture.knight.driver -e 'get_current_trace() has' # (0, False)
-python -m venture.knight.driver -e '{ t = get_current_trace(); t := 5; @t }' # (0, 5)
-python -m venture.knight.driver -e '{ t = T{ 6 }; @t }' # (0, 6)
+metaprob -e '((x) -> { x })(2)' # (0, 2)
+metaprob -e 'normal(2, 1)' # (0, x) where x ~ normal(2, 1)
+metaprob -e 'get_current_trace()' # (0, An empty trace)
+metaprob -e 'get_current_trace() has' # (0, False)
+metaprob -e '{ t = get_current_trace(); t := 5; @t }' # (0, 5)
+metaprob -e '{ t = T{ 6 }; @t }' # (0, 6)
 
-python -m venture.knight.driver -e '{
+metaprob -e '{
   t = T{};
   (score, x) = regenerate(normal, [0, 1], T{}, t);
   (score, x, @t) }' # (0, List(0, x, x)) where x ~ normal(0, 1)
 
-python -m venture.knight.driver -e '{
+metaprob -e '{
   t2 = T{};
   (score, x) = regenerate(normal, [0, 1], T{1}, t2);
   (score, x, @t2) }' # (0, List(-1.41, 1, 1))
 
-python -m venture.knight.driver -e '{
+metaprob -e '{
   t2 = T{1};
   (score, x) = regenerate(normal, [0, 1], T{}, t2);
   (score, x, @t2) }' # (0, List(0, 1, 1))
 
 # Running a synthetic SP
-python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
+metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e 'normal_normal(0, 1, 1)' # (0, x) where x ~ normal(0, 2)
 
 # Tracing a synthetic SP
-python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
+metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   model = () ~> { normal_normal(0, 100, 1) };
   t2 = T{};
@@ -35,7 +35,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 }' # (0, List(x, y)) where x ~ normal(0, 100) and y ~ normal(x, 1)
 
 # Constraining a synthetic SP
-python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
+metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   model = () ~> { normal_normal(0, 1, 1) };
   t1 = T{ *A/0/app/. = 5 };
@@ -46,13 +46,13 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 }' # (0, List(-7.52, x, 5)) where x ~ normal(2.5, 1/sqrt(2))
 
 # Test generic regenerator_of
-python -m venture.knight.driver -e '{
+metaprob -e '{
   t2 = T{1};
   (score, x) = regenerate(sp(regenerator_of(normal)), [0, 1], T{}, t2);
   (score, x, @t2) }' # (0, List(0, 1, 1))
 
 # Test tracing a mechanism
-python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
+metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   t2 = T{};
   t4 = T{};
@@ -61,7 +61,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 }' # (0, List(x, a trace)) where x ~ normal(0, 1)
 
 # Test another trace of a mechanism
-python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
+metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   t2 = T{};
   t4 = T{};
@@ -71,7 +71,7 @@ python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight
 
 # Test intervening on a traced mechanism
 # Compare the test case "constraining a synthetic SP"
-python -m venture.knight.driver -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
+metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   t2 = T{};
   t4 = T{ *A/3/app/0/app/0/app/5/def/app/. = 7 };
