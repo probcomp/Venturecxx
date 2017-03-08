@@ -75,10 +75,10 @@ def do_regen(exp, env, target, mechanism):
       score += top_score
       ans.set(val)
     for i, (k, v) in enumerate(exp.entries):
-      addr = []
+      addr = [] # type: List[vv.VentureValue]
       if isinstance(k, Spl):
         (k_score, k_val) = quasi_regen(k.sub, env, target, mechanism, i)
-        addr = k_val.asPythonList()
+        addr = cast(List[vv.VentureValue], k_val.asPythonList())
       else:
         (k_score, k_val) = quasi_regen(k, env, target, mechanism, i)
         addr = [k_val]
@@ -147,13 +147,14 @@ room for unquoting (in principle, at least)."""
   assert False, "Invalid quoted expression %s" % (exp,)
 
 def quasi_regen_list(exps, env, target, mechanism):
+  # type: (List[Exp], VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, List[vv.VentureValue]]
   score = 0.0
   vals = []
   for (i, exp) in enumerate(exps):
     (sub_score, sub_val) = quasi_regen(exp, env, target, mechanism, i)
     score += sub_score
     vals.append(sub_val)
-  return (0, vals)
+  return (score, vals)
 
 def match_bind(pat, val, env):
   # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None
@@ -163,9 +164,9 @@ def match_bind(pat, val, env):
   elif isinstance(pat, Seq) or isinstance(pat, Tup):
     if isinstance(val, Trace):
       keys = sorted(val.sites())
-      vals = [val.get_at(k) for k in keys]
+      vals = [val.get_at(cast(List[vv.VentureValue], k.asPythonList())) for k in keys]
     else:
-      vals = val.asPythonList()
+      vals = cast(List[vv.VentureValue], val.asPythonList())
     assert len(pat.subs) == len(vals), "Incorrect number of values in pattern match."
     for (p, v) in zip(pat.subs, vals):
       match_bind(p, v, env)

@@ -82,7 +82,7 @@ class Trace(vv.VentureValue):
 
   def sites(self):
     # type: () -> List[vv.VentureValue]
-    # Actually a Venture List of VentureValues, but I haven't coded
+    # Actually a list of Venture lists of VentureValues, but I haven't coded
     # Venture Lists to be an appropriate generic type.
     ans = [] # type: List[vv.VentureValue]
     if self.has():
