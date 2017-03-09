@@ -21,15 +21,18 @@ def plot_mcmc(filename, rejection_file=None):
                   % (len(chains), num_samples(rejection_file)))
     for i, step in enumerate(plot_schedule):
         ax = fig.add_subplot(len(plot_schedule), 1, i+1)
-        ax.hist([chain[step] for chain in chains],
-                bins=bins, weights=[100.0/len(chains)]*len(chains))
+        samples = [chain[step] for chain in chains]
+        ax.hist(samples, bins=bins, weights=[100.0/len(chains)]*len(chains))
         ax.set_xlim([0,1])
         ax.set_ylim([0,25])
-        ax.set_title("M-H step %d" % (step,))
+        title = "M-H step %d" % (step,)
         ax.set_xlabel("weight")
         ax.set_ylabel("% of samples")
         if rejection_file is not None:
-            do_plot_rejection(rejection_file, ax)
+            (_, rej_samples) = do_plot_rejection(rejection_file, ax)
+            (D, pval) = stats.ks_2samp(samples, rej_samples)
+            title += ", K-S stat %6.4f, p-value %8.6f" % (D, pval)
+        ax.set_title(title)
     plt.tight_layout()
     plt.subplots_adjust(top=0.94)
 
@@ -63,7 +66,7 @@ def plot_particles(filename, rejection_file=None):
         if rejection_file is not None:
             (_, rej_samples) = do_plot_rejection(rejection_file, ax)
             (D, pval) = stats.ks_2samp(samples, rej_samples)
-            title += ", K-S stat %6.4f, p-value %6.4f" % (D, pval)
+            title += ", K-S stat %6.4f, p-value %8.6f" % (D, pval)
         ax.set_title(title)
     plt.tight_layout()
     plt.subplots_adjust(top=0.94)
