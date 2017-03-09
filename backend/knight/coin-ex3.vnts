@@ -16,22 +16,29 @@ extract_weight = (mechanism) -> {
 };
 
 particle_sampler = (num_p) -> { () ~> {
-  extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
+  extract_weight(infer_resampling(
+    flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
 } };
 
 rejection_sampler = () ~> {
-  extract_weight(infer_reject(flip_coins, [5], constrain_coin_flipper_trace(5), 0))
+  extract_weight(infer_reject(
+    flip_coins, [5], constrain_coin_flipper_trace(5), 0))
 };
 
 ssrmh_sampler = (num_steps) -> { () ~> {
-  extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
+  extract_weight(infer_ssrmh(
+    flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
 } };
 
 // 4 minutes at 50 samples
 draw_plots = (num_samples) ~> {
-  p_p_plot_2samp_to_file("particles.png", replicate(num_samples, particle_sampler(20)), replicate(num_samples, rejection_sampler));
+  p_p_plot_2samp_to_file("particles.png",
+    replicate(num_samples, particle_sampler(20)),
+    replicate(num_samples, rejection_sampler));
 
-  p_p_plot_2samp_to_file("ssrmh.png", replicate(num_samples, ssrmh_sampler(20)), replicate(num_samples, rejection_sampler))
+  p_p_plot_2samp_to_file("ssrmh.png",
+    replicate(num_samples, ssrmh_sampler(20)),
+    replicate(num_samples, rejection_sampler))
 };
 
 dump_mcmc_samples = (num_chains, num_steps) ~> {
