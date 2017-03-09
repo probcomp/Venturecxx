@@ -1,0 +1,55 @@
+flip_coins = (n) ~> {
+  weight = beta(1, 3);
+  replicate2(n, () ~> { flip(weight) })
+};
+
+constrain_coin_flipper_trace = (n) -> {
+  t1 = T{};
+  for_each((k) -> { t1[1, "app", k, 0, "app"] := true },
+    range(5));
+  t1
+};
+
+extract_weight = (mechanism) -> {
+  @mechanism[0, "def", "app"]
+};
+
+particle_sampler = (num_p) -> { () ~> {
+  extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
+} };
+
+rejection_sampler = () ~> {
+  extract_weight(infer_reject(flip_coins, [5], constrain_coin_flipper_trace(5), 0))
+};
+
+analytic_sampler = () ~> {
+  beta(6, 3)
+};
+
+custom_rmh_sampler = (num_steps) -> { () ~> {
+  t2 = T{};
+  regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
+  beta_site = A/0/def/app/.;
+  replicate(num_steps, () ~> {
+    rmh_step(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site))
+  });
+  extract_weight(t2)
+} };
+
+ssrmh_sampler = (num_steps) -> { () ~> {
+  extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
+} };
+
+draw_plots = (num_samples) ~> {
+  // This takes three minutes on my laptop with 50 samples
+  p_p_plot_2samp_to_file("custom_rmh.png", replicate(num_samples, custom_rmh_sampler(20)), replicate(10 * num_samples, analytic_sampler));
+
+  p_p_plot_2samp_to_file("particles.png", replicate(num_samples, particle_sampler(20)), replicate(10 * num_samples, analytic_sampler));
+
+  p_p_plot_2samp_to_file("rejection.png", replicate(num_samples, rejection_sampler), replicate(10 * num_samples, analytic_sampler));
+
+  p_p_plot_2samp_to_file("mh-comparison.png", replicate(num_samples, ssrmh_sampler(3)), replicate(num_samples, custom_rmh_sampler(3)));
+
+  // This takes one and a half minutes on my laptop with 50 samples
+  p_p_plot_2samp_to_file("ssrmh.png", replicate(num_samples, ssrmh_sampler(20)), replicate(10 * num_samples, analytic_sampler))
+};
