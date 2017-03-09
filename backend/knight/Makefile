@@ -33,3 +33,6 @@ mcmc-50-20-50.png: mcmc-50-20.txt rejection-50.txt plotting.py
 
 mcmc-500-20-500.png: mcmc-500-20.txt rejection-500.txt plotting.py
 	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_mcmc("$<", "rejection-500.txt"); plt.savefig("$@")'
+
+mcmc-500-20-2000.png: mcmc-500-20.txt rejection-2000.txt plotting.py
+	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_mcmc("$<", "rejection-2000.txt"); plt.savefig("$@")'
