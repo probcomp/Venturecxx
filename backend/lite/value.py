@@ -444,7 +444,7 @@ class VentureString(VentureValue):
   def __repr__(self):
     return "Strng(%s)" % self.strng
   def __str__(self):
-    return self.string
+    return self.strng
   def getSymbol(self):
     # type: () -> str
     return self.strng
