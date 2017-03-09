@@ -46,14 +46,21 @@ rejection_p_p_plot = (num_samples, filename) ~> {
     replicate(10 * num_samples, analytic_sampler))
 };
 
+particles_p_p_plot = (num_samples, num_particles, filename) ~> {
+  p_p_plot_2samp_to_file(filename,
+    replicate(num_samples, particle_sampler(num_particles)),
+    replicate(10 * num_samples, analytic_sampler))
+};
+
+ssrmh_p_p_plot = (num_samples, num_steps, filename) ~> {
+  p_p_plot_2samp_to_file(filename,
+    replicate(num_samples, ssrmh_sampler(num_steps)),
+    replicate(10 * num_samples, analytic_sampler))
+};
+
 draw_plots = (num_samples) ~> {
   // This takes three minutes on my laptop with 50 samples
   p_p_plot_2samp_to_file("custom_rmh.png", replicate(num_samples, custom_rmh_sampler(20)), replicate(10 * num_samples, analytic_sampler));
 
-  p_p_plot_2samp_to_file("particles.png", replicate(num_samples, particle_sampler(20)), replicate(10 * num_samples, analytic_sampler));
-
   p_p_plot_2samp_to_file("mh-comparison.png", replicate(num_samples, ssrmh_sampler(3)), replicate(num_samples, custom_rmh_sampler(3)));
-
-  // This takes one and a half minutes on my laptop with 50 samples
-  p_p_plot_2samp_to_file("ssrmh.png", replicate(num_samples, ssrmh_sampler(20)), replicate(10 * num_samples, analytic_sampler))
 };

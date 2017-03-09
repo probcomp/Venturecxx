@@ -1,2 +1,11 @@
 rejection-p-p-50.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'rejection_p_p_plot(50, "$@")'
+
+particles-p-p-10-2.png: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'particles_p_p_plot(10, 2, "$@")'
+
+particles-p-p-50-20.png: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'particles_p_p_plot(50, 20, "$@")'
+
+ssrmh-p-p-50-20.png: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'ssrmh_p_p_plot(50, 20, "$@")'
