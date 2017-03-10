@@ -5,9 +5,7 @@ import scipy.stats as stats
 bins = np.linspace(0, 1, 50)
 
 def plot_mcmc(filename, exact_file=None):
-    with open(filename, 'r') as f:
-        chains = [[float(num) for num in line.strip().strip('[]').split(',')]
-                  for line in f.readlines()]
+    chains = read_chains(filename)
 
     num_steps = len(chains[0]) - 1
 
@@ -37,9 +35,7 @@ def plot_mcmc(filename, exact_file=None):
     plt.subplots_adjust(top=0.94)
 
 def plot_particles(filename, exact_file=None):
-    with open(filename, 'r') as f:
-        chains = [[float(num) for num in line.strip().strip('[]').split(',')]
-                  for line in f.readlines()]
+    chains = read_chains(filename)
 
     num_steps = len(chains[0])
 
@@ -75,10 +71,13 @@ def num_samples(filename):
     with open(filename, 'r') as f:
         return len(f.readlines())
 
-def do_plot_exact(filename, ax=None):
+def read_chains(filename):
     with open(filename, 'r') as f:
-        chains = [[float(num) for num in line.strip().strip('[]').split(',')]
-                  for line in f.readlines()]
+        return [[float(num) for num in line.strip().strip('[]').split(',')]
+                for line in f.readlines()]
+
+def do_plot_exact(filename, ax=None):
+    chains = read_chains(filename)
     if ax is None:
         plt.figure()
         ax = plt.gca()
