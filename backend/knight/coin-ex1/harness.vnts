@@ -1,13 +1,16 @@
 particle_sampler = (num_p) -> { () ~> {
-  extract_weight(infer_resampling(flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
+  extract_weight(infer_resampling(
+    flip_coins, [5], constrain_coin_flipper_trace(5), num_p))
 } };
 
 rejection_sampler = () ~> {
-  extract_weight(infer_reject(flip_coins, [5], constrain_coin_flipper_trace(5), 0))
+  extract_weight(infer_reject(
+    flip_coins, [5], constrain_coin_flipper_trace(5), 0))
 };
 
 ssrmh_sampler = (num_steps) -> { () ~> {
-  extract_weight(infer_ssrmh(flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
+  extract_weight(infer_ssrmh(
+    flip_coins, [5], constrain_coin_flipper_trace(5), num_steps))
 } };
 
 custom_rmh_sampler = (num_steps) -> { () ~> {
@@ -15,7 +18,8 @@ custom_rmh_sampler = (num_steps) -> { () ~> {
   regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
   beta_site = A/0/def/app/.;
   replicate(num_steps, () ~> {
-    rmh_step(flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site))
+    rmh_step(
+      flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site))
   });
   extract_weight(t2)
 } };
