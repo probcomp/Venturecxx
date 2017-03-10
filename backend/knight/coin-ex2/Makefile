@@ -26,6 +26,10 @@ custom-rmh-20-10.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(20, 10)' > $@
 
+custom-rmh-200-10.txt: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(200, 10)' > $@
+
 rejection-p-p-50.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'rejection_p_p_plot(50, "$@")'
@@ -86,6 +90,13 @@ ssrmh-400-30.png: ssrmh-400-30.txt ../plotting.py
 	  plt.savefig("$@")'
 
 custom-rmh-20-10.png: custom-rmh-20-10.txt ../plotting.py
+	python -c 'import matplotlib.pyplot as plt; \
+	  import scipy.stats as stats; \
+	  import venture.knight.plotting as p; \
+	  p.plot_mcmc("$<", analytic=stats.beta(7,2)); \
+	  plt.savefig("$@")'
+
+custom-rmh-200-10.png: custom-rmh-200-10.txt ../plotting.py
 	python -c 'import matplotlib.pyplot as plt; \
 	  import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
