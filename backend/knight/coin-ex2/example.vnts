@@ -70,6 +70,12 @@ ss_vs_custom_rmh_p_p_plot = (num_samples, num_steps, filename) ~> {
     replicate(num_samples, custom_rmh_sampler(num_steps)))
 };
 
+dump_analytic_samples = (num_samples) ~> {
+  replicate(num_samples, () ~> {
+    print(list(analytic_sampler()))
+  })
+};
+
 dump_particle_samples = (num_replicates, num_p) ~> {
   replicate(num_replicates, () ~> {
     print(infer_rolling_resample(
