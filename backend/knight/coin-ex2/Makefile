@@ -1,3 +1,6 @@
+particles-10-5.txt: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'dump_particle_samples(10, 5)' > $@
+
 rejection-p-p-50.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'rejection_p_p_plot(50, "$@")'
 
@@ -15,3 +18,6 @@ custom-rmh-p-p-50-20.png: example.vnts
 
 ss-vs-custom-rmh-p-p-50-3.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'ss_vs_custom_rmh_p_p_plot(50, 3, "$@")'
+
+particles-10-5.png: particles-10-5.txt ../plotting.py
+	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<"); plt.savefig("$@")'
