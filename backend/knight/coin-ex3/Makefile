@@ -1,32 +1,42 @@
 rejection-50.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(50)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(50)' > $@
 
 rejection-500.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(500)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(500)' > $@
 
 rejection-2000.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(2000)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(2000)' > $@
 
 rejection-10000.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(10000)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_rejection_samples(10000)' > $@
 
 particles-20-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(20, 20)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(20, 20)' > $@
 
 particles-500-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(500, 20)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(500, 20)' > $@
 
 particles-1500-30.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(1500, 30)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(1500, 30)' > $@
 
 mcmc-50-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(50, 20)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(50, 20)' > $@
 
 mcmc-500-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(500, 20)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(500, 20)' > $@
 
 mcmc-1500-30.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f example.vnts -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(1500, 30)' > $@
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(1500, 30)' > $@
 
 particles-20-20-50.png: particles-20-20.txt rejection-50.txt ../plotting.py
 	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<", "rejection-50.txt"); plt.savefig("$@")'
