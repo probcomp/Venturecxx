@@ -6,11 +6,7 @@ bins = np.linspace(0, 1, 50)
 
 def plot_mcmc(filename, exact_file=None):
     chains = read_chains(filename)
-
-    num_steps = len(chains[0]) - 1
-
-    plot_schedule = [0, int(num_steps/4), int(num_steps/2),
-                     int(3*num_steps/4), num_steps]
+    plot_schedule = schedule(len(chains[0]))
     fig = plt.figure(figsize=(8,12))
     if exact_file is None:
         fig.suptitle("%d independent chains" % (len(chains),))
@@ -36,11 +32,7 @@ def plot_mcmc(filename, exact_file=None):
 
 def plot_particles(filename, exact_file=None):
     chains = read_chains(filename)
-
-    num_steps = len(chains[0])
-
-    plot_schedule = [0, int((num_steps-1)/4), int((num_steps-1)/2),
-                     int(3*(num_steps-1)/4), num_steps-1]
+    plot_schedule = schedule(len(chains[0]))
     fig = plt.figure(figsize=(8,12))
     if exact_file is None:
         fig.suptitle("%d independent replicates" % (len(chains),))
@@ -75,6 +67,11 @@ def read_chains(filename):
     with open(filename, 'r') as f:
         return [[float(num) for num in line.strip().strip('[]').split(',')]
                 for line in f.readlines()]
+
+def schedule(chain_len):
+    max_stage = chain_len - 1
+    return [0, int(max_stage/4), int(max_stage/2),
+            int(3*max_stage/4), max_stage]
 
 def do_plot_exact(filename, ax=None):
     chains = read_chains(filename)
