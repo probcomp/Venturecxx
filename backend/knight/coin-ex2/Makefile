@@ -10,6 +10,9 @@ particles-100-10.txt: example.vnts
 particles-200-20.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'dump_particle_samples(200, 20)' > $@
 
+ssrmh-200-20.txt: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'dump_mcmc_samples(200, 20)' > $@
+
 rejection-p-p-50.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'rejection_p_p_plot(50, "$@")'
 
@@ -42,3 +45,8 @@ particles-200-20.png: particles-200-20.txt ../plotting.py
 	python -c 'import matplotlib.pyplot as plt; import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
 	  p.plot_particles("$<", analytic=stats.beta(7,2)); plt.savefig("$@")'
+
+ssrmh-200-20.png: ssrmh-200-20.txt ../plotting.py
+	python -c 'import matplotlib.pyplot as plt; import scipy.stats as stats; \
+	  import venture.knight.plotting as p; \
+	  p.plot_mcmc("$<", analytic=stats.beta(7,2)); plt.savefig("$@")'

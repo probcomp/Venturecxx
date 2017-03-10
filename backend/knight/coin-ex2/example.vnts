@@ -83,3 +83,11 @@ dump_particle_samples = (num_replicates, num_p) ~> {
       num_p, extract_weight))
   })
 };
+
+dump_mcmc_samples = (num_replicates, num_steps) ~> {
+  replicate(num_replicates, () ~> {
+    print(infer_mcmc(
+      flip_coins, [5], constrain_coin_flipper_trace(5),
+      num_steps, extract_weight))
+  })
+};
