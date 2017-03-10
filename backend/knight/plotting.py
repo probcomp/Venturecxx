@@ -4,7 +4,7 @@ import scipy.stats as stats
 
 bins = np.linspace(0, 1, 50)
 
-def plot_mcmc(filename, exact_file=None):
+def plot_sequential(filename, title_f, exact_file=None):
     chains = read_chains(filename)
     plot_schedule = schedule(len(chains[0]))
     fig = plt.figure(figsize=(8,12))
@@ -19,7 +19,7 @@ def plot_mcmc(filename, exact_file=None):
         ax.hist(samples, bins=bins, weights=[100.0/len(chains)]*len(chains))
         ax.set_xlim([0,1])
         ax.set_ylim([0,25])
-        title = "M-H step %d" % (step,)
+        title = title_f(step)
         ax.set_xlabel("weight")
         ax.set_ylabel("% of samples")
         if exact_file is not None:
@@ -30,34 +30,18 @@ def plot_mcmc(filename, exact_file=None):
     plt.tight_layout()
     plt.subplots_adjust(top=0.94)
 
+def plot_mcmc(filename, exact_file=None):
+    def title(step):
+        return "M-H step %d" % (step,)
+    plot_sequential(filename, title, exact_file=exact_file)
+
 def plot_particles(filename, exact_file=None):
-    chains = read_chains(filename)
-    plot_schedule = schedule(len(chains[0]))
-    fig = plt.figure(figsize=(8,12))
-    if exact_file is None:
-        fig.suptitle("%d independent replicates" % (len(chains),))
-    else:
-        fig.suptitle("%d independent replicates, against %d exact samples (orange outline)" \
-                     % (len(chains), num_samples(exact_file)))
-    for i, step in enumerate(plot_schedule):
-        ax = fig.add_subplot(len(plot_schedule), 1, i+1)
-        samples = [chain[step] for chain in chains]
-        ax.hist(samples, bins=bins, weights=[100.0/len(chains)]*len(chains))
-        ax.set_xlim([0,1])
-        ax.set_ylim([0,25])
+    def title(step):
         if step == 0:
-            title = "With 1 particle"
+            return "With 1 particle"
         else:
-            title = "With %d particles" % (step+1,)
-        ax.set_xlabel("weight")
-        ax.set_ylabel("% of samples")
-        if exact_file is not None:
-            (_, rej_samples) = do_plot_exact(exact_file, ax)
-            (D, pval) = stats.ks_2samp(samples, rej_samples)
-            title += ", K-S stat %6.4f, p-value %8.6f" % (D, pval)
-        ax.set_title(title)
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.94)
+            return "With %d particles" % (step+1,)
+    plot_sequential(filename, title, exact_file=exact_file)
 
 def num_samples(filename):
     with open(filename, 'r') as f:
