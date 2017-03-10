@@ -18,7 +18,7 @@ def plot_mcmc(filename, exact_file=None):
         fig.suptitle("%d independent chains" % (len(chains),))
     else:
         fig.suptitle("%d independent chains, against %d exact samples (orange outline)" \
-                  % (len(chains), num_samples(exact_file)))
+                     % (len(chains), num_samples(exact_file)))
     for i, step in enumerate(plot_schedule):
         ax = fig.add_subplot(len(plot_schedule), 1, i+1)
         samples = [chain[step] for chain in chains]
@@ -50,7 +50,7 @@ def plot_particles(filename, exact_file=None):
         fig.suptitle("%d independent replicates" % (len(chains),))
     else:
         fig.suptitle("%d independent replicates, against %d exact samples (orange outline)" \
-                  % (len(chains), num_samples(exact_file)))
+                     % (len(chains), num_samples(exact_file)))
     for i, step in enumerate(plot_schedule):
         ax = fig.add_subplot(len(plot_schedule), 1, i+1)
         samples = [chain[step] for chain in chains]
