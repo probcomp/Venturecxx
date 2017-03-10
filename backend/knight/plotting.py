@@ -32,7 +32,7 @@ def plot_sequential(filename, title_f, exact_file=None, analytic=None):
                 # The area under the histogram is len(chains) *
                 # (100.0/len(chains)) / n_bins
                 return analytic.pdf(x) * 100.0 / n_bins
-            ax.plot(x, map(scaled, x))
+            ax.plot(x, map(scaled, x), color='orange')
             (D, pval) = stats.kstest(samples, analytic.cdf)
             title += ", K-S stat %6.4f, p-value %8.6f" % (D, pval)
         elif exact_file is not None:
