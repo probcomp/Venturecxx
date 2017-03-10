@@ -9,3 +9,9 @@ particles-p-p-50-20.png: example.vnts
 
 ssrmh-p-p-50-20.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'ssrmh_p_p_plot(50, 20, "$@")'
+
+custom-rmh-p-p-50-20.png: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'custom_rmh_p_p_plot(50, 20, "$@")'
+
+ss-vs-custom-rmh-p-p-50-3.png: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'ss_vs_custom_rmh_p_p_plot(50, 3, "$@")'
