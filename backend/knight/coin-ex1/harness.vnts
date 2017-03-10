@@ -24,6 +24,19 @@ custom_rmh_sampler = (num_steps) -> { () ~> {
   extract_weight(t2)
 } };
 
+custom_mcmc = (num_steps) ~> {
+  t2 = T{};
+  regenerate(flip_coins, [5], constrain_coin_flipper_trace(5), t2);
+  first_val = extract_weight(t2);
+  beta_site = A/0/def/app/.;
+  step = (t) ~> {
+    rmh_step(
+      flip_coins, [5], constrain_coin_flipper_trace(5), t2, list(beta_site));
+    extract_weight(t2)
+  };
+  pair(first_val, map(step, range(num_steps)))
+};
+
 rejection_p_p_plot = (num_samples, filename) ~> {
   p_p_plot_2samp_to_file(filename,
     replicate(num_samples, rejection_sampler),
@@ -79,5 +92,11 @@ dump_mcmc_samples = (num_replicates, num_steps) ~> {
     print(infer_mcmc(
       flip_coins, [5], constrain_coin_flipper_trace(5),
       num_steps, extract_weight))
+  })
+};
+
+dump_custom_mcmc_samples = (num_replicates, num_steps) ~> {
+  replicate(num_replicates, () ~> {
+    print(custom_mcmc(num_steps))
   })
 };
