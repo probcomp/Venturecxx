@@ -31,14 +31,14 @@ ss-vs-custom-rmh-p-p-50-3.png: example.vnts
 particles-10-5.png: particles-10-5.txt ../plotting.py
 	python -c 'import matplotlib.pyplot as plt; import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
-	  p.plot_particles("$<", analytic=stats.beta(6,3)); plt.savefig("$@")'
+	  p.plot_particles("$<", analytic=stats.beta(7,2)); plt.savefig("$@")'
 
 particles-100-10.png: particles-100-10.txt ../plotting.py
 	python -c 'import matplotlib.pyplot as plt; import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
-	  p.plot_particles("$<", analytic=stats.beta(6,3)); plt.savefig("$@")'
+	  p.plot_particles("$<", analytic=stats.beta(7,2)); plt.savefig("$@")'
 
 particles-200-20.png: particles-200-20.txt ../plotting.py
 	python -c 'import matplotlib.pyplot as plt; import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
-	  p.plot_particles("$<", analytic=stats.beta(6,3)); plt.savefig("$@")'
+	  p.plot_particles("$<", analytic=stats.beta(7,2)); plt.savefig("$@")'

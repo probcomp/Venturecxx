@@ -1,5 +1,5 @@
 flip_coins = (n) ~> {
-  weight = beta(1, 3);
+  weight = beta(2, 2);
   replicate2(n, () ~> { flip(weight) })
 };
 
@@ -23,7 +23,7 @@ rejection_sampler = () ~> {
 };
 
 analytic_sampler = () ~> {
-  beta(6, 3)
+  beta(7, 2)
 };
 
 custom_rmh_sampler = (num_steps) -> { () ~> {
