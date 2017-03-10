@@ -23,7 +23,6 @@ ss-vs-custom-rmh-p-p-50-3.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< -e 'ss_vs_custom_rmh_p_p_plot(50, 3, "$@")'
 
 particles-10-5.png: particles-10-5.txt ../plotting.py
-	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<"); plt.savefig("$@")'
-
-particles-10-5-100.png: particles-10-5.txt analytic-100.txt ../plotting.py
-	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; import scipy.stats as stats; p.plot_particles("$<", analytic=stats.beta(6,3)); plt.savefig("$@")'
+	python -c 'import matplotlib.pyplot as plt; import scipy.stats as stats; \
+	  import venture.knight.plotting as p; \
+	  p.plot_particles("$<", analytic=stats.beta(6,3)); plt.savefig("$@")'
