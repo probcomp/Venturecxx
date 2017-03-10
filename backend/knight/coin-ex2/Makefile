@@ -26,4 +26,4 @@ particles-10-5.png: particles-10-5.txt ../plotting.py
 	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<"); plt.savefig("$@")'
 
 particles-10-5-100.png: particles-10-5.txt analytic-100.txt ../plotting.py
-	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; p.plot_particles("$<", "analytic-100.txt"); plt.savefig("$@")'
+	python -c 'import venture.knight.plotting as p; import matplotlib.pyplot as plt; import scipy.stats as stats; p.plot_particles("$<", analytic=stats.beta(6,3)); plt.savefig("$@")'

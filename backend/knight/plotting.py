@@ -2,16 +2,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
 
-bins = np.linspace(0, 1, 50)
+n_bins = 50
+bins = np.linspace(0, 1, n_bins)
 
-def plot_sequential(filename, title_f, exact_file=None):
+def plot_sequential(filename, title_f, exact_file=None, analytic=None):
     chains = read_chains(filename)
     plot_schedule = schedule(len(chains[0]))
     fig = plt.figure(figsize=(8,12))
-    if exact_file is None:
-        fig.suptitle("%d independent chains" % (len(chains),))
+    if exact_file is None and analytic is None:
+        fig.suptitle("%d independent replicates" % (len(chains),))
+    elif analytic is not None:
+        fig.suptitle("%d independent replicates, against the analytic distribution (orange outline)" \
+                     % (len(chains),))
     else:
-        fig.suptitle("%d independent chains, against %d exact samples (orange outline)" \
+        fig.suptitle("%d independent replicates, against %d exact samples (orange outline)" \
                      % (len(chains), num_samples(exact_file)))
     for i, step in enumerate(plot_schedule):
         ax = fig.add_subplot(len(plot_schedule), 1, i+1)
@@ -22,7 +26,16 @@ def plot_sequential(filename, title_f, exact_file=None):
         title = title_f(step)
         ax.set_xlabel("weight")
         ax.set_ylabel("% of samples")
-        if exact_file is not None:
+        if analytic is not None:
+            x = np.linspace(0, 1, 500)
+            def scaled(x):
+                # The area under the histogram is len(chains) *
+                # (100.0/len(chains)) / n_bins
+                return analytic.pdf(x) * 100.0 / n_bins
+            ax.plot(x, map(scaled, x))
+            (D, pval) = stats.kstest(samples, analytic.cdf)
+            title += ", K-S stat %6.4f, p-value %8.6f" % (D, pval)
+        elif exact_file is not None:
             (_, rej_samples) = do_plot_exact(exact_file, ax)
             (D, pval) = stats.ks_2samp(samples, rej_samples)
             title += ", K-S stat %6.4f, p-value %8.6f" % (D, pval)
@@ -30,18 +43,18 @@ def plot_sequential(filename, title_f, exact_file=None):
     plt.tight_layout()
     plt.subplots_adjust(top=0.94)
 
-def plot_mcmc(filename, exact_file=None):
+def plot_mcmc(filename, exact_file=None, analytic=None):
     def title(step):
         return "M-H step %d" % (step,)
-    plot_sequential(filename, title, exact_file=exact_file)
+    plot_sequential(filename, title, exact_file=exact_file, analytic=analytic)
 
-def plot_particles(filename, exact_file=None):
+def plot_particles(filename, exact_file=None, analytic=None):
     def title(step):
         if step == 0:
             return "With 1 particle"
         else:
             return "With %d particles" % (step+1,)
-    plot_sequential(filename, title, exact_file=exact_file)
+    plot_sequential(filename, title, exact_file=exact_file, analytic=analytic)
 
 def num_samples(filename):
     with open(filename, 'r') as f:
