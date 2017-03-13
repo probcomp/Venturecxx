@@ -132,7 +132,7 @@ addr(yes)		::= T_ASTART addr_entries(ks) T_AEND.
 addr_entries(one)	::= name(n).
 addr_entries(many)	::= addr_entries(a) T_DIV name(n).
 
-name(unquote)		::= T_LDOLLAR(op) primary(e).
+name(unquote)		::= T_LDOLLAR primary(e).
 name(symbol)		::= L_NAME(s).
 name(literal)		::= literal(l).
 

@@ -33,6 +33,7 @@ from venture.knight.types import Spl
 from venture.knight.types import Tra
 from venture.knight.types import Tup
 from venture.knight.types import Var
+from venture.knight.types import Unq
 
 operators = {
     '+':        'add',
@@ -213,8 +214,8 @@ class Semantics(object):
     def p_addr_entries_one(self, n):            return [n]
     def p_addr_entries_many(self, a, n):        a.append(n); return a
 
-    def p_name_unquote(self, op, e):
-        raise Exception("quasiquotation is not supported yet")
+    def p_name_unquote(self, e):
+        return Unq(e)
     def p_name_symbol(self, s):
         return Var(s)
     def p_name_literal(self, l):

@@ -22,6 +22,7 @@ from venture.knight.types import Tra
 from venture.knight.types import Trace # pylint: disable=unused-import
 from venture.knight.types import Tup
 from venture.knight.types import Var
+from venture.knight.types import Unq
 
 def regen(exp, env, target, mechanism):
   # type: (Exp, VentureEnvironment[vv.VentureValue], Trace, Trace) -> Tuple[float, vv.VentureValue]
@@ -109,6 +110,8 @@ def do_regen(exp, env, target, mechanism):
         (sub_score, subval) = regen(exp.expr, env, t2, m2)
         match_bind(exp.pat, subval, env)
         return (sub_score, vv.VentureNil())
+  if isinstance(exp, Unq):
+    raise Exception("Found unquote outside quoted context")
   assert False, "Unknown expression type %s" % (exp,)
 
 def regen_list(exps, env, target, mechanism):
@@ -143,7 +146,10 @@ room for unquoting (in principle, at least)."""
       with mechanism.subtrace(i) as m2:
         (score, ks) = quasi_regen_list(exp.keys, env, t2, m2)
         return (score, vv.pythonListToVentureList(ks))
-  # TODO: Implement unquote here
+  if isinstance(exp, Unq):
+    with target.subtrace(i) as t2:
+      with mechanism.subtrace(i) as m2:
+        return regen(exp.exp, env, t2, m2)
   assert False, "Invalid quoted expression %s" % (exp,)
 
 def quasi_regen_list(exps, env, target, mechanism):

@@ -25,6 +25,7 @@ class Adr(NamedTuple('Adr', [('keys', List[Exp])]), Exp): pass
 class Spl(NamedTuple('Spl', [('sub', Exp)]), Exp): pass
 class Tra(NamedTuple('Tra', [('top', Optional[Exp]), ('entries', List[Tuple[Exp, Exp]])]), Exp): pass
 class Tup(NamedTuple('Tup', [('subs', List[Exp])]), Exp): pass
+class Unq(NamedTuple('Unq', [('exp', Exp)]), Exp): pass
 
 Datum = NamedTuple('Datum', [('datum', vv.VentureValue)])
 Request = NamedTuple('Request', [('exp', Exp), ('env', VentureEnvironment[vv.VentureValue]),

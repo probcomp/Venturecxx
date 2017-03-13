@@ -78,3 +78,11 @@ metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   (out_score, (in_score, y)) = regenerate(regenerator_of(normal_normal), [[0, 1, 1], T{5}, t2], T{}, t4);
   print((out_score, in_score, y, @t2["x"], t4))
 }' # [0.0, -7.52, 5, 7, a trace]
+
+# Computed address splicing syntax
+metaprob -f backend/knight/prelude.vnts \
+  -e '{
+  site = A/1/app/.;
+  t = T{*$site = 4};
+  print(t[*site])
+}'
