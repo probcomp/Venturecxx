@@ -47,22 +47,26 @@ $1.png: $1.sav ../plotting.py
 	  plt.savefig("$$@")'
 endef
 
+# Histogramming effectiveness of SIR, up to 200 20-particle runs
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
 $(eval $(call MERGE_template,particle,200-20,10-20,20))
 $(eval $(call PLOT_template,particle-200-20,particles))
 
+# Histogramming effectiveness of single-site mh, up to 600 30-step chains
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,mcmc,10,30,$(seed))))
 $(eval $(call MERGE_template,mcmc,40-30,10-30,4))
 $(eval $(call PLOT_template,mcmc-40-30,mcmc))
 $(eval $(call MERGE_template,mcmc,600-30,10-30,60))
 $(eval $(call PLOT_template,mcmc-600-30,mcmc))
 
+# Histogramming effectiveness of custom mh, up to 600 30-step chains
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,custom_mcmc,10,30,$(seed))))
 $(eval $(call MERGE_template,custom_mcmc,40-30,10-30,4))
 $(eval $(call PLOT_template,custom_mcmc-40-30,mcmc))
 $(eval $(call MERGE_template,custom_mcmc,600-30,10-30,60))
 $(eval $(call PLOT_template,custom_mcmc-600-30,mcmc))
 
+# p-p plots
 rejection-p-p-50.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'rejection_p_p_plot(50, "$@")'
