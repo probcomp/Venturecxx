@@ -51,18 +51,15 @@ endef
 
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN_template,rejection,50,$(seed))))
 $(eval $(call MERGE_template,rejection,1000,50,20))
+$(eval $(call MERGE_template,rejection,10000,50,200))
 
-$(foreach seed,$(shell seq 200),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
+$(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
 $(eval $(call MERGE_template,particle,200-20,10-20,20))
 $(eval $(call PLOT_template,particle-200-20,1000,particles))
 
-particles-500-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(500, 20)' > $@
-
-particles-1500-30.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(1500, 30)' > $@
+$(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,30,$(seed))))
+$(eval $(call MERGE_template,particle,1500-30,10-30,150))
+$(eval $(call PLOT_template,particle-1500-30,10000,particles))
 
 mcmc-50-20.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
@@ -75,18 +72,6 @@ mcmc-500-20.txt: example.vnts
 mcmc-1500-30.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'dump_mcmc_samples(1500, 30)' > $@
-
-particles-500-20-2000.png: particles-500-20.txt rejection-2000.txt ../plotting.py
-	python -c 'import venture.knight.plotting as p; \
-	  import matplotlib.pyplot as plt; \
-	  p.plot_particles("$<", "rejection-2000.txt"); \
-	  plt.savefig("$@")'
-
-particles-1500-30-10000.png: particles-1500-30.txt rejection-10000.txt ../plotting.py
-	python -c 'import venture.knight.plotting as p; \
-	  import matplotlib.pyplot as plt; \
-	  p.plot_particles("$<", "rejection-10000.txt"); \
-	  plt.savefig("$@")'
 
 mcmc-50-20-50.png: mcmc-50-20.txt rejection-50.txt ../plotting.py
 	python -c 'import venture.knight.plotting as p; \
