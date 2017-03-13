@@ -57,21 +57,11 @@ $(eval $(call PLOT_template,mcmc-40-30,mcmc))
 $(eval $(call MERGE_template,mcmc,600-30,10-30,60))
 $(eval $(call PLOT_template,mcmc-600-30,mcmc))
 
-custom-rmh-20-10.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(20, 10)' > $@
-
-custom-rmh-200-10.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(200, 10)' > $@
-
-custom-rmh-400-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(400, 20)' > $@
-
-custom-rmh-1000-30.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(1000, 30)' > $@
+$(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,custom_mcmc,10,30,$(seed))))
+$(eval $(call MERGE_template,custom_mcmc,40-30,10-30,4))
+$(eval $(call PLOT_template,custom_mcmc-40-30,mcmc))
+$(eval $(call MERGE_template,custom_mcmc,600-30,10-30,60))
+$(eval $(call PLOT_template,custom_mcmc-600-30,mcmc))
 
 rejection-p-p-50.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
@@ -96,31 +86,3 @@ custom-rmh-p-p-50-20.png: example.vnts
 ss-vs-custom-rmh-p-p-50-3.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'ss_vs_custom_rmh_p_p_plot(50, 3, "$@")'
-
-custom-rmh-20-10.png: custom-rmh-20-10.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_mcmc("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
-
-custom-rmh-200-10.png: custom-rmh-200-10.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_mcmc("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
-
-custom-rmh-400-20.png: custom-rmh-400-20.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_mcmc("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
-
-custom-rmh-1000-30.png: custom-rmh-1000-30.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_mcmc("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
