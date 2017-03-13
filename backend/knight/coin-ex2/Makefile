@@ -47,6 +47,10 @@ $1.png: $1.sav ../plotting.py
 	  plt.savefig("$$@")'
 endef
 
+$(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
+$(eval $(call MERGE_template,particle,200-20,10-20,20))
+$(eval $(call PLOT_template,particle-200-20,particles))
+
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,mcmc,2,3,$(seed))))
 $(eval $(call MERGE_template,mcmc,40-3,2-3,20))
 $(eval $(call PLOT_template,mcmc-40-3,mcmc))
@@ -54,18 +58,6 @@ $(eval $(call PLOT_template,mcmc-40-3,mcmc))
 analytic-100.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'dump_analytic_samples(100)' > $@
-
-particles-10-5.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(10, 5)' > $@
-
-particles-100-10.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(100, 10)' > $@
-
-particles-200-20.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_particle_samples(200, 20)' > $@
 
 ssrmh-200-20.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
@@ -118,27 +110,6 @@ custom-rmh-p-p-50-20.png: example.vnts
 ss-vs-custom-rmh-p-p-50-3.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'ss_vs_custom_rmh_p_p_plot(50, 3, "$@")'
-
-particles-10-5.png: particles-10-5.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_particles("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
-
-particles-100-10.png: particles-100-10.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_particles("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
-
-particles-200-20.png: particles-200-20.txt ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
-	  import venture.knight.plotting as p; \
-	  p.plot_particles("$<", analytic=stats.beta(7,2)); \
-	  plt.savefig("$@")'
 
 ssrmh-200-20.png: ssrmh-200-20.txt ../plotting.py
 	python -c 'import matplotlib.pyplot as plt; \
