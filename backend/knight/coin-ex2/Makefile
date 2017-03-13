@@ -57,10 +57,6 @@ $(eval $(call PLOT_template,mcmc-40-30,mcmc))
 $(eval $(call MERGE_template,mcmc,600-30,10-30,60))
 $(eval $(call PLOT_template,mcmc-600-30,mcmc))
 
-analytic-100.txt: example.vnts
-	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
-	  -f ../coin-ex1/harness.vnts -e 'dump_analytic_samples(100)' > $@
-
 custom-rmh-20-10.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e 'dump_custom_mcmc_samples(20, 10)' > $@
