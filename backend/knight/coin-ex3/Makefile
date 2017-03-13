@@ -49,22 +49,27 @@ $1-$2.png: $1.sav rejection-$2.sav ../plotting.py
 	  plt.savefig("$$@")'
 endef
 
+# Define rejection sampling runs to serve as comparators
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN_template,rejection,50,$(seed))))
 $(eval $(call MERGE_template,rejection,1000,50,20))
 $(eval $(call MERGE_template,rejection,10000,50,200))
 
+# Small particles run (couple minutes on a probcomp machine)
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
 $(eval $(call MERGE_template,particle,200-20,10-20,20))
 $(eval $(call PLOT_template,particle-200-20,1000,particles))
 
+# Larger particles run
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,30,$(seed))))
 $(eval $(call MERGE_template,particle,1500-30,10-30,150))
 $(eval $(call PLOT_template,particle-1500-30,10000,particles))
 
+# Small mcmc run (couple minutes on a probcomp machine)
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,20,$(seed))))
 $(eval $(call MERGE_template,mcmc,200-20,10-20,20))
 $(eval $(call PLOT_template,mcmc-200-20,1000,mcmc))
 
+# Larger mcmc run
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,30,$(seed))))
 $(eval $(call MERGE_template,mcmc,1500-30,10-30,150))
 $(eval $(call PLOT_template,mcmc-1500-30,10000,mcmc))
