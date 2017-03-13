@@ -1,3 +1,14 @@
+define DATAGEN_template
+# Generating data from a unary sample dumping procedure
+# Arguments:
+# - Name of generator type
+# - Number of replicates
+# - Initial seed
+$1-$2-s$3.sav: example.vnts
+	metaprob -s $3 -f ../prelude.vnts -f ../inference.vnts -f $$< \
+	  -f ../coin-ex1/harness.vnts -e 'dump_$1_samples($2)' > $$@
+endef
+
 define DATAGEN2_template
 # Generating data from a binary sample dumping procedure
 # Arguments:
