@@ -1,7 +1,9 @@
 import argparse
+import random
 import resource
 import sys
 
+import numpy.random as npr
 from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from typing import cast
 
@@ -56,6 +58,9 @@ def toplevel(forms):
 def doit(args):
   # type: (argparse.Namespace) -> None
   forms = ""
+  if args.seed:
+    random.seed(long(args.seed))
+    npr.seed(random.randrange(2**31-1))
   if args.file:
     for fname in args.file:
       with open(fname) as f:
@@ -77,6 +82,7 @@ def main():
   parser.add_argument('-e', '--eval', action='append', help="execute the given expression")
   parser.add_argument('-f', '--file', action='append', help="execute the given file")
   parser.add_argument('-p', '--profile', action='store_true', help="Print implementation profile after running")
+  parser.add_argument('-s', '--seed', action='store', help="Random seed")
   args = parser.parse_args()
   doit(args)
 
