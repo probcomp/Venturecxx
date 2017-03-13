@@ -52,10 +52,12 @@ class MockArgs(IArgs):
   def py_prng(self):
     if self._py_rng is None:
       self._py_rng = random.Random()
+      self._py_rng.seed(random.randrange(2**31-1))
     return self._py_rng
   def np_prng(self):
     if self._np_rng is None:
       self._np_rng = npr.RandomState()
+      self._np_rng.seed(random.randrange(2**31-1))
     return self._np_rng
 
 def simulate(sp, no_wrapper=False):
