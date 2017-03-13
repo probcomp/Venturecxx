@@ -40,7 +40,8 @@ define PLOT_template
 # - Base name of plot/data file
 # - Plot style
 $1.png: $1.sav ../plotting.py
-	python -c 'import matplotlib.pyplot as plt; \
+	python -c 'import matplotlib; matplotlib.use("Agg"); \
+	  import matplotlib.pyplot as plt; \
 	  import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
 	  p.plot_$2("$$<", analytic=stats.beta(7,2)); \
