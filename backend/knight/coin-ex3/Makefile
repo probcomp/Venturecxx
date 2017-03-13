@@ -38,14 +38,14 @@ define PLOT_template
 # Plotting data merged by merge
 # Arguments:
 # - Base name of plot/data file
+# - Number of comparison rejection samples
 # - Plot style
-# - Comparable file
-$1.png: $1.sav $3 ../plotting.py
+$1-$2.png: $1.sav rejection-$2.sav ../plotting.py
 	python -c 'import matplotlib; matplotlib.use("Agg"); \
 	  import matplotlib.pyplot as plt; \
 	  import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
-	  p.plot_$2("$$<", "$3"); \
+	  p.plot_$3("$$<", "rejection-$2.sav"); \
 	  plt.savefig("$$@")'
 endef
 
@@ -54,7 +54,7 @@ $(eval $(call MERGE_template,rejection,1000,50,20))
 
 $(foreach seed,$(shell seq 200),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
 $(eval $(call MERGE_template,particle,200-20,10-20,20))
-$(eval $(call PLOT_template,particle-200-20,particles,rejection-1000.sav))
+$(eval $(call PLOT_template,particle-200-20,1000,particles))
 
 particles-500-20.txt: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
