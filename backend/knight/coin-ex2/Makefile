@@ -39,33 +39,34 @@ define PLOT_template
 # Arguments:
 # - Base name of plot/data file
 # - Plot style
+# - Comparable argument string
 $1.png: $1.sav ../plotting.py
 	python -c 'import matplotlib; matplotlib.use("Agg"); \
 	  import matplotlib.pyplot as plt; \
 	  import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
-	  p.plot_$2("$$<", analytic=stats.beta(7,2)); \
+	  p.plot_$2("$$<", $3); \
 	  plt.savefig("$$@")'
 endef
 
 # Histogramming effectiveness of SIR, up to 200 20-particle runs
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
 $(eval $(call MERGE_template,particle,200-20,10-20,20))
-$(eval $(call PLOT_template,particle-200-20,particles))
+$(eval $(call PLOT_template,particle-200-20,particles,analytic=stats.beta(7,2)))
 
 # Histogramming effectiveness of single-site mh, up to 600 30-step chains
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,mcmc,10,30,$(seed))))
 $(eval $(call MERGE_template,mcmc,40-30,10-30,4))
-$(eval $(call PLOT_template,mcmc-40-30,mcmc))
+$(eval $(call PLOT_template,mcmc-40-30,mcmc,analytic=stats.beta(7,2)))
 $(eval $(call MERGE_template,mcmc,600-30,10-30,60))
-$(eval $(call PLOT_template,mcmc-600-30,mcmc))
+$(eval $(call PLOT_template,mcmc-600-30,mcmc,analytic=stats.beta(7,2)))
 
 # Histogramming effectiveness of custom mh, up to 600 30-step chains
 $(foreach seed,$(shell seq 100),$(eval $(call DATAGEN2_template,custom_mcmc,10,30,$(seed))))
 $(eval $(call MERGE_template,custom_mcmc,40-30,10-30,4))
-$(eval $(call PLOT_template,custom_mcmc-40-30,mcmc))
+$(eval $(call PLOT_template,custom_mcmc-40-30,mcmc,analytic=stats.beta(7,2)))
 $(eval $(call MERGE_template,custom_mcmc,600-30,10-30,60))
-$(eval $(call PLOT_template,custom_mcmc-600-30,mcmc))
+$(eval $(call PLOT_template,custom_mcmc-600-30,mcmc,analytic=stats.beta(7,2)))
 
 # p-p plots
 rejection-p-p-50.png: example.vnts
