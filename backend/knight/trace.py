@@ -34,12 +34,6 @@ class Trace(vv.VentureValue):
       yield t
 
   @contextmanager
-  def application_subtrace(self):
-    # type: () -> Iterator[Trace]
-    with self.subtrace(vv.VentureString("app")) as t:
-      yield t
-
-  @contextmanager
   def definition_subtrace(self):
     # type: () -> Iterator[Trace]
     with self.subtrace(vv.VentureString("def")) as t:

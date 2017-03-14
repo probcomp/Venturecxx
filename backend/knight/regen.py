@@ -42,8 +42,9 @@ def do_regen(exp, env, target, mechanism):
     (sub_score, subvals) = regen_list(exp.subs, env, target, mechanism)
     oper = subvals[0]
     assert isinstance(oper, SP)
-    with target.application_subtrace() as c2:
-      with mechanism.application_subtrace() as i2:
+    assert oper.creation_point is not None
+    with target.subtrace(oper.creation_point) as c2:
+      with mechanism.subtrace(oper.creation_point) as i2:
         (app_score, val) = r_apply(oper, subvals[1:], c2, i2)
         maybe_register_made_sp(val, i2)
         return (sub_score + app_score, val)
