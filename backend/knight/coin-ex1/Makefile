@@ -14,6 +14,10 @@ particles-p-p-50-20.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f harness.vnts -e 'particles_p_p_plot(50, 20, "$@")'
 
+ssrmh-p-p-10-10.png: example.vnts
+	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f harness.vnts -e 'ssrmh_p_p_plot(10, 10, "$@")'
+
 ssrmh-p-p-50-20.png: example.vnts
 	metaprob -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f harness.vnts -e 'ssrmh_p_p_plot(50, 20, "$@")'
