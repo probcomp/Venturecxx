@@ -53,9 +53,9 @@ def do_regen(exp, env, target, mechanism):
   if isinstance(exp, Var):
     return (0, env.findSymbol(exp.name))
   if isinstance(exp, Lam):
-    ans = CompoundSP(exp.params, exp.body, env)
-    maybe_register_made_sp(ans, mechanism)
-    return (0, ans)
+    res = CompoundSP(exp.params, exp.body, env)
+    maybe_register_made_sp(res, mechanism)
+    return (0, res)
   if isinstance(exp, Seq):
     # This can also be emulated by applying a procedure that returns
     # the last argument (since the language is strict).
@@ -167,6 +167,7 @@ def quasi_regen_list(exps, env, target, mechanism):
   return (score, vals)
 
 def maybe_register_made_sp(val, mechanism):
+  # type: (vv.VentureValue, Trace) -> None
   if isinstance(val, SP):
     assert hasattr(val, 'creation_point')
     if val.creation_point is None:
