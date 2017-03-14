@@ -45,13 +45,16 @@ def do_regen(exp, env, target, mechanism):
     with target.application_subtrace() as c2:
       with mechanism.application_subtrace() as i2:
         (app_score, val) = r_apply(oper, subvals[1:], c2, i2)
+        maybe_register_made_sp(val, i2)
         return (sub_score + app_score, val)
   if isinstance(exp, Lit):
     return (0, exp.val)
   if isinstance(exp, Var):
     return (0, env.findSymbol(exp.name))
   if isinstance(exp, Lam):
-    return (0, CompoundSP(exp.params, exp.body, env))
+    ans = CompoundSP(exp.params, exp.body, env)
+    maybe_register_made_sp(ans, mechanism)
+    return (0, ans)
   if isinstance(exp, Seq):
     # This can also be emulated by applying a procedure that returns
     # the last argument (since the language is strict).
@@ -161,6 +164,13 @@ def quasi_regen_list(exps, env, target, mechanism):
     score += sub_score
     vals.append(sub_val)
   return (score, vals)
+
+def maybe_register_made_sp(val, mechanism):
+  if isinstance(val, SP):
+    assert hasattr(val, 'creation_point')
+    if val.creation_point is None:
+      mechanism.set(val)
+      val.creation_point = mechanism
 
 def match_bind(pat, val, env):
   # type: (Exp, vv.VentureValue, VentureEnvironment[vv.VentureValue]) -> None

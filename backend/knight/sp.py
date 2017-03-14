@@ -191,38 +191,41 @@ class RegeneratorOfSP(SP):
 def make_global_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
+  def register_builtin(name, sp):
+    sp.creation_point = name
+    env.addBinding(name, sp)
   for name, sp in builtInSPs().iteritems():
     if name not in ["lookup"]:
       if isinstance(sp.requestPSP, NullRequestPSP):
-        env.addBinding(name, SPFromLite(sp))
+        register_builtin(name, SPFromLite(sp))
   for name, sp in inf.inferenceSPsList:
     if isinstance(sp.requestPSP, NullRequestPSP):
-      env.addBinding(name, SPFromLite(sp))
-  env.addBinding("regenerate", RegenerateSP())
-  env.addBinding("get_current_trace", GetCurrentTraceSP())
-  env.addBinding("subtrace", SubtraceSP())
-  env.addBinding("trace_has", TraceHasSP())
-  env.addBinding("trace_get", TraceGetSP())
-  env.addBinding("trace_set", TraceSetSP())
-  env.addBinding("trace_clear", TraceClearSP())
-  env.addBinding("trace_sites", TraceSitesSP())
-  env.addBinding("sp", MakeSPSP())
-  env.addBinding("regenerator_of", RegeneratorOfSP())
+      register_builtin(name, SPFromLite(sp))
+  register_builtin("regenerate", RegenerateSP())
+  register_builtin("get_current_trace", GetCurrentTraceSP())
+  register_builtin("subtrace", SubtraceSP())
+  register_builtin("trace_has", TraceHasSP())
+  register_builtin("trace_get", TraceGetSP())
+  register_builtin("trace_set", TraceSetSP())
+  register_builtin("trace_clear", TraceClearSP())
+  register_builtin("trace_sites", TraceSitesSP())
+  register_builtin("sp", MakeSPSP())
+  register_builtin("regenerator_of", RegeneratorOfSP())
   lite_and_sp = deterministic_typed(lambda a, b: a and b,
       [t.Bool, t.Bool], t.Bool,
       descr="non-short-circuiting and")
-  env.addBinding("and", SPFromLite(lite_and_sp))
+  register_builtin("and", SPFromLite(lite_and_sp))
   lite_or_sp = deterministic_typed(lambda a, b: a or b,
       [t.Bool, t.Bool], t.Bool,
       descr="non-short-circuiting or")
-  env.addBinding("or", SPFromLite(lite_or_sp))
+  register_builtin("or", SPFromLite(lite_or_sp))
   # venture.lite.types.HomogeneousMappingType is not extensible to
   # include traces, but I want lookup to accept them.  Change the type
   # declaration.
   updated_lookup_sp = deterministic_typed(lambda xs, x: xs.lookup(x),
       [t.AnyType("<mapping l v>"), t.AnyType("k")],
       t.AnyType("v"))
-  env.addBinding("lookup", SPFromLite(updated_lookup_sp))
+  register_builtin("lookup", SPFromLite(updated_lookup_sp))
   return env
 
 the_global_env = make_global_env()
