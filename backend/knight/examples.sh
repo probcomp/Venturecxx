@@ -30,7 +30,7 @@ metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   model = () ~> { normal_normal(0, 100, 1) };
   t2 = T{};
   regenerate(model, [], T{}, t2);
-  subt = t2[0, "app"];
+  subt = t2[0, creation_point(normal_normal)];
   print((@subt["x"], @subt))
 }' # [x, y] where x ~ normal(0, 100) and y ~ normal(x, 1)
 
@@ -38,10 +38,10 @@ metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
 metaprob -f backend/knight/prelude.vnts -f backend/knight/normal-normal.vnts \
   -e '{
   model = () ~> { normal_normal(0, 1, 1) };
-  t1 = T{ *A/0/app/. = 5 };
+  t1 = T{ *A/0/${creation_point(normal_normal)}/. = 5 };
   t2 = T{};
   (score, _) = regenerate(model, [], t1, t2);
-  subt = t2[0, "app"];
+  subt = t2[0, creation_point(normal_normal)];
   print((score, @subt["x"], @subt))
 }' # [-7.52, x, 5] where x ~ normal(2.5, 1/sqrt(2))
 
