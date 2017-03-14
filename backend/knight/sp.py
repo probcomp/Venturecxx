@@ -26,7 +26,7 @@ from venture.knight.types import Var
 class SP(vv.VentureValue):
   def __init__(self):
     # type: () -> None
-    self.creation_point = None # type: Optional[Union[Trace, str]]
+    self.creation_point = None # type: Optional[Union[Trace, vv.VentureString]]
 
   def regenerate(self, args, target, mechanism):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
@@ -131,6 +131,14 @@ class TraceSitesSP(SP):
     assert isinstance(trace, Trace)
     return (0, Datum(vv.pythonListToVentureList(trace.sites())))
 
+class CreationPointSP(SP):
+  def regenerate(self, args, target, mechanism):
+    # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
+    (the_sp,) = args
+    assert isinstance(the_sp, SP)
+    assert the_sp.creation_point is not None
+    return (0, Datum(the_sp.creation_point))
+
 class RegenerateSP(SP):
   def regenerate(self, args, _target, _mechanism):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
@@ -192,7 +200,8 @@ def make_global_env():
   # type: () -> VentureEnvironment[vv.VentureValue]
   env = VentureEnvironment() # type: VentureEnvironment[vv.VentureValue]
   def register_builtin(name, sp):
-    sp.creation_point = name
+    # type: (str, SP) -> None
+    sp.creation_point = vv.VentureString(name)
     env.addBinding(name, sp)
   for name, sp in builtInSPs().iteritems():
     if name not in ["lookup"]:
@@ -209,6 +218,7 @@ def make_global_env():
   register_builtin("trace_set", TraceSetSP())
   register_builtin("trace_clear", TraceClearSP())
   register_builtin("trace_sites", TraceSitesSP())
+  register_builtin("creation_point", CreationPointSP())
   register_builtin("sp", MakeSPSP())
   register_builtin("regenerator_of", RegeneratorOfSP())
   lite_and_sp = deterministic_typed(lambda a, b: a and b,
