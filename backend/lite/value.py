@@ -592,6 +592,8 @@ class VenturePair(VentureValue):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
+  def equalSameType(self, other):
+    return self.first.equal(other.first) and self.rest.equal(other.rest)
   def __hash__(self):
     return hash(self.first) + 37*hash(self.rest)
 
