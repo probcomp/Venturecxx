@@ -24,6 +24,7 @@ import venture.lite.value as vv
 from venture.knight.parser import grammar
 from venture.knight.parser import scan
 from venture.knight.types import Adr
+from venture.knight.types import Alt
 from venture.knight.types import App
 from venture.knight.types import Def
 from venture.knight.types import Lam
@@ -173,7 +174,7 @@ class Semantics(object):
         assert isinstance(ss, Seq)
         return ss
     def p_primary_if(self, p, c, a):
-        return App([App([Var('biplex'), p, Lam([], c), Lam([], a)])])
+        return Alt(p, c, a)
     def p_primary_qquote(self, o, b, c):
         # XXX Options:
         # - Make a Quasi syntax and interpret it somewhere

@@ -19,6 +19,7 @@ class App(NamedTuple('App', [('subs', List[Exp])]), Exp): pass
 class Var(NamedTuple('Var', [('name', str)]), Exp): pass
 class Lit(NamedTuple('Lit', [('val', vv.VentureValue)]), Exp): pass
 class Lam(NamedTuple('Lam', [('params', List[str]), ('body', Exp)]), Exp): pass
+class Alt(NamedTuple('Alt', [('pred', Exp), ('cons', Exp), ('alt', Exp)]), Exp): pass
 class Seq(NamedTuple('Seq', [('subs', List[Exp])]), Exp): pass
 class Def(NamedTuple('Def', [('pat', Exp), ('expr', Exp)]), Exp): pass
 class Adr(NamedTuple('Adr', [('keys', List[Exp])]), Exp): pass

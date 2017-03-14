@@ -9,6 +9,7 @@ from venture.knight.sp import CompoundSP
 from venture.knight.sp import SP
 from venture.knight.trace import subtrace_at
 from venture.knight.types import Adr
+from venture.knight.types import Alt
 from venture.knight.types import App
 from venture.knight.types import Datum
 from venture.knight.types import Def
@@ -56,6 +57,19 @@ def do_regen(exp, env, target, mechanism):
     res = CompoundSP(exp.params, exp.body, env)
     maybe_register_made_sp(res, mechanism)
     return (0, res)
+  if isinstance(exp, Alt):
+    with target.predicate_subtrace() as tp:
+      with mechanism.predicate_subtrace() as mp:
+        (p_score, p_val) = regen(exp.pred, env, tp, mp)
+        if p_val.getBool():
+          with target.consequent_subtrace() as tc:
+            with mechanism.consequent_subtrace() as mc:
+              (branch_score, val) = regen(exp.cons, env, tc, mc)
+        else:
+          with target.alternate_subtrace() as ta:
+            with mechanism.alternate_subtrace() as ma:
+              (branch_score, val) = regen(exp.alt, env, ta, ma)
+        return (p_score + branch_score, val)
   if isinstance(exp, Seq):
     # This can also be emulated by applying a procedure that returns
     # the last argument (since the language is strict).
