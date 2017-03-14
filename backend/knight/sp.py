@@ -1,5 +1,7 @@
 from typing import List
-from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
+from typing import Optional # Pylint doesn't understand type comments pylint: disable=unused-import
+from typing import Tuple # pylint: disable=unused-import
+from typing import Union # pylint: disable=unused-import
 from typing import cast
 
 from venture.lite.builtin import builtInSPs
@@ -22,6 +24,10 @@ from venture.knight.types import Trace
 from venture.knight.types import Var
 
 class SP(vv.VentureValue):
+  def __init__(self):
+    # type: () -> None
+    self.creation_point = None # type: Optional[Union[Trace, str]]
+
   def regenerate(self, args, target, mechanism):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
     raise NotImplementedError
@@ -38,6 +44,7 @@ class SP(vv.VentureValue):
 class CompoundSP(SP):
   def __init__(self, params, body, env):
     # type: (List[str], Exp, VentureEnvironment[vv.VentureValue]) -> None
+    super(CompoundSP, self).__init__()
     self.params = params
     self.body = body
     self.env = env
@@ -51,6 +58,7 @@ class CompoundSP(SP):
 class SPFromLite(SP):
   def __init__(self, lite_sp):
     # type: (sp.SP) -> None
+    super(SPFromLite, self).__init__()
     self.lite_sp = lite_sp
     assert isinstance(lite_sp.requestPSP, NullRequestPSP)
     self.aux = lite_sp.constructSPAux()
@@ -151,6 +159,7 @@ class MakeSPSP(SP):
 class MadeSP(SP):
   def __init__(self, regenerator_sp):
     # type: (SP) -> None
+    super(MadeSP, self).__init__()
     self.regenerator_sp = regenerator_sp
   def regenerate(self, args, target, mechanism):
     # type: (List[vv.VentureValue], Trace, Trace) -> Tuple[float, RegenResult]
