@@ -124,6 +124,10 @@ class Trace(vv.VentureValue):
     else:
       return "Trace(%r)" % (self.value,)
 
+  def equalSameType(self, other):
+    # type: (Trace) -> bool
+    return self is other
+
 @contextmanager
 def subtrace_at(trace, keys):
   if len(keys) == 0:
