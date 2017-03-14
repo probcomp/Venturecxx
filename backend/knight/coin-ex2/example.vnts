@@ -5,13 +5,13 @@ flip_coins = (n) ~> {
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = T{};
-  for_each((k) -> { t1[1, "app", k, 0, "app"] := true },
+  for_each((k) -> { t1[1, creation_point(replicate2), k, 0, "flip"] := true },
     range(5));
   t1
 };
 
 extract_weight = (mechanism) -> {
-  @mechanism[0, "def", "app"]
+  @mechanism[0, "def", "beta"]
 };
 
 analytic_sampler = () ~> {
