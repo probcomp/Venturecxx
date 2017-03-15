@@ -53,6 +53,7 @@ endef
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN_template,rejection,50,$(seed))))
 $(eval $(call MERGE_template,rejection,1000,50,20))
 $(eval $(call MERGE_template,rejection,10000,50,200))
+$(eval $(call MERGE_template,rejection,20000,50,400))
 
 # Small particles run (couple minutes on a probcomp machine)
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,20,$(seed))))
@@ -73,3 +74,8 @@ $(eval $(call PLOT_template,mcmc-200-20,1000,mcmc))
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,30,$(seed))))
 $(eval $(call MERGE_template,mcmc,1500-30,10-30,150))
 $(eval $(call PLOT_template,mcmc-1500-30,10000,mcmc))
+
+# Still larger mcmc run
+$(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,50,$(seed))))
+$(eval $(call MERGE_template,mcmc,2000-50,10-50,200))
+$(eval $(call PLOT_template,mcmc-2000-50,20000,mcmc))
