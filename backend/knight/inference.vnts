@@ -44,11 +44,13 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   old_val = @input_trace[*site];
   del input_trace[*site];
   (old_score, _) = regenerate(sp, args, input_trace, T{*$site = old_val});
-  (new_score, _) = regenerate(sp, args, input_trace, input_trace);
-  new_candidates = set_difference(trace_sites(input_trace), constraint_addresses);
+  new_t = T{};
+  (new_score, _) = regenerate(sp, args, input_trace, new_t);
+  new_candidates = set_difference(trace_sites(new_t), constraint_addresses);
   (new_logp, _) = regenerate(uniform_categorical, [new_candidates], cons1, T{});
   if (log(uniform_continuous(0, 1)) < new_score - old_score + old_logp - new_logp) {
     // Accept
+    input_trace[*site] := @new_t[*site];
     input_trace
   } else {
     // Reject
