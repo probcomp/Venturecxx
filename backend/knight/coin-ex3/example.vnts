@@ -6,13 +6,19 @@ flip_coins = (n) ~> {
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = T{};
-  for_each((k) -> { t1[2, "app", k, 0, "app"] := true },
+  for_each((k) -> { t1[2, creation_point(replicate2), k, 0, "flip"] := true },
     range(5));
   t1
 };
 
 extract_weight = (mechanism) -> {
-  @mechanism[1, "def", "app", 0, "app"]
+  site1 = A/1/def/t/0/beta/.;
+  if (mechanism[*site1] has) {
+    @mechanism[*site1]
+  } else {
+    site2 = A/1/def/f/0/exactly/.;
+    @mechanism[*site2]
+  }
 };
 
 // 4 minutes at 50 samples
