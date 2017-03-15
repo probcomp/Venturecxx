@@ -50,8 +50,7 @@ ssrmh_step = (sp, args, input_trace, constraint_addresses) ~> {
   (new_logp, _) = regenerate(uniform_categorical, [new_candidates], cons1, T{});
   if (log(uniform_continuous(0, 1)) < new_score - old_score + old_logp - new_logp) {
     // Accept
-    input_trace[*site] := @new_t[*site];
-    input_trace
+    new_t
   } else {
     // Reject
     input_trace[*site] := old_val;
@@ -67,10 +66,14 @@ infer_ssrmh = (sp, args, target, num_steps) ~> {
 };
 
 infer_mcmc = (sp, args, target, num_steps, query) ~> {
-  t2 = T{};
-  regenerate(sp, args, target, t2);
-  first_val = query(t2);
-  step = (t) ~> { ssrmh_step(sp, args, t2, trace_sites(target)); query(t2) };
+  t_box = T{T{}};
+  regenerate(sp, args, target, @t_box);
+  first_val = query(@t_box);
+  step = (t) ~> {
+    new_t = ssrmh_step(sp, args, @t_box, trace_sites(target));
+    t_box := new_t;
+    query(@t_box)
+  };
   pair(first_val, map(step, range(num_steps)))
 };
 
