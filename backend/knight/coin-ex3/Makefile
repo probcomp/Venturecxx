@@ -78,3 +78,10 @@ $(eval $(call PLOT_template,mcmc-1500-30,10000,mcmc))
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,50,$(seed))))
 $(eval $(call MERGE_template,mcmc,2000-50,10-50,200))
 $(eval $(call PLOT_template,mcmc-2000-50,20000,mcmc))
+
+ks-evolution.png: mcmc-10-20-s1.sav particle-10-20-s1.sav rejection-50-s1.sav ../plotting.py
+	python -c 'import matplotlib; matplotlib.use("Agg"); \
+	  import matplotlib.pyplot as plt; \
+	  import venture.knight.plotting as p; \
+	  p.plot_ks_comparison("$<", "particle-10-20-s1.sav", "rejection-50-s1.sav"); \
+	  plt.savefig("$@")'
