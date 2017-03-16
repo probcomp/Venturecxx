@@ -65,6 +65,9 @@ def read_chains(filename):
         return [[float(num) for num in line.strip().strip('[]').split(',')]
                 for line in f.readlines()]
 
+def chains_to_sampless(chains):
+    return [[c[i] for c in chains] for i in range(len(chains[0]))]
+
 def schedule(chain_len):
     max_stage = chain_len - 1
     return [0, int(max_stage/4), int(max_stage/2),
@@ -86,6 +89,20 @@ def plot_exact(filename):
     ax.set_title("Exact sampling")
     ax.set_xlabel("weight")
     ax.set_ylabel("num samples")
+
+def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
+    p_sampless = chains_to_sampless(read_chains(particle_fname))
+    m_sampless = chains_to_sampless(read_chains(mcmc_fname))
+    r_sampless = chains_to_sampless(read_chains(rejection_fname))
+    assert len(r_sampless) == 1
+    plt.figure()
+    ax = plt.gca()
+    def compare(sampless1, sampless2):
+        ks_test_results = [stats.ks_2samp(sampless1[i], sampless2[i])
+                           for i in range(len(sampless1))]
+        kss, _pvals = zip(*ks_test_results)
+        ax.plot(kss)
+    compare(m_sampless, p_sampless)
 
 # plot_mcmc('mcmc.txt')
 # plot_particles('particles.txt')
