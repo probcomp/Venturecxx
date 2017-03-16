@@ -6,7 +6,10 @@ flip_coins = (n) ~> {
 
 constrain_coin_flipper_trace = (n) -> {
   t1 = T{};
-  for_each((k) -> { t1[2, creation_point(replicate2), k, 0, "flip"] := true },
+  for_each((k) -> {
+     t1[2, creation_point(replicate2),
+        k, 0, "flip"] := true
+    },
     range(5));
   t1
 };
