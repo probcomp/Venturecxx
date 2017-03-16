@@ -43,7 +43,6 @@ define PLOT_template
 $1-$2.png: $1.sav rejection-$2.sav ../plotting.py
 	python -c 'import matplotlib; matplotlib.use("Agg"); \
 	  import matplotlib.pyplot as plt; \
-	  import scipy.stats as stats; \
 	  import venture.knight.plotting as p; \
 	  p.plot_$3("$$<", "rejection-$2.sav"); \
 	  plt.savefig("$$@")'
