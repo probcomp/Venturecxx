@@ -98,16 +98,21 @@ def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
     plt.figure()
     ax = plt.gca()
     axt = ax.twinx()
-    def compare(sampless1, sampless2):
+    def compare(sampless1, sampless2, name, color, altcolor=None):
+        if altcolor is None:
+            altcolor = 'light' + color
         ks_test_results = [stats.ks_2samp(sampless1[i], sampless2[i])
                            for i in range(len(sampless1))]
         kss, pvals = zip(*ks_test_results)
-        ax.plot(kss)
-        axt.plot(pvals, color='green')
+        ax.plot(kss, color=color, label=name)
+        axt.plot(pvals, color=altcolor)
     ax.set_xlabel("Time step")
     ax.set_ylabel("K-S stat")
     axt.set_ylabel("K-S test p-value")
-    compare(m_sampless, p_sampless)
+    compare(m_sampless, p_sampless, "SIR vs MCMC", "blue")
+    compare(m_sampless, r_sampless * len(m_sampless), "MCMC vs posterior", "green")
+    compare(p_sampless, r_sampless * len(p_sampless), "SIR vs posterior", "red", "pink")
+    ax.legend()
 
 # plot_mcmc('mcmc.txt')
 # plot_particles('particles.txt')
