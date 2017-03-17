@@ -69,6 +69,8 @@ $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,50,$
 $(eval $(call MERGE_template,particle,2000-50,10-50,200))
 $(eval $(call MERGE_template,particle,5000-50,10-50,500))
 $(eval $(call PLOT_template,particle-2000-50,20000,particles))
+$(eval $(call PLOT_template,particle-5000-50,5000,particles))
+$(eval $(call PLOT_template,particle-5000-50,20000,particles))
 
 # Small mcmc run (couple minutes on a probcomp machine)
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,20,$(seed))))
@@ -85,6 +87,8 @@ $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,50,$(see
 $(eval $(call MERGE_template,mcmc,2000-50,10-50,200))
 $(eval $(call MERGE_template,mcmc,5000-50,10-50,500))
 $(eval $(call PLOT_template,mcmc-2000-50,20000,mcmc))
+$(eval $(call PLOT_template,mcmc-5000-50,5000,mcmc))
+$(eval $(call PLOT_template,mcmc-5000-50,20000,mcmc))
 
 ks-evolution-sm.png: mcmc-10-20-s1.sav particle-10-20-s1.sav rejection-50-s1.sav ../plotting.py
 	python -c 'import matplotlib; matplotlib.use("Agg"); \
