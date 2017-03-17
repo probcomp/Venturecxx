@@ -1,3 +1,29 @@
+# Shell wizardry to split the Make magic variable $*, within a given
+# rule, on hyphens, and assign the pieces to the names given as
+# arguments to SPLIT.
+SPLIT = split () { \
+    args='$*'; \
+    while [ $$\# -gt 0 ]; do \
+      arg=$${args%%-*}; \
+      args=$${args\#*-}; \
+      eval $$1=\$$arg; \
+      shift; \
+    done; \
+  }; \
+  split
+
+# Shell wizardry to echo a command and run it, from inside a single
+# Make line suppressed with the @ prefix.
+RUN = run () { echo $$@; $$@; }; run
+
+# Like RUN, but accepts a file name to direct output to.
+RUN_AT = runat () { t=$$1; shift; echo $$@ '>' $$t; $$@ > $$t; }; runat
+
+rejection-%.sav1: example.vnts
+	@$(SPLIT) reps seed && \
+	$(RUN_AT) $@ metaprob -s $$seed -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e "dump_rejection_samples($$reps)"
+
 define DATAGEN_template
 # Generating data from a unary sample dumping procedure
 # Arguments:
