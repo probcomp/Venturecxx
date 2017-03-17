@@ -91,7 +91,7 @@ def plot_exact(filename):
     ax.set_xlabel("weight")
     ax.set_ylabel("num samples")
 
-def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
+def plot_ks_comparison(mcmc_fname, particle_fname, rejection_fname):
     p_sampless = chains_to_sampless(read_chains(particle_fname))
     m_sampless = chains_to_sampless(read_chains(mcmc_fname))
     r_sampless = chains_to_sampless(read_chains(rejection_fname))
