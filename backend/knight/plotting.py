@@ -117,10 +117,10 @@ def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
         # Each distribution is represented with the same number of samples
         num_samples = len(p_sampless[0])
         title += " %d samples." % (num_samples,)
-        ks_cutoff = ks_stat_cutoff(num_samples, num_samples, 0.05)
+        ks_cutoff = ks_stat_cutoff(num_samples, num_samples, 0.001)
         x_edge = max(len(p_sampless), len(m_sampless))-1
         ax.plot((0, x_edge), (ks_cutoff, ks_cutoff), '-',
-            label="Distributions are different at 0.05 level")
+            label="Distributions are different at 0.001 level")
     ax.set_title(title)
     ax.legend()
     plt.tight_layout()
