@@ -139,6 +139,8 @@ def monotone_inverse(f, v, low, high):
         return low
     mid = (low + high) / 2
     fm = f(mid)
+    # print "Recurring on %20.18f, %20.18f, %20.18f, at %20.18f for %20.18f" \
+    #     % (low, mid, high, fm, v)
     if fm < v:
         return monotone_inverse(f, v, mid, high)
     else:
