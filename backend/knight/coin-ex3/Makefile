@@ -51,6 +51,7 @@ endef
 # Define rejection sampling runs to serve as comparators
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN_template,rejection,50,$(seed))))
 $(eval $(call MERGE_template,rejection,1000,50,20))
+$(eval $(call MERGE_template,rejection,5000,50,100))
 $(eval $(call MERGE_template,rejection,10000,50,200))
 $(eval $(call MERGE_template,rejection,20000,50,400))
 
@@ -63,6 +64,11 @@ $(eval $(call PLOT_template,particle-200-20,1000,particles))
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,30,$(seed))))
 $(eval $(call MERGE_template,particle,1500-30,10-30,150))
 $(eval $(call PLOT_template,particle-1500-30,10000,particles))
+
+$(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,particle,10,50,$(seed))))
+$(eval $(call MERGE_template,particle,2000-50,10-50,200))
+$(eval $(call MERGE_template,particle,5000-50,10-50,500))
+$(eval $(call PLOT_template,particle-2000-50,20000,particles))
 
 # Small mcmc run (couple minutes on a probcomp machine)
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,20,$(seed))))
@@ -77,11 +83,26 @@ $(eval $(call PLOT_template,mcmc-1500-30,10000,mcmc))
 # Still larger mcmc run
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN2_template,mcmc,10,50,$(seed))))
 $(eval $(call MERGE_template,mcmc,2000-50,10-50,200))
+$(eval $(call MERGE_template,mcmc,5000-50,10-50,500))
 $(eval $(call PLOT_template,mcmc-2000-50,20000,mcmc))
 
-ks-evolution.png: mcmc-10-20-s1.sav particle-10-20-s1.sav rejection-50-s1.sav ../plotting.py
+ks-evolution-sm.png: mcmc-10-20-s1.sav particle-10-20-s1.sav rejection-50-s1.sav ../plotting.py
 	python -c 'import matplotlib; matplotlib.use("Agg"); \
 	  import matplotlib.pyplot as plt; \
 	  import venture.knight.plotting as p; \
 	  p.plot_ks_comparison("$<", "particle-10-20-s1.sav", "rejection-50-s1.sav"); \
+	  plt.savefig("$@")'
+
+ks-evolution-mid.png: mcmc-2000-50.sav particle-2000-50.sav rejection-20000.sav ../plotting.py
+	python -c 'import matplotlib; matplotlib.use("Agg"); \
+	  import matplotlib.pyplot as plt; \
+	  import venture.knight.plotting as p; \
+	  p.plot_ks_comparison("$<", "particle-2000-50.sav", "rejection-20000.sav"); \
+	  plt.savefig("$@")'
+
+ks-evolution-lg.png: mcmc-5000-50.sav particle-5000-50.sav rejection-5000.sav ../plotting.py
+	python -c 'import matplotlib; matplotlib.use("Agg"); \
+	  import matplotlib.pyplot as plt; \
+	  import venture.knight.plotting as p; \
+	  p.plot_ks_comparison("$<", "particle-5000-50.sav", "rejection-5000.sav"); \
 	  plt.savefig("$@")'
