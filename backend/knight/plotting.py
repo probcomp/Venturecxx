@@ -106,8 +106,8 @@ def plot_ks_comparison(mcmc_fname, particle_fname, rejection_fname):
     ax.set_xlabel("Time step")
     ax.set_ylabel("K-S stat")
     compare(p_sampless, r_sampless * len(p_sampless), "SIR vs posterior")
-    compare(m_sampless, r_sampless * len(m_sampless), "MCMC vs posterior")
-    compare(m_sampless, p_sampless, "SIR vs MCMC")
+    compare(m_sampless, r_sampless * len(m_sampless), "M-H vs posterior")
+    compare(m_sampless, p_sampless, "SIR vs M-H")
     title = "K-S distances of SIR and single-site resimulation M-H\n" \
         + "from the posterior and from each other,\n" \
         + "on the trick coin problem,\n" \
