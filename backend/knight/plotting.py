@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as stats
+from scipy.stats import distributions
 
 n_bins = 50
 bins = np.linspace(0, 1, n_bins)
@@ -107,7 +108,45 @@ def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
     compare(p_sampless, r_sampless * len(p_sampless), "SIR vs posterior")
     compare(m_sampless, r_sampless * len(m_sampless), "MCMC vs posterior")
     compare(m_sampless, p_sampless, "SIR vs MCMC")
+    title = "K-S distances of sampling-importance-resampling and single-site resimulation M-H from the posterior and from each other, as a function of inference effort."
+    if len(p_sampless[0]) == len(m_sampless[0]) and \
+        len(p_sampless[0]) == len(r_sampless[0]):
+        # Each distribution is represented with the same number of samples
+        num_samples = len(p_sampless[0])
+        title += " %d samples." % (num_samples,)
+        ks_cutoff = ks_stat_cutoff(num_samples, num_samples, 0.05)
+        ax.plot((0, max(len(p_sampless), len(m_sampless))-1), (ks_cutoff, ks_cutoff), '-', label="Distributions are different at 0.05 level")
+    ax.set_title(title)
     ax.legend()
+
+def two_sample_p_value(n1, n2, d):
+    # Compute the p-value for a given value of the K-S statistic.
+    # Copied from scipy.stats, inside ks_2samp.
+    en = np.sqrt(n1 * n2 / float(n1 + n2))
+    try:
+        prob = distributions.kstwobign.sf((en + 0.12 + 0.11 / en) * d)
+    except:
+        prob = 1.0
+    return prob
+
+def monotone_inverse(f, v, low, high):
+    assert high > low, "%20.18f should be more than %20.18f" % (high, low)
+    if abs(low - high) < 1e-12:
+        return low
+    mid = (low + high) / 2
+    fm = f(mid)
+    if fm < v:
+        return monotone_inverse(f, v, mid, high)
+    else:
+        return monotone_inverse(f, v, low, mid)
+
+def ks_stat_cutoff(n1, n2, p):
+    """Return the maximum value of the K-S stat such that a two-sample
+    test with samples sized n1 and n2 has p-value in excess of p.
+    """
+    def f(d):
+        return -two_sample_p_value(n1, n2, d) # Negate so it is increasing
+    return monotone_inverse(f, -p, 0.0, 1.0)
 
 # plot_mcmc('mcmc.txt')
 # plot_particles('particles.txt')
