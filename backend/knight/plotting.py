@@ -108,7 +108,10 @@ def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
     compare(p_sampless, r_sampless * len(p_sampless), "SIR vs posterior")
     compare(m_sampless, r_sampless * len(m_sampless), "MCMC vs posterior")
     compare(m_sampless, p_sampless, "SIR vs MCMC")
-    title = "K-S distances of sampling-importance-resampling and single-site resimulation M-H from the posterior and from each other, as a function of inference effort."
+    title = "K-S distances of SIR and single-site resimulation M-H\n" \
+        + "from the posterior and from each other,\n" \
+        + "on the trick coin problem,\n" \
+        + "as a function of inference effort."
     if len(p_sampless[0]) == len(m_sampless[0]) and \
         len(p_sampless[0]) == len(r_sampless[0]):
         # Each distribution is represented with the same number of samples
@@ -118,6 +121,7 @@ def plot_ks_comparison(particle_fname, mcmc_fname, rejection_fname):
         ax.plot((0, max(len(p_sampless), len(m_sampless))-1), (ks_cutoff, ks_cutoff), '-', label="Distributions are different at 0.05 level")
     ax.set_title(title)
     ax.legend()
+    plt.tight_layout()
 
 def two_sample_p_value(n1, n2, d):
     # Compute the p-value for a given value of the K-S statistic.
