@@ -100,7 +100,7 @@ def plot_ks_comparison(mcmc_fname, particle_fname, rejection_fname):
     ax = plt.gca()
     def compare(sampless1, sampless2, name):
         ks_test_results = [stats.ks_2samp(sampless1[i], sampless2[i])
-                           for i in range(len(sampless1))]
+                           for i in range(min(len(sampless1), len(sampless2)))]
         kss, pvals = zip(*ks_test_results)
         ax.plot(kss, label=name)
     ax.set_xlabel("Time step")
