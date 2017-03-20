@@ -24,6 +24,12 @@ rejection-%.sav1: example.vnts
 	$(RUN_AT) $@ metaprob -s $$seed -f ../prelude.vnts -f ../inference.vnts -f $< \
 	  -f ../coin-ex1/harness.vnts -e "dump_rejection_samples($$reps)"
 
+%.sav1: example.vnts
+	@$(SPLIT) method reps steps seed && \
+	echo "Building" $@ && \
+	metaprob -s $$seed -f ../prelude.vnts -f ../inference.vnts -f $< \
+	  -f ../coin-ex1/harness.vnts -e "dump_$${method}_samples($$reps, $$steps)" > $@
+
 define DATAGEN_template
 # Generating data from a unary sample dumping procedure
 # Arguments:
@@ -73,6 +79,31 @@ $1-$2.png: $1.sav rejection-$2.sav ../plotting.py
 	  p.plot_$3("$$<", "rejection-$2.sav"); \
 	  plt.savefig("$$@")'
 endef
+
+REJ_FILES = $(foreach s,$(shell seq $$(($*/50))),rejection-50-$s.sav1)
+rejection-%.sav2:
+	rm -f $@.tmp
+	$(MAKE) $(REJ_FILES)
+	cat $(REJ_FILES) > $@.tmp
+	mv -f $@.tmp $@
+
+particle-%.sav2:
+	@$(SPLIT) reps steps && \
+	rm -f $@.tmp && \
+	files=$$(for seed in `seq $$(($$reps/10))`; do echo particle-10-$$steps-$$seed.sav1; done) && \
+	echo $$files && \
+	$(MAKE) $$files && \
+	cat $$files > $@.tmp && \
+	mv -f $@.tmp $@
+
+mcmc-%.sav2:
+	@$(SPLIT) reps steps && \
+	rm -f $@.tmp && \
+	files=$$(for seed in `seq $$(($$reps/10))`; do echo mcmc-10-$$steps-$$seed.sav1; done) && \
+	echo $$files && \
+	$(MAKE) $$files && \
+	cat $$files > $@.tmp && \
+	mv -f $@.tmp $@
 
 # Define rejection sampling runs to serve as comparators
 $(foreach seed,$(shell seq 500),$(eval $(call DATAGEN_template,rejection,50,$(seed))))
