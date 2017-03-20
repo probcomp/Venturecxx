@@ -41,7 +41,6 @@ particle-%.sav2:
 	@$(SPLIT) reps steps && \
 	rm -f $@.tmp && \
 	files=$$(for seed in `seq $$(($$reps/10))`; do echo particle-10-$$steps-$$seed.sav1; done) && \
-	echo $$files && \
 	$(MAKE) $$files && \
 	cat $$files > $@.tmp && \
 	mv -f $@.tmp $@
@@ -50,7 +49,6 @@ mcmc-%.sav2:
 	@$(SPLIT) reps steps && \
 	rm -f $@.tmp && \
 	files=$$(for seed in `seq $$(($$reps/10))`; do echo mcmc-10-$$steps-$$seed.sav1; done) && \
-	echo $$files && \
 	$(MAKE) $$files && \
 	cat $$files > $@.tmp && \
 	mv -f $@.tmp $@
