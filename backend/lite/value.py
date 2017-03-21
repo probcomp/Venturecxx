@@ -23,14 +23,20 @@ from collections import OrderedDict
 from numbers import Number
 import hashlib
 import operator
+from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
+from typing import Union # Pylint doesn't understand type comments pylint: disable=unused-import
+from typing import TYPE_CHECKING
 
-import numpy as np
+import numpy as np # type: ignore
 
 from venture.lite.exception import VentureTypeError
 from venture.lite.exception import VentureValueError
 from venture.lite.mlens import MLens
 import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
+
+if TYPE_CHECKING:
+  from venture.lite.types import VentureType # Pylint doesn't understand type comments pylint: disable=unused-import
 
 # TODO Define reasonable __str__ and/or __repr__ methods for all the
 # values and all the types.
@@ -39,6 +45,7 @@ class VentureValue(object):
   """Base class of all Venture values."""
   ### "natural" representation and conversions
   def getNumber(self):
+    # type: () -> float
     raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self):
     raise VentureTypeError("Cannot convert %s to integer" % type(self))
@@ -47,6 +54,7 @@ class VentureValue(object):
   def getBool(self):
     raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self):
+    # type: () -> str
     raise VentureTypeError("Cannot convert %s to symbol" % type(self))
   def getString(self):
     raise VentureTypeError("Cannot convert %s to string" % type(self))
@@ -78,6 +86,10 @@ class VentureValue(object):
     raise Exception("Cannot convert %s to a stack dictionary" % type(self))
   @staticmethod
   def fromStackDict(thing):
+    # type: (object) -> VentureValue
+    # XXX The precise type is a recursive union of lists,
+    # VentureValues, and dicts with specific keys.  That seems
+    # annoying to represent, so "object" will do for now.
     if isinstance(thing, list):
       # TODO Arrays or lists?
       return VentureArray([VentureValue.fromStackDict(val) for val in thing])
@@ -162,6 +174,10 @@ class VentureValue(object):
   def isValidCompoundForm(self):
     return False
 
+  def asPythonList(self, _elt_type=None):
+    # type: (VentureType) -> List[object]
+    raise VentureTypeError("Cannot view %s as a Python list" % type(self))
+
 def vv_dot_product(v1, v2):
   """Dot product of venture values taking into account that either may be
 a symbolic zero.  TODO: Introduce the VentureZero value to uniformize
@@ -170,7 +186,8 @@ this."""
   return v1.dot(v2)
 
 class VentureNumber(VentureValue):
-  def __init__(self,number):
+  def __init__(self, number):
+    # type: (Union[int, long, float]) -> None
     if not isinstance(number, Number):
       raise VentureTypeError(
         "%s is of %s, not Number" % (str(number), type(number)))
@@ -186,6 +203,7 @@ class VentureNumber(VentureValue):
     else:
       return "VentureNumber(uninitialized)"
   def getNumber(self):
+    # type: () -> float
     return self.number
   def getInteger(self):
     return int(self.number)
@@ -253,7 +271,8 @@ class VentureNumber(VentureValue):
 
 class VentureInteger(VentureValue):
   def __init__(self,number):
-    assert isinstance(number, Number)
+    # type: (Union[int, long, float]) -> None
+    assert isinstance(number, (int, long, float))
     self.number = int(number)
   def __repr__(self):
     if hasattr(self, "number"):
@@ -268,6 +287,7 @@ class VentureInteger(VentureValue):
   def getInteger(self):
     return self.number
   def getNumber(self):
+    # type: () -> float
     return float(self.number)
   def getBool(self):
     return self.number
@@ -361,6 +381,7 @@ class VentureAtom(VentureValue):
 
 class VentureBool(VentureValue):
   def __init__(self,boolean):
+    # type: (bool) -> None
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
     self.boolean = bool(boolean)
   def __repr__(self):
@@ -388,12 +409,14 @@ class VentureBool(VentureValue):
 
 class VentureSymbol(VentureValue):
   def __init__(self,symbol):
+    # type: (str) -> None
     self.symbol = symbol
   def __repr__(self):
     return "Symbol(%s)" % self.symbol
   def __str__(self):
     return self.symbol
   def getSymbol(self):
+    # type: () -> str
     return self.symbol
   def asStackDict(self, _trace=None):
     return v.symbol(self.symbol)
@@ -416,12 +439,14 @@ class VentureSymbol(VentureValue):
 # self-evaluating
 class VentureString(VentureValue):
   def __init__(self,strng):
+    # type: (str) -> VentureString
     self.strng = strng
   def __repr__(self):
     return "Strng(%s)" % self.strng
   def __str__(self):
     return self.strng
   def getSymbol(self):
+    # type: () -> str
     return self.strng
   def getString(self):
     return self.strng
@@ -459,6 +484,7 @@ class VentureForeignBlob(VentureValue):
 
 class VentureNil(VentureValue):
   def __init__(self):
+    # type: () -> None
     pass
   def __repr__(self):
     return "Nil"
@@ -502,10 +528,12 @@ class VentureNil(VentureValue):
   def asPossiblyImproperList(self):
     return ([], None)
   def asPythonList(self, _elt_type=None):
+    # type: (VentureType) -> List[object]
     return []
 
 class VenturePair(VentureValue):
   def __init__(self,(first,rest)):
+    # type: (Tuple[Union[int, VentureValue], Union[int, VentureValue]]) -> None
     # TODO Maybe I need to be careful about tangent and cotangent
     # spaces after all.  A true pair needs to have a venture value
     # inside; a pair that represents the cotangent of something needs
@@ -646,6 +674,7 @@ class VenturePair(VentureValue):
   def isValidCompoundForm(self):
     return self.rest.isValidCompoundForm()
   def asPythonList(self, elt_type=None):
+    # type: (VentureType) -> List[object]
     if elt_type is not None:
       return [elt_type.asPython(self.first)] + self.rest.asPythonList(elt_type)
     else:
@@ -662,6 +691,7 @@ class VenturePair(VentureValue):
       return (front, rest)
 
 def pythonListToVentureList(l):
+  # type: (List) -> Union[VenturePair, VentureNil]
   return reduce(lambda t, h: VenturePair((h, t)), reversed(l), VentureNil())
 
 def pythonListToImproperVentureList(tail, *l):
@@ -748,6 +778,9 @@ class VentureArray(VentureValue):
 
   def isValidCompoundForm(self): return True
   def asPythonList(self, elt_type=None):
+    # type: (VentureType) -> List[object]
+    # I don't think there is any way to tell mypy that the output is a
+    # list of VentureValue if the input is None
     return self.getArray(elt_type)
 
 class VentureArrayUnboxed(VentureValue):
@@ -867,6 +900,7 @@ and O(n) copy."""
 
   def isValidCompoundForm(self): return False
   def asPythonList(self, elt_type=None):
+    # type: (VentureType) -> List[object]
     return self.getArray(elt_type)
 
 class VentureSimplex(VentureValue):

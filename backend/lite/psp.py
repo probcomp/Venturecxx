@@ -15,12 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+from typing import List
+from typing import TYPE_CHECKING
+
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.lkernel import DefaultVariationalLKernel
 from venture.lite.lkernel import DeterministicMakerAAALKernel
 from venture.lite.lkernel import LKernel
+from venture.lite.env import VentureEnvironment
 from venture.lite.request import Request
 from venture.lite.utils import override
+import venture.lite.value as vv
+
+if TYPE_CHECKING:
+  from venture.lite.node import Node
 
 class PSP(object):
   """A Primitive Stochastic Procedure.
@@ -73,6 +81,7 @@ class PSP(object):
   """
 
   def simulate(self, _args):
+    # type: (IArgs) -> vv.VentureValue
     """Simulate this process with the given parameters and return the result."""
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
 
@@ -116,6 +125,7 @@ class PSP(object):
       type(self))
 
   def isRandom(self):
+    # type: () -> bool
     """Return whether this PSP is stochastic or not.  This is important
     because only nodes whose operators are random PSPs can be
     principal.
@@ -138,6 +148,7 @@ class PSP(object):
       type(self))
 
   def logDensity(self, _value, _args):
+    # type: (vv.VentureValue, IArgs) -> float
     """Return the log-density of simulating the given value from the given args.
 
     If the output space is discrete, return the log-probability.
@@ -314,7 +325,8 @@ class IArgs(object):
 
   """
   def __init__(self):
-    self.operandNodes = None
+    # type: () -> None
+    self.operandNodes = [] # type: List[Node]
     """The identities of the arguments passed to the PSP.
 
     These are used primarily by parametrically polymorphic PSPs, like
@@ -327,7 +339,7 @@ class IArgs(object):
     This is used mainly as a unique key to prevent auto-caching of
     requests that are supposed to be generative.
     """
-    self.env = None
+    self.env = VentureEnvironment() # type: VentureEnvironment[Node]
     """The lexical environment of the application.
 
     This is only used by SPs that need to access it, like the
@@ -374,23 +386,23 @@ class DeterministicPSP(PSP):
   """Provides good default implementations of PSP methods for deterministic
   PSPs."""
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def isRandom(self):
     return False
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def canAbsorb(self, _trace, _appNode, _parentNode):
     return False
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def logDensity(self, _value, _args):
     return 0
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def gradientOfLogDensity(self, _value, args):
     return (0, [0 for _ in args.operandNodes])
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def logDensityBound(self, _value, _args): return 0
 
 class DeterministicMakerAAAPSP(DeterministicPSP):
@@ -405,33 +417,33 @@ class DeterministicMakerAAAPSP(DeterministicPSP):
     return DeterministicMakerAAALKernel(self)
 
 class NullRequestPSP(DeterministicPSP):
-  @override(DeterministicPSP)
+  @override(DeterministicPSP) # type: ignore
   def simulate(self, _args):
     return Request()
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def gradientOfSimulate(self, args, _value, _direction):
     return [0 for _ in args.operandNodes]
 
-  @override(DeterministicPSP)
+  @override(DeterministicPSP) # type: ignore
   def canAbsorb(self, _trace, _appNode, _parentNode):
     return True
 
 class ESRRefOutputPSP(DeterministicPSP):
-  @override(DeterministicPSP)
+  @override(DeterministicPSP) # type: ignore
   def simulate(self, args):
     assert len(args.esrNodes()) ==  1
     return args.esrValues()[0]
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def gradientOfSimulate(self, args, _value, direction):
     return [0 for _ in args.operandNodes] + [direction]
 
-  @override(DeterministicPSP)
+  @override(DeterministicPSP) # type: ignore
   def gradientOfLogDensity(self, _value, args):
     return (0, [0 for _ in args.operandNodes + args.esrNodes()])
 
-  @override(DeterministicPSP)
+  @override(DeterministicPSP) # type: ignore
   def canAbsorb(self,trace,appNode,parentNode):
     return parentNode != trace.esrParentsAt(appNode)[0] \
         and parentNode != appNode.requestNode
@@ -440,11 +452,11 @@ class RandomPSP(PSP):
   """Provides good default implementations of (two) PSP methods for
   (assessable) stochastic PSPs.
   """
-  @override(PSP)
+  @override(PSP) # type: ignore
   def isRandom(self):
     return True
 
-  @override(PSP)
+  @override(PSP) # type: ignore
   def canAbsorb(self, _trace, _appNode, _parentNode):
     return True
 
@@ -452,7 +464,7 @@ class LikelihoodFreePSP(RandomPSP):
   """Provides good default implementations of (two) PSP methods for
   likelihood-free stochastic PSPs.
   """
-  @override(PSP)
+  @override(PSP) # type: ignore
   def canAbsorb(self, _trace, _appNode, _parentNode):
     return False
 

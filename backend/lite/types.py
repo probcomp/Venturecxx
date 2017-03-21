@@ -44,6 +44,7 @@ See the "Types" section of doc/type-system.md."""
     else:
       # Function will be added by inheritance pylint:disable=no-member
       return self.asPython(vthing)
+
   def distribution(self, base, **kwargs):
     name = self.name()
     if len(name) >= 2 and name[0] == "<" and name[-1] == ">":
@@ -51,6 +52,7 @@ See the "Types" section of doc/type-system.md."""
     else:
       raise Exception(
         "Please implement an explicit 'distribution' method for type %s" % name)
+
   def __eq__(self, other):
     return type(self) == type(other)
 

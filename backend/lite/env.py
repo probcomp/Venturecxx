@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import OrderedDict
+import typing as tp
 
 from venture.lite.exception import VentureError
 from venture.lite.value import VentureValue
@@ -24,16 +25,19 @@ from venture.lite.value import registerVentureType
 from venture.lite.types import VentureType
 from venture.lite.types import standard_venture_type
 
+T = tp.TypeVar('T')
+
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
 # should be consistent.
 # Binding a symbol to the Python value None has the effect of making
 # the symbol behave as if unbound, shadowing existing bindings; this
 # behavior is used in the implementation of letrec.
-class VentureEnvironment(VentureValue):
+class VentureEnvironment(VentureValue, tp.Generic[T]):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
+    # type: (VentureEnvironment, tp.List[str], tp.List[T]) -> None
     self.outerEnv = outerEnv
-    self.frame = OrderedDict()
+    self.frame = OrderedDict() # type: OrderedDict[str, T]
     if ids is not None:
       for sym in ids:
         assert isinstance(sym, str)
@@ -41,6 +45,7 @@ class VentureEnvironment(VentureValue):
       self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
+    # type: (str, T) -> None
     if not isinstance(sym, str):
       raise VentureError("Symbol '%s' must be a string, not %s" % (str(sym), type(sym)))
     if sym in self.frame:
@@ -61,6 +66,7 @@ class VentureEnvironment(VentureValue):
     self.frame[sym] = val
 
   def findSymbol(self,sym):
+    # type: (str) -> T
     if sym in self.frame: ret = self.frame[sym]
     elif not self.outerEnv: ret = None
     else: ret = self.outerEnv.findSymbol(sym)
