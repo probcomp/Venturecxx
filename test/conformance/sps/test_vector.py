@@ -1,4 +1,4 @@
-# Copyright (c) 2014, 2015 MIT Probabilistic Computing Project.
+# Copyright (c) 2017 MIT Probabilistic Computing Project.
 #
 # This file is part of Venture.
 #
@@ -15,13 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from venture.lite.infer.dispatch import primitive_infer
-from venture.lite.infer.dispatch import log_likelihood_at
-from venture.lite.infer.dispatch import log_joint_at
-from venture.lite.infer.mh import BlockScaffoldIndexer
-from venture.lite.infer.mh import getCurrentValues
-from venture.lite.infer.mh import registerDeterministicLKernels
-from venture.lite.infer.mh import unregisterDeterministicLKernels
-from venture.lite.infer.egibbs import EnumerativeDiversify
-from venture.lite.infer.rejection import MissingEsrParentError
-from venture.lite.infer.rejection import NoSPRefError
+from venture.test.config import get_ripl
+
+def test_append():
+  ripl = get_ripl(init_mode='venture_script')
+  ripl.assume('a', '[1,2,3]')
+  ripl.assume('b', '[4,5,6]')
+  assert ripl.sample('append(a, b)') == [1,2,3,4,5,6]

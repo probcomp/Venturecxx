@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 import numbers
 from collections import OrderedDict
 
@@ -42,6 +43,7 @@ def regenAndAttach(trace, scaffold, shouldRestore, omegaDB, gradients):
   ans = regenAndAttachAtBorder(trace, scaffold.border[0], scaffold,
                                shouldRestore, omegaDB, gradients)
   assertTrace(trace, scaffold)
+  assert not math.isnan(ans), "Regen weight should never be NaN"
   return ans
 
 def regenAndAttachAtBorder(trace, border, scaffold,

@@ -34,10 +34,11 @@ class VentureEnvironment(VentureValue):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     self.outerEnv = outerEnv
     self.frame = OrderedDict()
-    if ids:
+    if ids is not None:
       for sym in ids:
         assert isinstance(sym, str)
-    if ids and nodes: self.frame.update(zip(ids,nodes))
+    if ids is not None and nodes is not None:
+      self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
     if not isinstance(sym, str):

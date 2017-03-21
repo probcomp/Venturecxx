@@ -67,12 +67,18 @@ def testCategoricalDefault1():
 def testLogCategoricalAbsorb(seed):
   # A simple test that checks the interface of log categorical and its
   # simulate and log density methods
-  if config["get_ripl"] != "puma":
-    raise SkipTest("log categorical only implemented in Puma")
   ripl = get_ripl(seed=seed)
 
-  ripl.assume("x","(simplex (log .1) (log .9))")
-  ripl.assume("y","(simplex (log .55) (log .45))")
+  if config["get_ripl"] == "puma":
+    # XXX Puma's log_categorical demands a simplex argument, as that's
+    # the best representation the backend has for an array of numbers.
+    # Lite's simplex, however, checks boundary conditions, so can't be
+    # used here.
+    ripl.assume("x","(simplex (log .1) (log .9))")
+    ripl.assume("y","(simplex (log .55) (log .45))")
+  else:
+    ripl.assume("x","(array (log .1) (log .9))")
+    ripl.assume("y","(array (log .55) (log .45))")
   ripl.assume("b","(flip)",label="b")
   ripl.observe("(log_categorical (if b x y) (array 10 100))","100")
 
