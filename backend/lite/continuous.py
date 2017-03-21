@@ -173,7 +173,7 @@ class InverseWishartOutputPSP(RandomPSP):
     # use matlab's heuristic for choosing between the two different sampling schemes
     if (dof <= 81+p) and (dof == int(dof)):
       # direct
-      A = args.np_prng().normal(size=(p, dof))
+      A = args.np_prng().normal(size=(p, int(dof)))
     else:
       # https://en.wikipedia.org/wiki/Wishart_distribution#Bartlett_decomposition
       A = np.diag(np.sqrt(args.np_prng().chisquare(dof - np.arange(p), size=p)))
@@ -261,7 +261,7 @@ class WishartOutputPSP(RandomPSP):
     # Use Matlab's heuristic for choosing between the two different sampling schemes.
     if (dof <= 81+p) and (dof == int(dof)):
       # direct
-      A = args.np_prng().normal(size=(p, dof))
+      A = args.np_prng().normal(size=(p, int(dof)))
     else:
       # https://en.wikipedia.org/wiki/Wishart_distribution#Bartlett_decomposition
       A = np.diag(np.sqrt(args.np_prng().chisquare(dof - np.arange(p), size=p)))

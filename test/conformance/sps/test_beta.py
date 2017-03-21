@@ -39,6 +39,7 @@ from venture.lite.utils import logistic
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
+from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 from venture.test.config import stochasticTest
@@ -120,6 +121,7 @@ def check_beta_density_quad(sp, lo, hi, a, b):
     one, esterr = scipy.integrate.quad(pdf, lo, hi)
     assert relerr(1, one) < esterr
 
+@gen_on_inf_prim("none")
 def test_beta_density_quad():
     v = (.1, .25, .5, .75, 1, 2, 5, 10, 100)
     for _name, sp, _to_direct, lo, hi in BETA_SPACES:
@@ -127,6 +129,7 @@ def test_beta_density_quad():
             for b in v:
                 yield check_beta_density_quad, sp, lo, hi, a, b
 
+@on_inf_prim("none")
 @stochasticTest
 def test_log_odds_uniform_cdf(seed):
     inf = float('inf')
@@ -148,6 +151,7 @@ def check_beta_ks(name, sp, to_direct, lo, a, b, seed):
     return reportKnownContinuous(dist.cdf, map(to_direct, samples),
         descr='(%s %r %r)' % (name, a, b))
 
+@gen_on_inf_prim("none")
 def test_beta_ks():
     v = (.1, .25, .5, 1, 1.1, 2, 5.5, 10)
     for name, sp, to_direct, lo, _hi in BETA_SPACES:
@@ -175,6 +179,7 @@ def check_beta_ks_quad(name, sp, lo, a, b, seed):
     return reportKnownContinuous(np.vectorize(cdf), samples,
         descr='(%s %r %r)' % (name, a, b))
 
+@gen_on_inf_prim("none")
 def test_beta_ks_quad():
     v = (.1, .25, .5, 1, 1.1, 5.5, 10)
     for name, sp, _to_direct, lo, _hi in BETA_SPACES:
@@ -191,6 +196,7 @@ def test_beta_ks_quad():
                             continue
                 yield check_beta_ks_quad, name, sp, lo, a, b
 
+@on_inf_prim("none")
 @statisticalTest
 def test_beta_tail(seed):
     # Check that Beta(.1, .1) yields samples near 0 and 1, not just in
@@ -219,6 +225,7 @@ def test_beta_thagomizer(seed):
                 if a < 1e-16 or b < 1e-16:
                     assert sample < 1e-16 or sample == 1
 
+@on_inf_prim("none")
 @timed(5)
 @statisticalTest
 def test_beta_small_small(seed):
@@ -228,6 +235,7 @@ def test_beta_small_small(seed):
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr='(beta 5.5 5.5)')
 
+@on_inf_prim("none")
 @timed(5)
 @statisticalTest
 def test_beta_small_large(seed):
@@ -237,6 +245,7 @@ def test_beta_small_large(seed):
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr='(beta 5.5 1e9)')
 
+@on_inf_prim("none")
 @timed(5)
 @statisticalTest
 def test_beta_large_small(seed):
@@ -246,6 +255,7 @@ def test_beta_large_small(seed):
     dist = scipy.stats.beta(a, b)
     return reportKnownContinuous(dist.cdf, samples, descr='(beta 1e9 5.5)')
 
+@on_inf_prim("none")
 @timed(5)
 @stochasticTest
 def test_beta_large_large(seed):
@@ -254,6 +264,7 @@ def test_beta_large_large(seed):
     samples = collect_sp_samples(BetaOutputPSP, (a, b), seed)
     assert all(sample == 1/2 for sample in samples)
 
+@on_inf_prim("none")
 @timed(5)
 @stochasticTest
 def test_log_beta_small(seed):
@@ -268,7 +279,7 @@ def test_log_beta_small(seed):
     # A single sample is rounded to zero with probability < 10^-150.
     assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(40)
 @stochasticTest
 def test_log_beta_bernoulli_small(seed):
     a = 0.5
@@ -285,6 +296,7 @@ def test_log_beta_bernoulli_small(seed):
     # A single sample is rounded to zero with probability < 10^-150.
     assert all(sample != 0 for sample in samples)
 
+@on_inf_prim("none")
 @timed(5)
 @stochasticTest
 def test_log_beta_smaller(seed):
@@ -300,7 +312,7 @@ def test_log_beta_smaller(seed):
     # 0 is coarse enough that we plausibly get zero here.
     #assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(40)
 @stochasticTest
 def test_log_beta_bernoulli_smaller(seed):
     a = 0.001
@@ -319,6 +331,7 @@ def test_log_beta_bernoulli_smaller(seed):
     # 0 is coarse enough that we plausibly get zero here.
     #assert all(sample != 0 for sample in samples)
 
+@on_inf_prim("none")
 @timed(5)
 @stochasticTest
 def test_log_odds_beta_small(seed):
@@ -331,7 +344,7 @@ def test_log_odds_beta_small(seed):
     assert all(not math.isinf(sample) for sample in samples)
     assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(40)
 @stochasticTest
 def test_log_odds_beta_bernoulli_small(seed):
     a = 0.5
@@ -347,6 +360,7 @@ def test_log_odds_beta_bernoulli_small(seed):
     assert all(not math.isinf(sample) for sample in samples)
     assert all(sample != 0 for sample in samples)
 
+@on_inf_prim("none")
 @timed(5)
 @stochasticTest
 def test_log_odds_beta_smaller(seed):
@@ -360,7 +374,7 @@ def test_log_odds_beta_smaller(seed):
     assert all(not math.isinf(sample) for sample in samples)
     assert all(sample != 0 for sample in samples)
 
-@timed(5)
+@timed(40)
 @stochasticTest
 def test_log_odds_beta_bernoulli_smaller(seed):
     a = 0.001

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from venture.lite.node import isConstantNode
 from venture.lite.node import isLookupNode
 from venture.lite.node import isApplicationNode
@@ -29,9 +31,10 @@ from venture.lite.consistency import assertTorus, assertTrace
 def detachAndExtract(trace, scaffold, compute_gradient = False):
   assertTrace(trace, scaffold)
   assert len(scaffold.border) == 1
-  ans = detachAndExtractAtBorder(trace, scaffold.border[0], scaffold, compute_gradient=compute_gradient)
+  (wt, omegadb) = detachAndExtractAtBorder(trace, scaffold.border[0], scaffold, compute_gradient=compute_gradient)
   assertTorus(scaffold)
-  return ans
+  assert not math.isnan(wt), "Detach weight should never be NaN"
+  return (wt, omegadb)
 
 def detachAndExtractAtBorder(trace, border, scaffold, compute_gradient = False):
   """Returns the weight and an OmegaDB.  The OmegaDB contains
