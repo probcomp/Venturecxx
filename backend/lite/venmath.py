@@ -109,11 +109,22 @@ generic_times = dispatching_psp(
 
 registerBuiltinSP("mul", no_request(generic_times))
 
+def divide(x, y):
+  if y == 0:
+    if x > 0:
+      return float('+inf')
+    elif x < 0:
+      return float('-inf')
+    else:
+      return float('NaN')
+  else:
+    return x / y
+
 def grad_div(args, direction):
   return [direction * (1 / args[1]),
           direction * (- args[0] / (args[1] * args[1]))]
 
-registerBuiltinSP("div", binaryNum(lambda x,y: x / y,
+registerBuiltinSP("div", binaryNum(divide,
     sim_grad=grad_div,
     descr="div returns the ratio of its first argument to its second") )
 

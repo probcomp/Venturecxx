@@ -180,6 +180,11 @@ class VentureNumber(VentureValue):
       return "VentureNumber(%s)" % self.number
     else:
       return "VentureNumber(uninitialized)"
+  def __str__(self):
+    if hasattr(self, "number"):
+      return str(self.number)
+    else:
+      return "VentureNumber(uninitialized)"
   def getNumber(self):
     return self.number
   def getInteger(self):
@@ -253,6 +258,11 @@ class VentureInteger(VentureValue):
   def __repr__(self):
     if hasattr(self, "number"):
       return "VentureInteger(%s)" % self.number
+    else:
+      return "VentureInteger(uninitialized)"
+  def __str__(self):
+    if hasattr(self, "number"):
+      return str(self.number)
     else:
       return "VentureInteger(uninitialized)"
   def getInteger(self):
@@ -355,6 +365,8 @@ class VentureBool(VentureValue):
     self.boolean = bool(boolean)
   def __repr__(self):
     return "Bool(%s)" % self.boolean
+  def __str__(self):
+    return str(self.boolean)
   def getBool(self):
     return self.boolean
   def asStackDict(self, _trace=None):
@@ -379,6 +391,8 @@ class VentureSymbol(VentureValue):
     self.symbol = symbol
   def __repr__(self):
     return "Symbol(%s)" % self.symbol
+  def __str__(self):
+    return self.symbol
   def getSymbol(self):
     return self.symbol
   def asStackDict(self, _trace=None):
@@ -405,6 +419,8 @@ class VentureString(VentureValue):
     self.strng = strng
   def __repr__(self):
     return "Strng(%s)" % self.strng
+  def __str__(self):
+    return self.strng
   def getSymbol(self):
     return self.strng
   def getString(self):
@@ -504,6 +520,13 @@ class VenturePair(VentureValue):
       return "VentureList(%r)" % list_
     else:
       return "VentureList(%r . %r)" % (list_, tail)
+  def __str__(self):
+    (list_, tail) = self.asPossiblyImproperList()
+    base = ", ".join([str(l) for l in list_])
+    if tail is None:
+      return "[" + base + "]"
+    else:
+      return "[" + base + " . " + str(tail) + "]"
 
   def getPair(self):
     return (self.first,self.rest)
@@ -541,6 +564,8 @@ class VenturePair(VentureValue):
     fstcmp = self.first.compare(other.first)
     if fstcmp != 0: return fstcmp
     else: return self.rest.compare(other.rest)
+  def equalSameType(self, other):
+    return self.first.equal(other.first) and self.rest.equal(other.rest)
   def __hash__(self):
     return hash(self.first) + 37*hash(self.rest)
 
