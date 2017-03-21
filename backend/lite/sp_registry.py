@@ -23,8 +23,8 @@
 # - Trace construction involves additional activity (e.g., Venture SP
 #   Records)
 
-from typing import Dict
 from venture.lite.sp import SP
+from venture.lite.typing import Dict
 
 _builtInSPsList = []
 

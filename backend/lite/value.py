@@ -23,15 +23,15 @@ from collections import OrderedDict
 from numbers import Number
 import hashlib
 import operator
-from typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
-from typing import Union # Pylint doesn't understand type comments pylint: disable=unused-import
-from typing import TYPE_CHECKING
 
 import numpy as np # type: ignore
 
 from venture.lite.exception import VentureTypeError
 from venture.lite.exception import VentureValueError
 from venture.lite.mlens import MLens
+from venture.lite.typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
+from venture.lite.typing import Union # Pylint doesn't understand type comments pylint: disable=unused-import
+from venture.lite.typing import TYPE_CHECKING
 import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
 

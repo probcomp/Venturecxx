@@ -16,7 +16,6 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from collections import OrderedDict
-import typing as tp
 
 from venture.lite.exception import VentureError
 from venture.lite.value import VentureValue
@@ -24,6 +23,7 @@ from venture.lite.value import registerVentureType
 # Used by the exec pylint: disable=unused-import
 from venture.lite.types import VentureType
 from venture.lite.types import standard_venture_type
+import venture.lite.typing as tp
 
 T = tp.TypeVar('T')
 

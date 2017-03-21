@@ -16,15 +16,15 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-from typing import Any
-from typing import Callable
-from typing import Type
-from typing import TypeVar
 
 import numpy as np
 import scipy.special as ss
 
 import venture.lite.mvnormal as mvnormal
+from venture.lite.typing import Any
+from venture.lite.typing import Callable
+from venture.lite.typing import Type
+from venture.lite.typing import TypeVar
 
 C = TypeVar('C')
 FuncT = TypeVar('FuncT', bound=Callable[..., Any])

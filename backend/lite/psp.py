@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List
-from typing import TYPE_CHECKING
-
+from venture.lite.env import VentureEnvironment
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.lkernel import DefaultVariationalLKernel
 from venture.lite.lkernel import DeterministicMakerAAALKernel
 from venture.lite.lkernel import LKernel
-from venture.lite.env import VentureEnvironment
 from venture.lite.request import Request
+from venture.lite.typing import List
+from venture.lite.typing import TYPE_CHECKING
 from venture.lite.utils import override
 import venture.lite.value as vv
 
