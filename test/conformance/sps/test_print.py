@@ -26,7 +26,7 @@ from venture.test.config import on_inf_prim
 
 def extract_integer(captured):
   'Extract the Venture integer from a captured print'
-  res = search('VentureInteger\((.*)\)', captured) #pylint: disable=W1401
+  res = search('debug .*: (.*)', captured) #pylint: disable=W1401
   return int(res.group(1))
 
 def clear_Puma_warning(ripl):

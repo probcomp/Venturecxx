@@ -296,7 +296,7 @@ def testAnnotateErrorInListLookup():
   # negative list indexes).
   ripl = get_ripl()
   err.assert_error_message_contains("""\
-Index out of bounds VentureNumber(-1.0)
+Index out of bounds -1.0
 (autorun (lookup (list 2 3) -1))
          ^^^^^^^^^^^^^^^^^^^^^^
 """,
@@ -312,7 +312,7 @@ def testAnnotateErrorInListLookup2():
   #          ^^^^^^^^^^^^^^^^^^^^^^
   # once Issue #491 is fixed
   err.assert_error_message_contains("""\
-Index out of bounds VentureNumber(-1.0)
+Index out of bounds -1.0
 """,
   ripl.sample, "(lookup (list 2 3) -1)")
 
