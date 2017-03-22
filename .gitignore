@@ -24,6 +24,7 @@ a.out
 # Dev/testing
 dump
 .noseids
+/.mypy_cache
 # Compiled Stan model cache
 /test/integration/models/
 
