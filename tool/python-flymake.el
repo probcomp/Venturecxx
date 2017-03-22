@@ -23,7 +23,7 @@
 ;; (add-hook 'python-mode-hook 'python-guess-indent)
 
 ;; Set Flymake as a minor mode for Python
-(add-hook 'python-mode-hook '(lambda () (flymake-mode)))
+(add-hook 'python-mode-hook 'flymake-mode)
 
 ;; Configure Flymake wait a bit longer after edits before starting
 (setq-default flymake-no-changes-timeout '1)
@@ -56,4 +56,4 @@
                         (file-name-directory buffer-file-name))))
       (list "venture-epylint.py" (list local-file))))
   (add-to-list 'flymake-allowed-file-name-masks
-               '("\\.py\\'" flymake-pylint-init)))
+               '(".*/Venturecxx/.*\\.py\\'" flymake-pylint-init)))
