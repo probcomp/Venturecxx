@@ -52,6 +52,7 @@ class VentureValue(object):
   def getAtom(self):
     raise VentureTypeError("Cannot convert %s to atom" % type(self))
   def getBool(self):
+    # type: () -> bool
     raise VentureTypeError("Cannot convert %s to bool" % type(self))
   def getSymbol(self):
     # type: () -> str
