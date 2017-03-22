@@ -10,22 +10,33 @@
 
 from __future__ import absolute_import
 
-# Conditionalize trying to import the typing module on whether or not
-# we are typechecking with mypy, as recommended under
+# This is a magic constant that mypy sets to true during type
+# checking, as described under
 # http://mypy.readthedocs.io/en/latest/common_issues.html#import-cycles
 MYPY = False
-if MYPY:
+
+try:
+    # If typing is available, use it.  It's harmless in running code,
+    # and some uses can be fairly sophisticated.
     from typing import *
-else:
-    class bogus_container(object):
-        def __getitem__(self, *args, **kwargs): return object
-    Any = None
-    Callable = bogus_container()
-    Dict = bogus_container()
-    Generic = bogus_container()
-    List = bogus_container()
-    Type = None
-    Tuple = bogus_container()
-    Union = bogus_container()
-    TYPE_CHECKING = False
-    def TypeVar(*args, **kwargs): return None
+except ImportError:
+    if MYPY:
+        # We are type-checking without the typing module: fail.
+        raise
+    else:
+        # The typing module is not available, but we are not
+        # typechecking: Try to stub the names.  Sufficiently simple
+        # uses (such as occur in the code of Venture proper) should
+        # execute.
+        class bogus_container(object):
+            def __getitem__(self, *args, **kwargs): return object
+        Any = None
+        Callable = bogus_container()
+        Dict = bogus_container()
+        Generic = bogus_container()
+        List = bogus_container()
+        Type = None
+        Tuple = bogus_container()
+        Union = bogus_container()
+        TYPE_CHECKING = False
+        def TypeVar(*args, **kwargs): return None
