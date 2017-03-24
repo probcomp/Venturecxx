@@ -195,7 +195,7 @@ class VentureNumber(VentureValue):
     self.number = float(number)
   def __repr__(self):
     if hasattr(self, "number"):
-      return "VentureNumber(%s)" % self.number
+      return "VentureNumber(%r)" % (self.number,)
     else:
       return "VentureNumber(uninitialized)"
   def __str__(self):
