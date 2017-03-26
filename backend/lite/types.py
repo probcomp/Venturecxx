@@ -520,6 +520,8 @@ Caveat:
       return thing.getString()
     if isinstance(thing, vv.VentureSymbol):
       return thing.getSymbol()
+    if isinstance(thing, vv.VentureArrayUnboxed):
+      return [self.asPython(val) for val in thing.getArray()]
     if isinstance(thing, vv.VentureArray):
       return [self.asPython(val) for val in thing.getArray()]
     if isinstance(thing, vv.VentureDict):
