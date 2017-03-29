@@ -420,6 +420,20 @@ class NormalvsOutputPSP(RandomPSP):
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[gradMu,sum(gradSigma)])
 
+registerBuiltinSP("normalss", typed_nr(NormalOutputPSP(),
+    [t.NumberType(), t.NumberType()], t.NumberType()))
+
+registerBuiltinSP("normalsv", typed_nr(NormalsvOutputPSP(),
+    [t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+     t.ArrayUnboxedType(t.NumberType())))
+
+registerBuiltinSP("normalvs", typed_nr(NormalvsOutputPSP(),
+    [t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+     t.ArrayUnboxedType(t.NumberType())))
+
+registerBuiltinSP("normalvv", typed_nr(NormalvvOutputPSP(),
+    [t.ArrayUnboxedType(t.NumberType()), t.ArrayUnboxedType(t.NumberType())],
+     t.ArrayUnboxedType(t.NumberType())))
 
 generic_normal = dispatching_psp(
   [SPType([t.NumberType(), t.NumberType()], t.NumberType()), # TODO Sigma is really non-zero, but negative is OK by scaling
