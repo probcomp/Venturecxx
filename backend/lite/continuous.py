@@ -420,6 +420,29 @@ class NormalvsOutputPSP(RandomPSP):
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[gradMu,sum(gradSigma)])
 
+  def logDensityBound(self, x, args):
+    (mu, sigma) = args.operandValues()
+    if sigma is not None:
+      # I need to know the length
+      N = None
+      if x is not None:
+        N = len(x)
+      elif mu is not None:
+        N = len(mu)
+      else:
+        # XXX Perhaps modify the rejection mechanism to supply more
+        # type information, so I can get the length (which has to be
+        # fixed for these density bounds to be comparable anyway).
+        raise Exception("Cannot rejection auto-bound vector Gaussian of unknown length")
+      return -(math.log(sigma) + HALF_LOG2PI) * N
+    elif x is not None and mu is not None:
+      if len(x) == len(mu):
+        raise Exception("TODO: Compute the log density bound for vector Gaussian with known mean and observation and unknown shared sigma")
+      else:
+        return float("-inf")
+    else:
+      raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
+
 registerBuiltinSP("normalss", typed_nr(NormalOutputPSP(),
     [t.NumberType(), t.NumberType()], t.NumberType()))
 
