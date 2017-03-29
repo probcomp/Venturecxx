@@ -48,7 +48,7 @@
 
 ;; Configure flymake for Python
 (when (load "flymake" t)
-  (defun flymake-pylint-init ()
+  (defun venture-flymake-pylint-init ()
     (let* ((temp-file (flymake-init-create-temp-buffer-copy
                        'flymake-create-temp-inplace))
            (local-file (file-relative-name
@@ -56,4 +56,4 @@
                         (file-name-directory buffer-file-name))))
       (list "venture-epylint.py" (list local-file))))
   (add-to-list 'flymake-allowed-file-name-masks
-               '(".*/Venturecxx/.*\\.py\\'" flymake-pylint-init)))
+               '(".*/Venturecxx/.*\\.py\\'" venture-flymake-pylint-init)))
