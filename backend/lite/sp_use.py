@@ -24,6 +24,8 @@ from venture.lite.psp import IArgs
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
 from venture.lite import env as env
+from venture.lite.sp import SPAux
+import venture.lite.value as vv
 
 class MockArgs(IArgs):
   """IArgs instance for invoking methods on SPs that don't interact with the trace.
@@ -31,6 +33,7 @@ class MockArgs(IArgs):
   (Which is most of them)."""
 
   def __init__(self, vals, aux, py_rng=None, np_rng=None, madeSPAux=None):
+    # type: (List[vv.VentureValue], SPAux, random.Random, npr.RandomState, SPAux) -> None
     super(MockArgs, self).__init__()
     self.vals = vals
     self.aux = aux
@@ -49,10 +52,12 @@ class MockArgs(IArgs):
   def py_prng(self):
     if self._py_rng is None:
       self._py_rng = random.Random()
+      self._py_rng.seed(random.randrange(2**31-1))
     return self._py_rng
   def np_prng(self):
     if self._np_rng is None:
       self._np_rng = npr.RandomState()
+      self._np_rng.seed(random.randrange(2**31-1))
     return self._np_rng
 
 def simulate(sp, no_wrapper=False):

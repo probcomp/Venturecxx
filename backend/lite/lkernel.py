@@ -20,7 +20,6 @@ import sys
 import math
 
 from venture.lite.exception import VentureBuiltinLKernelMethodError
-from venture.lite.sp import VentureSPRecord
 from venture.lite.value import VentureValue
 
 class LKernel(object):
@@ -167,6 +166,7 @@ class DeterministicMakerAAALKernel(PosteriorAAALKernel):
     spRecord.spAux = args.madeSPAux()
     return spRecord
   def weight(self, _trace, newValue, args):
+    from venture.lite.sp import VentureSPRecord
     assert isinstance(newValue,VentureSPRecord)
     return newValue.sp.outputPSP.logDensityOfData(args.madeSPAux())
 

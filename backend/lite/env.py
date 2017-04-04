@@ -23,6 +23,9 @@ from venture.lite.value import registerVentureType
 # Used by the exec pylint: disable=unused-import
 from venture.lite.types import VentureType
 from venture.lite.types import standard_venture_type
+import venture.lite.typing as tp
+
+T = tp.TypeVar('T')
 
 # Environments store Python strings for the symbols, not Venture
 # symbol objects.  This is a choice, but whichever way it is made it
@@ -30,16 +33,19 @@ from venture.lite.types import standard_venture_type
 # Binding a symbol to the Python value None has the effect of making
 # the symbol behave as if unbound, shadowing existing bindings; this
 # behavior is used in the implementation of letrec.
-class VentureEnvironment(VentureValue):
+class VentureEnvironment(VentureValue, tp.Generic[T]):
   def __init__(self,outerEnv=None,ids=None,nodes=None):
+    # type: (VentureEnvironment, tp.List[str], tp.List[T]) -> None
     self.outerEnv = outerEnv
-    self.frame = OrderedDict()
-    if ids:
+    self.frame = OrderedDict() # type: OrderedDict[str, T]
+    if ids is not None:
       for sym in ids:
         assert isinstance(sym, str)
-    if ids and nodes: self.frame.update(zip(ids,nodes))
+    if ids is not None and nodes is not None:
+      self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
+    # type: (str, T) -> None
     if not isinstance(sym, str):
       raise VentureError("Symbol '%s' must be a string, not %s" % (str(sym), type(sym)))
     if sym in self.frame:
@@ -60,6 +66,7 @@ class VentureEnvironment(VentureValue):
     self.frame[sym] = val
 
   def findSymbol(self,sym):
+    # type: (str) -> T
     if sym in self.frame: ret = self.frame[sym]
     elif not self.outerEnv: ret = None
     else: ret = self.outerEnv.findSymbol(sym)
@@ -98,6 +105,14 @@ class VentureEnvironment(VentureValue):
   def lookup(self, key):
     return self.findSymbol(key.getSymbol())
   # TODO Define contains to check whether the symbol is there (without throwing exceptions)
+
+  def printEnv(self):
+    print "-- Frame --"
+    for (k, v) in self.frame.iteritems():
+      print k, v
+    if self.outerEnv is not None and self.outerEnv.outerEnv is not None:
+      # Skip the top frame, which is presumably the global environment
+      self.outerEnv.printEnv()
 
 registerVentureType(VentureEnvironment, "environment")
 # Exec is appropriate for metaprogramming

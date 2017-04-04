@@ -46,6 +46,7 @@ for egg in ${root}/.eggs/*.egg; do
 done
 
 export PYTHONPATH="${libdir}:${plat_libdir}${eggs}${PYTHONPATH:+:${PYTHONPATH}}"
+export MYPYPATH="${libdir}:${plat_libdir}${eggs}${MYPYPATH:+:${MYPYPATH}}"
 
 bindir="${root}/build/scripts-${version}"
 export PATH="${bindir}${PATH:+:${PATH}}"

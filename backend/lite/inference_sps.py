@@ -489,6 +489,13 @@ anything other than `one`.
 Returns the average number of nodes touched per transition in each particle.
 """)
 
+register_trace_method_sp("log_rejection_bound_at", transition_oper_type(min_req_args=1), desc="""\
+Compute an upper bound on the density obtainable in the given subproblem.
+
+This is the same bound that rejection sampling on that subproblem
+would use as the acceptance criterion.
+""")
+
 register_trace_method_sp("slice",
                   transition_oper_type([t.NumberType("w : number"), t.IntegerType("m : int")]),
                   desc="""\

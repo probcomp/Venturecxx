@@ -90,9 +90,9 @@ class RequestArgs(IArgs):
     self.operandNodes = nodes
     self.env = env
     assert seed is not None
-    rng = random.Random(seed)
-    self._py_rng = random.Random(rng.randint(1, 2**31 - 1))
-    self._np_rng = npr.RandomState(rng.randint(1, 2**31 - 1))
+    self._seed = seed
+    self._py_rng = None
+    self._np_rng = None
     # TODO Theoretically need spaux and madeSPAux fields
 
   def operandValues(self):
@@ -101,8 +101,25 @@ class RequestArgs(IArgs):
       assert v is None or isinstance(v, vv.VentureValue)
     return ans
 
-  def py_prng(self): return self._py_rng
-  def np_prng(self): return self._np_rng
+  def py_prng(self):
+    if self._py_rng is None:
+      if self._seed is not None:
+        self._py_rng = random.Random(self._seed)
+        self._seed = None
+      else:
+        assert self._np_rng is not None
+        self._py_rng = random.Random(self._np_rng.randint(1, 2**31 - 1))
+    return self._py_rng
+
+  def np_prng(self):
+    if self._np_rng is None:
+      if self._seed is not None:
+        self._np_rng = npr.RandomState(self._seed)
+        self._seed = None
+      else:
+        assert self._py_rng is not None
+        self._np_rng = npr.RandomState(self._py_rng.randint(1, 2**31 - 1))
+    return self._np_rng
 
 class OutputArgs(RequestArgs):
   "A package containing all the evaluation context information that an OutputPSP might need, parallel to venture.lite.node.Args"

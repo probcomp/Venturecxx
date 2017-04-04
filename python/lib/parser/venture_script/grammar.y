@@ -42,10 +42,15 @@ instruction(command)	::= command(c).
 instruction(statement)	::= statement(e).
 
 labelled(directive)	::= L_NAME(l) T_COLON directive(d).
-labelled(directive_prog)::= T_LDOLLAR(dol) primary(lab_exp) T_COLON directive(d).
+labelled(directive_prog)::= T_LDOLLAR(dol) primary(lab_exp) T_COLON
+				directive(d).
 directive(assume)	::= K_ASSUME(k) L_NAME(n) T_EQDEF(eq) expression(e).
-directive(assume_prog)	::= K_ASSUME(k) T_LDOLLAR(dol) primary(sym_exp) T_EQDEF(eq) expression(e).
-directive(observe)	::= K_OBSERVE(k) expression(e) T_EQDEF(eq) expression(e1).
+directive(assume_vals)	::= K_ASSUME(k) T_LROUND(l) paramlist(ns) T_RROUND(r)
+				T_EQDEF(eq) expression(e).
+directive(assume_prog)	::= K_ASSUME(k) T_LDOLLAR(dol) primary(sym_exp)
+				T_EQDEF(eq) expression(e).
+directive(observe)	::= K_OBSERVE(k) expression(e)
+				T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
 command(define)		::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
@@ -77,7 +82,8 @@ do_bind(labelled)	::= L_NAME(n) T_LARR(op) labelled(l).
 do_bind(none)		::= action(e).
 
 action(directive)	::= directive(d).
-action(force)		::= K_FORCE(k) expression(e1) T_EQDEF(eq) expression(e2).
+action(force)		::= K_FORCE(k) expression(e1)
+				T_EQDEF(eq) expression(e2).
 action(sample)		::= K_SAMPLE(k) expression(e).
 action(none)		::= arrow(e).
 
@@ -92,12 +98,14 @@ path_expression(one)	::= T_DIV(slash) path_step(s).
 path_expression(some)	::= path_expression(more) T_DIV(slash) path_step(s).
 
 path_step(tag)		::= T_QUESTION(q) L_NAME(tag).
-path_step(tag_val)	::= T_QUESTION(q) L_NAME(tag) T_EQ(eq) primary(value).
+path_step(tag_val)	::= T_QUESTION(q) L_NAME(tag)
+				T_EQ(eq) applicative(value).
 path_step(star)		::= T_MUL(star).
 path_step(edge)		::= primary(e).
 
 hash_tag(tag)		::= hash_tag(e) T_HASH(h) L_NAME(tag).
-hash_tag(tag_val)	::= hash_tag(e) T_HASH(h) L_NAME(tag) T_COLON(colon) applicative(value).
+hash_tag(tag_val)	::= hash_tag(e) T_HASH(h) L_NAME(tag)
+				T_COLON(colon) applicative(value).
 hash_tag(none)		::= boolean_or(e).
 
 boolean_or(or)		::= boolean_or(l) K_OR|T_OR(op) boolean_and(r).
@@ -133,7 +141,8 @@ exponential(none)	::= applicative(e).
 
 applicative(app)	::= applicative(fn) T_LROUND(o) arglist(args)
 				T_RROUND(c).
-applicative(lookup)	::= applicative(a) T_LSQUARE(o) expression(index) T_RSQUARE(c).
+applicative(lookup)	::= applicative(a) T_LSQUARE(o) expression(index)
+				T_RSQUARE(c).
 applicative(none)	::= primary(e).
 
 arglist(none)		::= .
@@ -167,6 +176,7 @@ params(many)		::= params(params) T_COMMA(c) L_NAME(param).
 
 arraybody(none)		::= .
 arraybody(some)		::= arrayelts(es).
+arraybody(somecomma)	::= arrayelts(es) T_COMMA(c).
 arrayelts(one)		::= expression(e).
 arrayelts(many)		::= arrayelts(es) T_COMMA(c) expression(e).
 

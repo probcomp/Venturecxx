@@ -94,7 +94,7 @@ def p_p_plot_2samp(observed1, observed2, ax=None, show=False):
   ax.set_ylabel("Probability (%s samples, observed2)" % len(observed2))
   ax.set_title("Probability-probability plot", loc='left')
   (D, pval) = stats.ks_2samp(observed1, observed2)
-  ax.set_title("Two-sided K-S stat: %s, p-value: %s" % (D, pval), loc='right')
+  ax.set_title("Two-sided K-S stat: %s\np-value: %s" % (D, pval), loc='right')
   if show:
     plt.show()
   return ax

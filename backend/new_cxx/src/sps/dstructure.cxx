@@ -137,15 +137,6 @@ VentureValuePtr PrependOutputPSP::simulate(
 VentureValuePtr AppendOutputPSP::simulate(
     const shared_ptr<Args> & args, gsl_rng * rng) const
 {
-  checkArgsLength("concat", args, 2);
-  vector<VentureValuePtr> v(args->operandValues[0]->getArray());
-  v.push_back(args->operandValues[1]);
-  return VentureValuePtr(new VentureArray(v));
-}
-
-VentureValuePtr ConcatOutputPSP::simulate(
-    const shared_ptr<Args> & args, gsl_rng * rng) const
-{
   checkArgsLength("append", args, 2);
   vector<VentureValuePtr> v1(args->operandValues[0]->getArray());
   const vector<VentureValuePtr>& v2 = args->operandValues[1]->getArray();

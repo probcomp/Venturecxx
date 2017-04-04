@@ -73,7 +73,7 @@ VentureValuePtr LogFlipOutputPSP::simulate(
   checkArgsLength("log_flip", args, 0, 1);
   double logp = log(0.5);
   if (!args->operandValues.empty()) {
-    logp = args->operandValues[0]->getDouble();
+    logp = args->operandValues[0]->getNonPositive();
   }
   return VentureValuePtr(new VentureBool(log(gsl_rng_uniform(rng)) < logp));
 }
@@ -84,7 +84,7 @@ double LogFlipOutputPSP::logDensity(
 {
   double logp = log(0.5);
   if (!args->operandValues.empty()) {
-    logp = args->operandValues[0]->getDouble();
+    logp = args->operandValues[0]->getNonPositive();
   }
 
   if (value->getBool()) { return logp; }
@@ -96,7 +96,7 @@ vector<VentureValuePtr> LogFlipOutputPSP::enumerateValues(
 {
   double logp = log(0.5);
   if (!args->operandValues.empty()) {
-    logp = args->operandValues[0]->getDouble();
+    logp = args->operandValues[0]->getNonPositive();
   }
 
   vector<VentureValuePtr> vs;
@@ -197,7 +197,7 @@ VentureValuePtr LogBernoulliOutputPSP::simulate(
   checkArgsLength("log_bernoulli", args, 0, 1);
   double logp = log(0.5);
   if (!args->operandValues.empty()) {
-    logp = args->operandValues[0]->getDouble();
+    logp = args->operandValues[0]->getNonPositive();
   }
   return VentureValuePtr(new VentureInteger(log(gsl_rng_uniform(rng)) < logp));
 }
@@ -208,7 +208,7 @@ double LogBernoulliOutputPSP::logDensity(
 {
   double logp = log(0.5);
   if (!args->operandValues.empty()) {
-    logp = args->operandValues[0]->getDouble();
+    logp = args->operandValues[0]->getNonPositive();
   }
 
   if (value->getInt()) { return logp; }
@@ -220,7 +220,7 @@ vector<VentureValuePtr> LogBernoulliOutputPSP::enumerateValues(
 {
   double logp = log(0.5);
   if (!args->operandValues.empty()) {
-    logp = args->operandValues[0]->getDouble();
+    logp = args->operandValues[0]->getNonPositive();
   }
 
   vector<VentureValuePtr> vs;

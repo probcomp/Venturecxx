@@ -35,12 +35,16 @@ class VentureType(object):
   """Base class of all Venture types.
 
 See the "Types" section of doc/type-system.md."""
+  def asPython(self, vthing):
+    raise NotImplementedError
+
   def asPythonNoneable(self, vthing):
     if vthing is None:
       return None
     else:
       # Function will be added by inheritance pylint:disable=no-member
       return self.asPython(vthing)
+
   def distribution(self, base, **kwargs):
     name = self.name()
     if len(name) >= 2 and name[0] == "<" and name[-1] == ">":
@@ -48,6 +52,7 @@ See the "Types" section of doc/type-system.md."""
     else:
       raise Exception(
         "Please implement an explicit 'distribution' method for type %s" % name)
+
   def __eq__(self, other):
     return type(self) == type(other)
 
@@ -181,6 +186,25 @@ class PositiveType(VentureType):
   def name(self): return self._name or "<positive>"
   def distribution(self, base, **kwargs):
     return base("positive", **kwargs)
+  def gradient_type(self): return NumberType()
+
+class NonpositiveType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
+  def asVentureValue(self, thing):
+    assert thing <= 0
+    return vv.VentureNumber(thing)
+  def asPython(self, vthing):
+    ans = vthing.getNumber()
+    if ans <= 0:
+      return ans
+    else:
+      raise vv.VentureTypeError("Number is positive %s" % ans)
+  def __contains__(self, vthing):
+    return isinstance(vthing, vv.VentureNumber) and vthing.getNumber() <= 0
+  def name(self): return self._name or "<nonpositive>"
+  def distribution(self, base, **kwargs):
+    return base("nonpositive", **kwargs)
   def gradient_type(self): return NumberType()
 
 class NilType(VentureType):
@@ -445,6 +469,72 @@ data Expression = Bool | Number | Integer | Atom | Symbol | Array Expression
   def distribution(self, base, **kwargs):
     return base("exp", **kwargs)
 
+class RecursiveSimpleDataType(VentureType):
+  """In Haskell type notation:
+
+data RecursiveSimpleData = Bool | Number | Integer | String
+    | Array RecursiveSimpleData | Dict RecursiveSimpleData RecursiveSimpleData
+    | a Venture value represented as itself
+
+Caveat:
+- Python doesn't like dict keys to be mutable, so this limits the
+  recursion possibilities.
+- Symbols and Lists are additionally mapped to strings and lists,
+  respectively, even though this makes the Venture->Python map not
+  injective.
+- Atoms, however, are left alone as VentureAtom instances.
+
+  """
+  def __init__(self, name=None):
+    self._name = name
+
+  def asVentureValue(self, thing):
+    if isinstance(thing, bool) or isinstance(thing, np.bool_):
+      return vv.VentureBool(thing)
+    if isinstance(thing, int):
+      return vv.VentureInteger(thing)
+    if isinstance(thing, numbers.Number):
+      return vv.VentureNumber(thing)
+    if isinstance(thing, str):
+      return vv.VentureString(thing)
+    if isinstance(thing, dict):
+      return vv.VentureDict(OrderedDict(
+        [(self.asVentureValue(key), self.asVentureValue(val))
+         for (key, val) in thing.iteritems()]))
+    if hasattr(thing, "__getitem__"): # Already not a string
+      return vv.VentureArray([self.asVentureValue(val) for val in thing])
+    if isinstance(thing, vv.VentureValue):
+      return thing
+    else:
+      raise Exception("Cannot convert Python object %r to a Venture " \
+                      "Expression" % thing)
+
+  def asPython(self, thing):
+    if isinstance(thing, vv.VentureBool):
+      return thing.getBool()
+    if isinstance(thing, vv.VentureInteger):
+      return thing.getInteger()
+    if isinstance(thing, vv.VentureNumber):
+      return thing.getNumber()
+    if isinstance(thing, vv.VentureString):
+      return thing.getString()
+    if isinstance(thing, vv.VentureSymbol):
+      return thing.getSymbol()
+    if isinstance(thing, vv.VentureArrayUnboxed):
+      return [self.asPython(val) for val in thing.getArray()]
+    if isinstance(thing, vv.VentureArray):
+      return [self.asPython(val) for val in thing.getArray()]
+    if isinstance(thing, vv.VentureDict):
+      return OrderedDict([(self.asPython(key), self.asPython(val))
+         for (key, val) in thing.dict.iteritems()])
+    if thing.isValidCompoundForm():
+      return thing.asPythonList(self)
+    return thing
+
+  def name(self): return self._name or "<data>"
+  def distribution(self, base, **kwargs):
+    return base("data", **kwargs)
+
 class HomogeneousDictType(VentureType):
   """Type objects for homogeneous dicts.  Right now, the homogeneity
   is not captured in the implementation, in that on the Venture side
@@ -596,6 +686,7 @@ def Seq(subtype):
   return HomogeneousSequenceType(subtype)
 
 Exp = ExpressionType()
+Data = RecursiveSimpleDataType()
 Request = RequestType()
 
 def Mapping(keytype, valtype):

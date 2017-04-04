@@ -148,6 +148,10 @@ registerBuiltinSP("reverse", deterministic_typed(lambda l: list(reversed(l)),
     [t.ListType()], t.ListType(),
     descr="reverse reverses the order of its argument list"))
 
+registerBuiltinSP("set_difference", deterministic_typed(lambda l1, l2: [v for v in l1 if v not in l2],
+    [t.ListType(), t.ListType()], t.ListType(),
+    descr="set_difference returns the elements in the first list that do not appear in the second"))
+
 def mk_dict(*entries):
   return dict([(e.lookup(v.VentureNumber(0)), e.lookup(v.VentureNumber(1)))
                for e in entries])

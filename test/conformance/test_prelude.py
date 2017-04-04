@@ -263,7 +263,7 @@ class TestPrelude(TestCase):
     # Test that diagonal and identity matrices are as expected
     for fname in ['id_matrix', 'diag_matrix']:
       self.reset_ripl()
-      D = self.r.assume('D', '(* 1 (uniform_discrete 1 10))')
+      D = int(self.r.assume('D', '(* 1 (uniform_discrete 1 10))'))
       if fname == 'diag_matrix':
         diag_entry = self.r.assume('diag_value', '(uniform_continuous 0 10)')
         res_ven = self.r.assume('res', '(diag_matrix (fill D diag_value))')

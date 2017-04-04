@@ -30,6 +30,29 @@ def textOfQuotation(exp):
   assert len(exp) > 1
   return exp[1]
 
+def isLambda(exp):
+  assert isinstance(exp,list)
+  assert len(exp) > 0
+  return exp[0] == "make_csp"
+
+def destructLambda(exp):
+  import venture.lite.types as t
+  assert isinstance(exp,list)
+  assert len(exp) == 3
+  assert isQuotation(exp[1])
+  assert isQuotation(exp[2])
+  params = t.ExpressionType().asPython(textOfQuotation(exp[1]))
+  body = t.ExpressionType().asPython(textOfQuotation(exp[2]))
+  return (params, body)
+
+def isApplication(exp):
+  return not (isVariable(exp) or isSelfEvaluating(exp) or \
+              isQuotation(exp) or isLambda(exp))
+
+def subexpressions(exp):
+  assert isinstance(exp,list)
+  return exp
+
 def getOperator(exp):
   assert isinstance(exp,list)
   assert len(exp) > 0

@@ -245,6 +245,9 @@ class Trace(object):
     assert node.isAppropriateValue(value)
     node.value = value
 
+  def hasMadeSPRecordAt(self, node):
+    return node.madeSPRecord is not None
+
   def madeSPRecordAt(self, node):
     assert node.madeSPRecord is not None
     return node.madeSPRecord
@@ -583,21 +586,19 @@ function.
 
   def detach_for_proposal(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()
-    from infer.mh import getCurrentValues, registerDeterministicLKernels, unregisterDeterministicLKernels
-    currentValues = getCurrentValues(self, pnodes)
-    registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
+    currentValues = infer.getCurrentValues(self, pnodes)
+    infer.registerDeterministicLKernels(self, scaffold, pnodes, currentValues)
     rhoWeight, rhoDB = detachAndExtract(self, scaffold)
-    unregisterDeterministicLKernels(self, scaffold, pnodes) # de-mutate the scaffold in case it is used for subsequent operations
+    infer.unregisterDeterministicLKernels(self, scaffold, pnodes) # de-mutate the scaffold in case it is used for subsequent operations
     return rhoWeight, rhoDB
 
   def regen_with_proposal(self, scaffold, values):
     pnodes = scaffold.getPrincipalNodes()
     assert len(values) == len(pnodes), "Tried to propose %d values, but subproblem accepts %d values" % (len(values), len(pnodes))
-    from infer.mh import registerDeterministicLKernels, unregisterDeterministicLKernels
-    registerDeterministicLKernels(self, scaffold, pnodes, values)
+    infer.registerDeterministicLKernels(self, scaffold, pnodes, values)
     xiWeight = regenAndAttach(self, scaffold, False, OmegaDB(), OrderedDict())
     # de-mutate the scaffold in case it is used for subsequent operations
-    unregisterDeterministicLKernels(self, scaffold, pnodes)
+    infer.unregisterDeterministicLKernels(self, scaffold, pnodes)
     return xiWeight
 
   def checkInvariants(self):
@@ -651,8 +652,7 @@ function.
 
   def get_current_values(self, scaffold):
     pnodes = scaffold.getPrincipalNodes()
-    from infer.mh import getCurrentValues
-    currentValues = getCurrentValues(self, pnodes)
+    currentValues = infer.getCurrentValues(self, pnodes)
     for val in currentValues:
       assert val is not None, "Tried to get_current_values of a detached subproblem"
     return currentValues

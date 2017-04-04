@@ -279,6 +279,11 @@ boost::shared_ptr<SPAux> ConcreteTrace::getMadeSPAux(Node * makerNode)
   return spRecord->spAux;
 }
 
+bool ConcreteTrace::hasMadeSPRecord(Node * makerNode)
+{
+  return madeSPRecords.count(makerNode);
+}
+
 boost::shared_ptr<VentureSPRecord> ConcreteTrace::getMadeSPRecord(Node * makerNode)
 {
   assert(madeSPRecords.count(makerNode));

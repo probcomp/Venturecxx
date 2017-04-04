@@ -147,6 +147,12 @@ class Semantics(object):
         s = ast.map_value(val.symbol, n)
         app = [i, s, e]
         return ast.locmerge(i, e, app)
+    def p_directive_assume_vals(self, k, l, ns, r, eq, e):
+        assert ast.isloc(e)
+        i = ast.update_value(k, val.symbol('assume_values'))
+        assert all(ast.isloc(n) for n in ns)
+        app = [i, ast.locmerge(l, r, ns), e]
+        return ast.locmerge(i, e, app)
     def p_directive_assume_prog(self, k, dol, sym_exp, eq, e):
         assert ast.isloc(e)
         assert ast.isloc(sym_exp)
@@ -170,7 +176,8 @@ class Semantics(object):
         assert ast.isloc(e)
         i = ast.update_value(k, 'define')
         s = ast.map_value(val.symbol, n)
-        return ast.locmerge(i, e, {'instruction': i, 'symbol': s, 'expression': e})
+        instruction = {'instruction': i, 'symbol': s, 'expression': e}
+        return ast.locmerge(i, e, instruction)
     def p_command_infer(self, k, e):
         assert ast.isloc(e)
         i = ast.update_value(k, 'infer')
@@ -263,12 +270,14 @@ class Semantics(object):
         assert ast.isloc(e)
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
-        return ast.locmerge(n, e, [n, ast.update_value(op, val.symbol("<-")), e])
+        expression = [n, ast.update_value(op, val.symbol("<-")), e]
+        return ast.locmerge(n, e, expression)
     def p_do_bind_labelled(self, n, op, l):
         assert ast.isloc(l)
         # XXX Yes, this remains infix, for the macro expander to handle...
         # XXX Convert <~ to <- for the macro expander's sake
-        return ast.locmerge(n, l, [n, ast.update_value(op, val.symbol("<-")), l])
+        expression = [n, ast.update_value(op, val.symbol("<-")), l]
+        return ast.locmerge(n, l, expression)
     def p_action_directive(self, d):
         assert ast.isloc(d)
         return d
@@ -402,7 +411,8 @@ class Semantics(object):
             [e] = es
             return ast.locmerge(o, c, e.value)
         else:
-            construction = [ast.map_value(val.symbol, ast.update_value(o, 'values_list'))] + es
+            keyword = ast.update_value(o, val.symbol('values_list'))
+            construction = [keyword] + es
             return ast.locmerge(o, c, construction)
     def p_primary_brace(self, o, e, c):
         assert ast.isloc(e)
@@ -427,7 +437,7 @@ class Semantics(object):
             val.quote(ast.locmerge(op, e, val.unquote(e))))
     def p_primary_array(self, o, a, c):
         assert isinstance(a, list)
-        construction = [ast.map_value(val.symbol, ast.update_value(o, 'array'))] + a
+        construction = [ast.update_value(o, val.symbol('array'))] + a
         return ast.locmerge(o, c, construction)
     def p_primary_literal(self, l):
         assert ast.isloc(l)
@@ -454,6 +464,7 @@ class Semantics(object):
     # arraybody, arrayelts: Return list of located expressions.
     def p_arraybody_none(self):                 return []
     def p_arraybody_some(self, es):             return es
+    def p_arraybody_somecomma(self, es, c):     return es
     def p_arrayelts_one(self, e):               return [e]
     def p_arrayelts_many(self, es, c, e):       es.append(e); return es
 
@@ -579,7 +590,9 @@ def parse_instructions(string, languages=None):
 def parse_instruction(string, languages=None):
     ls = parse_instructions(string, languages)
     if len(ls) != 1:
-        raise VentureException('text_parse', "Expected a single instruction.  String:\n'%s'\nParse:\n%s" % (string, ls))
+        raise VentureException('text_parse',
+            "Expected a single instruction.  String:\n'%s'\nParse:\n%s"
+            % (string, ls))
     return ls[0]
 
 def parse_expression(string, languages=None):
@@ -774,7 +787,9 @@ class VentureScriptParser(object):
         def append_unparsed(key, unparser):
             chunks.append(' ')
             if key == 'expression': # Urk
-                chunks.append(self.unparse_expression_and_mark_up(instruction[key], expr_markers))
+                d = instruction[key]
+                chunk = self.unparse_expression_and_mark_up(d, expr_markers)
+                chunks.append(chunk)
             else:
                 chunks.append(unparser(self, instruction[key]))
         if len(unparsers) >= 1:
@@ -819,9 +834,11 @@ class VentureScriptParser(object):
         Return [start, end] position of the last nested subexpression.
         '''
         l = parse_expression(string, languages)
-        return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
+        return self._expression_index_to_text_index_in_parsed_expression(l,
+            index, string)
 
-    def _expression_index_to_text_index_in_parsed_expression(self, l, index, string):
+    def _expression_index_to_text_index_in_parsed_expression(self,
+            l, index, string):
         for i in range(len(index)):
             if index[i] < 0 or len(l['value']) <= index[i]:
                 raise ValueError('Index out of range: %s in %s' %
@@ -841,10 +858,11 @@ class VentureScriptParser(object):
         '''
         inst = parse_instruction(string, languages)
         l = inst['value']['expression']
-        return self._expression_index_to_text_index_in_parsed_expression(l, index, string)
+        return self._expression_index_to_text_index_in_parsed_expression(l,
+            index, string)
 
     def unparse_expression_and_mark_up(self, exp, places=None):
-        '''Return a string representing the given EXP with markings at the given PLACES.
+        '''Return a string representing EXP with markings at PLACES.
 
         - EXP is a parsed expression
         - PLACES is an association list from index lists to markers
@@ -870,22 +888,31 @@ class VentureScriptParser(object):
             if exp["type"] == "array":
                 # Because combinations actually parse as arrays too,
                 # and I want the canonical form to be that.
-                return self._unparse_expression_and_mark_up_with_trie(exp["value"], markers)
+                v = exp['value']
+                return self._unparse_expression_and_mark_up_with_trie(v,
+                    markers)
             else: # Leaf
                 if markers.has_children():
-                    print "Warning: index mismatch detected: looking for children of %s." % value_to_string(exp)
+                    print "Warning: index mismatch detected:" \
+                        " looking for children of %s." \
+                        % (value_to_string(exp),)
                 return unparse_leaf(value_to_string(exp), markers)
         elif isinstance(exp, basestring):
             # XXX This is due to &@!#^&$@!^$&@#!^%&*.
             if markers.has_children():
-                print "Warning: index mismatch detected: looking for children of string-exp %s." % exp
+                print "Warning: index mismatch detected:" \
+                    " looking for children of string-exp %s." \
+                    % (exp,)
             return unparse_leaf(exp, markers)
         elif isinstance(exp, list):
-            terms = (self._unparse_expression_and_mark_up_with_trie(e, markers.get(i))
-                     for (i, e) in enumerate(exp))
+            terms = \
+                (self._unparse_expression_and_mark_up_with_trie(e,
+                        markers.get(i))
+                    for (i, e) in enumerate(exp))
             return unparse_leaf('(' + ' '.join(terms) + ')', markers)
         else:
-            raise TypeError('Invalid expression: %s of type %s' % (repr(exp),type(exp)))
+            raise TypeError('Invalid expression: %r of type %s' % \
+                (exp, type(exp)))
 
 class Trie(object):
     '''A compact representation of an association with sequence keys.

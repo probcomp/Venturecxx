@@ -71,6 +71,7 @@ struct VentureValue
   virtual long getInt() const;
 
   double getProbability() const;
+  double getNonPositive() const;
 
   virtual int getAtom() const;
 

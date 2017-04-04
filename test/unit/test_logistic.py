@@ -17,15 +17,20 @@
 
 from __future__ import division
 
+from math import isinf
+
 import numpy as np
 
 from venture.lite.utils import T_logistic
 from venture.lite.utils import d_log_logistic
 from venture.lite.utils import d_logistic
+from venture.lite.utils import d_logit_exp
 from venture.lite.utils import exp
 from venture.lite.utils import log_d_logistic
 from venture.lite.utils import log_logistic
 from venture.lite.utils import logistic
+from venture.lite.utils import logit
+from venture.lite.utils import logit_exp
 
 def relerr(expected, actual):
   if expected == 0:
@@ -35,8 +40,12 @@ def relerr(expected, actual):
 
 def check(x, Lx, dLx, logLx, dlogLx, logdLx):
   assert relerr(Lx, logistic(x)) < 1e-15
+  if Lx not in (0, 1):
+    assert relerr(x, logit(Lx)) < 1e-15
   if Lx < 1:
     assert relerr(1 - Lx, logistic(-x)) < 1e-15
+    if abs(x) < 709:
+      assert relerr(-x, logit(1 - Lx)) < 1e-15
   else:
     assert logistic(-x) < 1e-300
   assert relerr(Lx, T_logistic(x)[0]) < 1e-15
@@ -53,9 +62,15 @@ def check(x, Lx, dLx, logLx, dlogLx, logdLx):
   assert relerr(dLx, exp(log_d_logistic(x))) < 1e-15
   assert relerr(logdLx, log_d_logistic(x)) < 1e-15
   assert relerr(logLx, log_logistic(x)) < 1e-15
+  if x <= 709:
+    assert relerr(x, logit_exp(logLx)) < 1e-15
   if Lx < 1:
     assert relerr(np.log1p(-Lx), log_logistic(-x)) < 1e-15
   assert relerr(dlogLx, d_log_logistic(x)) < 1e-15
+  if 710 <= x:
+    assert isinf(d_logit_exp(logLx))
+  if 1e-308 < dlogLx:
+    assert relerr(1/dlogLx, d_logit_exp(logLx)) < 1e-15
   if dlogLx < 1:
     assert relerr(1 - dlogLx, d_log_logistic(-x)) < 1e-15
   else:

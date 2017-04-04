@@ -147,7 +147,7 @@ def testSugarySmoke():
   s <- select(minimal_subproblem(/?total));
   get_current_values(s)}"""))
   one(r.infer("""{
-  s <- select(minimal_subproblem(random_singleton(/*)));
+  s <- select(minimal_subproblem(random_singleton(/ *)));
   get_current_values(s)}"""))
 
 @broken_in("puma", "Puma does not implement subproblem selection")

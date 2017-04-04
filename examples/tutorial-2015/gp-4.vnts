@@ -10,7 +10,7 @@ assume g = make_gp(zero_func, se);
 // Data
 assume data_xs = array(3.2, 2.2, 8.7);
 define data_ys = array(8.7, 0.2, 5.5);
-infer observe(g(data_xs), data_ys);
+observe g(data_xs) = data_ys;
 
 // Plot several samples of the gp
 define xs = linspace(0, 10, 200);
