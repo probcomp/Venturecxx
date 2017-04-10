@@ -72,7 +72,7 @@ from scipy.stats.mstats import rankdata
 from testconfig import config
 from venture.test.config import ignore_inference_quality
 from venture.test.config import stochasticTest
-import venture.test.plots as plots
+import venture.plots.p_p_plot as plots
 
 def normalizeList(seq):
   denom = sum(seq)

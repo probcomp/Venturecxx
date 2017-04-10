@@ -39,7 +39,7 @@ from venture.ripl.utils import strip_types_from_dict_values
 import venture.lite.inference_sps as inf
 import venture.lite.types as t
 import venture.lite.value as v
-import venture.test.plots as plots
+import venture.plots.p_p_plot as plots
 
 class Infer(object):
   def __init__(self, engine):
