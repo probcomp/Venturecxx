@@ -61,11 +61,9 @@ def deduplicate(sample):
   return list(itertools.chain.from_iterable(
     map(chunk, itertools.groupby(sorted(sample)))))
 
-def p_p_plot(expected, observed, ax=None, show=False):
-  if ax is None:
-    ax = plt.axes()
+def _p_p_plot(expected_massive, observed, ax):
   points = sorted(deduplicate(observed))
-  cdf1 = expand_state_space(massless(expected))
+  cdf1 = expand_state_space(expected_massive)
   cdf2 = expand_state_space(empirical_cdf(observed))
   ax.plot([0,1], [0,1], 'r-', label="equality line")
   ax.scatter(map(cdf1, points), map(cdf2, points), label="observed")
@@ -73,6 +71,11 @@ def p_p_plot(expected, observed, ax=None, show=False):
   ax.set_xlabel("Probability")
   ax.set_ylabel("Probability (%s samples)" % len(observed))
   ax.set_title("Probability-probability plot", loc='left')
+
+def p_p_plot(expected, observed, ax=None, show=False):
+  if ax is None:
+    ax = plt.axes()
+  _p_p_plot(massless(expected), observed, ax)
   (K, pval) = stats.kstest(observed, expected)
   ax.set_title("One-sided K-S stat: %s, p-value: %s" % (K, pval), loc='right')
   if show:
