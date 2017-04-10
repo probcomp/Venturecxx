@@ -419,7 +419,7 @@ def print_fun(*args):
   if len(args) == 1:
     print convert_arg(args[0])
   else:
-    print [convert_arg(a) for a in args]
+    print " ".join([str(convert_arg(a)) for a in args])
 
 inf.registerBuiltinInferenceSP("print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
 Print the given values to the terminal.
