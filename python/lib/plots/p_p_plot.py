@@ -21,6 +21,7 @@ import bisect
 import itertools
 
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy.stats as stats
 
 # Returns a "massive cdf": a function a -> (Double, Double) that
@@ -122,6 +123,9 @@ def discrete_p_p_plot(expectedRates, observed, ax=None, show=False):
   if ax is None:
     ax = plt.axes()
   _p_p_plot(discrete_cdf(expectedRates), observed, ax)
+  (counts, expCounts) = count_occurrences(expectedRates, observed)
+  (chisq, pval) = stats.chisquare(counts, np.array(expCounts))
+  ax.set_title("One-sided Chi^2 stat: %s, p-value: %s" % (chisq, pval), loc='right')
   if show:
     plt.show()
   return ax
