@@ -154,6 +154,21 @@ def statisticalTest(f):
   return wrapped
 
 
+def count_occurrences(expectedRates, observed):
+  items = [pair[0] for pair in expectedRates]
+  itemsDict = {pair[0]:pair[1] for pair in expectedRates}
+  for o in observed:
+    assert o in itemsDict, "Completely unexpected observation %r" % o
+  # N.B. This is not None test allows observations to be selectively
+  # ignored.  This is useful when information about the right answer
+  # is incomplete.
+  counts = [observed.count(x) for x in items if itemsDict[x] is not None]
+  total = sum(counts)
+  expRates = normalizeList([pair[1] for pair in expectedRates
+    if pair[1] is not None])
+  expCounts = [total * r for r in expRates]
+  return (counts, expCounts)
+
 # TODO Broken (too stringent?) for small sample sizes; warn?
 def reportKnownDiscrete(expectedRates, observed):
   """Chi^2 test for agreement with the given discrete distribution.
@@ -169,18 +184,7 @@ def reportKnownDiscrete(expectedRates, observed):
   least five times for the Chi^2 statistic to be reasonable.
 
   """
-  items = [pair[0] for pair in expectedRates]
-  itemsDict = {pair[0]:pair[1] for pair in expectedRates}
-  for o in observed:
-    assert o in itemsDict, "Completely unexpected observation %r" % o
-  # N.B. This is not None test allows observations to be selectively
-  # ignored.  This is useful when information about the right answer
-  # is incomplete.
-  counts = [observed.count(x) for x in items if itemsDict[x] is not None]
-  total = sum(counts)
-  expRates = normalizeList([pair[1] for pair in expectedRates
-    if pair[1] is not None])
-  expCounts = [total * r for r in expRates]
+  (counts, expCounts) = count_occurrences(expectedRates, observed)
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
   return TestResult(pval, "\n".join([
     "Expected: " + fmtlst("% 4.1f", expCounts),
