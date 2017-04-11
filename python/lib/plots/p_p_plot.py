@@ -50,6 +50,9 @@ def discrete_cdf(rates):
   return mcdf
 
 def massless(cdf):
+  # (a -> Double) -> (a -> (Double, Double))
+  # Convert a traditional cdf to a "massive" one, assuming every
+  # object has 0 mass.
   def mcdf(x):
     return (cdf(x), 0)
   return mcdf
