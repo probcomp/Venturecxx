@@ -109,13 +109,15 @@ def count_occurrences(expectedRates, observed):
   itemsDict = {pair[0]:pair[1] for pair in expectedRates}
   for o in observed:
     assert o in itemsDict, "Completely unexpected observation %r" % o
+    assert itemsDict[o] > 0, "Detected observation with expected probability 0 %r" % o
   # N.B. This is not None test allows observations to be selectively
   # ignored.  This is useful when information about the right answer
   # is incomplete.
-  counts = [observed.count(x) for x in items if itemsDict[x] is not None]
+  counts = [observed.count(x) for x in items
+            if itemsDict[x] is not None and itemsDict[x] > 0]
   total = sum(counts)
   expRates = normalizeList([pair[1] for pair in expectedRates
-    if pair[1] is not None])
+                            if pair[1] is not None and pair[1] > 0])
   expCounts = [total * r for r in expRates]
   return (counts, expCounts)
 
