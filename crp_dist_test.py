@@ -6,6 +6,7 @@ from venture.lite.crp import CRPOutputPSP
 from venture.lite.crp import CRPSPAux
 from venture.lite.sp_use import MockArgs
 from venture.lite.utils import logsumexp
+from venture.plots.p_p_plot import discrete_p_p_plot
 
 def draw_crp_samples(n, alpha):
     aux = CRPSPAux()
@@ -16,8 +17,11 @@ def draw_crp_samples(n, alpha):
         psp.incorporate(ans, args)
         return ans
     ans = [draw_sample() for _ in range(n)]
-    print aux.cts()
     return ans
+
+def sample_num_tables(n, alpha):
+    assignments = draw_crp_samples(n, alpha)
+    return len(set(assignments))
 
 def log_prob_num_tables(k, n, alpha):
     # Log probability that a CRP(alpha) will seat n customers at
@@ -48,9 +52,10 @@ def cdf_num_tables(n, alpha):
                 math.exp(log_prob_num_tables(k, n, alpha)))
     return mcdf
 
-if __name__ == '__main__':
-    n = int(sys.argv[1])
-    alpha = float(sys.argv[2])
+def compare(n, alpha, iters):
     f = cdf_num_tables(n, alpha)
-    for k in range(n+2):
-        print k, f(k)
+    lengths = [sample_num_tables(n, alpha) for _ in range(iters)]
+    discrete_p_p_plot(f, lengths, show=True)
+
+if __name__ == '__main__':
+    compare(int(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]))
