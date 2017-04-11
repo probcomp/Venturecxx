@@ -559,66 +559,126 @@ def pattern_matching_WNxWN(kernel1, kernel2):
     if kernel1[0]=="WN" and kernel2[0]=="WN":
         return ["WN", kernel1[1] * kernel2[1]]
     else:
-        None
+        return None
 
 def pattern_matching_CxWN(kernel1, kernel2):
     if kernel1[0]=="C" and kernel2[0]=="WN":
         return ["WN", kernel1[1] * kernel2[1]]
     else:
-        None
+        return None
 
 def pattern_matching_CxC(kernel1, kernel2):
     if kernel1[0]=="C" and kernel2[0]=="C":
         return ["C", kernel1[1] * kernel2[1]]
     else:
-        None
+        return None
 
-def get_pattern_matching_rules():
-    return [
-        pattern_matching_WNxWN,
-        pattern_matching_CxWN,
-        pattern_matching_CxC
-    ]
+def pattern_matching_SExWN(kernel1, kernel2):
+    if kernel1[0]=="SE" and kernel2[0]=="WN":
+        return ["WN", kernel2[1]]
+    else:
+        return None
 
-def flatten_product(product_parse_tree):
+def pattern_matching_SExSE(kernel1, kernel2):
+    if kernel1[0]=="SE" and kernel2[0]=="SE":
+        return ["SE", (kernel1[1] * kernel2[1])/(kernel1[1] + kernel2[1])]
+    else:
+        return None
+
+def pattern_matching_PERxWN(kernel1, kernel2):
+    if kernel1[0]=="PER" and kernel2[0]=="WN":
+        return ["WN", kernel2[1]]
+    else:
+        return None
+
+# pattern matching rules
+def pattern_matching_WNplusWN(kernel1, kernel2):
+    if kernel1[0]=="WN" and kernel2[0]=="WN":
+        return ["WN", kernel1[1] + kernel2[1]]
+    else:
+        return None
+
+def pattern_matching_CplusWN(kernel1, kernel2):
+    if kernel1[0]=="C" and kernel2[0]=="WN":
+        return ["WN", kernel1[1] + kernel2[1]]
+    else:
+        return None
+
+def pattern_matching_CplusC(kernel1, kernel2):
+    if kernel1[0]=="C" and kernel2[0]=="C":
+        return ["C", kernel1[1] + kernel2[1]]
+    else:
+        return None
+
+def get_pattern_matching_rules(operator):
+    if operator == "*": 
+        return [
+            pattern_matching_WNxWN,
+            pattern_matching_CxWN,
+            pattern_matching_CxC,
+            pattern_matching_SExWN,
+            pattern_matching_SExSE,
+            pattern_matching_PERxWN
+        ]
+    elif operator == "+": 
+        return [
+            pattern_matching_WNplusWN,
+            pattern_matching_CplusWN,
+            pattern_matching_CplusC,
+        ]
+    else:
+        raise ValueError("Unknown operator")
+
+def flatten_expression(product_parse_tree, operator):
     #base case
-    if product_parse_tree[0]!="*" and product_parse_tree[0]!="+":
+    if product_parse_tree[0]!=operator:
         return [product_parse_tree]
-    elif product_parse_tree[0]=="+":
-        raise ValueError("""An error occured - at this stage, the program expects
-            only products, not sums""")
     else:
-        return flatten_product(product_parse_tree[1]) +\
-            flatten_product(product_parse_tree[2])
+        return flatten_expression(product_parse_tree[1], operator) +\
+            flatten_expression(product_parse_tree[2], operator)
 
-def parse_to_tree(flat_product):
+def parse_to_tree(flat_expression, operator):
     #base case
-    if len(flat_product)==1:
-        return flat_product[0]
+    if len(flat_expression)==1:
+        return flat_expression[0]
     else:
-        return ["*", flat_product[0], parse_to_tree(flat_product[1:])]
+        return [ operator, flat_expression[0], parse_to_tree(flat_expression[1:],
+            operator)]
 
 def simplify_product(product_parse_tree):
-    flat_product = flatten_product(product_parse_tree)
-    return parse_to_tree(simplify_flat_product(flat_product))
+    operator = "*"
+    flat_product = flatten_expression(product_parse_tree, operator)
+    return parse_to_tree(simplify_with_rules(flat_product,
+        get_pattern_matching_rules(operator)), operator)
 
-def simplify_flat_product(flat_product):
-    sorted_product = sorted(flat_product) 
-    if len(sorted_product)==1:
-        return sorted_product
+def simplify_sum(sum_parse_tree):
+    operator = "+"
+    flat_sum = flatten_expression(sum_parse_tree, operator)
+    return parse_to_tree(simplify_with_rules(flat_sum,
+        get_pattern_matching_rules(operator)), operator)
+
+def simplify_with_rules(flat_expression, rules):
+    sorted_expression = sorted(flat_expression) 
+    if len(sorted_expression)==1:
+        return sorted_expression
     i = 0
-    while i<len(sorted_product)-1:
+    while i<len(sorted_expression)-1:
         not_modified = True
-        for rule in get_pattern_matching_rules():
-           outcome = rule(sorted_product[i], sorted_product[i+1])  
-           if outcome is not None:
-               sorted_product[i] = outcome
-               del sorted_product[i+1]
-               not_modified = False
-               break
+        for j in range(i+1,len(sorted_expression)):
+            for rule in rules:
+               outcome = rule(sorted_expression[i], sorted_expression[j])  
+               if outcome is not None:
+                   sorted_expression[i] = outcome
+                   del sorted_expression[j]
+                   # hmm... isn't the next line introducing a bug?
+                   sorted_expression = sorted(sorted_expression)
+                   not_modified = False
+                   break
+            if not not_modified:
+                 break
         if not_modified:
             i+=1
-    return sorted_product
+    return sorted_expression
 
 #TODO this is basically doing the same thing as flatten product, but not turning
 # the tree into a list. For now, I parse the tree twice, to keep all my tests
@@ -629,7 +689,7 @@ def unpack_venture_values(venture_parse_tree):
         return [venture_parse_tree.getArray()[0].getString()] +\
             [value.getNumber() for value in  venture_parse_tree.getArray()[1:]]
     else:
-        return ["*", unpack_venture_values(venture_parse_tree.getArray()[1]),
+        return [venture_parse_tree.getArray()[0].getString(), unpack_venture_values(venture_parse_tree.getArray()[1]),
              unpack_venture_values(venture_parse_tree.getArray()[2])]
 
 def pack_venture_values(product_parse_tree):
@@ -641,14 +701,30 @@ def pack_venture_values(product_parse_tree):
             pack_venture_values(product_parse_tree[1]),
             pack_venture_values(product_parse_tree[2])])
 
-# TODO only handles products for now!
-def simplify(venture_parse_tree):
+def simplify_product_source(venture_parse_tree):
     parse_tree = unpack_venture_values(venture_parse_tree)
     return pack_venture_values(simplify_product(parse_tree))
 
-registerBuiltinSP("simplify_product", deterministic_typed(simplify,
+def simplify_sum_source(venture_parse_tree):
+    parse_tree = unpack_venture_values(venture_parse_tree)
+    return pack_venture_values(simplify_sum(parse_tree))
+
+def simplify_non_identicial(venture_parse_tree):
+    print "warning, null op" 
+    return venture_parse_tree
+
+registerBuiltinSP("simplify_product", deterministic_typed(simplify_product_source,
     [t.AnyType()],
     t.AnyType(),
-    descr="Simplification and compiler optimization for source for GP structure"))
+    descr="Simplification and compiler optimization for source for GP structure in product form"))
 
+registerBuiltinSP("simplify_sum", deterministic_typed(simplify_sum_source,
+    [t.AnyType()],
+    t.AnyType(),
+    descr="Simplification and compiler optimization for source for GP structure (sums)"))
+
+registerBuiltinSP("simplify_non_identicial", deterministic_typed(simplify_non_identicial,
+    [t.AnyType()],
+    t.AnyType(),
+    descr="Compiler optimization for source for GP structure (sums)"))
 
