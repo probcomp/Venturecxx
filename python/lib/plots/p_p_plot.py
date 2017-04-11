@@ -82,6 +82,14 @@ def p_p_plot(expected, observed, ax=None, show=False):
     plt.show()
   return ax
 
+def discrete_p_p_plot(massive_expected, observed, ax=None, show=False):
+  if ax is None:
+    ax = plt.axes()
+  _p_p_plot(massive_expected, observed, ax)
+  if show:
+    plt.show()
+  return ax
+
 def p_p_plot_2samp(observed1, observed2, ax=None, show=False):
   if ax is None:
     ax = plt.axes()
