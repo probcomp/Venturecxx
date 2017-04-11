@@ -53,9 +53,10 @@ def cdf_num_tables(n, alpha):
     return mcdf
 
 def compare(n, alpha, iters):
-    f = cdf_num_tables(n, alpha)
+    probs = [math.exp(log_prob_num_tables(k, n, alpha)) for k in range(n+1)]
+    expected = zip(range(n+1), probs)
     lengths = [sample_num_tables(n, alpha) for _ in range(iters)]
-    discrete_p_p_plot(f, lengths, show=True)
+    discrete_p_p_plot(expected, lengths, show=True)
 
 if __name__ == '__main__':
     compare(int(sys.argv[1]), float(sys.argv[2]), int(sys.argv[3]))

@@ -36,6 +36,19 @@ def empirical_cdf(sample):
     return (low_ind * step, (high_ind - low_ind) * step)
   return mcdf
 
+def discrete_cdf(rates):
+  # (Eq a, Ord a) => [(a, Double)] -> (a -> (Double, Double))
+  # Convert an explicit discrete distribution to its "massive cdf" (by partial sums).
+  ordered = sorted(rates, key=lambda (v, p): v)
+  def mcdf(x):
+    total = 0
+    for (v, p) in ordered:
+      if v < x: total += p
+      if v == x: return (total, p)
+      if v > x: return (total, 0)
+    return (total, 0)
+  return mcdf
+
 def massless(cdf):
   def mcdf(x):
     return (cdf(x), 0)
@@ -82,10 +95,10 @@ def p_p_plot(expected, observed, ax=None, show=False):
     plt.show()
   return ax
 
-def discrete_p_p_plot(massive_expected, observed, ax=None, show=False):
+def discrete_p_p_plot(expectedRates, observed, ax=None, show=False):
   if ax is None:
     ax = plt.axes()
-  _p_p_plot(massive_expected, observed, ax)
+  _p_p_plot(discrete_cdf(expectedRates), observed, ax)
   if show:
     plt.show()
   return ax
