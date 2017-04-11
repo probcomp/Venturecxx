@@ -17,6 +17,8 @@
 
 """(Deterministic) basic programming SPs"""
 
+import cPickle as pkl
+
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
 from venture.lite.sp_help import binaryPred
@@ -240,3 +242,52 @@ registerBuiltinSP("name", deterministic_typed(make_name,
     [t.SymbolType(), t.NumberType()], t.SymbolType(),
     descr = "Programmatically synthesize a variable name. " \
             "The name is determined by the given prefix and index."))
+
+def dump_data(data, outfile):
+    with open(outfile, 'w') as f:
+        pkl.dump(data, f)
+
+def load_data(infile):
+    with open(infile, 'r') as f:
+        return pkl.load(f)
+
+registerBuiltinSP("dump_data", deterministic_typed(
+  dump_data, [t.Object, t.String], t.Nil,
+  descr='''Dump the given object to the given file as a pickled Python data structure.
+  The object must be backed by a picklable instance of `VentureValue`.
+  The object is dumped as a `VentureValue` with no conversion, so this
+  is convenient for persisting values for later consumption by `load_data`.
+  If you want to dump values for use by a non-VentureScript client, consider
+  `dump_py_data`.'''))
+
+registerBuiltinSP("load_data", deterministic_typed(
+  load_data, [t.String], t.Object,
+  descr='''Load a Venture value from a pickled Python data structure in the
+  given file.  The object is loaded as a `VentureValue` with no
+  conversion, so this is the inverse of `dump_data`.  If you want to
+  load values dumped by a non-VentureScript client, consider
+  `load_py_data`.
+
+  As always, remember that loading untrusted pickle files leaves you vulnerable
+  to remote code execution.'''))
+
+registerBuiltinSP("dump_py_data", deterministic_typed(
+  dump_data, [t.RecursiveSimpleDataType(), t.String], t.Nil,
+  descr='''Dump the given object to the given file as a pickled Python data structure.
+  The object must be a 'plain data' object -- no traces, SPs, or any such stuff.
+  The object is converted to an equivalent Python data structure prior to dumping,
+  so it is convenient to consume by a non-VentureScript client program.
+  If you want to persist data for future consumption be VentureScript, use
+  `dump_data` and `load_data`.'''))
+
+registerBuiltinSP("load_py_data", deterministic_typed(
+  load_data, [t.String], t.RecursiveSimpleDataType(),
+  descr='''Load a pickled Python data structure from the given file.
+  The object must be a 'plain data' object -- no classes, functions, or any such stuff.
+  The object is converted to an equivalent Venture data structure after loading,
+  so this is convenient for consuming data produced by a non-VentureScript program.
+  If you want to load data persisted from VentureScript, use `load_data` and
+  `dump_data`.
+
+  As always, remember that loading untrusted pickle files leaves you vulnerable
+  to remote code execution.'''))
