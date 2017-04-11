@@ -127,7 +127,7 @@ def discrete_p_p_plot(expectedRates, observed, ax=None, show=False):
   _p_p_plot(discrete_cdf(expectedRates), observed, ax)
   (counts, expCounts) = count_occurrences(expectedRates, observed)
   (chisq, pval) = stats.chisquare(counts, np.array(expCounts))
-  ax.set_title("One-sided Chi^2 stat: %s, p-value: %s" % (chisq, pval), loc='right')
+  ax.set_title("One-sided Chi^2 stat: %s\np-value: %s" % (chisq, pval), loc='right')
   if show:
     plt.show()
   return ax
