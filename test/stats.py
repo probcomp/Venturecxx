@@ -151,7 +151,7 @@ def statisticalTest(f):
 
 
 # TODO Broken (too stringent?) for small sample sizes; warn?
-def reportKnownDiscrete(expectedRates, observed):
+def reportKnownDiscrete(expectedRates, observed, show_plot=False):
   """Chi^2 test for agreement with the given discrete distribution.
   reportKnownDiscrete :: (Eq a) => [(a,Double)] -> [a] -> TestResult
 
@@ -167,6 +167,8 @@ def reportKnownDiscrete(expectedRates, observed):
   """
   (counts, expCounts) = count_occurrences(expectedRates, observed)
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
+  if show_plot:
+    plots.discrete_p_p_plot(expectedRates, observed, show=True)
   return TestResult(pval, "\n".join([
     "Expected: " + fmtlst("% 4.1f", expCounts),
     "Observed: " + fmtlst("% 4d", counts),
