@@ -74,7 +74,7 @@ def expand_state_space(mcdf):
 def deduplicate(sample):
   def chunk((x, xs)):
     k = len(list(xs))
-    return [(x, i/k) for i in range(k)]
+    return [(x, float(i)/k) for i in range(k)]
   return list(itertools.chain.from_iterable(
     map(chunk, itertools.groupby(sorted(sample)))))
 
