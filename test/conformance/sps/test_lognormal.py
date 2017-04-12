@@ -16,19 +16,23 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from venture.test.config import get_ripl
+from venture.test.config import broken_in
 
+@broken_in('puma', 'Puma does not support rejection sampling')
 def test_lognormal_rejection_x():
   r = get_ripl(init_mode='venture_script')
   r.assume('x', 'lognormal(2, 1)')
   r.observe('log_bernoulli(-x)', '1')
   r.infer('rejection(default, all, 0, 1)')
 
+@broken_in('puma', 'Puma does not support rejection sampling')
 def test_lognormal_rejection_mu():
   r = get_ripl(init_mode='venture_script')
   r.assume('mu', 'expon(2)')
   r.observe('lognormal(mu, 1)', '0.5')
   r.infer('rejection(default, all, 0, 1)')
 
+@broken_in('puma', 'Puma does not support rejection sampling')
 def test_lognormal_rejection_sigma():
   r = get_ripl(init_mode='venture_script')
   r.assume('sigma', 'expon(1)')
