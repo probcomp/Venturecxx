@@ -24,8 +24,8 @@ from venture.lite.psp import IArgs
 from venture.lite.psp import NullRequestPSP
 from venture.lite.psp import TypedPSP
 from venture.lite import env as env
-from venture.lite.sp import SPAux
-import venture.lite.value as vv
+from venture.lite.sp import SPAux # Pylint doesn't understand type comments pylint: disable=unused-import
+import venture.lite.value as vv # Pylint doesn't understand type comments pylint: disable=unused-import
 
 class MockArgs(IArgs):
   """IArgs instance for invoking methods on SPs that don't interact with the trace.
