@@ -389,6 +389,10 @@ class NormalvvOutputPSP(RandomPSP):
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[gradMu,gradSigma])
 
+  def description(self,name):
+    return "  %s(mu, sigma) samples a vector of normal variates with means mu "\
+      "and corresponding standard deviations sigma." % name
+
 
 # These two only differ because the gradients need to account for broadcasting
 class NormalsvOutputPSP(RandomPSP):
@@ -405,6 +409,10 @@ class NormalsvOutputPSP(RandomPSP):
     gradMu = (x - mu) / (np.power(sigma,2))
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
     return (gradX,[sum(gradMu),gradSigma])
+
+  def description(self,name):
+    return "  %s(mu, sigma) samples a vector of normal variates, all with the "\
+      "same mean mu, and a vector of standard deviations sigma." % name
 
 
 class NormalvsOutputPSP(RandomPSP):
@@ -444,6 +452,10 @@ class NormalvsOutputPSP(RandomPSP):
         return float("-inf")
     else:
       raise Exception("Cannot rejection auto-bound psp with unbounded likelihood")
+
+  def description(self,name):
+    return "  %s(mu, sigma) samples a vector of normal variates, with a "\
+      "a vector of means mu, and all the same standard deviation sigma." % name
 
 registerBuiltinSP("normalss", typed_nr(NormalOutputPSP(),
     [t.NumberType(), t.NumberType()], t.NumberType()))
