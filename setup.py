@@ -202,6 +202,7 @@ packages = [
     "venture.shortcuts",
     "venture.sivm",
     "venture.test",
+    "venture.test.properties",
     "venture.value",
 ]
 

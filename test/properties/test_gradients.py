@@ -25,6 +25,7 @@ from venture.test.config import gen_broken_in
 from venture.test.config import gen_in_backend
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
+from venture.test.properties.test_sps import relevantSPs
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.mlens import real_lenses
@@ -35,8 +36,6 @@ import venture.lite.value as vv
 import venture.lite.types as t
 from venture.lite.utils import FixedRandomness
 import venture.test.numerical as num
-
-from test_sps import relevantSPs
 
 @gen_in_backend("none")
 def testGradientOfLogDensity():
