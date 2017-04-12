@@ -15,9 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from nose.tools import eq_
 from nose.tools import assert_almost_equal
+import numpy.random as npr
 
+from venture.lite.crp import log_prob_num_tables
+from venture.lite.crp import sample_num_tables
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import gen_on_inf_prim
@@ -71,6 +76,23 @@ def checkCRPCounter(n, seed):
   predictions = collectSamples(ripl, "pid")
   ans = [(n, 0.5), ("other", 0.5)]
   return reportKnownDiscrete(ans, replaceWithDefault(predictions, [n], "other"))
+
+def test_number_of_tables():
+  # Check that the sampled distribution on the number of tables where
+  # n customers get seated agrees with theory.
+  for alpha in [0.01, 0.1, 0.7, 1.0, 1.2, 2.0, 10.0, 100]:
+    yield check_number_of_tables, alpha
+
+@statisticalTest
+def check_number_of_tables(alpha, seed):
+  n = 7
+  iters = 1000
+  rng = npr.RandomState()
+  rng.seed(seed)
+  probs = [math.exp(log_prob_num_tables(k, n, alpha)) for k in range(n+1)]
+  expected = zip(range(n+1), probs)
+  lengths = [sample_num_tables(n, alpha, np_rng=rng) for _ in range(iters)]
+  return reportKnownDiscrete(expected, lengths)
 
 @gen_on_inf_prim("none")
 def testLogDensityOfData():
