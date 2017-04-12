@@ -73,11 +73,7 @@ from testconfig import config
 from venture.test.config import ignore_inference_quality
 from venture.test.config import stochasticTest
 import venture.plots.p_p_plot as plots
-
-def normalizeList(seq):
-  denom = sum(seq)
-  if denom > 0: return [ float(x)/denom for x in seq]
-  else: return [0 for x in seq]
+from venture.plots.p_p_plot import count_occurrences
 
 def fmtlst(fmt, lst):
   return "[" + ", ".join([fmt % n for n in lst]) + "]"
@@ -155,7 +151,7 @@ def statisticalTest(f):
 
 
 # TODO Broken (too stringent?) for small sample sizes; warn?
-def reportKnownDiscrete(expectedRates, observed):
+def reportKnownDiscrete(expectedRates, observed, show_plot=False):
   """Chi^2 test for agreement with the given discrete distribution.
   reportKnownDiscrete :: (Eq a) => [(a,Double)] -> [a] -> TestResult
 
@@ -169,19 +165,10 @@ def reportKnownDiscrete(expectedRates, observed):
   least five times for the Chi^2 statistic to be reasonable.
 
   """
-  items = [pair[0] for pair in expectedRates]
-  itemsDict = {pair[0]:pair[1] for pair in expectedRates}
-  for o in observed:
-    assert o in itemsDict, "Completely unexpected observation %r" % o
-  # N.B. This is not None test allows observations to be selectively
-  # ignored.  This is useful when information about the right answer
-  # is incomplete.
-  counts = [observed.count(x) for x in items if itemsDict[x] is not None]
-  total = sum(counts)
-  expRates = normalizeList([pair[1] for pair in expectedRates
-    if pair[1] is not None])
-  expCounts = [total * r for r in expRates]
+  (counts, expCounts) = count_occurrences(expectedRates, observed)
   (chisq,pval) = stats.chisquare(counts, np.array(expCounts))
+  if show_plot:
+    plots.discrete_p_p_plot(expectedRates, observed, show=True)
   return TestResult(pval, "\n".join([
     "Expected: " + fmtlst("% 4.1f", expCounts),
     "Observed: " + fmtlst("% 4d", counts),

@@ -33,6 +33,7 @@ with valid domains will result in dangerous behavior.
 from collections import OrderedDict
 from copy import deepcopy
 from weakref import WeakKeyDictionary
+import itertools
 import math
 
 from scipy.special import digamma, gammaln
@@ -48,6 +49,8 @@ from venture.lite.sp import SPType
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_help import typed_nr
 from venture.lite.sp_registry import registerBuiltinSP
+from venture.lite.sp_use import MockArgs
+from venture.lite.utils import logsumexp
 from venture.lite.utils import simulateCategorical
 import venture.lite.types as t
 
@@ -205,3 +208,48 @@ class CRPOutputPSP(RandomPSP):
 
 registerBuiltinSP('make_crp', typed_nr(MakeCRPOutputPSP(),
     [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args=1))
+
+def draw_crp_samples(n, alpha, np_rng=None):
+  """Jointly draw n samples from CRP(alpha).
+
+  This returns an assignment of n objects to clusters, given by a
+  length-n list of cluster ids.
+  """
+  aux = CRPSPAux()
+  args = MockArgs([], aux, np_rng=np_rng)
+  psp = CRPOutputPSP(alpha, 0) # No dispersion
+  def draw_sample():
+    ans = psp.simulate(args)
+    psp.incorporate(ans, args)
+    return ans
+  ans = [draw_sample() for _ in range(n)]
+  return ans
+
+def sample_num_tables(n, alpha, np_rng=None):
+  """Sample how many tables n customers get seated at by a CRP(alpha)."""
+  assignments = draw_crp_samples(n, alpha, np_rng=np_rng)
+  return len(set(assignments))
+
+def log_prob_num_tables(k, n, alpha):
+  """The log probability that a CRP(alpha) will seat n customers at
+  exactly k tables.
+
+  The runtime is O(n * (n choose k)).
+  """
+  if k > n:
+    return float("-inf")
+  config_denominator = sum([math.log(i + alpha) for i in range(n)])
+  def log_prob_one_assignment(items):
+    # items is the (ordered) list of customer numbers
+    # (zero-indexed for customers beyond the first) each of whom
+    # sat at an existing table.
+    ans = 0
+    for i in items:
+        ans += math.log(i+1)
+    # k customers started new tables
+    ans += k * math.log(alpha)
+    # Each customer had to sit somewhere
+    ans -= config_denominator
+    return ans
+  return logsumexp([log_prob_one_assignment(items)
+                    for items in itertools.combinations(range(n-1), n-k)])
