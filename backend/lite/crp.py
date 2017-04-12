@@ -209,14 +209,14 @@ class CRPOutputPSP(RandomPSP):
 registerBuiltinSP('make_crp', typed_nr(MakeCRPOutputPSP(),
     [t.NumberType(),t.NumberType()], SPType([], t.AtomType()), min_req_args=1))
 
-def draw_crp_samples(n, alpha):
+def draw_crp_samples(n, alpha, np_rng=None):
   """Jointly draw n samples from CRP(alpha).
 
   This returns an assignment of n objects to clusters, given by a
   length-n list of cluster ids.
   """
   aux = CRPSPAux()
-  args = MockArgs([], aux)
+  args = MockArgs([], aux, np_rng=np_rng)
   psp = CRPOutputPSP(alpha, 0) # No dispersion
   def draw_sample():
     ans = psp.simulate(args)
@@ -225,9 +225,9 @@ def draw_crp_samples(n, alpha):
   ans = [draw_sample() for _ in range(n)]
   return ans
 
-def sample_num_tables(n, alpha):
+def sample_num_tables(n, alpha, np_rng=None):
   """Sample how many tables n customers get seated at by a CRP(alpha)."""
-  assignments = draw_crp_samples(n, alpha)
+  assignments = draw_crp_samples(n, alpha, np_rng=np_rng)
   return len(set(assignments))
 
 def log_prob_num_tables(k, n, alpha):
