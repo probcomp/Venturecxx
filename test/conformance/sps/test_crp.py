@@ -22,10 +22,13 @@ from nose.tools import assert_almost_equal
 import numpy.random as npr
 
 from venture.lite.crp import log_prob_num_tables
+from venture.lite.crp import log_density_crp_joint
 from venture.lite.crp import sample_num_tables
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
+from venture.test.config import gen_in_backend
 from venture.test.config import gen_on_inf_prim
+from venture.test.config import in_backend
 from venture.test.config import on_inf_prim
 from venture.test.config import stochasticTest
 from venture.test.stats import reportKnownDiscrete
@@ -77,6 +80,7 @@ def checkCRPCounter(n, seed):
   ans = [(n, 0.5), ("other", 0.5)]
   return reportKnownDiscrete(ans, replaceWithDefault(predictions, [n], "other"))
 
+@gen_in_backend('none')
 def test_number_of_tables():
   # Check that the sampled distribution on the number of tables where
   # n customers get seated agrees with theory.
@@ -93,6 +97,10 @@ def check_number_of_tables(alpha, seed):
   expected = zip(range(n+1), probs)
   lengths = [sample_num_tables(n, alpha, np_rng=rng) for _ in range(iters)]
   return reportKnownDiscrete(expected, lengths)
+
+@in_backend('none')
+def test_crp_logdensity_joint_smoke():
+  eq_(-6.666193142143909, log_density_crp_joint((1, 1, 2, 3, 4), 0.4))
 
 @gen_on_inf_prim("none")
 def testLogDensityOfData():

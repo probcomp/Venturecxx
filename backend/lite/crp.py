@@ -225,6 +225,16 @@ def draw_crp_samples(n, alpha, np_rng=None):
   ans = [draw_sample() for _ in range(n)]
   return ans
 
+def log_density_crp_joint(assignments, alpha):
+  aux = CRPSPAux()
+  args = MockArgs([], aux)
+  psp = CRPOutputPSP(alpha, 0) # No dispersion
+  def log_d_sample(datum):
+    val = psp.logDensity(datum, args)
+    psp.incorporate(datum, args)
+    return val
+  return sum(map(log_d_sample, assignments))
+
 def sample_num_tables(n, alpha, np_rng=None):
   """Sample how many tables n customers get seated at by a CRP(alpha)."""
   assignments = draw_crp_samples(n, alpha, np_rng=np_rng)
