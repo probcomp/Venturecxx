@@ -96,3 +96,14 @@ def testExplicitQuasiquotation():
 @on_inf_prim("quasiquote")
 def testExplicitQuasiquotation2():
   eq_(3, get_ripl().infer("(inference_action (lambda (t) (pair (lookup `(,(+ 1 2) 5) 0) t)))"))
+
+@on_inf_prim("value_at")
+def testValueAt():
+  eq_(7, get_ripl(init_mode="venture_script").infer("""{
+assume x = normal(0, 1) #foo:1;
+set_value_at(/?foo==1, 7);
+return(value_at(/?foo==1)) }"""))
+
+@on_inf_prim("value_at2")
+def testValueAt2():
+  eq_(7, get_ripl().infer("(do (assume x (tag 'foo 1 (normal 0 1))) (set_value_at2 'foo 1 7) (return (value_at2 'foo 1)))"))
