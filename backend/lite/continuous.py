@@ -384,6 +384,7 @@ class NormalvvOutputPSP(RandomPSP):
 
   def gradientOfLogDensity(self,x,args):
     (mu, sigma) = args.operandValues()
+    x = np.array(x); mu = np.array(mu); sigma = np.array(sigma)
     gradX = -(x - mu) / (np.power(sigma,2))
     gradMu = (x - mu) / (np.power(sigma,2))
     gradSigma = (np.power(x - mu,2) - np.power(sigma,2)) / np.power(sigma,3)
