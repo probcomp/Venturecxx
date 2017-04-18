@@ -156,7 +156,11 @@ class GPOutputPSP(RandomPSP):
       self.mean, self.covariance, samples, xs, os)
 
   def logDensityOfData(self, aux):
-    return _gp_logDensityOfData(self.mean, self.covariance, aux.samples)
+    ans = _gp_logDensityOfData(self.mean, self.covariance, aux.samples)
+    assert not np.isnan(ans), \
+      "GP got NaN log density of data at %s, %s, %s" \
+      % (self.mean, self.covariance, aux.samples)
+    return ans
 
   def incorporate(self, os, args):
     samples = args.spaux().samples
