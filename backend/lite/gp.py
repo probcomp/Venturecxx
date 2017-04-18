@@ -20,7 +20,6 @@ from collections import OrderedDict
 
 import numpy as np
 
-from venture.lite.exception import VentureValueError
 from venture.lite.function import ParamLeaf
 from venture.lite.function import parameter_nest
 from venture.lite.psp import DeterministicMakerAAAPSP
@@ -320,10 +319,10 @@ class VentureGPMeanFunction(v.VentureValue):
   @property
   def f(self):
     return self._f
-  def asStackDict(self, trace=None):
+  def asStackDict(self, _trace=None):
     return vv.val('gp_mean_function', self._f)
   @staticmethod
-  def fromStackDict(self, thing):
+  def fromStackDict(thing):
     f = thing['value']
     return VentureGPMeanFunction(f)
 
@@ -353,10 +352,10 @@ class VentureGPCovarianceKernel(v.VentureValue):
   @property
   def kernel(self):
     return self._kernel
-  def asStackDict(self, trace=None):
+  def asStackDict(self, _trace=None):
     return vv.val('gp_covariance_kernel', self._kernel)
   @staticmethod
-  def fromStackDict(self, thing):
+  def fromStackDict(thing):
     kernel = thing['value']
     return VentureGPCovarianceKernel(kernel)
 
