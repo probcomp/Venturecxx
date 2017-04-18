@@ -190,6 +190,7 @@ class GPOutputPSP1(GPOutputPSP):
     return _gp_logDensity(self.mean, self.covariance, samples, [x], [o])
 
   def gradientOfLogDensity(self, o, args):
+    samples = args.spaux().samples
     x = args.operandValues()
     return _gp_gradientOfLogDensity(
       self.mean, self.covariance, samples, [x], [o])
