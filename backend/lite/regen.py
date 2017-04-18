@@ -37,6 +37,15 @@ from venture.lite.value import SPRef
 import venture.lite.address as addr
 import venture.lite.exp as e
 
+def check_weight(weight, psp, args):
+  assert not math.isnan(weight), \
+    "Got NaN weight applying %s to %s" % (psp, args.operandValues())
+
+def check_kernel_weight(weight, k, newValue, oldValue, args):
+  assert not math.isnan(weight), \
+    "Got NaN weight applying kernel %s to %s, %s, and %s" \
+    % (k, newValue, oldValue, args.operandValues())
+
 def regenAndAttach(trace, scaffold, shouldRestore, omegaDB, gradients):
   assertTorus(scaffold)
   assert len(scaffold.border) == 1
@@ -73,6 +82,7 @@ def constrain(trace, node, value):
   psp, args = trace.pspAt(node), trace.argsAt(node)
   psp.unincorporate(trace.valueAt(node), args)
   weight = psp.logDensity(value, args)
+  check_weight(weight, psp, args)
   trace.setValueAt(node, value)
   psp.incorporate(value, args)
   trace.registerConstrainedChoice(node)
@@ -113,6 +123,7 @@ def absorb(trace, node):
   psp, args = trace.pspAt(node), trace.argsAt(node)
   gvalue = trace.groundValueAt(node)
   weight = psp.logDensity(gvalue, args)
+  check_weight(weight, psp, args)
   psp.incorporate(gvalue, args)
   maybeRegisterRandomChoiceInScope(trace, node)
   assert isinstance(weight, numbers.Number)
@@ -264,6 +275,7 @@ def applyPSP(trace, node, scaffold, shouldRestore, omegaDB, gradients):
     else:
       newValue = oldValue
     weight += k.forwardWeight(trace, newValue, oldValue, args)
+    check_kernel_weight(weight, k, newValue, oldValue, args)
     assert isinstance(weight, numbers.Number)
     if isinstance(k, VariationalLKernel):
       gradients[node] = k.gradientOfLogDensity(newValue, args)
