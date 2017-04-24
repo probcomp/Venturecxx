@@ -553,6 +553,10 @@ registerBuiltinSP('gp_cov_sum',
 registerBuiltinSP('gp_cov_product',
   _cov_sp(cov.product, [GPCovarianceType('K'), GPCovarianceType('H')]))
 
+registerBuiltinSP('gp_cov_cp',
+  _cov_sp(cov.change_point,
+  [t.NumberType(), GPCovarianceType('K'), GPCovarianceType('H')])
+)
 
 # pattern matching rules
 def pattern_matching_WNxWN(kernel1, kernel2):
