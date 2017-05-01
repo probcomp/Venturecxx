@@ -71,6 +71,7 @@ class VentureValue(object):
   def getSimplex(self):
     raise VentureTypeError("Cannot convert %s to simplex" % type(self))
   def getDict(self):
+    # type: () -> Dict[VentureValue, VentureValue]
     raise VentureTypeError("Cannot convert %s to dict" % type(self))
   def getMatrix(self):
     raise VentureTypeError("Cannot convert %s to matrix" % type(self))
@@ -976,10 +977,12 @@ are also supposed to sum to 1, but we are not checking that.
 
 class VentureDict(VentureValue):
   def __init__(self,d):
+    # type: (Dict[VentureValue, VentureValue]) -> None
     assert isinstance(d, OrderedDict)
     self.dict = d
 
   def getDict(self):
+    # type: () -> Dict[VentureValue, VentureValue]
     return self.dict
 
   def asStackDict(self, _trace=None):
