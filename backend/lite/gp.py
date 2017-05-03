@@ -555,7 +555,13 @@ registerBuiltinSP('gp_cov_product',
 
 registerBuiltinSP('gp_cov_cp',
   _cov_sp(cov.change_point,
-  [t.NumberType(), GPCovarianceType('K'), GPCovarianceType('H')])
+      [
+        t.NumberType(),
+        t.NumberType(),
+        GPCovarianceType('K'),
+        GPCovarianceType('H')
+      ]
+  )
 )
 
 # pattern matching rules
