@@ -78,6 +78,10 @@ def deduplicate(sample):
   return list(itertools.chain.from_iterable(
     map(chunk, itertools.groupby(sorted(sample)))))
 
+def report_ks_stat(expected, observed, ax):
+  (K, pval) = stats.kstest(observed, expected)
+  ax.set_title("One-sided K-S stat: %s\np-value: %s" % (K, pval), loc='right')
+
 def _p_p_plot(expected_massive, observed, ax):
   points = sorted(deduplicate(observed))
   cdf1 = expand_state_space(expected_massive)
@@ -93,8 +97,7 @@ def p_p_plot(expected, observed, ax=None, show=False):
   if ax is None:
     ax = plt.axes()
   _p_p_plot(massless(expected), observed, ax)
-  (K, pval) = stats.kstest(observed, expected)
-  ax.set_title("One-sided K-S stat: %s, p-value: %s" % (K, pval), loc='right')
+  report_ks_stat(expected, observed, ax)
   if show:
     plt.show()
   return ax
