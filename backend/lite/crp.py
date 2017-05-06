@@ -235,6 +235,28 @@ def log_density_crp_joint(assignments, alpha):
     return val
   return sum(map(log_d_sample, assignments))
 
+def enumerate_crp_joint(n):
+  """Enumerate all possible sequences of return values from n consecutive CRP invocations."""
+  def remainders(customers_left, tables_used):
+    if customers_left == 0:
+      yield []
+    else:
+      for table in range(1, tables_used + 2):
+        for rem in remainders(customers_left - 1, max(tables_used, table)):
+          yield [table] + rem
+  return list(remainders(n, 0))
+
+def exact_crp_joint(n, alpha):
+  """Return the exact joint distribution on return CRP values.
+
+  Specifically, n applications of a CRP with concentration parameter alpha.
+  Being an exhaustive enumeration, this scales combinatorially in n.
+
+  The returned value is a list of (assignment, probability) pairs."""
+  items = enumerate_crp_joint(n)
+  probs = [math.exp(log_density_crp_joint(item, alpha)) for item in items]
+  return zip(items, probs)
+
 def sample_num_tables(n, alpha, np_rng=None):
   """Sample how many tables n customers get seated at by a CRP(alpha)."""
   assignments = draw_crp_samples(n, alpha, np_rng=np_rng)
