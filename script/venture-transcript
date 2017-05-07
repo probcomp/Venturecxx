@@ -208,6 +208,8 @@ class Writer(object):
                     sys.stderr.write("Inserting unexpected exception into output:\n")
                     sys.stderr.write(str(e))
                     sys.stderr.write("\n")
+                    import traceback
+                    print >>sys.stderr, traceback.format_exc()
                     sys.stderr.flush()
                     self.unexpected_errors += 1
                 return [None]
