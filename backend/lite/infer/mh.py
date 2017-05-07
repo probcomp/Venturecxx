@@ -18,6 +18,7 @@
 import math
 import time
 from collections import OrderedDict
+from venture.lite.orderedset import OrderedSet
 from ..regen import regenAndAttach
 from ..detach import detachAndExtract
 from ..scaffold import constructScaffold
