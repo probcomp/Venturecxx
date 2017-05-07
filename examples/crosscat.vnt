@@ -58,8 +58,10 @@
         (lambda (c)
           (let ((value (int_div r n_values)))
             (observe (get_cell ,r ,c) value)))))))]
-
+
 [define smoke_test
   (do (model 2)
       (observe_square 2 4 4)
       (mh default one 1000))]
+
+; Runs with venture -f crosscat.vnt -e 'smoke_test'
