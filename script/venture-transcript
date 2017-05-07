@@ -158,7 +158,7 @@ class Writer(object):
         (returned, printed) = with_output_to_string(self.execute_program, munged, expect_error)
         val = getValue(returned[-1])
         indent = self.detect_indent(string)
-        self.out_chunks.extend([indent, "```", string, "```\n"])
+        self.out_chunks.extend([indent, "```", string, indent, "```\n"])
         if len(printed.strip()) > 0:
             self.out_chunks.extend([indent, '<pre class="stdout"><code>', cgi.escape(printed), "</code></pre>\n"])
         self.out_chunks.extend([indent, '<pre class="value"><code>', cgi.escape(str(val)), "</code></pre>\n"])
