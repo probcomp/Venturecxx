@@ -18,7 +18,8 @@
 ;; Run me with one of
 ;; - venture lite -L hmm_plugin.py -f hmm.vnt -e 'infer exact_map()'
 ;;   for one-shot exact max a-posteriori
-;; - venture lite -L hmm_plugin.py -f hmm.vnt -e 'infer online_smoothed_marginals(10000, 5, 20)'
+;; - venture lite -L hmm_plugin.py -f hmm.vnt
+;;     -e 'infer online_smoothed_marginals(10000, 5, 20)'
 ;;   for online approximate posterior marginals
 ;; - venture lite -L hmm_plugin.py -f hmm.vnt -e 'infer exact_filtering()'
 ;;   for one-shot exact forward marginals
