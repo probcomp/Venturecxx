@@ -39,3 +39,6 @@
        (for_each (arange n_words_per_doc)
         (lambda (pos)
           (observe (word ,doc_id ,pos) integer<0>))))))]
+
+; Smoke test with
+; venture -f lda.vnt -e 'do(model(2, 2), data(3, 4), mh(default, one, 500))'

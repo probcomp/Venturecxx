@@ -57,7 +57,7 @@
           (if (<= t 1)
               1
               (transition (state (- t 1)))))))]
-
+
 ;;; The data, and abstracting doing inference after each time step
 
 [define data (array 3 2 3 5 5 1 2 5 2 4 4 1 2 2 1 4 2 3 5 1)]
@@ -113,7 +113,7 @@
            (forward_phase_step time)
            (call_back hmm_state (state (unquote time))))))
       (call_back hmm_end)))]
-
+
 ;;; Viterbi algorithm
 
 [define exact_map
