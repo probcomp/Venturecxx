@@ -54,7 +54,7 @@ define infer_gibbs_mh = (num_rows, num_cols, num_sweeps) -> {
   }, arange(num_sweeps));
   return(pair(init, rest))
 };
-
+
 // One replicate, as a suitable argument to mapv or parallel_mapv
 define replicate = (num_sweeps, num_rows, num_cols) -> {
   (rep_id) -> {
@@ -82,3 +82,6 @@ define doit = (num_reps, num_cores, num_sweeps, num_rows, num_cols) -> {
     arange($num_rows));
   action(make_plots(data, results))
 };
+
+// Run me with, e.g.,
+// venture -f dpmm_example.vnts -L extensions.py -e 'doit(6, 3, 2, 8, 4)'
