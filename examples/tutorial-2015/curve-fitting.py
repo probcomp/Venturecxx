@@ -107,6 +107,9 @@ class Draw(object):
           if isinstance(datum[2], list) and len(datum[2]) == 2 and datum[2][0] == {'type': 'symbol', 'value': 'quote'}:
             # quoted, probably by observe_dataset
             obs_x = datum[2][1]["value"]
+          elif isinstance(datum[2], list) and len(datum[2]) == 3 and datum[2][0] == {'type': 'symbol', 'value': 'sub'}:
+            # assume negative literal parsed as 0 - x
+            obs_x = -datum[2][2]["value"]
           else:
             obs_x = datum[2]["value"]
         if isinstance(datum, list):
