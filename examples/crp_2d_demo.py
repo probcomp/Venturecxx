@@ -78,19 +78,22 @@ def do_infer(ripl, iter):
   #   (mh 'hypers one 2)
   #   (mh 'parameters one 3)
   #   (pgibbs 'clustering ordered 2 1)))""")
-  # self.ripl.infer("(repeat 1 (do (mh 'hypers one 2) (mh 'parameters one 3) (mh 'clustering one 8)))")
-  # self.ripl.infer('(mh 'hypers one %d)'%iter)
-  # self.ripl.infer('(mh 'clustering one %d)'%(iter))
-  # self.ripl.infer('(mh 'parameters one %d)'%(iter))
-  # self.ripl.infer('(hmc 'parameters all %f %d %d)'%(eps, L, iter))
-  # self.ripl.infer('(pgibbs 'clustering ordered 2 %d)'%iter)
+  # ripl.infer("""(repeat 1 (do
+  #   (mh 'hypers one 2)
+  #   (mh 'parameters one 3)
+  #   (mh 'clustering one 8)))""")
+  # ripl.infer('(mh 'hypers one %d)'%iter)
+  # ripl.infer('(mh 'clustering one %d)'%(iter))
+  # ripl.infer('(mh 'parameters one %d)'%(iter))
+  # ripl.infer('(hmc 'parameters all %f %d %d)'%(eps, L, iter))
+  # ripl.infer('(pgibbs 'clustering ordered 2 %d)'%iter)
 
 def collect_clusters(ripl, num_points):
   mean_l = list()
   var_l = list()
   component_set = set()
   for ni in range(num_points):
-    # print 'ni = %d, cluster = %d'%(ni, self.ripl.predict('(get_cluster %d)'%ni))
+    # print 'ni = %d, cluster = %d'%(ni, ripl.predict('(get_cluster %d)'%ni))
     component_set.add(ripl.sample('(get_cluster %d)'%ni))
   for ci in component_set:
     mean_l.append(ripl.sample('(get_mean atom<%d>)'%ci))
@@ -105,8 +108,10 @@ def do_plot(x_l, y_l, sample, show_pics):
   plt.clf()
   plt.plot(x_l, y_l, 'r.')
   for (mean_x,var_x) in zip(sample['mean'], sample['var']):
-    plot_xrange = np.arange(2*min(x_l)-max(x_l), 2*max(x_l)-min(x_l), 2*(max(x_l)-min(x_l))/100)
-    plot_yrange = np.arange(2*min(y_l)-max(y_l), 2*max(y_l)-min(y_l), 2*(max(y_l)-min(y_l))/100)
+    plot_xrange =\
+      np.arange(2*min(x_l)-max(x_l), 2*max(x_l)-min(x_l), 2*(max(x_l)-min(x_l))/100)
+    plot_yrange =\
+      np.arange(2*min(y_l)-max(y_l), 2*max(y_l)-min(y_l), 2*(max(y_l)-min(y_l))/100)
     plot_xrange, plot_yrange = np.meshgrid(plot_xrange, plot_yrange)
     plot_zrange = mlab.bivariate_normal(plot_xrange, plot_yrange, \
         mux=mean_x[0], muy=mean_x[1],  \
