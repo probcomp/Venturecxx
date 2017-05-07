@@ -59,7 +59,7 @@ These represent very common types of knobs:
   "problem complexity" parameter.  Increasing this kind of parameter
   tends to make the problem computationally harder and has an
   ambiguous effect on its inferential ease or difficuly.
-
+
 A last comment about scaling: As one might imagine, the program is
 embarrassingly parallel in the independent replicates.  This example
 uses `parallel_mapv_action` to take advantage of this, on a

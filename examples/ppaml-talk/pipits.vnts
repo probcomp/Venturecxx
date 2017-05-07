@@ -47,7 +47,7 @@ assume x = mem(proc(n) {
     normal(mu_m, sigma_m)
   }
 });
-
+
 // Read in the data
 run(pyexec("import pandas as pd"));
 run(pyexec("from collections import Counter"));
