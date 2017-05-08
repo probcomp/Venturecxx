@@ -590,6 +590,11 @@ class HomogeneousMappingType(VentureType):
                                vv.VentureSimplex)):
       raise vv.VentureTypeError(str(vthing) + " is not a HomogeneousMappingType!")
     return vthing
+  def __contains__(self, vthing):
+    return isinstance(vthing, (vv.VentureArray, vv.VentureArrayUnboxed,
+                               vv.VentureNil, vv.VenturePair,
+                               vv.VentureMatrix, vv.VentureDict,
+                               vv.VentureSimplex))
   def name(self):
     return self._name or "<mapping %s %s>" % \
       (self.keytype.name(), self.valtype.name())
