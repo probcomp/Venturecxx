@@ -733,8 +733,16 @@ class VentureArray(VentureValue):
     else:
       raise VentureValueError("Index out of bounds: %s" % index)
   def lookup_grad(self, index, direction):
-    return VentureArray([direction if i == index else 0
-                         for (_,i) in enumerate(self.array)])
+    try:
+      ind = index.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-number %r in an array" % index)
+    if 0 <= int(ind) and int(ind) < len(self.array):
+      ans = VentureArray([direction if i == int(ind) else 0
+                          for (i,_) in enumerate(self.array)])
+      return ans
+    else:
+      raise VentureValueError("Index out of bounds: %s" % index)
   def contains(self, obj):
     # Not Python's `in` because I need to use custom equality
     # TODO I am going to have to overload the equality for dicts
@@ -842,10 +850,18 @@ and O(n) copy."""
   def lookup_grad(self, index, direction):
     # TODO Really this should be an unboxed array of the gradient
     # types of the elements, with generic zeroes.
-    return VentureArrayUnboxed(
-      [self.elt_type.asPython(direction) if i == index else 0
-       for (_,i) in enumerate(self.array)],
-      self.elt_type)
+    try:
+      ind = index.getNumber()
+    except VentureTypeError:
+      raise VentureValueError("Looking up non-number %r in an array" % index)
+    if 0 <= int(ind) and int(ind) < len(self.array):
+      ans = VentureArrayUnboxed(
+        [self.elt_type.asPython(direction) if i == int(ind) else 0
+         for (i,_) in enumerate(self.array)],
+        self.elt_type)
+      return ans
+    else:
+      raise VentureValueError("Index out of bounds: %s" % index)
   def contains(self, obj):
     return any(obj.equal(self.elt_type.asVentureValue(li))
                for li in self.array)
