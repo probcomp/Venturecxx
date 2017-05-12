@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import numbers
 import sys
 import math
 
 from venture.lite.exception import VentureBuiltinLKernelMethodError
 from venture.lite.value import VentureValue
+from venture.lite.utils import ensure_python_float
 
 class LKernel(object):
   """A local proposal distribution for one node."""
@@ -181,8 +181,7 @@ class DeterministicLKernel(SimulationLKernel):
 
   def weight(self, _trace, newValue, args):
     answer = self.psp.logDensity(newValue,args)
-    assert isinstance(answer, numbers.Number)
-    return answer
+    return ensure_python_float(answer)
 
   def gradientOfReverseWeight(self, _trace, value, args):
     return self.psp.gradientOfLogDensity(value, args)

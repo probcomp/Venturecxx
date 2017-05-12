@@ -32,6 +32,7 @@ from venture.lite.mlens import MLens
 from venture.lite.typing import Tuple # Pylint doesn't understand type comments pylint: disable=unused-import
 from venture.lite.typing import Union # Pylint doesn't understand type comments pylint: disable=unused-import
 from venture.lite.typing import TYPE_CHECKING
+from venture.lite.utils import ensure_python_float
 import venture.lite.ensure_numpy as enp
 import venture.value.dicts as v
 
@@ -190,10 +191,7 @@ this."""
 class VentureNumber(VentureValue):
   def __init__(self, number):
     # type: (Union[int, long, float]) -> None
-    if not isinstance(number, Number):
-      raise VentureTypeError(
-        "%s is of %s, not Number" % (str(number), type(number)))
-    self.number = float(number)
+    self.number = ensure_python_float(number)
   def __repr__(self):
     if hasattr(self, "number"):
       return "VentureNumber(%r)" % (self.number,)
@@ -240,12 +238,10 @@ class VentureNumber(VentureValue):
       return VentureNumber(self.number - other.number)
   def __mul__(self, other):
     # Assume other is a scalar
-    assert isinstance(other, Number)
-    return VentureNumber(self.number * other)
+    return VentureNumber(self.number * ensure_python_float(other))
   def __rmul__(self, other):
     # Assume other is a scalar
-    assert isinstance(other, Number)
-    return VentureNumber(other * self.number)
+    return VentureNumber(ensure_python_float(other) * self.number)
   def __abs__(self):
     return VentureNumber(abs(self.number))
   def __float__(self):
@@ -266,8 +262,7 @@ class VentureNumber(VentureValue):
       def get(self):
         return self.vn.number
       def set(self, new):
-        assert isinstance(new, Number)
-        self.vn.number = new
+        self.vn.number = ensure_python_float(new)
     return [NumberLens(self)]
   def expressionFor(self): return self.number
 

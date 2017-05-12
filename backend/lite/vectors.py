@@ -98,6 +98,11 @@ registerBuiltinSP("linspace",
     descr="%s(start, stop, n) returns an array of n evenly spaced numbers " \
           "over the interval [start, stop]."))
 
+registerBuiltinSP("zero_matrix",
+  deterministic_typed(lambda n, m: np.zeros((n, m)),
+    [t.CountType(), t.CountType()], t.MatrixType(),
+    descr="%s(n, m) returns a zero matrix of shape n by m."))
+
 registerBuiltinSP("id_matrix",
   deterministic_typed(np.identity, [t.CountType()], t.MatrixType(),
     descr="%s(n) returns an identity matrix of dimension n."))

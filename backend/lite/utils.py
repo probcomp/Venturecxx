@@ -15,15 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
+from numbers import Number
 import math
 
 import numpy as np
 import scipy.special as ss
 
+from venture.lite.exception import VentureTypeError
 import venture.lite.mvnormal as mvnormal
 from venture.lite.typing import Any
 from venture.lite.typing import Callable
-from venture.lite.typing import Type
+from venture.lite.typing import Type # Pylint doesn't understand type comments pylint: disable=unused-import
 from venture.lite.typing import TypeVar
 
 C = TypeVar('C')
@@ -37,6 +40,22 @@ def override(interface_class):
     assert method.__name__ in dir(interface_class)
     return method # type: ignore
   return overrider
+
+@contextlib.contextmanager
+def np_seterr(**kwargs):
+  old_settings = np.seterr(**kwargs)
+  try:
+    yield
+  finally:
+    np.seterr(**old_settings)
+
+def ensure_python_float(thing):
+  """Return the given object as a Python float, or raise an exception."""
+  if isinstance(thing, Number) or (isinstance(thing, np.ndarray) and thing.size == 1):
+    return float(thing)
+  else:
+    raise VentureTypeError(
+      "%s is of %s, not Number" % (str(thing), type(thing)))
 
 def log(x): return float('-inf') if x == 0 else math.log(x)
 def log1p(x): return float('-inf') if x == -1 else math.log1p(x)
@@ -143,7 +162,7 @@ def logWeightsToNormalizedDirect(logs):
   if the_max > float("-inf"):
     # Even if the logs include some -inf values, math.exp will produce
     # zeros there and it will be fine.
-    return normalizeList([math.exp(log - the_max) for log in logs])
+    return normalizeList([math.exp(lg - the_max) for lg in logs])
   else:
     # If all the logs are -inf, force 0 instead of NaN.
     return [0 for _ in logs]
@@ -152,7 +171,7 @@ def sampleLogCategorical(logs, np_rng, os=None):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
-    return simulateCategorical([math.exp(log - the_max) for log in logs],
+    return simulateCategorical([math.exp(lg - the_max) for lg in logs],
       np_rng, os=os)
   else:
     # normalizeList, as written above, will actually do the right
@@ -178,10 +197,8 @@ def logistic(x):
   # giving the approximation 1/(1 + e^{-x}) ~= 1/e^{-x} = e^x, which
   # never overflows.
   #
-  if x <= -37:
-    return np.exp(x)
-  else:
-    return 1/(1 + np.exp(-x))
+  with np_seterr(over='ignore'):
+    return np.where(x <= -37, np.exp(x), 1/(1 + np.exp(-x)))
 
 def T_logistic(x):
   """Tangent vector of logistic function: (logistic(x), d/dx logistic(x))."""
@@ -207,52 +224,47 @@ def T_logistic(x):
   # separately, but that would cost two exps.  We instead compute L(x)
   # and L'(x) simultaneously in terms of e^{-x}.
   #
-  if x <= -37:
+  with np_seterr(over='ignore', invalid='ignore'):
     # When x <= -37, so that 1 + e^{-x} ~= e^{-x}, we have
     #
     #   1/(1 + e^{-x}) = 1/e^{-x} = e^x
     #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
     #
     ex = np.exp(x)
-    return (ex, ex)
-  else:
-    ex = np.exp(-x)
-    ex1 = 1 + ex
-    return (1/ex1, ex/(ex1*ex1))
+    mex = np.exp(-x)
+    mex1 = 1 + mex
+    return (np.where(x <= -37, ex, 1/mex1),
+      np.where(x <= -37, ex, mex/(mex1*mex1)))
 
 def d_logistic(x):
   """d/dx logistic(x) = e^{-x} / (1 + e^{-x})^2"""
-  if x <= -37:
+  with np_seterr(over='ignore', invalid='ignore'):
+    # When x <= -37,
     # 1 + e^{-x} ~= e^{-x}, so e^{-x} / (1 + e^{-x}) ~=
     # e^{-x}/(e^{-x})^2 = 1/e^{-x} = e^x.
-    return np.exp(x)
-  else:
     ex = np.exp(-x)
     ex1 = 1 + ex
-    return ex/(ex1*ex1)
+    return np.where(x <= -37, np.exp(x), ex/(ex1*ex1))
 
 def log_d_logistic(x):
   """log d/dx logistic(x) = -x - 2 log (1 + e^{-x})"""
-  if x <= -37:
+  with np_seterr(over='ignore', invalid='ignore'):
+    # When x <= -37,
     # -x - 2 log (1 + e^{-x}) ~= -x - 2 log (e^{-x}) = -x - 2 (-x) = x
-    return x
-  else:
-    return -x - 2*log1p(exp(-x))
+    return np.where(x <= -37, x, -x - 2*np.log1p(np.exp(-x)))
 
 def log_logistic(x):
-  """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
+  r"""log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
 
   Maps log-odds space probabilities in \R into log-space in (-\infty, 0].
   """
-  if x <= -37:
-    return x
-  else:
+  with np_seterr(over='ignore'):
     # log 1/(1 + e^{-x}) = log 1 - log (1 + e^{-x}) = -log1p(e^{-x}).
     #
     # When x is large and positive, e^{-x} is small relative to 1, so
     # computing 1 + e^{-x} may lose precision, which log1p avoids.
     #
-    return -np.log1p(np.exp(-x))
+    return np.where(x <= -37, x, -np.log1p(np.exp(-x)))
 
 def d_log_logistic(x):
   """Derivative of the log-logistic function: d/dx log logistic(x)."""
@@ -271,7 +283,7 @@ def logit(x):
   return log(x / (1 - x))
 
 def logit_exp(x):
-  """Logit of exp function, log e^x/(1 - e^x).  Inverse of log_logistic.
+  r"""Logit of exp function, log e^x/(1 - e^x).  Inverse of log_logistic.
 
   Maps log-space probabilities (-\infty, 0] into log-odds space in \R.
   """
