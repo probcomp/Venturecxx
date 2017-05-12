@@ -229,6 +229,7 @@ def T_logistic(x):
 def d_logistic(x):
   """d/dx logistic(x) = e^{-x} / (1 + e^{-x})^2"""
   with np_seterr(over='ignore', invalid='ignore'):
+    # When x <= -37,
     # 1 + e^{-x} ~= e^{-x}, so e^{-x} / (1 + e^{-x}) ~=
     # e^{-x}/(e^{-x})^2 = 1/e^{-x} = e^x.
     ex = np.exp(-x)
@@ -237,11 +238,10 @@ def d_logistic(x):
 
 def log_d_logistic(x):
   """log d/dx logistic(x) = -x - 2 log (1 + e^{-x})"""
-  if x <= -37:
+  with np_seterr(over='ignore', invalid='ignore'):
+    # When x <= -37,
     # -x - 2 log (1 + e^{-x}) ~= -x - 2 log (e^{-x}) = -x - 2 (-x) = x
-    return x
-  else:
-    return -x - 2*log1p(exp(-x))
+    return np.where(x <= -37, x, -x - 2*np.log1p(np.exp(-x)))
 
 def log_logistic(x):
   """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
