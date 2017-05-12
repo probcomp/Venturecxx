@@ -24,7 +24,7 @@ import scipy.special as ss
 import venture.lite.mvnormal as mvnormal
 from venture.lite.typing import Any
 from venture.lite.typing import Callable
-from venture.lite.typing import Type
+from venture.lite.typing import Type # Pylint doesn't understand type comments pylint: disable=unused-import
 from venture.lite.typing import TypeVar
 
 C = TypeVar('C')
@@ -152,7 +152,7 @@ def logWeightsToNormalizedDirect(logs):
   if the_max > float("-inf"):
     # Even if the logs include some -inf values, math.exp will produce
     # zeros there and it will be fine.
-    return normalizeList([math.exp(log - the_max) for log in logs])
+    return normalizeList([math.exp(lg - the_max) for lg in logs])
   else:
     # If all the logs are -inf, force 0 instead of NaN.
     return [0 for _ in logs]
@@ -161,7 +161,7 @@ def sampleLogCategorical(logs, np_rng, os=None):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
-    return simulateCategorical([math.exp(log - the_max) for log in logs],
+    return simulateCategorical([math.exp(lg - the_max) for lg in logs],
       np_rng, os=os)
   else:
     # normalizeList, as written above, will actually do the right
@@ -273,7 +273,7 @@ def logit(x):
   return log(x / (1 - x))
 
 def logit_exp(x):
-  """Logit of exp function, log e^x/(1 - e^x).  Inverse of log_logistic.
+  r"""Logit of exp function, log e^x/(1 - e^x).  Inverse of log_logistic.
 
   Maps log-space probabilities (-\infty, 0] into log-odds space in \R.
   """
