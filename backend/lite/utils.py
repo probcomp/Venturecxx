@@ -16,11 +16,13 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import contextlib
+from numbers import Number
 import math
 
 import numpy as np
 import scipy.special as ss
 
+from venture.lite.exception import VentureTypeError
 import venture.lite.mvnormal as mvnormal
 from venture.lite.typing import Any
 from venture.lite.typing import Callable
@@ -46,6 +48,14 @@ def np_seterr(**kwargs):
     yield
   finally:
     np.seterr(**old_settings)
+
+def ensure_python_float(thing):
+  """Return the given object as a Python float, or raise an exception."""
+  if isinstance(thing, Number) or (isinstance(thing, np.ndarray) and thing.size == 1):
+    return float(thing)
+  else:
+    raise VentureTypeError(
+      "%s is of %s, not Number" % (str(thing), type(thing)))
 
 def log(x): return float('-inf') if x == 0 else math.log(x)
 def log1p(x): return float('-inf') if x == -1 else math.log1p(x)

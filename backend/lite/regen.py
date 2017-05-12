@@ -16,7 +16,6 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import numbers
 from collections import OrderedDict
 
 from venture.exception import VentureException
@@ -34,6 +33,7 @@ from venture.lite.psp import PSP
 from venture.lite.scope import isTagOutputPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.value import SPRef
+from venture.lite.utils import ensure_python_float
 import venture.lite.address as addr
 import venture.lite.exp as e
 
@@ -69,8 +69,7 @@ def regenAndAttachAtBorder(trace, border, scaffold,
         weight += getAndConstrain(trace, node, constraintsToPropagate)
   propagateConstraints(trace, constraintsToPropagate)
 
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def getAndConstrain(trace, node, constraintsToPropagate):
   appNode = trace.getConstrainableNode(node)
@@ -86,8 +85,7 @@ def constrain(trace, node, value):
   trace.setValueAt(node, value)
   psp.incorporate(value, args)
   trace.registerConstrainedChoice(node)
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def propagateConstraints(trace, constraintsToPropagate):
   for node, value in constraintsToPropagate.iteritems():
@@ -126,8 +124,7 @@ def absorb(trace, node):
   check_weight(weight, psp, args)
   psp.incorporate(gvalue, args)
   maybeRegisterRandomChoiceInScope(trace, node)
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def regenParents(trace, node, scaffold, shouldRestore, omegaDB, gradients):
   weight = 0
@@ -135,15 +132,13 @@ def regenParents(trace, node, scaffold, shouldRestore, omegaDB, gradients):
     weight += regen(trace, parent, scaffold, shouldRestore, omegaDB, gradients)
   for parent in trace.esrParentsAt(node):
     weight += regen(trace, parent, scaffold, shouldRestore, omegaDB, gradients)
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def regenESRParents(trace, node, scaffold, shouldRestore, omegaDB, gradients):
   weight = 0
   for parent in trace.esrParentsAt(node):
     weight += regen(trace, parent, scaffold, shouldRestore, omegaDB, gradients)
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def regen(trace, node, scaffold, shouldRestore, omegaDB, gradients):
   weight = 0
@@ -163,8 +158,7 @@ def regen(trace, node, scaffold, shouldRestore, omegaDB, gradients):
   weight += maybeRegenStaleAAA(trace, node, scaffold,
                                shouldRestore, omegaDB, gradients)
 
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def propagateLookup(trace, node):
   trace.setValueAt(node, trace.valueAt(node.sourceNode))
@@ -233,8 +227,7 @@ def evalFamily(trace, address, exp, env, scaffold,
       info = sys.exc_info()
       raise VentureException("evaluation", err.message, address=address,
                              cause=err), None, info[2]
-    assert isinstance(weight, numbers.Number)
-    return weight, outputNode
+    return ensure_python_float(weight), outputNode
 
 def apply(trace, requestNode, outputNode, scaffold,
           shouldRestore, omegaDB, gradients):
@@ -248,8 +241,7 @@ def apply(trace, requestNode, outputNode, scaffold,
                             shouldRestore, omegaDB, gradients)
   weight += applyPSP(trace, outputNode, scaffold,
                      shouldRestore, omegaDB, gradients)
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def processMadeSP(trace, node, isAAA):
   spRecord = trace.valueAt(node)
@@ -276,7 +268,7 @@ def applyPSP(trace, node, scaffold, shouldRestore, omegaDB, gradients):
       newValue = oldValue
     weight += k.forwardWeight(trace, newValue, oldValue, args)
     check_kernel_weight(weight, k, newValue, oldValue, args)
-    assert isinstance(weight, numbers.Number)
+    weight = ensure_python_float(weight)
     if isinstance(k, VariationalLKernel):
       gradients[node] = k.gradientOfLogDensity(newValue, args)
   else:
@@ -290,8 +282,7 @@ def applyPSP(trace, node, scaffold, shouldRestore, omegaDB, gradients):
     processMadeSP(trace, node, scaffold.isAAA(node))
   if psp.isRandom(): trace.registerRandomChoice(node)
   maybeRegisterRandomChoiceInScope(trace, node)
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def evalRequests(trace, node, scaffold, shouldRestore, omegaDB, gradients):
   assert isRequestNode(node)
@@ -331,8 +322,7 @@ def evalRequests(trace, node, scaffold, shouldRestore, omegaDB, gradients):
     weight += trace.spAt(node).simulateLatents(trace.argsAt(node), lsr,
                                                shouldRestore, latentDB)
 
-  assert isinstance(weight, numbers.Number)
-  return weight
+  return ensure_python_float(weight)
 
 def restore(trace, node, scaffold, omegaDB, gradients):
   if isConstantNode(node): return 0
@@ -340,8 +330,7 @@ def restore(trace, node, scaffold, omegaDB, gradients):
     weight = regenParents(trace, node, scaffold, True, omegaDB, gradients)
     trace.reconnectLookup(node)
     trace.setValueAt(node, trace.valueAt(node.sourceNode))
-    assert isinstance(weight, numbers.Number)
-    return weight
+    return ensure_python_float(weight)
   else: # node is output node
     assert isOutputNode(node)
     weight = restore(trace, node.operatorNode, scaffold, omegaDB, gradients)
@@ -349,8 +338,7 @@ def restore(trace, node, scaffold, omegaDB, gradients):
       weight += restore(trace, operandNode, scaffold, omegaDB, gradients)
     weight += apply(trace, node.requestNode, node, scaffold,
                     True, omegaDB, gradients)
-    assert isinstance(weight, numbers.Number)
-    return weight
+    return ensure_python_float(weight)
 
 def maybeRegisterRandomChoiceInScope(trace, node):
   psp = trace.pspAt(node)
