@@ -244,19 +244,17 @@ def log_d_logistic(x):
     return np.where(x <= -37, x, -x - 2*np.log1p(np.exp(-x)))
 
 def log_logistic(x):
-  """log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
+  r"""log logistic(x) = log 1/(1 + e^{-x}) = -log1p(e^{-x})
 
   Maps log-odds space probabilities in \R into log-space in (-\infty, 0].
   """
-  if x <= -37:
-    return x
-  else:
+  with np_seterr(over='ignore'):
     # log 1/(1 + e^{-x}) = log 1 - log (1 + e^{-x}) = -log1p(e^{-x}).
     #
     # When x is large and positive, e^{-x} is small relative to 1, so
     # computing 1 + e^{-x} may lose precision, which log1p avoids.
     #
-    return -np.log1p(np.exp(-x))
+    return np.where(x <= -37, x, -np.log1p(np.exp(-x)))
 
 def d_log_logistic(x):
   """Derivative of the log-logistic function: d/dx log logistic(x)."""
