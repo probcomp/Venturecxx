@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
 import math
 
 import numpy as np
@@ -37,6 +38,14 @@ def override(interface_class):
     assert method.__name__ in dir(interface_class)
     return method # type: ignore
   return overrider
+
+@contextlib.contextmanager
+def np_seterr(**kwargs):
+  old_settings = np.seterr(**kwargs)
+  try:
+    yield
+  finally:
+    np.seterr(**old_settings)
 
 def log(x): return float('-inf') if x == 0 else math.log(x)
 def log1p(x): return float('-inf') if x == -1 else math.log1p(x)
@@ -178,10 +187,8 @@ def logistic(x):
   # giving the approximation 1/(1 + e^{-x}) ~= 1/e^{-x} = e^x, which
   # never overflows.
   #
-  if x <= -37:
-    return np.exp(x)
-  else:
-    return 1/(1 + np.exp(-x))
+  with np_seterr(over='ignore'):
+    return np.where(x <= -37, np.exp(x), 1/(1 + np.exp(-x)))
 
 def T_logistic(x):
   """Tangent vector of logistic function: (logistic(x), d/dx logistic(x))."""

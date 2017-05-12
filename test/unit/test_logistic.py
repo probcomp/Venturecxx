@@ -163,3 +163,8 @@ def testLogistic():
   assert np.isnan(log_d_logistic(nan))
   assert np.isnan(log_logistic(nan))
   assert np.isnan(d_log_logistic(nan))
+
+def test_vector_logistic():
+  inputs    = np.array([-1e308, -1000, -710, -1, 0, 1, 710, 1000, 1e308])
+  logistics = np.array([0, 0, 4.4762862256751298e-309, 0.2689414213699951, 0.5, 0.7310585786300049, 1, 1, 1])
+  assert np.allclose(logistics, logistic(inputs))
