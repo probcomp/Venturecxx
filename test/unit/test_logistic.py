@@ -172,6 +172,8 @@ def test_vector_logistic():
                          0.19661193324148185, 4.4762862256751298e-309, 0, 0])
   log_logistics  = np.array([-1e308, -1000, -710, -1.3132616875182228, np.log(1/2),
                              -0.3132616875182228, -4.4762862256751298e-309, 0, 0])
+  dlog_logistics = np.array([1, 1, 1, 0.7310585786300049, 0.5,
+                             0.2689414213699951, 4.4762862256751298e-309, 0, 0])
   log_dlogistics = np.array([-1e308, -1000, -710, -1.6265233750364456, np.log(1/4),
                              -1.6265233750364456, -710, -1000, -1e308])
   assert np.allclose(logistics, logistic(inputs))
@@ -180,3 +182,4 @@ def test_vector_logistic():
   assert np.allclose(dlogistics, T_logistic(inputs)[1])
   assert np.allclose(log_dlogistics, log_d_logistic(inputs))
   assert np.allclose(log_logistics, log_logistic(inputs))
+  assert np.allclose(dlog_logistics, d_log_logistic(inputs))
