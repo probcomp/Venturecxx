@@ -214,18 +214,17 @@ def T_logistic(x):
   # separately, but that would cost two exps.  We instead compute L(x)
   # and L'(x) simultaneously in terms of e^{-x}.
   #
-  if x <= -37:
+  with np_seterr(over='ignore', invalid='ignore'):
     # When x <= -37, so that 1 + e^{-x} ~= e^{-x}, we have
     #
     #   1/(1 + e^{-x}) = 1/e^{-x} = e^x
     #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
     #
     ex = np.exp(x)
-    return (ex, ex)
-  else:
-    ex = np.exp(-x)
-    ex1 = 1 + ex
-    return (1/ex1, ex/(ex1*ex1))
+    mex = np.exp(-x)
+    mex1 = 1 + mex
+    return (np.where(x <= -37, ex, 1/mex1),
+      np.where(x <= -37, ex, mex/(mex1*mex1)))
 
 def d_logistic(x):
   """d/dx logistic(x) = e^{-x} / (1 + e^{-x})^2"""
