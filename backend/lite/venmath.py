@@ -253,6 +253,11 @@ def grad_logistic(args, direction):
 registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logistic,
     descr="The logistic function: 1/(1+exp(-x))"))
 
+registerBuiltinSP("logisticv", deterministic_typed(logistic,
+    [t.UArray(t.Number)], t.UArray(t.Number),
+    sim_grad=grad_logistic,
+    descr="The logistic function: 1/(1+exp(-x))"))
+
 registerBuiltinSP("logit", unaryNum(logit,
     descr="The logit (inverse logistic) function: log(x/(1-x))"))
 
