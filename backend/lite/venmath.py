@@ -74,10 +74,27 @@ generic_add = dispatching_psp(
 
 registerBuiltinSP("add", no_request(generic_add))
 
-registerBuiltinSP("sub",
-  binaryNum(lambda x,y: x - y,
+generic_sub = dispatching_psp(
+  [SPType([t.NumberType(), t.NumberType()], t.NumberType()),
+   SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType())),
+   SPType([t.ArrayUnboxedType(t.NumberType()),
+           t.ArrayUnboxedType(t.NumberType())],
+          t.ArrayUnboxedType(t.NumberType()))],
+  [deterministic_psp(lambda x, y: x - y,
     sim_grad=lambda args, direction: [direction, -direction],
-    descr="sub returns the difference between its first and second arguments"))
+    descr="sub returns the difference between its first and second arguments"),
+   deterministic_psp(np.subtract,
+    sim_grad=lambda args, direction: [direction, -vvsum(direction)]),
+   deterministic_psp(np.subtract,
+    sim_grad=lambda args, direction: [vvsum(direction), -direction]),
+   deterministic_psp(np.subtract,
+    sim_grad=lambda args, direction: [direction, -direction],
+    descr="sub returns the difference between its first and second arguments")])
+
+registerBuiltinSP("sub", no_request(generic_sub))
 
 def grad_times(args, direction):
   assert len(args) == 2, "Gradient only available for binary multiply"
