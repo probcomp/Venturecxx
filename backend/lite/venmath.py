@@ -301,7 +301,7 @@ def grad_logisticv(args, direction):
   # (numpy) array :(
   [x] = args
   (_, deriv) = T_logistic(x)
-  return [direction.array * deriv]
+  return [v.VentureArrayUnboxed(direction.array * deriv, t.Number)]
 
 registerBuiltinSP("logisticv", deterministic_typed(logistic,
     [t.UArray(t.Number)], t.UArray(t.Number),
