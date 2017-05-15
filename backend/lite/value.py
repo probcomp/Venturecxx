@@ -301,7 +301,14 @@ class VentureInteger(VentureValue):
     if other == 0:
       return self
     else:
-      raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
+      assert isinstance(other, VentureInteger)
+      return VentureInteger(self.number + other.number)
+  def __radd__(self, other):
+    if other == 0:
+      return self
+    else:
+      assert isinstance(other, VentureInteger)
+      return VentureInteger(other.number + self.number)
   def expressionFor(self):
     return self.number
 
