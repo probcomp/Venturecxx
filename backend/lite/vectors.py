@@ -185,7 +185,8 @@ registerBuiltinSP("matrix_mul",
 def matrix_times_vector_grad(args, direction):
   (mat, vec) = args
   dm = np.outer(direction.array, vec)
-  dv = np.multiply(np.transpose(mat), direction.array)
+  dv = np.transpose(np.multiply(np.transpose(mat), direction.array))[0]
+  # print "Matrix times vector gradient", mat, vec, direction, dm, dv
   return [vv.VentureMatrix(dm), vv.VentureArrayUnboxed(dv, t.Number)]
 
 registerBuiltinSP("matrix_times_vector",
