@@ -25,6 +25,7 @@ from venture.lite.exception import VentureValueError
 from venture.lite.sp_help import deterministic_typed
 from venture.lite.sp_help import type_test
 from venture.lite.sp_registry import registerBuiltinSP
+import venture.lite.value as vv
 import venture.lite.types as t
 import venture.lite.utils as u
 
@@ -181,10 +182,17 @@ registerBuiltinSP("matrix_mul",
     t.MatrixType(),
     descr="%s(x, y) returns the product of matrices x and y."))
 
+def matrix_times_vector_grad(args, direction):
+  (mat, vec) = args
+  dm = np.outer(direction.array, vec)
+  dv = np.multiply(np.transpose(mat), direction.array)
+  return [vv.VentureMatrix(dm), vv.VentureArrayUnboxed(dv, t.Number)]
+
 registerBuiltinSP("matrix_times_vector",
   deterministic_typed(np.dot,
     [t.MatrixType(), t.ArrayUnboxedType(t.NumberType())],
     t.ArrayUnboxedType(t.NumberType()),
+    sim_grad=matrix_times_vector_grad,
     descr="%s(M, v) returns the matrix-vector product Mv."))
 
 registerBuiltinSP("vector_times_matrix",
