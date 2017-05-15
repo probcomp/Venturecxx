@@ -103,7 +103,7 @@ def grad_list(args, direction):
     return [0 for _ in args]
   else:
     (list_, tail) = direction.asPossiblyImproperList()
-    assert tail is None or tail == 0
+    assert tail is None or tail == 0 or tail == v.VentureInteger(0)
     tails = [0 for _ in range(len(args) - len(list_))]
     return list_ + tails
 
