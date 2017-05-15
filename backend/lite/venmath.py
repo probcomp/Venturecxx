@@ -270,9 +270,16 @@ def grad_logistic(args, direction):
 registerBuiltinSP("logistic", unaryNum(logistic, sim_grad=grad_logistic,
     descr="The logistic function: 1/(1+exp(-x))"))
 
+def grad_logisticv(args, direction):
+  # XXX The direction is a Venture value, but the deriv is a Python
+  # (numpy) array :(
+  [x] = args
+  (_, deriv) = T_logistic(x)
+  return [direction.array * deriv]
+
 registerBuiltinSP("logisticv", deterministic_typed(logistic,
     [t.UArray(t.Number)], t.UArray(t.Number),
-    sim_grad=grad_logistic,
+    sim_grad=grad_logisticv,
     descr="The logistic function: 1/(1+exp(-x))"))
 
 registerBuiltinSP("logit", unaryNum(logit,

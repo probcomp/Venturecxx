@@ -891,15 +891,25 @@ and O(n) copy."""
         *enp.map2(operator.sub, self.array, self.elt_type,
                   other.array, other.elt_type))
   def __mul__(self, other):
-    # Assume other is a scalar
-    assert isinstance(other, Number)
-    return VentureArrayUnboxed(
-      enp.map(lambda x: x * other, self.array, self.elt_type), self.elt_type)
+    if isinstance(other, Number):
+      # If other is a scalar, broadcast
+      return VentureArrayUnboxed(
+        enp.map(lambda x: x * other, self.array, self.elt_type), self.elt_type)
+    else:
+      # Otherwise, multiply pointwise
+      return VentureArrayUnboxed(
+        *enp.map2(operator.mul, self.array, self.elt_type,
+                  other.array, other.elt_type))
   def __rmul__(self, other):
-    # Assume other is a scalar
-    assert isinstance(other, Number)
-    return VentureArrayUnboxed(
-      enp.map(lambda x: other * x, self.array, self.elt_type), self.elt_type)
+    # If other is a scalar, broadcast
+    if isinstance(other, Number):
+      return VentureArrayUnboxed(
+        enp.map(lambda x: other * x, self.array, self.elt_type), self.elt_type)
+    else:
+      # Otherwise, multiply pointwise
+      return VentureArrayUnboxed(
+        *enp.map2(operator.mul, other.array, other.elt_type,
+                  self.array, self.elt_type))
   def dot(self, other):
     return enp.dot(self.array, self.elt_type, other.array, other.elt_type)
   def map_real(self, f):
