@@ -25,6 +25,9 @@ class VentureValueError(VentureError):
   """This exception means that some SP was passed an inappropriate value
 of correct type (by analogy to ValueError in Python)."""
 
+class VentureAssertionFailure(VentureError):
+  """This exception means that some user-level assertion failed."""
+
 class VentureBuiltinSPMethodError(VentureError):
   """This exception means that an unimplemented method was called on a built-in PSP."""
 

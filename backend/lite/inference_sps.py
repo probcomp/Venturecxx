@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from venture.exception import VentureException
+from venture.lite.exception import VentureAssertionFailure
 from venture.lite.exception import VentureNestedRiplMethodError
 from venture.lite.exception import VentureTypeError
 from venture.lite.records import RecordType
@@ -895,8 +896,8 @@ registerBuiltinInferenceSP("ordered_range",
                         [t.AnyType()], t.ListType(), variadic=True))
 
 def assert_fun(test, msg=""):
-  # TODO Raise an appropriate Venture exception instead of crashing Python
-  assert test, msg
+  if not test:
+    raise VentureAssertionFailure(msg)
 
 registerBuiltinInferenceSP("assert", sequenced_sp(assert_fun, infer_action_maker_type([t.BoolType(), t.SymbolType("message")], min_req_args=1), desc="""\
 Check the given boolean condition and raise an error if it fails.
