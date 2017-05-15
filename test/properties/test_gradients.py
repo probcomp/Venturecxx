@@ -117,7 +117,10 @@ def testGradientOfSimulate():
                 "floor",
                 # For some reason, the gradient is too often large
                 # enough to confuse the numerical approximation
-                "tan"
+                "tan",
+                # Synthesizing inputs and dealing with them gets
+                # confused; and the gradient is not very interesting
+                "exactly",
     ]:
       continue
     elif name.startswith('gp_cov_') or name.startswith('gp_mean_'):
