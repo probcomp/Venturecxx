@@ -198,7 +198,7 @@ def logistic(x):
   # never overflows.
   #
   with np_seterr(over='ignore'):
-    return np.where(x <= -37, np.exp(x), 1/(1 + np.exp(-x)))
+    return np.where(x <= -37, np.exp(x), 1/(1 + np.exp(np.negative(x))))
 
 def T_logistic(x):
   """Tangent vector of logistic function: (logistic(x), d/dx logistic(x))."""
@@ -231,7 +231,7 @@ def T_logistic(x):
     #   e^{-x}/(1 + e^{-x})^2 = e^{-x}/e^{-x}^2 = 1/e^{-x} = e^x.
     #
     ex = np.exp(x)
-    mex = np.exp(-x)
+    mex = np.exp(np.negative(x))
     mex1 = 1 + mex
     return (np.where(x <= -37, ex, 1/mex1),
       np.where(x <= -37, ex, mex/(mex1*mex1)))
@@ -242,7 +242,7 @@ def d_logistic(x):
     # When x <= -37,
     # 1 + e^{-x} ~= e^{-x}, so e^{-x} / (1 + e^{-x}) ~=
     # e^{-x}/(e^{-x})^2 = 1/e^{-x} = e^x.
-    ex = np.exp(-x)
+    ex = np.exp(np.negative(x))
     ex1 = 1 + ex
     return np.where(x <= -37, np.exp(x), ex/(ex1*ex1))
 
@@ -251,6 +251,7 @@ def log_d_logistic(x):
   with np_seterr(over='ignore', invalid='ignore'):
     # When x <= -37,
     # -x - 2 log (1 + e^{-x}) ~= -x - 2 log (e^{-x}) = -x - 2 (-x) = x
+    x = np.array(x)
     return np.where(x <= -37, x, -x - 2*np.log1p(np.exp(-x)))
 
 def log_logistic(x):
@@ -264,7 +265,7 @@ def log_logistic(x):
     # When x is large and positive, e^{-x} is small relative to 1, so
     # computing 1 + e^{-x} may lose precision, which log1p avoids.
     #
-    return np.where(x <= -37, x, -np.log1p(np.exp(-x)))
+    return np.where(x <= -37, x, -np.log1p(np.exp(np.negative(x))))
 
 def d_log_logistic(x):
   """Derivative of the log-logistic function: d/dx log logistic(x)."""
@@ -273,7 +274,7 @@ def d_log_logistic(x):
   #
   #     (log o L)'(x) = L'(x) log'(L(x)) = L(x) L(-x) / L(x) = L(-x).
   #
-  return logistic(-x)
+  return logistic(np.negative(x))
 
 def logit(x):
   """Logit function, log x/(1 - x).  Inverse of logistic.
