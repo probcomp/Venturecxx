@@ -376,7 +376,7 @@ class VentureAtom(VentureValue):
   def __hash__(self):
     return hash(self.atom)
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
@@ -404,7 +404,7 @@ class VentureBool(VentureValue):
   def __hash__(self):
     return hash(self.boolean)
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
@@ -432,7 +432,7 @@ class VentureSymbol(VentureValue):
   def __hash__(self):
     return hash(self.symbol)
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
@@ -464,7 +464,7 @@ class VentureString(VentureValue):
   def __hash__(self):
     return hash(self.strng)
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
@@ -507,7 +507,7 @@ class VentureNil(VentureValue):
   def __hash__(self):
     return 0
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       raise VentureTypeError("Cannot move %s by a non-zero displacement" % (self,))
@@ -641,19 +641,19 @@ class VenturePair(VentureValue):
       return VenturePair((self.first, self.rest.take(ind-1)))
 
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VenturePair((self.first + other.first, self.rest + other.rest))
   def __radd__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VenturePair((other.first + self.first, other.rest + self.rest))
   def __neg__(self):
     return VenturePair((-self.first, -self.rest))
   def __sub__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VenturePair((self.first - other.first, self.rest - other.rest))
@@ -757,19 +757,19 @@ class VentureArray(VentureValue):
     return VentureArray(self.array[0:ind])
 
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureArray([x + y for (x,y) in zip(self.array, other.array)])
   def __radd__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureArray([y + x for (x,y) in zip(self.array, other.array)])
   def __neg__(self):
     return VentureArray([-x for x in self.array])
   def __sub__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureArray([x - y for (x,y) in zip(self.array, other.array)])
@@ -874,14 +874,14 @@ and O(n) copy."""
     return VentureArrayUnboxed(self.array[0:ind], self.elt_type)
 
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureArrayUnboxed(
         *enp.map2(operator.add, self.array, self.elt_type,
                   other.array, other.elt_type))
   def __radd__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureArrayUnboxed(
@@ -891,7 +891,7 @@ and O(n) copy."""
     return VentureArrayUnboxed(
       enp.map(operator.neg, self.array, self.elt_type), self.elt_type)
   def __sub__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureArrayUnboxed(
@@ -1075,19 +1075,19 @@ class VentureMatrix(VentureValue):
     return NumberType().asVentureValue(self.matrix[int(ind1), int(ind2)])
 
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureMatrix(self.matrix + other.matrix)
   def __radd__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureMatrix(other.matrix + self.matrix)
   def __neg__(self):
     return VentureMatrix(-self.matrix)
   def __sub__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     else:
       return VentureMatrix(self.matrix - other.matrix)
@@ -1126,14 +1126,14 @@ class VentureSymmetricMatrix(VentureMatrix):
     return VentureSymmetricMatrix(thing["value"])
 
   def __add__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     if isinstance(other, VentureSymmetricMatrix):
       return VentureSymmetricMatrix(self.matrix + other.matrix)
     else:
       return VentureMatrix(self.matrix + other.matrix)
   def __radd__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     if isinstance(other, VentureSymmetricMatrix):
       return VentureSymmetricMatrix(other.matrix + self.matrix)
@@ -1142,7 +1142,7 @@ class VentureSymmetricMatrix(VentureMatrix):
   def __neg__(self):
     return VentureSymmetricMatrix(-self.matrix)
   def __sub__(self, other):
-    if other == 0:
+    if other == 0 or other == VentureInteger(0):
       return self
     if isinstance(other, VentureSymmetricMatrix):
       return VentureSymmetricMatrix(self.matrix - other.matrix)
