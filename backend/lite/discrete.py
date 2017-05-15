@@ -586,6 +586,9 @@ class ExactlyOutputPSP(RandomPSP):
     # The optional second argument is the error rate
     return x
 
+  def gradientOfSimulate(self, _args, _value, direction):
+    return [direction]
+
   def logDensity(self, y, args):
     vals = args.operandValues()
     if len(vals) == 1:
