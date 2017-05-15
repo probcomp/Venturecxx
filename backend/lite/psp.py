@@ -85,6 +85,7 @@ class PSP(object):
     raise VentureBuiltinSPMethodError("Simulate not implemented!")
 
   def gradientOfSimulate(self, _args, _value, _direction):
+    # type: (IArgs, vv.VentureValue, vv.VentureValue) -> List[vv.VentureValue]
     """Return the gradient of this PSP's simulation function.  This method
     is needed only for Hamiltonian Monte Carlo.
 
