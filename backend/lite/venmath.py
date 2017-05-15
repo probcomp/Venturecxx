@@ -52,16 +52,36 @@ def vvsum(venture_array):
   # instead of being unpacked by f_type.gradient_type()?
   return v.VentureNumber(sum(venture_array.getArray(t.NumberType())))
 
+def symbolic_zero_left(n, obj):
+  assert n == 0, "Cannot add non-zero integer %r to %r" % (n, obj)
+  return obj
+
+def symbolic_zero_right(obj, n):
+  assert n == 0, "Cannot add non-zero integer %r to %r" % (n, obj)
+  return obj
+
 generic_add = dispatching_psp(
-  [SPType([t.NumberType()], t.NumberType(), variadic=True),
+  [SPType([t.Int], t.Int, variadic=True),
+   SPType([t.Int, t.Number], t.Number),
+   SPType([t.Number, t.Int], t.Number),
+   SPType([t.NumberType()], t.NumberType(), variadic=True),
    SPType([t.ArrayUnboxedType(t.NumberType()), t.NumberType()],
           t.ArrayUnboxedType(t.NumberType())),
    SPType([t.NumberType(), t.ArrayUnboxedType(t.NumberType())],
           t.ArrayUnboxedType(t.NumberType())),
    SPType([t.ArrayUnboxedType(t.NumberType())],
           t.ArrayUnboxedType(t.NumberType()),
-          variadic=True)],
+          variadic=True),
+   SPType([t.Int, t.Object], t.Object),
+   SPType([t.Object, t.Int], t.Object),
+   SPType([t.Object, t.Object], t.Object),
+   ],
   [deterministic_psp(lambda *args: sum(args),
+    sim_grad=lambda args, direction: [direction for _ in args],
+    descr="add returns the sum of all its arguments"),
+   deterministic_psp(lambda a, b: a + b),
+   deterministic_psp(lambda a, b: a + b),
+   deterministic_psp(lambda *args: sum(args),
     sim_grad=lambda args, direction: [direction for _ in args],
     descr="add returns the sum of all its arguments"),
    deterministic_psp(np.add,
@@ -70,7 +90,13 @@ generic_add = dispatching_psp(
     sim_grad=lambda args, direction: [vvsum(direction), direction]),
    deterministic_psp(lambda *args: np.sum(args, axis=0),
     sim_grad=lambda args, direction: [direction for _ in args],
-    descr="add returns the sum of all its arguments")])
+    descr="add returns the sum of all its arguments"),
+   deterministic_psp(symbolic_zero_left,
+    sim_grad=lambda args, direction: [0, direction]),
+   deterministic_psp(symbolic_zero_right,
+    sim_grad=lambda args, direction: [direction, 0]),
+   deterministic_psp(lambda a, b: a + b),
+ ])
 
 registerBuiltinSP("add", no_request(generic_add))
 
