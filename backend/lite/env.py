@@ -34,6 +34,7 @@ T = tp.TypeVar('T')
 # the symbol behave as if unbound, shadowing existing bindings; this
 # behavior is used in the implementation of letrec.
 class VentureEnvironment(VentureValue, tp.Generic[T]):
+  __slots__ = ('outerEnv', 'frame')
   def __init__(self,outerEnv=None,ids=None,nodes=None):
     # type: (VentureEnvironment, tp.List[str], tp.List[T]) -> None
     self.outerEnv = outerEnv

@@ -43,6 +43,7 @@ if TYPE_CHECKING:
 # values and all the types.
 
 class VentureValue(object):
+  __slots__ = ()
   """Base class of all Venture values."""
   ### "natural" representation and conversions
   def getNumber(self):
@@ -189,6 +190,7 @@ this."""
   return v1.dot(v2)
 
 class VentureNumber(VentureValue):
+  __slots__ = ('number',)
   def __init__(self, number):
     # type: (Union[int, long, float]) -> None
     self.number = ensure_python_float(number)
@@ -267,6 +269,7 @@ class VentureNumber(VentureValue):
   def expressionFor(self): return self.number
 
 class VentureInteger(VentureValue):
+  __slots__ = ('number',)
   def __init__(self,number):
     # type: (Union[int, long, float]) -> None
     assert isinstance(number, (int, long, float))
@@ -359,6 +362,7 @@ def sequenceHash(seq):
   return reduce(lambda res, item: res * 37 + item, [hash(i) for i in seq], 1)
 
 class VentureAtom(VentureValue):
+  __slots__ = ('atom',)
   def __init__(self,atom):
     assert isinstance(atom, Number)
     self.atom = atom
@@ -384,6 +388,7 @@ class VentureAtom(VentureValue):
     return v.quote(self) # TODO Is this right?
 
 class VentureBool(VentureValue):
+  __slots__ = ('boolean',)
   def __init__(self,boolean):
     # type: (bool) -> None
     assert isinstance(boolean, bool) or isinstance(boolean, np.bool_)
@@ -412,6 +417,7 @@ class VentureBool(VentureValue):
     return v.symbol("true") if self.boolean else v.symbol("false")
 
 class VentureSymbol(VentureValue):
+  __slots__ = ('symbol',)
   def __init__(self,symbol):
     # type: (str) -> None
     self.symbol = symbol
@@ -442,6 +448,7 @@ class VentureSymbol(VentureValue):
 # The difference between strings and symbols is that strings are
 # self-evaluating
 class VentureString(VentureValue):
+  __slots__ = ('strng',)
   def __init__(self,strng):
     # type: (str) -> VentureString
     self.strng = strng
@@ -472,6 +479,7 @@ class VentureString(VentureValue):
     return v.quote(self.asStackDict(None))
 
 class VentureForeignBlob(VentureValue):
+  __slots__ = ('datum',)
   # TODO Think about the interaction of foreign blobs with trace
   # copying and serialization
   def __init__(self, datum):
@@ -487,6 +495,7 @@ class VentureForeignBlob(VentureValue):
     return self.datum == other.datum
 
 class VentureNil(VentureValue):
+  __slots__ = ()
   def __init__(self):
     # type: () -> None
     pass
@@ -536,6 +545,7 @@ class VentureNil(VentureValue):
     return []
 
 class VenturePair(VentureValue):
+  __slots__ = ('first', 'rest')
   def __init__(self,(first,rest)):
     # type: (Tuple[Union[int, VentureValue], Union[int, VentureValue]]) -> None
     # TODO Maybe I need to be careful about tangent and cotangent
@@ -703,6 +713,7 @@ def pythonListToImproperVentureList(tail, *l):
 
 class VentureArray(VentureValue):
   """Venture arrays are heterogeneous, with O(1) access and O(n) copy."""
+  __slots__ = ('array',)
   def __init__(self, array):
     self.array = array
   def __repr__(self):
@@ -800,6 +811,7 @@ class VentureArray(VentureValue):
 class VentureArrayUnboxed(VentureValue):
   """Venture arrays of unboxed objects are homogeneous, with O(1) access
 and O(n) copy."""
+  __slots__ = ('array', 'elt_type')
   def __init__(self, array, elt_type):
     from venture.lite.types import VentureType
     if not isinstance(elt_type, VentureType):
@@ -940,6 +952,7 @@ class VentureSimplex(VentureValue):
 are also supposed to sum to 1, but we are not checking that.
 
   """
+  __slots__ = ('simplex',)
   def __init__(self,simplex):
     self.simplex = simplex
   def __repr__(self):
@@ -1004,6 +1017,7 @@ are also supposed to sum to 1, but we are not checking that.
                 for val in self.simplex]
 
 class VentureDict(VentureValue):
+  __slots__ = ('dict',)
   def __init__(self,d):
     # type: (Dict[VentureValue, VentureValue]) -> None
     assert isinstance(d, OrderedDict)
@@ -1038,6 +1052,7 @@ class VentureDict(VentureValue):
 
 # 2D array of numbers backed by a numpy array object
 class VentureMatrix(VentureValue):
+  __slots__ = ('matrix',)
   def __init__(self,matrix):
     self.matrix = np.asarray(matrix)
   def __repr__(self):
@@ -1113,6 +1128,7 @@ class VentureMatrix(VentureValue):
                                   for row in self.matrix]]
 
 class VentureSymmetricMatrix(VentureMatrix):
+  __slots__ = ('matrix',)
   def __init__(self, matrix):
     self.matrix = np.asarray(matrix)
     assert matrixIsSymmetric(self.matrix)
@@ -1169,6 +1185,7 @@ def matrixIsSymmetric(matrix):
   return np.allclose(matrix.transpose(), matrix)
 
 class SPRef(VentureValue):
+  __slots__ = ('makerNode',)
   def __init__(self,makerNode):
     self.makerNode = makerNode
   def asStackDict(self, trace=None):

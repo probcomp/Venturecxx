@@ -114,6 +114,7 @@ class SP(object):
   # otherwise
 
 class VentureSPRecord(VentureValue):
+  __slots__ = ('sp', 'spAux', 'spFamilies')
   def __init__(self, sp, spAux=None, spFamilies=None):
     if spAux is None:
       spAux = sp.constructSPAux()
