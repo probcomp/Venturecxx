@@ -23,16 +23,18 @@ from venture.lite.value import VentureValue
 import venture.lite.address as addr
 
 class Node(object):
+  __slots__ = ('address', 'value', 'children', 'isObservation', 'observedValue',
+    'madeSPRecord', 'aaaMadeSPAux', 'numRequests', 'esrParents', 'isFrozen')
   def __init__(self, address):
     assert address is not None
     self.address = address
     self.value = None
     self.children = OrderedSet()
     self.isObservation = False
+    self.observedValue = None
     self.madeSPRecord = None
     self.aaaMadeSPAux = None
     self.numRequests = 0
-    self.esrParents = []
     self.esrParents = []
     self.isFrozen = False
 
@@ -50,6 +52,7 @@ class Node(object):
 
 
 class ConstantNode(Node):
+  __slots__ = ()
   def __init__(self,address,value):
     super(ConstantNode,self).__init__(address)
     if isinstance(value, VentureValue):
@@ -64,6 +67,7 @@ class ConstantNode(Node):
 
 
 class LookupNode(Node):
+  __slots__ = ('sourceNode')
   def __init__(self,address,sourceNode):
     super(LookupNode,self).__init__(address)
     self.sourceNode = sourceNode
@@ -72,6 +76,7 @@ class LookupNode(Node):
 
 
 class ApplicationNode(Node):
+  __slots__ = ('operatorNode', 'operandNodes')
   def __init__(self, address, operatorNode, operandNodes):
     super(ApplicationNode, self).__init__(address)
     self.operatorNode = operatorNode
@@ -79,6 +84,7 @@ class ApplicationNode(Node):
 
 
 class RequestNode(ApplicationNode):
+  __slots__ = ('env', 'outputNode')
   def __init__(self,address,operatorNode,operandNodes,env):
     super(RequestNode,self).__init__(address, operatorNode, operandNodes)
     self.env = env
@@ -97,6 +103,7 @@ class RequestNode(ApplicationNode):
 
 
 class OutputNode(ApplicationNode):
+  __slots__ = ('env', 'requestNode', '__weakref__')
   def __init__(self,address,operatorNode,operandNodes,requestNode,env):
     super(OutputNode,self).__init__(address, operatorNode, operandNodes)
     self.requestNode = requestNode
