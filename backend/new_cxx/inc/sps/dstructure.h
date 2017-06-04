@@ -99,12 +99,6 @@ struct AppendOutputPSP : virtual PSP
   VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
 };
 
-struct ConcatOutputPSP : virtual PSP
-  , DeterministicPSP
-{
-  VentureValuePtr simulate(const shared_ptr<Args> & args, gsl_rng * rng) const;
-};
-
 struct IsArrayOutputPSP : virtual PSP
   , DeterministicPSP
 {

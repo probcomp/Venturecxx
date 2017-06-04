@@ -30,12 +30,6 @@ import sys
 
 from subprocess import Popen, PIPE, check_output
 
-ignore = ",".join ( [
-    "I0011",  # Warning locally suppressed using disable-msg
-    "I0012",  # Warning locally suppressed using disable-msg
-    "W0511",  # FIXME/TODO
-] )
-
 mypath = os.path.dirname(os.path.realpath(sys.argv[0]))
 pylint_version = check_output("pylint --version | grep pylint | cut -f 2 -d ' '", shell=True).strip().strip(",")
 lintfile = mypath + "/pylintrc-" + pylint_version
@@ -48,14 +42,12 @@ filename = os.path.basename(sys.argv[1])
 cmd = "%s pylint --output-format parseable --reports n --rcfile %s %s" % \
     (pythenvfile, lintfile, filename)
 
-p = Popen ( cmd, shell = True, bufsize = -1, cwd = workdir or None,
-            stdin = PIPE, stdout = PIPE, close_fds = True )
-pylint_re = re.compile (
-    '^([^:]+):(\d+):\s*\[([WECR])([^,]+),\s*([^\]]+)\]\s*(.*)$'
-    )
-pylint_no_context_re = re.compile (
-    '^([^:]+):(\d+):\s*\[([WECR])([^,]+)\]\s*(.*)$'
-    )
+p = Popen(cmd, shell=True, bufsize=-1, cwd=workdir or None,
+    stdin=PIPE, stdout=PIPE, close_fds=True)
+pylint_re = re.compile(
+    r'^([^:]+):(\d+):\s*\[([WECR])([^,]+),\s*([^\]]+)\]\s*(.*)$')
+pylint_no_context_re = re.compile(
+    r'^([^:]+):(\d+):\s*\[([WECR])([^,]+)\]\s*(.*)$')
 
 for line in p.stdout:
     line = line.strip()
@@ -84,5 +76,5 @@ for line in p.stdout:
         # running 'M-x describe-variable' on the variable
         # 'flymake-err-line-patterns'
     
-        print "%s %s%s %s at %s line %s." % ( msg, errtype, errnum,
-                                                  description, filename, linenum )
+        print "%s %s%s %s at %s line %s." % \
+            (msg, errtype, errnum, description, filename, linenum)

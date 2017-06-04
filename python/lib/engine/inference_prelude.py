@@ -447,6 +447,78 @@ if freeze was used, it's the prior of particle 0.
             (let ((xiWeight 0 ; (assess subproblem select scope block)
                             )
                   (new_weight (+ xiWeight (first result) (- 0 rhoWeight))))
-              (return (pair new_weight (rest result))))))))"""]
+              (return (pair new_weight (rest result))))))))"""],
+
+["value_at", """\
+.. function:: value_at(selector: object)
+
+  :rtype: object
+
+  Return the value the current model has at the choice indicated by
+  the given selector.  If the selector identifies more than one random
+  choice, return one of their values arbitrarily.
+
+  Does not interoperate with multiple particles (use `on_particle` if needed).
+""",
+"""\
+(lambda (selector)
+  (run (do (subp <- (select (minimal_subproblem selector)))
+           (vals <- (get_current_values subp))
+           (return (lookup vals 0)))))"""],
+
+["value_at2", """\
+.. function:: value_at2(scope: object, block:object)
+
+  :rtype: object
+
+  Return the value the current model has at the choice indicated by
+  the given scope and block.  If the scope-block pair identifies more
+  than one random choice, return one of their values arbitrarily.
+
+  Does not interoperate with multiple particles (use `on_particle` if needed).
+""",
+"""\
+(lambda (scope block)
+  (run (do (subp <- (select scope block))
+           (vals <- (get_current_values subp))
+           (return (lookup vals 0)))))"""],
+
+["set_value_at", """\
+.. function:: set_value_at(selector: object, value: object)
+
+  :rtype: <inference_action returning weight>
+
+  Set the value of the random choice at the given selector in the
+  current model to the given object.  Return the probability density
+  thereof in the local posterior around that random choice.  It is an
+  error if the selector identifies more than one random choice.
+
+  Does not interoperate with multiple particles (use `on_particle` if needed).
+""",
+"""\
+(lambda (selector val)
+  (do (subp <- (select (minimal_subproblem selector)))
+      (detach subp)
+      (regen_with_proposal subp (array val))))
+"""],
+
+["set_value_at2", """\
+.. function:: set_value_at(scope: object, block: object, value: object)
+
+  :rtype: <inference_action returning weight>
+
+  Set the value of the random choice at the given scope and block in the
+  current model to the given object.  Return the probability density
+  thereof in the local posterior around that random choice.  It is an
+  error if the scope-block pair identifies more than one random choice.
+
+  Does not interoperate with multiple particles (use `on_particle` if needed).
+""",
+"""\
+(lambda (scope block val)
+  (do (subp <- (select scope block))
+      (detach subp)
+      (regen_with_proposal subp (array val))))
+"""],
 
 ]

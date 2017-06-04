@@ -109,7 +109,8 @@ def parallel_map(f, l, parallelism=None):
     except Exception as e:           # paranoia
         # Terminate all subprocesses immediately and reraise.
         for p in process:
-            p.terminate()
+            if p.is_alive():
+                p.terminate()
         raise
 
     finally:

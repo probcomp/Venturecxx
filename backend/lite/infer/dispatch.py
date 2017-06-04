@@ -35,6 +35,7 @@ from venture.lite.infer.mh import registerDeterministicLKernels
 from venture.lite.infer.pgibbs import PGibbsOperator
 from venture.lite.infer.pgibbs import ParticlePGibbsOperator
 from venture.lite.infer.pgibbs import ParticlePMAPOperator
+from venture.lite.infer.rejection import computeRejectionBound
 from venture.lite.infer.rejection import BogoPossibilizeOperator
 from venture.lite.infer.rejection import RejectionOperator
 from venture.lite.infer.slice_sample import DoublingSliceOperator
@@ -278,6 +279,11 @@ def primitive_infer(trace, exp):
     def doit(scaffolder):
       return mixMH(trace, scaffolder, BogoPossibilizeOperator())
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
+  elif operator == "log_rejection_bound_at":
+    (scaffolders, _transitions, _) = dispatch_arguments(trace, exp)
+    assert len(scaffolders) == 1, "log_rejection_bound_at doesn't support 'each'"
+    scaffold = scaffolders[0].sampleIndex(trace)
+    return computeRejectionBound(trace, scaffold, scaffold.border[0])
   elif operator == "print_scaffold_stats":
     (scaffolders, _transitions, _) = dispatch_arguments(trace, exp)
     scaffold = scaffolders[0].sampleIndex(trace)

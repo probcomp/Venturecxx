@@ -16,19 +16,26 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import numbers
 
 import numpy as np
-import numpy.linalg as npla
 import scipy.special as ss
 
 import venture.lite.mvnormal as mvnormal
+from venture.lite.typing import Any
+from venture.lite.typing import Callable
+from venture.lite.typing import Type
+from venture.lite.typing import TypeVar
+
+C = TypeVar('C')
+FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
 # This one is from http://stackoverflow.com/questions/1167617/in-python-how-do-i-indicate-im-overriding-a-method
 def override(interface_class):
+  # type: (Type[C]) -> Callable[[FuncT], FuncT]
   def overrider(method):
+    # type: (FuncT) -> FuncT
     assert method.__name__ in dir(interface_class)
-    return method
+    return method # type: ignore
   return overrider
 
 def log(x): return float('-inf') if x == 0 else math.log(x)
@@ -141,17 +148,21 @@ def logWeightsToNormalizedDirect(logs):
     # If all the logs are -inf, force 0 instead of NaN.
     return [0 for _ in logs]
 
-def sampleLogCategorical(logs, np_rng):
+def sampleLogCategorical(logs, np_rng, os=None):
   "Samples from an unnormalized categorical distribution given in logspace."
   the_max = max(logs)
   if the_max > float("-inf"):
     return simulateCategorical([math.exp(log - the_max) for log in logs],
-      np_rng, os=None)
+      np_rng, os=os)
   else:
     # normalizeList, as written above, will actually do the right
     # thing with this, namely treat all impossible options as equally
     # impossible.
-    return simulateCategorical([0 for _ in logs], np_rng, os=None)
+    return simulateCategorical([0 for _ in logs], np_rng, os=os)
+
+def logDensityLogCategorical(val,log_ps,os=None):
+  if os is None: os = range(len(log_ps))
+  return logsumexp([log_pi for (log_pi, oi) in zip(log_ps, os) if oi == val]) - logsumexp(log_ps)
 
 def logDensityMVNormal(x, mu, sigma):
   return mvnormal.logpdf(np.asarray(x), np.asarray(mu), np.asarray(sigma))
@@ -253,11 +264,48 @@ def d_log_logistic(x):
   return logistic(-x)
 
 def logit(x):
-  """Logit function, x/(1 - x).  Inverse of logistic.
+  """Logit function, log x/(1 - x).  Inverse of logistic.
 
   Maps direct-space probabilities in [0, 1] into log-odds space.
   """
   return log(x / (1 - x))
+
+def logit_exp(x):
+  """Logit of exp function, log e^x/(1 - e^x).  Inverse of log_logistic.
+
+  Maps log-space probabilities (-\infty, 0] into log-odds space in \R.
+  """
+  # log e^x/(1 - e^x)
+  # = -log (1 - e^x)/e^x
+  # = -log (e^{-x} - 1)
+  # = -log expm1(-x)
+  #
+  # If x <= -37, expm1(-x) = e^{-x}, so this reduces to x.
+  if x <= -37:
+    return x
+  else:
+    return -log(expm1(-x))
+
+def d_logit_exp(x):
+  """d/dx log e^x/(1 - e^x)"""
+  # d/dx -log expm1(-x)
+  #   = -d/dx log expm1(-x)
+  #   = -(d/dx expm1(-x))/expm1(-x)
+  #   = -(-e^{-x})/expm1(-x)
+  #   = e^{-x}/(e^{-x} - 1)
+  #   = 1/(1 - e^x)
+  #   = -1/expm1(x)
+  #
+  # For x >= 37, 1 - e^x = -e^x in IEEE 754 double-precision
+  # arithmetic, so this reduces to -x.
+  if x >= 37:
+    return -x
+  else:
+    ex1 = expm1(x)
+    try:
+      return -1/ex1
+    except ZeroDivisionError:
+      return float('inf')
 
 def simulateLogGamma(shape, np_rng):
   """Sample from log of standard Gamma distribution with given shape."""

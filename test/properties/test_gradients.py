@@ -21,10 +21,13 @@ import random
 from numpy.testing import assert_allclose
 from venture.test.flaky import flaky
 
+from venture.test.config import broken_in
 from venture.test.config import gen_broken_in
 from venture.test.config import gen_in_backend
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
+from venture.test.config import on_inf_prim
+from venture.test.properties.test_sps import relevantSPs
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
 from venture.lite.exception import VentureBuiltinSPMethodError
 from venture.lite.mlens import real_lenses
@@ -36,14 +39,21 @@ import venture.lite.types as t
 from venture.lite.utils import FixedRandomness
 import venture.test.numerical as num
 
-from test_sps import relevantSPs
-
 @gen_in_backend("none")
 def testGradientOfLogDensity():
   for (name,sp) in relevantSPs():
-    if name not in ["dict", "multivariate_normal", "wishart", "inv_wishart", "categorical",  # TODO
-                    "flip", "bernoulli"]: # TODO: Implement ZeroType
-      if sp.outputPSP.isRandom(): # TODO Check the ones that are random when curried
+    if name not in [
+        "bernoulli",            # TODO: Implement ZeroType
+        "categorical",          # TODO
+        "dict",
+        "flip",                 # TODO: Implement ZeroType
+        "lognormal",            # bounded support: (0, +\infty)
+        "inv_wishart",          # TODO
+        "multivariate_normal",  # TODO
+        "wishart",              # TODO
+    ]:
+      # TODO Check the ones that are random when curried
+      if sp.outputPSP.isRandom():
         yield checkGradientOfLogDensity, name, sp
 
 def checkGradientOfLogDensity(name, sp):
@@ -166,6 +176,30 @@ def propGradientOfSimulate(args_lists, name, sp):
     return vv.vv_dot_product(direction, asGradient(ans))
   numerical_gradient = carefully(num.gradient_from_lenses, sim_displacement_func, real_lenses(args_lists[0]))
   assert_gradients_close(numerical_gradient, computed_gradient)
+
+@broken_in("puma", "Puma doesn't have gradients")
+@on_inf_prim("grad_ascent")
+def testGradientOfSimulateOfLookup():
+  from venture.lite.sp_registry import builtInSPs
+  sp = builtInSPs()["lookup"]
+  args = [vv.VentureArray([vv.VentureNumber(0), vv.VentureNumber(0)]), vv.VentureNumber(1)]
+  grad = sp.outputPSP.gradientOfSimulate(
+    MockArgs(args, sp.constructSPAux()), vv.VentureNumber(0), vv.VentureNumber(1))
+  assert grad[0].lookup(vv.VentureNumber(0)) == 0
+  assert grad[0].lookup(vv.VentureNumber(1)) == vv.VentureNumber(1)
+  assert grad[1] == 0
+
+@broken_in("puma", "Puma doesn't have gradients")
+@on_inf_prim("grad_ascent")
+def testGradientOfSimulateOfLookup2():
+  from venture.lite.sp_registry import builtInSPs
+  sp = builtInSPs()["lookup"]
+  args = [vv.VentureArrayUnboxed([0, 0], t.Number), vv.VentureNumber(1)]
+  grad = sp.outputPSP.gradientOfSimulate(
+    MockArgs(args, sp.constructSPAux()), vv.VentureNumber(0), vv.VentureNumber(1))
+  assert grad[0].lookup(vv.VentureNumber(0)) == vv.VentureNumber(0)
+  assert grad[0].lookup(vv.VentureNumber(1)) == vv.VentureNumber(1)
+  assert grad[1] == 0
 
 @gen_broken_in("puma", "Puma doesn't have gradients")
 @gen_on_inf_prim("grad_ascent")

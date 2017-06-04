@@ -80,14 +80,14 @@ def ripl_builder(args, backend):
 
     if args is not None:
         if args.prelude: r.load_prelude()
-        if args.library:
-            for l in args.library:
-                r.load_plugin(l)
-                plugins.append(l)
         if args.abstract_syntax:
             r.set_mode("church_prime")
         else:
             r.set_mode("venture_script")
+        if args.library:
+            for l in args.library:
+                r.load_plugin(l)
+                plugins.append(l)
         if args.file:
             for f in args.file:
                 interactive = False

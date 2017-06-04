@@ -52,6 +52,10 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
              'gp_cov_bias', 'gp_cov_scale', 'gp_cov_sum', 'gp_cov_product',
              # Can't synthesize origins with NumericArrayType.
              'gp_cov_linear',
+             # Don't want to leave pickles lying around
+             'dump_data', 'dump_py_data',
+             # Autotester will not synthesize appropriate pickles
+             'load_data', 'load_py_data',
             ]
 
 # Select particular SPs to test thus:

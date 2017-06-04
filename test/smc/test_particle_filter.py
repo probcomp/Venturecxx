@@ -16,6 +16,7 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import random
 import sys
 
 from nose.plugins.attrib import attr
@@ -118,8 +119,9 @@ def testBasicParticleFilter1(seed):
 
   os = zip(range(1,6),[False,False,True,False,False])
 
+  rng = random.Random(seed)
   for _ in range(N):
-    ripl = initBasicPFripl1(seed)
+    ripl = initBasicPFripl1(rng.randint(1, 2**31 - 1))
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)
@@ -161,8 +163,9 @@ def testBasicParticleFilter2(seed):
 
   os = zip(range(0,5),[1,2,3,4,5])
 
+  rng = random.Random(seed)
   for _ in range(N):
-    ripl = initBasicPFripl2(seed)
+    ripl = initBasicPFripl2(rng.randint(1, 2**31 - 1))
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)

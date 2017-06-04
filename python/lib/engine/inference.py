@@ -39,6 +39,7 @@ from venture.ripl.utils import strip_types_from_dict_values
 import venture.lite.inference_sps as inf
 import venture.lite.types as t
 import venture.lite.value as v
+import venture.plots.p_p_plot as plots
 
 class Infer(object):
   def __init__(self, engine):
@@ -418,7 +419,7 @@ def print_fun(*args):
   if len(args) == 1:
     print convert_arg(args[0])
   else:
-    print [convert_arg(a) for a in args]
+    print " ".join([str(convert_arg(a)) for a in args])
 
 inf.registerBuiltinInferenceSP("print", deterministic_typed(print_fun, [t.AnyType()], t.NilType(), variadic=True, descr="""\
 Print the given values to the terminal.
@@ -577,3 +578,21 @@ inf.register_engine_method_sp("printf", inf.infer_action_maker_type([t.ForeignBl
 Print model values collected in a dataset.
 
 This is a basic debugging facility.""")
+
+def p_p_plot_2samp(observed1, observed2):
+  plots.p_p_plot_2samp(observed1, observed2, show=True)
+
+inf.registerBuiltinInferenceSP("p_p_plot_2samp", deterministic_typed(p_p_plot_2samp,
+  [t.Array(t.Number), t.Array(t.Number)], t.Nil, descr="""\
+Render a P-P plot comparing the two observed samples."""))
+
+def p_p_plot_2samp_to_file(filename, observed1, observed2):
+  import matplotlib.pyplot as plt
+  plt.figure()
+  plots.p_p_plot_2samp(observed1, observed2, show=False)
+  plt.savefig(filename)
+  plt.close()
+
+inf.registerBuiltinInferenceSP("p_p_plot_2samp_to_file", deterministic_typed(p_p_plot_2samp_to_file,
+  [t.String, t.Array(t.Number), t.Array(t.Number)], t.Nil, descr="""\
+Render a P-P plot comparing the two observed samples and save it in the given file."""))

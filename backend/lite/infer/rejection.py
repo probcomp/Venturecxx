@@ -82,15 +82,17 @@ class RejectionOperator(InPlaceOperator):
     attempt = 0
     while not accept and (self.trials is None or self.trials > attempt):
       xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
+      attempt += 1
       assert xiWeight <= logBound, \
         "Detected regen weight %s not at most weight bound %s" % (xiWeight, logBound)
-      # print xiWeight, logBound
-      accept = trace.py_rng.random() < math.exp(xiWeight - logBound)
+      prob_accept = math.exp(xiWeight - logBound)
+      # print "Attempting candidate with score", xiWeight, \
+      #   "against bound", logBound, "p accept is", prob_accept
+      accept = trace.py_rng.random() < prob_accept
       if not accept:
         detachAndExtract(trace, scaffold)
-        attempt += 1
       # else:
-      #   print "Accepted!"
+      #   print "Accepted after %d attempts!" % (attempt,)
     if not accept:
       # Ran out of attempts
       print "Warning: rejection hit attempt bound of %s" % self.trials

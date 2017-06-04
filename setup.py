@@ -194,6 +194,7 @@ packages = [
     "venture.parser.church_prime",
     "venture.parser.venture_script",
     "venture.plex",
+    "venture.plots",
     "venture.plugins",
     "venture.puma",
     "venture.ripl",

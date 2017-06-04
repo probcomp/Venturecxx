@@ -22,7 +22,7 @@ define data = zip(data_xs, data_ys);
 define obs = proc(xy) {
     x = lookup(xy, 0);
     y = lookup(xy, 1);
-    observe(normal(true_f(unquote(x)), 1.0), y)
+    observe normal(true_f($x), 1.0) = y
 };
 run(for_each(data, obs));
 

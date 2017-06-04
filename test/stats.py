@@ -48,7 +48,7 @@ For example, here is one way to test a coin flipping device:
   from venture.test.stats import statisticalTest, reportKnownDiscrete
 
   @statisticalTest
-  def test_flip_coins():
+  def test_flip_coins(seed):
     observed = ... # Flip a bunch of coins and count the heads and tails
     expected = [("heads", 0.5), ("tails", 0.5)]
     return reportKnownDiscrete(expected, observed)
@@ -72,7 +72,7 @@ from scipy.stats.mstats import rankdata
 from testconfig import config
 from venture.test.config import ignore_inference_quality
 from venture.test.config import stochasticTest
-import venture.test.plots as plots
+import venture.plots.p_p_plot as plots
 
 def normalizeList(seq):
   denom = sum(seq)

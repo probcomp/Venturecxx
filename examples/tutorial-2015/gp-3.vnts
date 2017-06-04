@@ -20,7 +20,7 @@ define data = zip(xs, ys);
 define obs_pf = proc(xy) {
     x = lookup(xy, 0);
     y = lookup(xy, 1);
-    observe(normal(pf(unquote(x)), 1.0), y)
+    observe normal(pf($x), 1.0) = y
 };
 run(for_each(data, obs_pf));
 

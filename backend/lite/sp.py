@@ -18,6 +18,7 @@
 from collections import OrderedDict
 
 from venture.lite.exception import VentureError
+from venture.lite.psp import PSP
 from venture.lite.types import VentureType
 from venture.lite.value import VentureNil
 from venture.lite.value import VentureValue
@@ -61,13 +62,14 @@ class SPAux(object):
 
 class SP(object):
   def __init__(self, requestPSP, outputPSP):
-    from psp import PSP
+    # type: (PSP, PSP) -> None
     self.requestPSP = requestPSP
     self.outputPSP = outputPSP
     assert isinstance(requestPSP, PSP)
     assert isinstance(outputPSP, PSP)
 
   def constructSPAux(self):
+    # type: () -> SPAux
     return SPAux()
 
   def constructLatentDB(self):

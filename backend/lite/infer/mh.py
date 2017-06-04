@@ -186,7 +186,25 @@ class MHOperator(InPlaceOperator):
   def propose(self, trace, scaffold):
     rhoWeight = self.prepare(trace, scaffold)
     xiWeight = regenAndAttach(trace, scaffold, False, self.rhoDB, OrderedDict())
-    return trace, xiWeight - rhoWeight
+    if rhoWeight == float('-inf') and xiWeight == float('-inf'):
+      # Proposed a move from one impossible state to another.  What to
+      # do here is a policy choice; I think chosing to accept makes
+      # more sense, because rejecting will cause inference to get
+      # stuck if the prior puts the system into an impossible state
+      # from which no one move will get to a possible one.
+      return trace, float('+inf')
+    elif rhoWeight == float('+inf') and xiWeight == float('+inf'):
+      # I think a positive infinity density is always indicative of a
+      # model that is prone to computational artifacts.  That said,
+      # there is still a choice of whether to accept or reject a
+      # transition from a +inf state to another +inf state.  The space
+      # of +inf states is impossible to leave, so my inclination is to
+      # reject, so that the user has more debugging information about
+      # how they got into that state.
+      return trace, float('-inf')
+    else:
+      # Typical case.
+      return trace, xiWeight - rhoWeight
 
   def name(self): return "resimulation MH"
 
