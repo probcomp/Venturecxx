@@ -52,3 +52,4 @@ bindir="${root}/build/scripts-${version}"
 export PATH="${bindir}${PATH:+:${PATH}}"
 
 exec "$@"
+
