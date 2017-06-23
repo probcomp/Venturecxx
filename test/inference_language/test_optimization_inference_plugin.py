@@ -92,8 +92,6 @@ def test_scipy_optimize_raw():
     ripl.execute_program('''
          grad_ascent(default, all, 0.01, 1, 100)
     ''')
-    out_logpdf = logpdf([mu_0, std_0])
-    out_der_logpdf = der_logpdf([mu_0, std_0])
     mu_after_ascent = ripl.sample('mu')
     std_after_ascent = ripl.sample('std')
     if PRINT_OPTIMIZATION:
