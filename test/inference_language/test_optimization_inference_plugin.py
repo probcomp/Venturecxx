@@ -75,6 +75,15 @@ def run_gradient_ascent(ripl):
     std_after_ascent = ripl.sample('std')
     return mu_after_ascent, std_after_ascent
 
+def compare_to_grad_ascent(mu_after_optimization, std_after_optimization):
+    """Compare the result of some other optimization method to gradient ascent.
+    """
+    ripl, mu_0, std_0  = get_normal_ripl(SEED)
+    mu_after_ascent, std_after_ascent = run_gradient_ascent(ripl)
+    decimals = 4
+    assert_almost_equal(mu_after_optimization, mu_after_ascent, places=decimals)
+    assert_almost_equal(std_after_optimization, std_after_ascent, places=decimals)
+
 def test_did_I_get_derivative_right():
     """Simple test, to compare a grad ascent step taken with Venture with a
     manually computed one, to ascertain that I got the derivative right."""
@@ -138,3 +147,45 @@ def test_scipy_optimize_raw():
 
     assert_almost_equal(res_cg[0], mu_after_ascent, places=decimals)
     assert_almost_equal(res_cg[1], std_after_ascent, places=decimals)
+
+def test_sanity_check_abstraction():
+    """Sanity check the infrastructure for comparing other optimization to
+    gradient ascent."""
+    ripl, _, _  = get_normal_ripl(SEED)
+    ripl.execute_program('''
+         grad_ascent(default, all, 0.01, 1, 100)
+    ''')
+    mu_after_ascent = ripl.sample('mu')
+    std_after_ascent = ripl.sample('std')
+    compare_to_grad_ascent(mu_after_ascent, std_after_ascent)
+
+def test_conjugate_gradient_by_comparison_to_grad_ascent():
+    """Test venture's conjugate gradient optimization by comparison to gradient
+    ascent."""
+    ripl, _, _  = get_normal_ripl(SEED)
+    ripl.execute_program('''
+         conjugate_gradient_ascent(default, all)
+    ''')
+    mu_after_cg = ripl.sample('mu')
+    std_after_cg = ripl.sample('std')
+    compare_to_grad_ascent(mu_after_cg, std_after_cg)
+
+def test_bfgs_by_comparison_to_grad_ascent():
+    """Test venture's bfgs optimization by comparison to gradient ascent."""
+    ripl, _, _  = get_normal_ripl(SEED)
+    ripl.execute_program('''
+         bfgs_optimize(default, all)
+    ''')
+    mu_after_bfgs = ripl.sample('mu')
+    std_after_bfgs = ripl.sample('std')
+    compare_to_grad_ascent(mu_after_bfgs, std_after_bfgs)
+
+def test_nelder_by_comparison_to_grad_ascent():
+    """Test venture's bfgs optimization by comparison to gradient ascent."""
+    ripl, _, _  = get_normal_ripl(SEED)
+    ripl.execute_program('''
+         nelder_mead_optimize(default, all)
+    ''')
+    mu_after_nelder = ripl.sample('mu')
+    std_after_nelder = ripl.sample('std')
+    compare_to_grad_ascent(mu_after_nelder, std_after_nelder)
