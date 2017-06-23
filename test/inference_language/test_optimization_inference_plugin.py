@@ -61,21 +61,30 @@ def get_normal_ripl(seed):
         assume std ~ uniform_continuous(0,10);
         assume obs_func = () -> {normal(mu, std)};
     ''')
+    mu_0 = ripl.sample('mu')
+    std_0 = ripl.sample('std')
     for sample in SAMPLES:
         ripl.observe('obs_func()', sample)
-    return ripl
+    return ripl, mu_0, std_0
+
+def run_gradient_ascent(ripl):
+    ripl.execute_program('''
+         grad_ascent(default, all, 0.01, 1, 100)
+    ''')
+    mu_after_ascent = ripl.sample('mu')
+    std_after_ascent = ripl.sample('std')
+    return mu_after_ascent, std_after_ascent
 
 def test_did_I_get_derivative_right():
     """Simple test, to compare a grad ascent step taken with Venture with a
     manually computed one, to ascertain that I got the derivative right."""
-    ripl = get_normal_ripl(SEED)
-    mu_0 = ripl.sample('mu')
-    std_0 = ripl.sample('std')
+    ripl, mu_0, std_0 = get_normal_ripl(SEED)
     ripl.execute_program('''
          grad_ascent(default, all, 0.1, 1, 1)
     ''')
     mu_1 = ripl.sample('mu')
     std_1 = ripl.sample('std')
+
     assert mu_0 != mu_1
     assert std_0 != std_1
 
@@ -86,14 +95,8 @@ def test_did_I_get_derivative_right():
 def test_scipy_optimize_raw():
     """Test whether I can find the same solution with scipy.optimize and
     venture's gradient ascent."""
-    ripl = get_normal_ripl(SEED)
-    mu_0 = ripl.sample('mu')
-    std_0 = ripl.sample('std')
-    ripl.execute_program('''
-         grad_ascent(default, all, 0.01, 1, 100)
-    ''')
-    mu_after_ascent = ripl.sample('mu')
-    std_after_ascent = ripl.sample('std')
+    ripl, mu_0, std_0  = get_normal_ripl(SEED)
+    mu_after_ascent, std_after_ascent = run_gradient_ascent(ripl)
     if PRINT_OPTIMIZATION:
         print "================"
         print "Venture"
