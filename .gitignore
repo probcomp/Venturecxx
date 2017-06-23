@@ -49,4 +49,8 @@ ideal_prior_trick_mar.png
 *.so
 ideal_prior_weight_mar.png
 
+# Ignore linux artifacts.
+.fuse*
 
+# XXX no idea where the function caching is coming from.
+.cache
