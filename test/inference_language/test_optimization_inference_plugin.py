@@ -18,7 +18,6 @@
 import numpy as np
 from scipy.stats import norm
 from scipy.optimize import minimize
-from scipy.optimize import fmin_cg
 
 from nose.tools import assert_almost_equal
 
@@ -131,10 +130,12 @@ def test_scipy_optimize_raw():
         print res_bfgs.x
         print "================"
         print "Conjugate gradient"
-        res_cg = fmin_cg(
+        res_cg = minimize(
             logpdf,
             [mu_0, std_0],
-            fprime=der_logpdf
+            method='CG',
+            jac=der_logpdf,
+            options={'disp': True}
         )
         print res_cg
         print "================"
@@ -145,8 +146,8 @@ def test_scipy_optimize_raw():
     assert_almost_equal(res_bfgs.x[0], mu_after_ascent, places=decimals)
     assert_almost_equal(res_bfgs.x[1], std_after_ascent, places=decimals)
 
-    assert_almost_equal(res_cg[0], mu_after_ascent, places=decimals)
-    assert_almost_equal(res_cg[1], std_after_ascent, places=decimals)
+    assert_almost_equal(res_cg.x[0], mu_after_ascent, places=decimals)
+    assert_almost_equal(res_cg.x[1], std_after_ascent, places=decimals)
 
 def test_sanity_check_abstraction():
     """Sanity check the infrastructure for comparing other optimization to
