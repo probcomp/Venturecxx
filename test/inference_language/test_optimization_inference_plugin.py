@@ -159,6 +159,17 @@ def test_sanity_check_abstraction():
     std_after_ascent = ripl.sample('std')
     compare_to_grad_ascent(mu_after_ascent, std_after_ascent)
 
+def test_my_gradient_ascent_by_comparison_to_grad_ascent():
+    """Sanity check the infrastructure for comparing other optimization to
+    gradient ascent."""
+    ripl, _, _  = get_normal_ripl(SEED)
+    ripl.execute_program('''
+         my_grad_ascent(default, all, 0.01, 1, 100)
+    ''')
+    mu_after_ascent = ripl.sample('mu')
+    std_after_ascent = ripl.sample('std')
+    compare_to_grad_ascent(mu_after_ascent, std_after_ascent)
+
 def test_conjugate_gradient_by_comparison_to_grad_ascent():
     """Test venture's conjugate gradient optimization by comparison to gradient
     ascent."""
