@@ -18,6 +18,7 @@
 import numpy as np
 from scipy.stats import norm
 from scipy.optimize import minimize
+from scipy.optimize import fmin_cg
 
 from nose.tools import assert_almost_equal
 
@@ -105,7 +106,8 @@ def test_scipy_optimize_raw():
             logpdf,
             [mu_0, std_0],
             method='nelder-mead',
-            options={'xtol': 1e-8, 'disp': True})
+            options={'xtol': 1e-8, 'disp': True}
+        )
         print res_nelder_mead.x
         print "================"
         print "BFGS"
@@ -114,11 +116,24 @@ def test_scipy_optimize_raw():
             [mu_0, std_0],
             method='BFGS',
             jac=der_logpdf,
-            options={'disp': True})
+            options={'disp': True}
+        )
         print res_bfgs.x
+        print "================"
+        print "Conjugate gradient"
+        res_cg = fmin_cg(
+            logpdf,
+            [mu_0, std_0],
+            fprime=der_logpdf
+        )
+        print res_cg
         print "================"
     decimals = 4
     assert_almost_equal(res_nelder_mead.x[0], mu_after_ascent, places=decimals)
     assert_almost_equal(res_nelder_mead.x[1], std_after_ascent, places=decimals)
+
     assert_almost_equal(res_bfgs.x[0], mu_after_ascent, places=decimals)
     assert_almost_equal(res_bfgs.x[1], std_after_ascent, places=decimals)
+
+    assert_almost_equal(res_cg[0], mu_after_ascent, places=decimals)
+    assert_almost_equal(res_cg[1], std_after_ascent, places=decimals)
