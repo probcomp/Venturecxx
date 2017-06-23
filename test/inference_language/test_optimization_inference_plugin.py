@@ -53,19 +53,23 @@ def der_logpdf(parameters, sign=-1.):
     partial_std = sign * sum((parameters[0] - SAMPLES)**2 - parameters[1]**2)/parameters[1]**3
     return np.array([partial_mu, partial_std])
 
-def test_did_I_get_derivative_right():
-    """Simple test, to compare a grad ascent step taken with Venture with a
-    manually computed one, to ascertain that I got the derivative right."""
-    ripl = shortcuts.make_lite_ripl(seed=SEED)
+def get_normal_ripl(seed):
+    ripl = shortcuts.make_lite_ripl(seed=seed)
     ripl.execute_program('''
         assume mu ~ uniform_continuous(0,10);
         assume std ~ uniform_continuous(0,10);
         assume obs_func = () -> {normal(mu, std)};
     ''')
-    mu_0 = ripl.sample('mu')
-    std_0 = ripl.sample('std')
     for sample in SAMPLES:
         ripl.observe('obs_func()', sample)
+    return ripl
+
+def test_did_I_get_derivative_right():
+    """Simple test, to compare a grad ascent step taken with Venture with a
+    manually computed one, to ascertain that I got the derivative right."""
+    ripl = get_normal_ripl(SEED)
+    mu_0 = ripl.sample('mu')
+    std_0 = ripl.sample('std')
     ripl.execute_program('''
          grad_ascent(default, all, 0.1, 1, 1)
     ''')
@@ -81,16 +85,9 @@ def test_did_I_get_derivative_right():
 def test_scipy_optimize_raw():
     """Test whether I can find the same solution with scipy.optimize and
     venture's gradient ascent."""
-    ripl = shortcuts.make_lite_ripl(seed=SEED)
-    ripl.execute_program('''
-        assume mu ~ uniform_continuous(0,10);
-        assume std ~ uniform_continuous(0,10);
-        assume obs_func = () -> {normal(mu, std)};
-    ''')
+    ripl = get_normal_ripl(SEED)
     mu_0 = ripl.sample('mu')
     std_0 = ripl.sample('std')
-    for sample in SAMPLES:
-        ripl.observe('obs_func()', sample)
     ripl.execute_program('''
          grad_ascent(default, all, 0.01, 1, 100)
     ''')
