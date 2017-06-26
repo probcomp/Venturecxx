@@ -181,11 +181,11 @@ def test_bfgs_by_comparison_to_grad_ascent():
     std_after_bfgs = ripl.sample('std')
     compare_to_grad_ascent(mu_after_bfgs, std_after_bfgs)
 
-def test_nelder_by_comparison_to_grad_ascent():
+def test_lbfgs_by_comparison_to_grad_ascent():
     """Test venture's bfgs optimization by comparison to gradient ascent."""
     ripl, _, _  = get_normal_ripl(SEED)
     ripl.execute_program('''
-         nelder_mead_optimize(default, all)
+         lbfgs_optimize(default, all)
     ''')
     mu_after_nelder = ripl.sample('mu')
     std_after_nelder = ripl.sample('std')
