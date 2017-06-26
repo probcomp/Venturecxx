@@ -62,9 +62,9 @@ class GradientOfRegen(object):
     self.fixed_regen(values)
     new_scaffold = constructScaffold(self.trace, [OrderedSet(self.pnodes)])
     registerDeterministicLKernels(self.trace, new_scaffold, self.pnodes, values)
-    (_, rhoDB) = detachAndExtract(self.trace, new_scaffold, True)
+    (rhoWeight, rhoDB) = detachAndExtract(self.trace, new_scaffold, True)
     self.scaffold = new_scaffold
-    return [rhoDB.getPartial(pnode) for pnode in self.pnodes]
+    return ([rhoDB.getPartial(pnode) for pnode in self.pnodes], rhoWeight)
 
   def fixed_regen(self, values):
     # Ensure repeatability of randomness
@@ -114,7 +114,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     grad = GradientOfRegen(trace, scaffold, pnodes)
     def grad_potential(values):
       # The potential function we want is - log density
-      return [-dx for dx in grad(values)]
+      return [-dx for dx in grad(values)[0]]
 
     # Might as well save a gradient computation, since the initial
     # detach does it
