@@ -28,7 +28,7 @@ from venture.lite.infer.mh import InPlaceOperator
 from venture.lite.infer.mh import getCurrentValues
 from venture.lite.infer.mh import registerDeterministicLKernels
 
-class GradientOfRegen(object):
+class RegenAndGradient(object):
   """An applicable object, calling which computes the gradient
   of regeneration along the given scaffold.  Also permits performing
   one final such regeneration without computing the gradient.  The
@@ -111,7 +111,7 @@ class HamiltonianMonteCarloOperator(InPlaceOperator):
     momenta = self.sampleMomenta(currentValues, trace.np_rng)
     start_K = self.kinetic(momenta)
 
-    grad = GradientOfRegen(trace, scaffold, pnodes)
+    grad = RegenAndGradient(trace, scaffold, pnodes)
     def grad_potential(values):
       # The potential function we want is - log density
       return [-dx for dx in grad(values)[0]]
