@@ -23,6 +23,7 @@ from venture.lite.infer.draw_scaffold import drawScaffold
 from venture.lite.infer.egibbs import EnumerativeGibbsOperator
 from venture.lite.infer.egibbs import EnumerativeMAPOperator
 from venture.lite.infer.hmc import HamiltonianMonteCarloOperator
+from venture.lite.infer.map_gradient import ConjugateGradientAscentOperator
 from venture.lite.infer.map_gradient import GradientAscentOperator
 from venture.lite.infer.map_gradient import NesterovAcceleratedGradientAscentOperator
 from venture.lite.infer.meanfield import MeanfieldOperator
@@ -254,6 +255,11 @@ def primitive_infer(trace, exp):
     (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
     def doit(scaffolder):
       return mixMH(trace, scaffolder, GradientAscentOperator(rate, int(steps)))
+    return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
+  elif operator == "conjugate_gradient_ascent":
+    (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
+    def doit(scaffolder):
+      return mixMH(trace, scaffolder, ConjugateGradientAscentOperator())
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))
   elif operator == "nesterov":
     (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)

@@ -401,6 +401,18 @@ correction.
 Returns the average number of nodes touched per transition in each particle.
 """)
 
+register_trace_method_sp("conjugate_gradient_ascent",
+                  transition_oper_type([]),
+                  desc="""\
+Move deterministically toward the maximum of the local conditional by
+conjugate gradient ascent.
+
+Not available in the Puma backend.  Not all the builtin procedures
+support all the gradient information necessary for this.
+
+Returns the average number of nodes touched per transition in each particle.
+""")
+
 register_trace_method_sp("hmc",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
