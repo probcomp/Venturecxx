@@ -18,43 +18,54 @@
 # You should have received a copy of the GNU General Public License
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import argparse
-from venture.ripl.console import run_venture_console
-import venture.shortcuts as v
-import venture
+import sys
 
-version_str=venture.__version__
+import venture
+import venture.shortcuts as v
+
+from venture.ripl.console import run_venture_console
+
+
+DEFAULT_HOST = '127.0.0.1'
+DEFAULT_PORT = 8082
+VERSION_STR = venture.__version__
+
 
 def banner(help=True):
-    help_ad = "  `help' for help"
+    help_ad = '  `help\' for help'
     if not(help):
         help_ad = ""
     print '''
 Venture Script, version {0}  http://probcomp.csail.mit.edu/venture/{1}
 Venture is *alpha quality* software.
 Expect occasional crashes that wipe out your console session.
-'''.format(version_str, help_ad).strip()
+'''.format(VERSION_STR, help_ad).strip()
+
 
 def server(args):
     banner(False)
     server = v.backend(args.backend).make_ripl_rest_server()
-    print "Launching RIPL Server"
+    print 'Launching RIPL Server'
     server.run(host='0.0.0.0', port=args.port, debug=True, use_reloader=False)
+
 
 def client(args):
     banner()
-    url = "http://{0}:{1}".format(args.host, args.port)
+    url = 'http://{0}:{1}'.format(args.host, args.port)
     print "Connecting to RIPL Server at {0}".format(url)
     run_venture_console(v.make_ripl_rest_client(url))
 
+
 def puma(args):
-    print "Tracing models with the Puma backend"
+    print 'Tracing models with the Puma backend'
     local_ripl(args, v.Puma())
 
+
 def lite(args):
-    print "Tracing models with the Lite backend"
+    print 'Tracing models with the Lite backend'
     local_ripl(args, v.Lite())
+
 
 def local_ripl(args, backend):
     build = ripl_builder(args, backend)
@@ -64,133 +75,209 @@ def local_ripl(args, backend):
         run_venture_console(r, build, files=files, plugins=plugins)
     return r
 
-def ripl_builder(args, backend):
-  if args and args.seed:
-    seed = int(args.seed)
-  else:
-    seed = v._seed(None)
-  def build():
-    interactive = True
-    files = []
-    plugins = []
-    r = backend.make_combined_ripl(persistent_inference_trace = True,
-                                   seed=seed)
-    print "Initial random seed is %d (to reproduce run, use -s %d)" % \
-      (seed, seed)
 
-    if args is not None:
-        if args.prelude: r.load_prelude()
-        if args.abstract_syntax:
-            r.set_mode("church_prime")
-        else:
-            r.set_mode("venture_script")
-        if args.library:
-            for l in args.library:
-                r.load_plugin(l)
-                plugins.append(l)
-        if args.file:
-            for f in args.file:
-                interactive = False
-                r.execute_program_from_file(f)
-                files.append(f)
-        if args.eval:
-            for e in args.eval:
-                interactive = False
-                r.execute_program(e)
-        if args.interactive:
-            interactive = True
+def ripl_builder(args, backend):
+    if args and args.seed:
+        seed = int(args.seed)
     else:
-        r.set_mode("venture_script")
-    return (interactive, r, files, plugins)
-  def prof_build():
-    import cProfile
-    loc = {"build": build}
-    cProfile.runctx("ans = build()", {}, loc, sort='cumtime')
-    return loc["ans"]
-  if args is not None and args.profile:
-    return prof_build
-  else:
-    return build
+        seed = v._seed(None)
+
+    def build():
+        interactive = True
+        files = []
+        plugins = []
+        r = backend.make_combined_ripl(
+            persistent_inference_trace=True, seed=seed)
+        print 'Initial random seed is %d (to reproduce run, use -s %d)' % \
+          (seed, seed)
+
+        if args is not None:
+            if args.prelude: r.load_prelude()
+            if args.abstract_syntax:
+                r.set_mode('church_prime')
+            else:
+                r.set_mode('venture_script')
+            if args.library:
+                for l in args.library:
+                    r.load_plugin(l)
+                    plugins.append(l)
+            if args.file:
+                for f in args.file:
+                    interactive = False
+                    r.execute_program_from_file(f)
+                    files.append(f)
+            if args.eval:
+                for e in args.eval:
+                    interactive = False
+                    r.execute_program(e)
+            if args.interactive:
+                interactive = True
+        else:
+            r.set_mode('venture_script')
+        return (interactive, r, files, plugins)
+
+    def prof_build():
+        import cProfile
+        loc = {'build': build}
+        cProfile.runctx('ans = build()', {}, loc, sort='cumtime')
+        return loc['ans']
+
+    if args is not None and args.profile:
+        return prof_build
+    else:
+        return build
+
 
 def add_local_args(parser):
-    parser.add_argument('-f', '--file', action='append', help="execute the given file")
-    parser.add_argument('-e', '--eval', action='append', help="execute the given program")
-    parser.add_argument('-i', '--interactive', action='store_true', help="enter interactive interpreter after completing script file")
-    parser.add_argument('-a', '--abstract-syntax', action='store_true',
-                        help="interpret abstract rather than concrete syntax")
-    parser.add_argument('-L', '--library', action='append',
-                        help="load a Python file in the local directory.  If the file defines\na __venture_start__ function, call it with the ripl to\ninitialize the library.")
-    parser.add_argument('--prelude', action='store_true',
-                        help = 'load model prelude on startup (default: off)')
-    parser.add_argument('-s', '--seed', action='store', help="Random seed")
-    parser.add_argument('-p', '--profile', action='store_true', help="Print implementation profile after running")
+    parser.add_argument(
+        '-f', '--file',
+        action='append',
+        help="execute the given file")
+    parser.add_argument(
+        '-e', '--eval',
+        action='append',
+        help="execute the given program")
+    parser.add_argument(
+        '-i', '--interactive',
+        action='store_true',
+        help="enter interactive interpreter after completing script file")
+    parser.add_argument(
+        '-a', '--abstract-syntax',
+        action='store_true',
+        help="interpret abstract rather than concrete syntax")
+    parser.add_argument(
+        '-L', '--library',
+        action='append',
+        help='load a Python file in the local directory. If the file defines\n'
+        'a __venture_start__ function, call it with the ripl to\n'
+        'initialize the library.')
+    parser.add_argument(
+        '--prelude',
+        action='store_true',
+        help = 'load model prelude on startup (default: off)')
+    parser.add_argument(
+        '-s', '--seed',
+        action='store',
+        help="Random seed")
+    parser.add_argument(
+        '-p', '--profile',
+        action='store_true',
+        help="Print implementation profile after running")
     return parser
 
-parser = argparse.ArgumentParser(description='An interactive, Turing-complete probabilistic programming platform',
-                                 epilog="Run 'venture {mode} -h' for help on mode-specific options")
-parser.add_argument('--version', action='version', version='Venture, version %s' % version_str)
-subparsers = parser.add_subparsers(title="optional mode")
 
-parser_local = subparsers.add_parser("puma", help="VentureScript, tracing models with the Puma backend",
-                                     description="VentureScript, tracing models with the Puma backend")
-parser_local.set_defaults(func=puma)
-add_local_args(parser_local)
+if __name__ == '__main__':
 
-parser_local = subparsers.add_parser("lite", help="VentureScript, tracing models with the Lite backend",
-                                     description="VentureScript, tracing models with the Lite backend")
-parser_local.set_defaults(func=lite)
-add_local_args(parser_local)
+    # Overall parser object.
+    parser = argparse.ArgumentParser(
+        description='An interactive,'
+            'Turing-complete probabilistic programming platform',
+        epilog='Run \'venture {mode} -h\' for help on mode-specific options')
 
-default_port = 8082
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='Venture, version %s' % VERSION_STR)
 
-parser_server = subparsers.add_parser("server", help="Start a VentureScript server",
-                                      description="Start a VentureScript server")
-parser_server.add_argument("backend", default="lite", help="the backend to trace models in")
-parser_server.add_argument("-p", "--port", type=int, default=default_port,
-                           help="the port to listen on (default {0})".format(default_port))
-parser_server.set_defaults(func=server)
+    # Store subparasers.
+    subparsers = parser.add_subparsers(title='optional mode')
 
-default_host = '127.0.0.1'
+    # Puma subparser.
+    parser_local_puma = subparsers.add_parser(
+        'puma',
+        help='VentureScript, tracing models with the Puma backend',
+        description='VentureScript, tracing models with the Puma backend')
 
-parser_client = subparsers.add_parser("remote", help="Connect to a running VentureScript server",
-                                      description="Connect to a running VentureScript server")
-parser_client.add_argument("--host", default=default_host,
-                           help="the host to connect to (default {0})".format(default_host))
-parser_client.add_argument("-p", "--port", type=int, default=default_port,
-                           help="the port to connect on (default {0})".format(default_port))
-parser_client.set_defaults(func=client)
+    parser_local_puma.set_defaults(func=puma)
+    add_local_args(parser_local_puma)
 
-parser_no_mode = argparse.ArgumentParser(description='A general-purpose probabilistic computing platform.',
-                                         epilog="""\
-optional modes:
-  lite                  (default) VentureScript, tracing models with the Lite backend
-  puma                  VentureScript, tracing models with the Puma backend
-  server                Start a VentureScript command server
-  remote                Connect to a running VentureScript command server
+    # Lite subparser.
+    parser_local_lite = subparsers.add_parser(
+        'lite',
+        help='VentureScript, tracing models with the Lite backend',
+        description='VentureScript, tracing models with the Lite backend')
 
-Run venture {mode} -h for mode-specific options.
-                                         """,
-                                         formatter_class=argparse.RawTextHelpFormatter)
-parser_no_mode.add_argument('--version', action='version', version='Venture, version %s' % version_str)
-add_local_args(parser_no_mode)
+    parser_local_lite.set_defaults(func=lite)
+    add_local_args(parser_local_lite)
 
-if len(sys.argv) == 1:
-    # Work around what appears to be a limitation of argparse
-    lite(None)
-elif sys.argv[1] in ["puma", "lite", "server", "remote"]:
-    args = parser.parse_args()
-    args.func(args)
-elif sys.argv[1] == "bql":
-    from distutils.spawn import find_executable
-    if find_executable("bayeslite"):
-        import os
-        sys.stdout.flush()
-        os.execvp("bayeslite", ["bayeslite"] + sys.argv[2:])
+    # Server subparser.
+    parser_server = subparsers.add_parser(
+        'server',
+        help='Start a VentureScript server',
+        description='Start a VentureScript server')
+
+    parser_server.add_argument(
+        'backend',
+        default='lite',
+        help='the backend to trace models in')
+
+    parser_server.add_argument(
+        '-p', '--port',
+        type=int,
+        default=DEFAULT_PORT,
+        help='the port to listen on (default {0})'.format(DEFAULT_PORT))
+
+    parser_server.set_defaults(func=server)
+
+    # Client subparser.
+    parser_client = subparsers.add_parser(
+        'remote',
+        help='Connect to a running VentureScript server',
+        description='Connect to a running VentureScript server')
+
+    parser_client.add_argument(
+        '--host',
+        default=DEFAULT_HOST,
+        help='the host to connect to (default {0})'.format(DEFAULT_HOST))
+
+    parser_client.add_argument(
+        '-p', '--port',
+        type=int,
+        default=DEFAULT_PORT,
+        help='the port to connect on (default {0})'.format(DEFAULT_PORT))
+
+    parser_client.set_defaults(func=client)
+
+    # Fresh parser for no mode.
+    parser_no_mode = argparse.ArgumentParser(
+        description='A general-purpose probabilistic computing platform.',
+        epilog="""\
+    optional modes:
+      lite                  (default) VentureScript, tracing models with the Lite backend
+      puma                  VentureScript, tracing models with the Puma backend
+      server                Start a VentureScript command server
+      remote                Connect to a running VentureScript command server
+
+    Run venture {mode} -h for mode-specific options.
+    """,
+    formatter_class=argparse.RawTextHelpFormatter)
+
+    parser_no_mode.add_argument(
+        '--version',
+        action='version',
+        version='Venture, version %s' % VERSION_STR)
+
+    add_local_args(parser_no_mode)
+
+
+    # Do the actual parsing.
+    if len(sys.argv) == 1:
+        # Work around what appears to be a limitation of argparse
+        lite(None)
+    elif sys.argv[1] in ['puma', 'lite', 'server', 'remote']:
+        args = parser.parse_args()
+        args.func(args)
+    elif sys.argv[1] == 'bql':
+        from distutils.spawn import find_executable
+        if find_executable('bayeslite'):
+            import os
+            sys.stdout.flush()
+            os.execvp('bayeslite', ['bayeslite'] + sys.argv[2:])
+        else:
+            print \
+                'You do not appear to have the `bayeslite` command installed.'\
+                ' Please contact us for a private alpha.'
+            exit(1)
     else:
-        print """\
-You do not appear to have the `bayeslite` command installed.
-Please contact us for a private alpha."""
-        exit(1)
-else:
-    args = parser_no_mode.parse_args()
-    lite(args)
+        args = parser_no_mode.parse_args()
+        lite(args)
