@@ -17,10 +17,15 @@
 
 import math
 
-from venture.lite.infer.hmc import GradientOfRegen
+import numpy as np
+from scipy.optimize import minimize
+
+from venture.lite.infer.hmc import RegenAndGradient
 from venture.lite.infer.mh import InPlaceOperator
 from venture.lite.infer.mh import getCurrentValues
 from venture.lite.infer.mh import registerDeterministicLKernels
+
+import venture.lite.value as vv
 
 class GradientAscentOperator(InPlaceOperator):
   def __init__(self, epsilon, steps):
@@ -77,3 +82,54 @@ class NesterovAcceleratedGradientAscentOperator(GradientAscentOperator):
       (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs)[0], self.step_lam(lam))
     return xs
   def name(self): return "gradient ascent with Nesterov acceleration"
+
+class ConjugateGradientAscentOperator(InPlaceOperator):
+  def propose(self, trace, scaffold):
+    pnodes = scaffold.getPrincipalNodes()
+    currentValues = getCurrentValues(trace,pnodes)
+    # So the initial detach will get the gradient right
+    registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
+    rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
+    grad = RegenAndGradient(trace, scaffold, pnodes)
+
+    # Might as well save a gradient computation, since the initial
+    # detach does it
+    start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
+
+    # TODO: Both of the function call RegenAndGradient.__call__().
+    # Which is thus evaluated twice at the same values.
+
+    # Objective function
+    def get_objective_function(values):
+        venture_values = [vv.VentureNumber(value) for value in values]
+        return - grad(venture_values)[1]
+
+    # Get gradient of objective function
+    def get_gradient_objective_function(values):
+        venture_values = [vv.VentureNumber(value) for value in values]
+        return np.array([-dx.getNumber() for dx in  grad(venture_values)[0]])
+
+    starting_values = [value.getNumber() for value in currentValues]
+
+    proposed_values =  minimize(
+            get_objective_function,
+            starting_values,
+            method='CG',
+            jac=get_gradient_objective_function,
+            options={'disp': True}
+    ).x
+    _xiWeight = grad.regen(
+        [vv.VentureNumber(value) for value in proposed_values]
+    ) # Mutates the trace
+
+    return (trace, 1000) # It's MAP -- try to force acceptance
+
+  def evolve(self, grad, values, start_grad):
+    xs = values
+    dxs = start_grad
+    for _ in range(self.steps):
+      xs = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
+      dxs = grad(xs)[0]
+    return xs
+
+  def name(self): return "conjugate gradient ascent"
