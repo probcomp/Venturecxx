@@ -53,7 +53,7 @@ class GradientAscentOperator(InPlaceOperator):
     dxs = start_grad
     for _ in range(self.steps):
       xs = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
-      dxs = grad(xs)
+      dxs = grad(xs)[0]
     return xs
 
   def name(self): return "gradient ascent"
@@ -74,6 +74,6 @@ class NesterovAcceleratedGradientAscentOperator(GradientAscentOperator):
       gam = self.gamma(lam)
       new_ys = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
       new_xs = [old_y * gam + new_y * (1-gam) for (old_y, new_y) in zip(ys, new_ys)]
-      (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs), self.step_lam(lam))
+      (xs, ys, dxs, lam) = (new_ys, new_ys, grad(new_xs)[0], self.step_lam(lam))
     return xs
   def name(self): return "gradient ascent with Nesterov acceleration"
