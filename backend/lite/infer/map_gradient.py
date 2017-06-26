@@ -35,7 +35,7 @@ class GradientAscentOperator(InPlaceOperator):
     registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
     _rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
 
-    grad = GradientOfRegen(trace, scaffold, pnodes)
+    grad = RegenAndGradient(trace, scaffold, pnodes)
 
     # Might as well save a gradient computation, since the initial
     # detach does it
