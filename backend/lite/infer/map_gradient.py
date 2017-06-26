@@ -83,53 +83,67 @@ class NesterovAcceleratedGradientAscentOperator(GradientAscentOperator):
     return xs
   def name(self): return "gradient ascent with Nesterov acceleration"
 
-class ConjugateGradientAscentOperator(InPlaceOperator):
-  def propose(self, trace, scaffold):
-    pnodes = scaffold.getPrincipalNodes()
-    currentValues = getCurrentValues(trace,pnodes)
-    # So the initial detach will get the gradient right
-    registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
-    rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
-    grad = RegenAndGradient(trace, scaffold, pnodes)
+class OptimizationOperator(InPlaceOperator):
+    def propose(self, trace, scaffold):
+        pnodes = scaffold.getPrincipalNodes()
+        currentValues = getCurrentValues(trace,pnodes)
+        # So the initial detach will get the gradient right
+        registerDeterministicLKernels(trace, scaffold, pnodes, currentValues)
+        rhoWeight = self.prepare(trace, scaffold, True) # Gradient is in self.rhoDB
+        grad = RegenAndGradient(trace, scaffold, pnodes)
 
-    # Might as well save a gradient computation, since the initial
-    # detach does it
-    start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
+        # Might as well save a gradient computation, since the initial
+        # detach does it
+        start_grad = [self.rhoDB.getPartial(pnode) for pnode in pnodes]
 
-    # TODO: Both of the function call RegenAndGradient.__call__().
-    # Which is thus evaluated twice at the same values.
+        # TODO: Both of the function call RegenAndGradient.__call__().
+        # Which is thus evaluated twice at the same values.
 
-    # Objective function
-    def get_objective_function(values):
-        venture_values = [vv.VentureNumber(value) for value in values]
-        return - grad(venture_values)[1]
+        # Objective function
+        def get_objective_function(values):
+            venture_values = [vv.VentureNumber(value) for value in values]
+            return - grad(venture_values)[1]
 
-    # Get gradient of objective function
-    def get_gradient_objective_function(values):
-        venture_values = [vv.VentureNumber(value) for value in values]
-        return np.array([-dx.getNumber() for dx in  grad(venture_values)[0]])
+        # Get gradient of objective function
+        def get_gradient_objective_function(values):
+            venture_values = [vv.VentureNumber(value) for value in values]
+            return np.array([-dx.getNumber() for dx in  grad(venture_values)[0]])
 
-    starting_values = [value.getNumber() for value in currentValues]
+        starting_values = [value.getNumber() for value in currentValues]
 
-    proposed_values =  minimize(
+        proposed_values = self.optimize(
+            get_objective_function,
+            get_gradient_objective_function,
+            starting_values
+        )
+        _xiWeight = grad.regen(
+            [vv.VentureNumber(value) for value in proposed_values]
+        ) # Mutates the trace
+
+        return (trace, 1000) # It's MAP -- try to force acceptance
+
+    # Optimize (abstract)
+    def optimize(
+            self,
+            get_objective_function,
+            get_gradient_objective_function,
+            starting_values
+        ):
+        raise NotImplementedError('Abstract method')
+
+    def name(self): return "Abstract optimization operator class."
+
+class ConjugateGradientAscentOperator(OptimizationOperator):
+    def optimize(
+            self,
+            get_objective_function,
+            get_gradient_objective_function,
+            starting_values
+        ):
+        return minimize(
             get_objective_function,
             starting_values,
             method='CG',
             jac=get_gradient_objective_function,
             options={'disp': True}
-    ).x
-    _xiWeight = grad.regen(
-        [vv.VentureNumber(value) for value in proposed_values]
-    ) # Mutates the trace
-
-    return (trace, 1000) # It's MAP -- try to force acceptance
-
-  def evolve(self, grad, values, start_grad):
-    xs = values
-    dxs = start_grad
-    for _ in range(self.steps):
-      xs = [x + dx*self.epsilon for (x,dx) in zip(xs, dxs)]
-      dxs = grad(xs)[0]
-    return xs
-
-  def name(self): return "conjugate gradient ascent"
+        ).x
