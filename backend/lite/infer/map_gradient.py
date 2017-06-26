@@ -111,6 +111,8 @@ class OptimizationOperator(InPlaceOperator):
 
         starting_values = [value.getNumber() for value in currentValues]
 
+        # XXX: this should go into the constructor.
+        self.verbose = False
         proposed_values = self.optimize(
             get_objective_function,
             get_gradient_objective_function,
@@ -145,5 +147,35 @@ class ConjugateGradientAscentOperator(OptimizationOperator):
             starting_values,
             method='CG',
             jac=get_gradient_objective_function,
-            options={'disp': True}
+            options={'disp': self.verbose}
+        ).x
+
+class BFGSOperator(OptimizationOperator):
+    def optimize(
+            self,
+            get_objective_function,
+            get_gradient_objective_function,
+            starting_values
+        ):
+        return minimize(
+            get_objective_function,
+            starting_values,
+            method='BFGS',
+            jac=get_gradient_objective_function,
+            options={'disp': self.verbose}
+        ).x
+
+class LBFGSOperator(OptimizationOperator):
+    def optimize(
+            self,
+            get_objective_function,
+            get_gradient_objective_function,
+            starting_values
+        ):
+        return minimize(
+            get_objective_function,
+            starting_values,
+            method='L-BFGS-B',
+            jac=get_gradient_objective_function,
+            options={'disp': self.verbose}
         ).x
