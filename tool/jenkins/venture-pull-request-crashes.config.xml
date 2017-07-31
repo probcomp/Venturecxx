@@ -1,13 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>Test that installing Venture on a clean Ubuntu using primarily apt-get produces a configuration that passes tests.&#xd;
-&#xd;
-Isolation mechanism: Docker container.&#xd;
-&#xd;
-To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name is derived from the build name and build number, and reported near the end of the console output. </description>
+  <description>Crash testing Venture</description>
   <keepDependencies>false</keepDependencies>
-  <properties/>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>commit</name>
+          <description>The state of the tree to test at</description>
+          <defaultValue>master</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
   <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.6">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
@@ -18,7 +24,7 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
     </userRemoteConfigs>
     <branches>
       <hudson.plugins.git.BranchSpec>
-        <name>*/master</name>
+        <name>${commit}</name>
       </hudson.plugins.git.BranchSpec>
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
@@ -30,16 +36,9 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <triggers>
-    <jenkins.triggers.ReverseBuildTrigger>
-      <spec></spec>
-      <upstreamProjects>venture-crashes,</upstreamProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-        <completeBuild>true</completeBuild>
-      </threshold>
-    </jenkins.triggers.ReverseBuildTrigger>
+    <hudson.triggers.TimerTrigger>
+      <spec>@weekly</spec>
+    </hudson.triggers.TimerTrigger>
   </triggers>
   <concurrentBuild>false</concurrentBuild>
   <builders>
@@ -47,7 +46,10 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-./script/jenkins/venture-in-docker.sh debian-test-docker</command>
+pip install &quot;distribute&gt;=0.6.28&quot; # Because the distribute executable has to be there for the rest of it
+CC=&quot;ccache gcc&quot; pip install .
+./all-crashes
+</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
@@ -74,14 +76,14 @@ source ~/env/bin/activate
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
+          <boolean>true</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
       </notifyMap>
-      <notifySuccess>false</notifySuccess>
+      <notifySuccess>true</notifySuccess>
       <notifyFailure>true</notifyFailure>
       <notifyFixed>true</notifyFixed>
       <notifyUnstable>false</notifyUnstable>

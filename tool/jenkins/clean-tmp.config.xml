@@ -27,7 +27,11 @@ find /tmp -maxdepth 1 -readable -atime +0 | xargs -l -I{} find {} -user jenkins 
 # Flush unused Docker containers, ignoring failure to remove running ones
 (docker ps -a -q | xargs docker rm) || true
 # Flush untagged Docker images
-docker images | grep &quot;&lt;none&gt;&quot; | awk &quot;{print \$3}&quot; | xargs --no-run-if-empty docker rmi</command>
+docker images | grep &quot;&lt;none&gt;&quot; | awk &quot;{print \$3}&quot; | xargs --no-run-if-empty docker rmi
+# Flush stale job-created Docker images
+docker images | grep &quot;venture-sdist-docker&quot; | grep &quot;days ago&quot; | awk &quot;{print \$3}&quot; | xargs --no-run-if-empty docker rmi
+# Flush old Venture sdists
+find $WORKSPACE/.. -name &quot;venture-0.*post*.tar.gz&quot; -mtime +90 -print -delete</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

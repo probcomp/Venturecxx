@@ -41,6 +41,8 @@
 
 source ~/env/bin/activate
 pip install &quot;distribute&gt;=0.6.28&quot; # Because the distribute executable has to be there for the rest of it
+rm -rf ~/env/lib/python2.7/site-packages/venture # So that coverage doesn&apos;t pick up stale files
+rm -rf ~/env/lib/python2.7/site-packages/venture*.egg-info
 CC=&quot;ccache gcc&quot; pip install .
 ./all-crashes
 </command>
@@ -53,7 +55,19 @@ CC=&quot;ccache gcc&quot; pip install .
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
+          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
           <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
+          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
           <boolean>true</boolean>
         </entry>
         <entry>
@@ -63,18 +77,6 @@ CC=&quot;ccache gcc&quot; pip install .
         <entry>
           <com.flowdock.jenkins.BuildResult>ABORTED</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
-        </entry>
-        <entry>
-          <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
-          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
         </entry>
       </notifyMap>
       <notifySuccess>true</notifySuccess>

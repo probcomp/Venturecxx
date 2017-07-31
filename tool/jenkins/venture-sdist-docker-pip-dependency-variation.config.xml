@@ -47,6 +47,7 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
 
+source ~/env/bin/activate
 ./tool/minimal_deps.py &gt; low-requirements.txt
 ./script/jenkins/venture-in-docker.sh pip-test-docker low-requirements.txt</command>
     </hudson.tasks.Shell>
@@ -58,8 +59,8 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
       <chatNotification>false</chatNotification>
       <notifyMap>
         <entry>
-          <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
+          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
+          <boolean>true</boolean>
         </entry>
         <entry>
           <com.flowdock.jenkins.BuildResult>FAILURE</com.flowdock.jenkins.BuildResult>
@@ -70,16 +71,16 @@ To post-mortem a failure, do `docker run -it &lt;image name&gt;` The image name 
           <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
-          <boolean>false</boolean>
-        </entry>
-        <entry>
           <com.flowdock.jenkins.BuildResult>UNSTABLE</com.flowdock.jenkins.BuildResult>
           <boolean>false</boolean>
         </entry>
         <entry>
-          <com.flowdock.jenkins.BuildResult>FIXED</com.flowdock.jenkins.BuildResult>
-          <boolean>true</boolean>
+          <com.flowdock.jenkins.BuildResult>SUCCESS</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
+        </entry>
+        <entry>
+          <com.flowdock.jenkins.BuildResult>NOT_BUILT</com.flowdock.jenkins.BuildResult>
+          <boolean>false</boolean>
         </entry>
       </notifyMap>
       <notifySuccess>false</notifySuccess>
