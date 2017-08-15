@@ -493,6 +493,8 @@ class VentureForeignBlob(VentureValue):
     return VentureForeignBlob(thing["value"])
   def equalSameType(self, other):
     return self.datum == other.datum
+  def __hash__(self):
+    return hash(self.datum)
 
 class VentureNil(VentureValue):
   __slots__ = ()
