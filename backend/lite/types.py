@@ -35,7 +35,12 @@ class VentureType(object):
   """Base class of all Venture types.
 
 See the "Types" section of doc/type-system.md."""
+  def asVentureValue(self, thing):
+    # type: (object) -> vv.VentureValue
+    raise NotImplementedError
+
   def asPython(self, vthing):
+    # type: (vv.VentureValue) -> object
     raise NotImplementedError
 
   def asPythonNoneable(self, vthing):
@@ -657,6 +662,7 @@ Nil = NilType()
 Zero = ZeroType()
 
 def Array(subtype=None):
+  # type: (Optional[VentureType]) -> VentureType
   if subtype is None:
     return ArrayType()
   else:

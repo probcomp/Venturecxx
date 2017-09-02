@@ -43,13 +43,14 @@ if TYPE_CHECKING:
 # values and all the types.
 
 class VentureValue(object):
-  __slots__ = ()
   """Base class of all Venture values."""
+  __slots__ = ()
   ### "natural" representation and conversions
   def getNumber(self):
     # type: () -> float
     raise VentureTypeError("Cannot convert %s to number" % type(self))
   def getInteger(self):
+    # type: () -> int
     raise VentureTypeError("Cannot convert %s to integer" % type(self))
   def getAtom(self):
     raise VentureTypeError("Cannot convert %s to atom" % type(self))
@@ -60,6 +61,7 @@ class VentureValue(object):
     # type: () -> str
     raise VentureTypeError("Cannot convert %s to symbol" % type(self))
   def getString(self):
+    # type: () -> str
     raise VentureTypeError("Cannot convert %s to string" % type(self))
   def getForeignBlob(self):
     raise VentureTypeError("Cannot convert %s to foreign blob" % type(self))
@@ -285,6 +287,7 @@ class VentureInteger(VentureValue):
     else:
       return "VentureInteger(uninitialized)"
   def getInteger(self):
+    # type: () -> int
     return self.number
   def getNumber(self):
     # type: () -> float
@@ -398,6 +401,7 @@ class VentureBool(VentureValue):
   def __str__(self):
     return str(self.boolean)
   def getBool(self):
+    # type: () -> bool
     return self.boolean
   def asStackDict(self, _trace=None):
     return v.boolean(self.boolean)
@@ -460,6 +464,7 @@ class VentureString(VentureValue):
     # type: () -> str
     return self.strng
   def getString(self):
+    # type: () -> str
     return self.strng
   def asStackDict(self, _trace=None):
     return v.string(self.strng)
@@ -483,8 +488,10 @@ class VentureForeignBlob(VentureValue):
   # TODO Think about the interaction of foreign blobs with trace
   # copying and serialization
   def __init__(self, datum):
+    # type: (object) -> None
     self.datum = datum
   def getForeignBlob(self):
+    # type: () -> object
     return self.datum
   def asStackDict(self, _trace=None):
     return v.blob(self.datum)
