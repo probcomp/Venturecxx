@@ -339,7 +339,7 @@ class IArgs(object):
     This is used mainly as a unique key to prevent auto-caching of
     requests that are supposed to be generative.
     """
-    self.env = VentureEnvironment() # type: VentureEnvironment[Node]
+    self.env = None # type: VentureEnvironment[Node]
     """The lexical environment of the application.
 
     This is only used by SPs that need to access it, like the

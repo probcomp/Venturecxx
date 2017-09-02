@@ -39,7 +39,6 @@ class MockArgs(IArgs):
     self.aux = aux
     self._madeSPAux = madeSPAux
     self.operandNodes = [None for _ in vals]
-    self.env = env.VentureEnvironment()
     self._np_rng = np_rng
     self._py_rng = py_rng
 
