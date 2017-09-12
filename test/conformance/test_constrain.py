@@ -18,8 +18,8 @@
 from nose import SkipTest
 from nose.tools import eq_
 from nose.tools import raises
-from testconfig import config
 
+from venture.test.config import backend_name
 from venture.test.config import collectSamples
 from venture.test.config import collectStateSequence
 from venture.test.config import gen_on_inf_prim
@@ -192,7 +192,7 @@ def checkConstrainAVar6b(program):
 
 @gen_on_inf_prim("all") # TODO Segregate generated tests by inference method
 def testConstrainWithAPredict1():
-  if config["get_ripl"] != "lite": raise SkipTest("assert(false) crashes NoseTests")
+  if backend_name() != "lite": raise SkipTest("assert(false) crashes NoseTests")
   for p in ["(mh default one 50)",
             "(rejection default all 50)",
             "(func_pgibbs default ordered 3 50 false)",

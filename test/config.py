@@ -125,6 +125,9 @@ def default_num_data(desired=None):
   else:
     return 2
 
+def backend_name():
+  return config["get_ripl"]
+
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
