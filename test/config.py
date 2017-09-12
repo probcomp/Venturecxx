@@ -133,6 +133,9 @@ def relevant_sps():
     return []
   return config["relevant"]
 
+def global_reporting_threshold():
+  return float(config["global_reporting_threshold"])
+
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
