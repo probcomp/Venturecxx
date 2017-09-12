@@ -128,6 +128,11 @@ def default_num_data(desired=None):
 def backend_name():
   return config["get_ripl"]
 
+def relevant_sps():
+  if "relevant" not in config or config["relevant"] is None:
+    return []
+  return config["relevant"]
+
 disable_get_ripl = False
 ct_get_ripl_called = 0
 
