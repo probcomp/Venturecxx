@@ -543,7 +543,6 @@ include doc/sp-math/sp-math.tex
 include doc/stale-mac-install-instructions.md
 include doc/towards-operating-on-sufficient-statistics.md
 include doc/type-system.md
-include doc/venstan.md
 include examples/brownian/README
 include examples/brownian/data-gen.py
 include examples/brownian/drawing-plugin.py
@@ -600,8 +599,6 @@ include examples/tutorial-2015/mk_frame.vnts
 include examples/tutorial-2015/mk_outlier_frame.vnts
 include examples/tutorial-2015/multiline_plot_plugin.py
 include examples/tutorial-2015/regress_mem.py
-include examples/venstan/README
-include examples/venstan/normal_normal.vnts
 include external/README
 include external/lemonade/COPYING
 include external/lemonade/README
@@ -773,7 +770,6 @@ include refman/overview.rst
 include refman/plugins.rst
 include refman/programming-model.rst
 include refman/usage.rst
-include refman/venstan.rst
 include refman/venture.lite.psp.rst
 include refman/venture.lite.sp.rst
 include refman/venture.lite.sp_help.rst
@@ -911,7 +907,6 @@ include test/integration/test_doc_autogen.py
 include test/integration/test_examples.py
 include test/integration/test_plugin_loading.py
 include test/integration/test_sublanguages.py
-include test/integration/test_venstan.py
 include test/lite-config.py
 include test/manual/all.sh
 include test/manual/console-error.sh

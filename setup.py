@@ -372,10 +372,6 @@ tests_require = [
     'nose-testconfig>=0.9',
     'nose-cov>=1.6',
     'pexpect',
-    'cython', # Because it has to be installed before pystan, and pip
-              # does the wrong thing with ordering packages pulled in
-              # as dependencies.
-    'pystan', # For testing the venstan integration
     'markdown2', # For building the tutorial with venture-transcript
     # TODO Is markdown2 a real dependency?
 ]
