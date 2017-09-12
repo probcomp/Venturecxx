@@ -69,8 +69,8 @@ from scipy.spatial.distance import squareform
 import scipy.stats as stats
 from scipy.stats.mstats import rankdata
 
-from testconfig import config
 from venture.test.config import ignore_inference_quality
+from venture.test.config import global_reporting_threshold
 from venture.test.config import stochasticTest
 import venture.plots.p_p_plot as plots
 from venture.plots.p_p_plot import count_occurrences
@@ -107,7 +107,7 @@ def fisherMethod(pvals):
 
 def repeatTest(func, seed, *args, **kwargs):
   rng = random.Random(seed)
-  globalReportingThreshold = float(config["global_reporting_threshold"])
+  globalReportingThreshold = global_reporting_threshold()
   result = func(*args, seed=rng.randint(1, 2**31 - 1), **kwargs)
   assert isinstance(result, TestResult)
   if ignore_inference_quality():
@@ -131,7 +131,7 @@ def repeatTest(func, seed, *args, **kwargs):
     return TestResult(pval, report)
 
 def reportTest(result):
-  globalReportingThreshold = float(config["global_reporting_threshold"])
+  globalReportingThreshold = global_reporting_threshold()
   if not ignore_inference_quality():
     assert result.pval > globalReportingThreshold, result
 

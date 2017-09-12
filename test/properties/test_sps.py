@@ -23,7 +23,6 @@ import random
 import numpy.random as npr
 
 from nose.tools import eq_
-from testconfig import config
 from venture.test.flaky import flaky
 
 from venture.lite.builtin import builtInSPsIter
@@ -34,6 +33,7 @@ from venture.lite.sp_use import simulate
 from venture.lite.utils import FixedRandomness
 from venture.test.config import gen_in_backend
 from venture.test.randomized import * # Importing many things, which are closely related to what this is trying to do pylint: disable=wildcard-import, unused-wildcard-import
+import venture.test.config as conf
 
 blacklist = ['make_csp', 'apply_function', 'make_gp',
              # TODO Appropriately construct random inputs to test
@@ -63,7 +63,7 @@ blacklist = ['make_csp', 'apply_function', 'make_gp',
 def relevantSPs():
   for (name,sp) in builtInSPsIter():
     if isinstance(sp.requestPSP, NullRequestPSP):
-      if "relevant" not in config or config["relevant"] is None or name in config["relevant"]:
+      if name in conf.relevant_sps():
         if name not in blacklist: # Placeholder for selecting SPs to do or not do
           yield name, sp
 

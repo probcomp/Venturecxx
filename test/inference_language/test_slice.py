@@ -19,8 +19,8 @@ import math
 
 import scipy.stats as stats
 from nose import SkipTest
-from testconfig import config
 
+from venture.test.config import backend_name
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
@@ -56,7 +56,7 @@ def myCollectSamples(ripl, method):
 @statisticalTest
 def checkSliceBasic1(slice_method, seed):
   # Basic sanity test for slice
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
@@ -67,7 +67,7 @@ def checkSliceBasic1(slice_method, seed):
 def checkSliceNormalWithObserve1(slice_method, seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)",label="pid")
@@ -83,7 +83,7 @@ def checkSliceNormalWithObserve2a(slice_method, seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation.  The difference between this and 1 is an extra
   # predict, which apparently has a deleterious effect on mixing.
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)", label="pid")
@@ -98,7 +98,7 @@ def checkSliceNormalWithObserve2a(slice_method, seed):
 def checkSliceNormalWithObserve2b(slice_method, seed):
   # Checks the posterior distribution on a Gaussian given an unlikely
   # observation
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(normal 10.0 1.0)")
@@ -112,7 +112,7 @@ def checkSliceNormalWithObserve2b(slice_method, seed):
 @statisticalTest
 def checkSliceStudentT1(slice_method, seed):
   # Simple program involving simulating from a student_t
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(student_t 1.0)", label="pid")
@@ -135,7 +135,7 @@ def checkSliceStudentT1(slice_method, seed):
 @statisticalTest
 def checkSliceStudentT2(slice_method, seed):
   # Simple program involving simulating from a student_t
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(student_t 1.0)")
@@ -159,7 +159,7 @@ def checkSliceStudentT2(slice_method, seed):
 @statisticalTest
 def checkSliceL(slice_method, seed):
   # Checks slice sampling on an L-shaped distribution.
-  if (config["get_ripl"] != "lite") and (slice_method == 'slice_doubling'):
+  if (backend_name() != "lite") and (slice_method == 'slice_doubling'):
     raise SkipTest("Slice sampling with doubling only implemented in Lite.")
   ripl = get_ripl(seed=seed)
   ripl.assume("a", "(uniform_continuous 0.0 1.0)")

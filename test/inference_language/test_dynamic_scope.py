@@ -17,8 +17,8 @@
 
 from nose.tools import assert_equal
 from nose.tools import eq_
-from testconfig import config
 
+from venture.test.config import backend_name
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -147,7 +147,7 @@ def testRandomBlockIdSmoke():
   # Test that scope membership maintenance works even if the block id
   # changes under inference
   r = get_ripl()
-  if config["get_ripl"] == "puma":
+  if backend_name() == "puma":
     # Puma doesn't have the invariant check that Lite does
     r.define("checkInvariants", "(lambda () pass)")
   r.execute_program("""
@@ -161,7 +161,7 @@ def testRandomScopeIdSmoke():
   # Test that scope membership maintenance works even if the scope id
   # changes under inference
   r = get_ripl()
-  if config["get_ripl"] == "puma":
+  if backend_name() == "puma":
     # Puma doesn't have the invariant check that Lite does
     r.define("checkInvariants", "(lambda () pass)")
   r.execute_program("""
@@ -180,7 +180,7 @@ def testRandomScopeIdExclusionSmoke():
   # Test that scope membership maintenance works even if the scope id
   # excluded by tag_exclude changes under inference
   r = get_ripl()
-  if config["get_ripl"] == "puma":
+  if backend_name() == "puma":
     # Puma doesn't have the invariant check that Lite does
     r.define("checkInvariants", "(lambda () pass)")
   r.execute_program("""
