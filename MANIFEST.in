@@ -543,7 +543,6 @@ include doc/sp-math/sp-math.tex
 include doc/stale-mac-install-instructions.md
 include doc/towards-operating-on-sufficient-statistics.md
 include doc/type-system.md
-include doc/venstan.md
 include examples/brownian/README
 include examples/brownian/data-gen.py
 include examples/brownian/drawing-plugin.py
