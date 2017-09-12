@@ -773,7 +773,6 @@ include refman/overview.rst
 include refman/plugins.rst
 include refman/programming-model.rst
 include refman/usage.rst
-include refman/venstan.rst
 include refman/venture.lite.psp.rst
 include refman/venture.lite.sp.rst
 include refman/venture.lite.sp_help.rst
