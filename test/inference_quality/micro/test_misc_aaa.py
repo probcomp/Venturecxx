@@ -16,8 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
-from testconfig import config
 
+from venture.test.config import backend_name
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
 from venture.test.config import default_num_transitions_per_sample
@@ -43,7 +43,7 @@ def testMakeBetaBernoulli1():
 def checkMakeBetaBernoulli1(maker, hyper, seed):
   if rejectionSampling() and hyper == "(normal 10.0 1.0)":
     raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
-  if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
+  if inParallel() and "make_suff_stat_bernoulli" in maker and backend_name() == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl(seed=seed)
 
@@ -70,7 +70,7 @@ def testMakeBetaBernoulli2():
 def checkMakeBetaBernoulli2(maker, seed):
   if rejectionSampling():
     raise SkipTest("Too slow.  Tightening the rejection bound is Issue #468.")
-  if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
+  if inParallel() and "make_suff_stat_bernoulli" in maker and backend_name() == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl(seed=seed)
 
@@ -94,7 +94,7 @@ def testMakeBetaBernoulli3():
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def checkMakeBetaBernoulli3(maker, seed):
-  if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
+  if inParallel() and "make_suff_stat_bernoulli" in maker and backend_name() == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl(seed=seed)
 
@@ -122,7 +122,7 @@ def testMakeBetaBernoulli4():
 @skipWhenSubSampling("Leads to a scaffold structure that the current implementation of subsampling can't handle")
 @statisticalTest
 def checkMakeBetaBernoulli4(maker, seed):
-  if inParallel() and "make_suff_stat_bernoulli" in maker and config["get_ripl"] == "puma":
+  if inParallel() and "make_suff_stat_bernoulli" in maker and backend_name() == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
   ripl = get_ripl(seed=seed)
 
@@ -153,9 +153,9 @@ def testAAAParticleWeights():
 
 @statisticalTest
 def checkAAAParticleWeights(sp, seed):
-  if inParallel() and "make_suff_stat_bernoulli" in sp and config["get_ripl"] == "puma":
+  if inParallel() and "make_suff_stat_bernoulli" in sp and backend_name() == "puma":
     raise SkipTest("The Lite SPs in Puma interface is not thread-safe, and make_suff_stat_bernoulli comes from Lite.")
-  if "dir_cat" in sp and config['get_ripl'] == 'puma':
+  if "dir_cat" in sp and backend_name() == 'puma':
     raise SkipTest("Dirichlet categorical in Puma does not accept objects parameter.  Issue #340")
   ripl = get_ripl(seed=seed)
 

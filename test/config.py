@@ -73,7 +73,22 @@ import sys
 
 from nose import SkipTest
 import nose.tools as nose
-from testconfig import config
+try:
+  from testconfig import config
+except ImportError:
+  # Assume testconfig isn't installed; default to the Lite-crashes
+  # configuration.
+  config = {}
+  config["num_samples"] = 50
+  config["num_transitions_per_sample"] = 50
+  config["num_data"] = 20
+  config["should_reset"] = True
+  config["get_ripl"] = "lite"
+
+  config["seed"] = None
+  config["global_reporting_threshold"] = 0.00001
+  config["infer"] = "(mh default one 100)"
+  config["ignore_inference_quality"] = True
 
 import venture.shortcuts as s
 import venture.value.dicts as v
@@ -124,6 +139,17 @@ def default_num_data(desired=None):
     return desired or int(config["num_data"])
   else:
     return 2
+
+def backend_name():
+  return config["get_ripl"]
+
+def relevant_sps():
+  if "relevant" not in config or config["relevant"] is None:
+    return []
+  return config["relevant"]
+
+def global_reporting_threshold():
+  return float(config["global_reporting_threshold"])
 
 disable_get_ripl = False
 ct_get_ripl_called = 0

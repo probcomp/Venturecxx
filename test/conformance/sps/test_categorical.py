@@ -17,8 +17,8 @@
 
 from nose import SkipTest
 from nose.tools import eq_
-from testconfig import config
 
+from venture.test.config import backend_name
 from venture.test.config import collectSamples
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -69,7 +69,7 @@ def testLogCategoricalAbsorb(seed):
   # simulate and log density methods
   ripl = get_ripl(seed=seed)
 
-  if config["get_ripl"] == "puma":
+  if backend_name() == "puma":
     # XXX Puma's log_categorical demands a simplex argument, as that's
     # the best representation the backend has for an array of numbers.
     # Lite's simplex, however, checks boundary conditions, so can't be
