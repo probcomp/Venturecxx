@@ -17,13 +17,13 @@
 
 from nose import SkipTest
 from nose.tools import eq_
-from testconfig import config
 
 from venture.lite.psp import NullRequestPSP
 from venture.lite.sp import VentureSPRecord
 from venture.lite.sp_use import simulate
 from venture.lite.types import AnyType
 from venture.lite.value import VentureValue
+from venture.test.config import backend_name
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
@@ -65,7 +65,7 @@ def testRiplSimulate():
                 "extend_environment", # Because MockArgs gives a bogus environment
               ]:
       continue
-    if config["get_ripl"] != "lite" and name in [
+    if backend_name() != "lite" and name in [
         ## Expected failures
         "dict", # Because keys and values must be the same length
         "matrix", # Because rows must be the same length
@@ -81,7 +81,7 @@ def testRiplSimulate():
       yield checkRiplAgreesWithDeterministicSimulate, name, sp
 
 def checkRiplAgreesWithDeterministicSimulate(name, sp):
-  if config["get_ripl"] != "lite" and name in [
+  if backend_name() != "lite" and name in [
     ## Incompatibilities with Puma
     "apply", # Not implemented, and can't seem to import it as a foreign from Python
     "arange", # Not the same return type (elements boxed in Puma?)
@@ -139,7 +139,7 @@ def testForeignInterfaceSimulate():
                 "extend_environment", # Because MockArgs gives a bogus environment
               ]:
       continue
-    if config["get_ripl"] != "lite" and name in [
+    if backend_name() != "lite" and name in [
         ## Expected failures
         "dict", # Because keys and values must be the same length
         "matrix", # Because rows must be the same length

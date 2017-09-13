@@ -16,8 +16,8 @@
 # along with Venture.  If not, see <http://www.gnu.org/licenses/>.
 
 from nose import SkipTest
-from testconfig import config
 
+from venture.test.config import backend_name
 from venture.test.config import broken_in
 from venture.test.config import collectSamples
 from venture.test.config import default_num_samples
@@ -219,7 +219,7 @@ def testEnumerativeGibbsBrushRandomness(seed):
     def posterior_inference_action():
       # Work around the fact that Puma doesn't have rejection sampling
       # by asking for a bunch of MH.
-      if config['get_ripl'] == 'lite':
+      if backend_name() == 'lite':
         return "(rejection default all 1)"
       else:
         return "(mh default one %d)" % (default_num_transitions_per_sample(),)
