@@ -8,10 +8,12 @@ source:
 build:
   script: python setup.py install
 
+source:
+  path: ../
+
 requirements:
   build:
     - git
-    - anaconda # probably don't need this
     - python 2.7.*
   run:
     - python 2.7.*
@@ -26,13 +28,15 @@ requirements:
     - jsonschema
 
 test:
+  source_files:
+    - test
+    - examples
   requires:
     - python 2.7.*
     - nose
-    # - nose-testconfig
     - pexpect
-  # commands:
-  #   - python -m pytest --pyargs crosscat
+  commands:
+    - nosetests -c lite-crashes.cfg -w test -e integration
 
 about:
   home: https://github.com/probcomp/Venturecxx
