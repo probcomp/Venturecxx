@@ -20,9 +20,9 @@ install:
   - touch ~/.config/matplotlib/matplotlibrc
   - touch ~/.matplotlib/matplotlibrc
   - touch ~/.matplotlibrc
-  - echo "backend: agg" >> ~/.config/matplotlib/matplotlibrc
-  - echo "backend: agg" >> ~/.matplotlib/matplotlibrc
-  - echo "backend: agg" >> ~/.matplotlibrc
+  - 'echo "backend: agg" >> ~/.config/matplotlib/matplotlibrc'
+  - 'echo "backend: agg" >> ~/.matplotlib/matplotlibrc'
+  - 'echo "backend: agg" >> ~/.matplotlibrc'
 
   - wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
