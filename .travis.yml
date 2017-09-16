@@ -17,6 +17,9 @@ install:
 
   - mkdir -p ~/.config/matplotlib
   - mkdir -p ~/.matplotlib
+  - touch ~/.config/matplotlib/matplotlibrc
+  - touch ~/.matplotlib/matplotlibrc
+  - touch ~/.matplotlibrc
   - echo 'backend: agg' > ~/.config/matplotlib/matplotlibrc
   - echo 'backend: agg' > ~/.matplotlib/matplotlibrc
   - echo 'backend: agg' > ~/.matplotlibrc
