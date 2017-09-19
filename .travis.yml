@@ -8,10 +8,21 @@ python:
   - 2.7
 
 install:
+  - sudo apt-get update -qq
+#  - sudo apt-get upgrade -qq
   - sudo apt-get install -qq build-essential
   - sudo apt-get install -qq libboost-all-dev
   - sudo apt-get install -qq ccache
   - sudo apt-get install -qq libgsl0-dev
+
+  - mkdir -p ~/.config/matplotlib
+  - mkdir -p ~/.matplotlib
+  - touch ~/.config/matplotlib/matplotlibrc
+  - touch ~/.matplotlib/matplotlibrc
+  - touch ~/.matplotlibrc
+  - 'echo "backend: agg" >> ~/.config/matplotlib/matplotlibrc'
+  - 'echo "backend: agg" >> ~/.matplotlib/matplotlibrc'
+  - 'echo "backend: agg" >> ~/.matplotlibrc'
 
   - wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
