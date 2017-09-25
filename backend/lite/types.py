@@ -22,6 +22,7 @@ import numpy as np
 
 import venture.lite.value as vv
 import venture.lite.request as req
+from venture.lite.function import VentureFunction
 
 from venture.lite.exception import VentureTypeError
 
@@ -128,6 +129,18 @@ for typename in ["Array", "Simplex", "Dict", "Matrix", "SymmetricMatrix"]:
   # used lightly.
   # pylint: disable=exec-used
   exec(standard_venture_type(typename))
+
+
+class FunctionType(VentureType):
+  def __init__(self, name=None):
+    self._name = name
+  def asVentureValue(self, thing): return vv.VentureFunction(thing)
+  def asPython(self, vthing): return vthing.f
+  def __contains__(self, vthing): return isinstance(vthing, VentureFunction)
+  def name(self): return self._name or "<function>"
+  def distribution(self, base, **kwargs):
+    return base("function", **kwargs)
+
 
 class ProbabilityType(VentureType):
   def __init__(self, name=None):
