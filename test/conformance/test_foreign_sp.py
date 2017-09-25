@@ -27,6 +27,9 @@ from venture.test.config import skipWhenInParallel
 from venture.test.stats import reportKnownDiscrete
 from venture.test.stats import statisticalTest
 
+import venture.lite.types as vt
+from venture.lite.sp_help import deterministic_typed
+
 def test_foreign_aaa():
     builtins = builtin.builtInSPs()
     ripl = get_ripl()
@@ -160,3 +163,30 @@ def test_return_foreign_sp():
     ripl = get_ripl()
     ripl.bind_foreign_sp('f', binaryNum(lambda x, y: 10*x + y))
     ripl.sample('f')
+
+
+def test_foreign_sp_function_input():
+    ripl = get_ripl()
+    ripl.set_mode('venture_script')
+    ripl.execute_program('''
+        define f = (x) -> {2 * x};
+    ''')
+    def my_func(f, x):
+        return f(x) +1
+
+    ripl.bind_foreign_inference_sp(
+        'my_func',
+        deterministic_typed(
+            my_func,
+            [
+                vt.FunctionType(),
+                vt.NumberType(),
+            ],
+            vt.NumberType(),
+            min_req_args=2
+        )
+    )
+    out = ripl.evaluate('my_func(f, 3)')
+    assert out == 7
+
+
