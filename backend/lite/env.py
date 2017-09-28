@@ -43,6 +43,7 @@ class VentureEnvironment(VentureValue, tp.Generic[T]):
       for sym in ids:
         assert isinstance(sym, str)
     if ids is not None and nodes is not None:
+      assert len(ids) == len(nodes)
       self.frame.update(zip(ids,nodes))
 
   def addBinding(self,sym,val):
