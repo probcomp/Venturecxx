@@ -70,11 +70,39 @@ def massless(cdf):
     return (cdf(x), 0)
   return mcdf
 
+class ComparableMixin(object):
+  # From https://stackoverflow.com/questions/1061283/lt-instead-of-cmp
+  def __eq__(self, other):
+    return not self<other and not other<self
+  def __ne__(self, other):
+    return self<other or other<self
+  def __gt__(self, other):
+    return other<self
+  def __ge__(self, other):
+    return not self<other
+  def __le__(self, other):
+    return not other<self
+
+class Exp(ComparableMixin):
+  slots = ('x', 'portion')
+  def __init__(self, x, portion):
+    self.x = x
+    self.portion = portion
+  def __eq__(self, other):
+    return self.x == other.x and self.portion == other.portion
+  def __lt__(self, other):
+    if self.x < other.x:
+      return True
+    if self.x > other.x:
+      return False
+    else:
+      return self.portion < other.portion
+
 def expand_state_space(mcdf):
   """Convert an MCDF into a CDF on the expanded state space."""
-  def expanded((x, portion)):
-    (below, at) = mcdf(x)
-    return below + portion * at
+  def expanded(exp):
+    (below, at) = mcdf(exp.x)
+    return below + exp.portion * at
   return expanded
 
 def deduplicate(sample):
@@ -85,7 +113,7 @@ expanded state space without duplicates.
   """
   def chunk((x, xs)):
     k = len(list(xs))
-    return [(x, float(i)/k) for i in range(k)]
+    return [Exp(x, float(i)/k) for i in range(k)]
   return list(itertools.chain.from_iterable(
     map(chunk, itertools.groupby(sorted(sample)))))
 
