@@ -6,21 +6,23 @@ rather than silently not following it.
 
 - We use [Github Issues](http://github.com/probcomp/Venturecxx/Issues/) to track issues.
 
-- We use [Flowdock](https://www.flowdock.com/app/mit-probcomp/main) for persistent group chat.
+- We use [Slack](https://probcomp.slack.com/) for persistent group chat.
 
 - We use [nosetests](https://nose.readthedocs.org/en/latest/) for running the test suite.
 
 - We have a compute cluster at `probcomp-{1,2,3,4}.csail.mit.edu`, and we have EC2 as a fallback.
 
-- We use [Jenkins](http://jenkins-ci.org/) for the continuous build.  As of this writing, the
-  server listens to https://probcomp-3.csail.mit.edu/
+- We use [Jenkins](http://jenkins-ci.org/) for the continuous build.
+  As of this writing, the server listens to
+  https://probcomp-4.csail.mit.edu/.  Note in particular the
+  `venture-master-crashes` build.
 
 - We use [pylint](http://www.pylint.org/) to maintain our Python code style.  The normative
-  pylint configuration file is in `tool/pylintrc`.  See also [pylint](#pylint).
+  pylint configuration files are `tool/pylintrc-<version>`.  See also [pylint](#pylint).
 
 - We have a [Testing Policy](#testing-policy).
 
-- We have a [Contributor Policy](#contributor-policy) non-core developers.
+- We have a [Contributor Policy](#contributor-policy) for non-core developers.
 
 Particulars
 ===========
@@ -164,11 +166,16 @@ Pylint
 ------
 
 We use pylint to maintain a Python code style.  The normative style
-file is in `tool/pylintrc`.  A number of existing style violations are
-grandfathered, but we try not to introduce new ones.
+files are `tool/pylintrc-<version>`.  A number of existing style
+violations are grandfathered, but we try not to introduce new ones.
+
+- Pylint message exclusion lists are not forward or backward
+  compatible, so we maintain separate style files for each of the
+  Pylint versions that people use.
 
 - You can run pylint in batch mode using the Venture style with, e.g.,
-  `pylint --rcfile=tool/pylintrc backend/lite/wttree.py`
+  `pylint --rcfile=tool/pylintrc-<version> backend/lite/wttree.py`
+  where `<version>` is your Pylint version number, like 1.5.1.
 
 - Pylint is more useful if the feedback is instantaneous.  If you edit
     in Emacs, this can be achieved using Flymake Mode:
@@ -248,7 +255,7 @@ Summary
   - Push your branch and ask for a review (e.g. by creating a pull
     request).
 
-- Keep an eye on [Jenkins](https://probcomp-3.csail.mit.edu/) after
+- Keep an eye on [Jenkins](https://probcomp-4.csail.mit.edu/) after
   being merged
 
 Fuller Guide
@@ -310,7 +317,7 @@ Fuller Guide
   developer will merge your branch into master.
 
 - After your contribution is merged, it's good to monitor
-  [Jenkins](https://probcomp-3.csail.mit.edu/) a
+  [Jenkins](https://probcomp-4.csail.mit.edu/) a
   bit, because the testing it's doing is likely to be more thorough
   than yours, and it may be running in a different environment.  If
   the venture-crashes build fails, we will be after you to produce a
