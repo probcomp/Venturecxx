@@ -365,17 +365,6 @@ class local_test(test_py):
         print "Please use ./check.sh instead and read ./HACKING.md"
         sys.exit(0)  # A success(!) because we have what tests_require.
 
-install_requires = parse_req_file("install_requires.txt")
-
-tests_require = [
-    'nose>=1.3',
-    'nose-testconfig>=0.9',
-    'nose-cov>=1.6',
-    'pexpect',
-    'markdown2', # For building the tutorial with venture-transcript
-    # TODO Is markdown2 a real dependency?
-]
-
 # Make sure the VERSION file in the sdist is exactly specified, even
 # if it is a development version, so that we do not need to run git to
 # discover it -- which won't work because there's no .git directory in
@@ -406,11 +395,6 @@ setup (
     author_email = 'venture-dev@lists.csail.mit.edu',
     url = 'http://probcomp.csail.mit.edu/venture/',
     long_description = 'TBA.',
-    install_requires = install_requires,
-    tests_require = tests_require,
-    extras_require = {
-        'tests': tests_require,
-    },
     packages = packages,
     package_dir = {
         "venture": "python/lib",
