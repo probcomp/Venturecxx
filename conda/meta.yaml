@@ -14,7 +14,7 @@ source:
 requirements:
   build:
     - git
-    - python 2.7.*
+    - python 2.7.13
   run:
     - python 2.7.*
     - numpy >=1.8
@@ -32,7 +32,7 @@ test:
     - test
     - examples
   requires:
-    - python 2.7.*
+    - python 2.7.13
     - matplotlib 2.0.2
     - nose
     - numpy 1.11.*
