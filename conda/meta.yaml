@@ -33,8 +33,11 @@ test:
     - examples
   requires:
     - python 2.7.*
+    - matplotlib 2.0.2
     - nose
+    - numpy 1.11.*
     - pexpect
+    - scipy 0.19.*
   commands:
     - nosetests -c lite-crashes.cfg -w test -e integration
 
