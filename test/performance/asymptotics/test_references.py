@@ -68,13 +68,13 @@ def loadReferencesProgram(K):
 # O(N) forwards
 # O(1) to infer
 # (this could be reused from testChurchPairProgram)
-@attr('slow')
-@on_inf_prim("mh")
-@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
-def testReferencesProgram1():
-
-  def refify(K):
-    ripl = loadReferencesProgram(K)
-    return lambda : ripl.infer(100)
-
-  timing.assertConstantTime(refify)
+##@attr('slow')
+##@on_inf_prim("mh")
+##@broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+##def testReferencesProgram1():
+##
+##  def refify(K):
+##    ripl = loadReferencesProgram(K)
+##    return lambda : ripl.infer(100)
+##
+##  timing.assertConstantTime(refify)
