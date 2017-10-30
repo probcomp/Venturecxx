@@ -2,9 +2,10 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
-#include <iostream>
-#include <cmath>
 #include <cfloat>
+#include <cmath>
+#include <cstring>
+#include <iostream>
 
 
 double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma) {
@@ -41,12 +42,15 @@ double chain(gsl_rng * rng, int steps) {
 }
 
 int main(int argc, char** argv) {
-  int steps = atoi(argv[1]);
+  char* mode = argv[1];
   int reps = atoi(argv[2]);
-  std::cout << steps << "\n";
+  int steps = atoi(argv[3]);
   gsl_rng * rng = gsl_rng_alloc(gsl_rng_mt19937);
   gsl_rng_set(rng, time(NULL));
-  for (int i = 0; i < reps; i++) {
-    std::cout << chain(rng, steps) << std::endl;
+  std::cerr << mode << " " << reps << " " << steps << std::endl;
+  if (strcmp(mode, "mcmc") == 0) {
+    for (int i = 0; i < reps; i++) {
+      std::cout << chain(rng, steps) << std::endl;
+    }
   }
 }
