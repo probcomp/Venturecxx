@@ -20,7 +20,7 @@ double NormalDistributionLogLikelihood(double sampled_value, double average, dou
   return loglikelihood;
 }
 
-double chain(gsl_rng * rng, int steps) {
+double chain(gsl_rng * rng, double obs, int steps) {
   double mu_1 = 0.0;
   double sigma_1 = 1.0;
   double sigma_2 = 1.0;
@@ -29,9 +29,9 @@ double chain(gsl_rng * rng, int steps) {
     // TODO If I were doing this for real, I would store w_old from
     // the previous loop iteration, not recompute it; but this is what
     // Puma does.
-    double w_old = NormalDistributionLogLikelihood(2.0, x, sigma_2);
+    double w_old = NormalDistributionLogLikelihood(obs, x, sigma_2);
     double x_new = gsl_ran_gaussian(rng, sigma_1) + mu_1;
-    double w_new = NormalDistributionLogLikelihood(2.0, x_new, sigma_2);
+    double w_new = NormalDistributionLogLikelihood(obs, x_new, sigma_2);
     double alpha = w_new - w_old;
     double logU = log(gsl_ran_flat(rng,0.0,1.0));
     if (logU < alpha) {
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
   std::cerr << mode << " " << reps << " " << steps << std::endl;
   if (strcmp(mode, "mcmc") == 0) {
     for (int i = 0; i < reps; i++) {
-      std::cout << chain(rng, steps) << std::endl;
+      std::cout << chain(rng, 2.0, steps) << std::endl;
     }
   }
 }
