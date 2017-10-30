@@ -26,7 +26,7 @@ double chain(gsl_rng * rng, int steps) {
   double x = gsl_ran_gaussian(rng, sigma_1) + mu_1;
   for (int i = 0; i < steps; i++) {
     // TODO If I were doing this for real, I would store w_old from
-    // the previous loop iteration, not recompute it; but thus is what
+    // the previous loop iteration, not recompute it; but this is what
     // Puma does.
     double w_old = NormalDistributionLogLikelihood(2.0, x, sigma_2);
     double x_new = gsl_ran_gaussian(rng, sigma_1) + mu_1;
