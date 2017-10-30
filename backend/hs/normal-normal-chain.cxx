@@ -19,9 +19,7 @@ double NormalDistributionLogLikelihood(double sampled_value, double average, dou
   return loglikelihood;
 }
 
-double chain(int steps) {
-  gsl_rng * rng = gsl_rng_alloc(gsl_rng_mt19937);
-  gsl_rng_set(rng, time(NULL));
+double chain(gsl_rng * rng, int steps) {
   double mu_1 = 0.0;
   double sigma_1 = 1.0;
   double sigma_2 = 1.0;
@@ -44,6 +42,11 @@ double chain(int steps) {
 
 int main(int argc, char** argv) {
   int steps = atoi(argv[1]);
+  int reps = atoi(argv[2]);
   std::cout << steps << "\n";
-  std::cout << chain(steps);
+  gsl_rng * rng = gsl_rng_alloc(gsl_rng_mt19937);
+  gsl_rng_set(rng, time(NULL));
+  for (int i = 0; i < reps; i++) {
+    std::cout << chain(rng, steps) << std::endl;
+  }
 }
