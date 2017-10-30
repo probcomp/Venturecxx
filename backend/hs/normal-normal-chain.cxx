@@ -20,10 +20,11 @@ double NormalDistributionLogLikelihood(double sampled_value, double average, dou
   return loglikelihood;
 }
 
+double mu_1 = 0.0;
+double sigma_1 = 1.0;
+double sigma_2 = 1.0;
+
 double chain(gsl_rng * rng, double obs, int steps) {
-  double mu_1 = 0.0;
-  double sigma_1 = 1.0;
-  double sigma_2 = 1.0;
   double x = gsl_ran_gaussian(rng, sigma_1) + mu_1;
   for (int i = 0; i < steps; i++) {
     // TODO If I were doing this for real, I would store w_old from
