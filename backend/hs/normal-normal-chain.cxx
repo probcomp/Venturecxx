@@ -2,11 +2,12 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include <algorithm>
 #include <cfloat>
 #include <cmath>
 #include <cstring>
 #include <iostream>
-
+#include <vector>
 
 double NormalDistributionLogLikelihood(double sampled_value, double average, double sigma) {
   double loglikelihood = 0.0;
@@ -34,6 +35,45 @@ double rejection(gsl_rng * rng, double obs) {
       return x;
     }
   }
+}
+
+template<typename T>
+T simulate_categorical_normalized(gsl_rng * rng, std::vector<T> xs, std::vector<double> ps) {
+  std::vector<unsigned int> ns(ps.size());
+  gsl_ran_multinomial(rng, ps.size(), 1, &ps[0], &ns[0]);
+  for (size_t i = 0; i < ns.size(); ++i) {
+    if (ns[i] == 1) { return xs[i]; }
+  }
+}
+
+double logsumexp(std::vector<double> logs) {
+  if (logs.empty()) { return log(0.0); }
+  double max = *std::max_element(logs.begin(), logs.end());
+  double sum = 0;
+  for (size_t i = 0; i < logs.size(); ++i) {
+    sum += exp(logs[i] - max);
+  }
+  return max + log(sum);
+}
+
+template<typename T>
+T simulate_log_categorical(gsl_rng * rng, std::vector<T> xs, std::vector<double> ws) {
+  double total_w = logsumexp(ws);
+  std::vector<double> ps = std::vector<double>(ws.size());
+  for (int i = 0; i < ws.size(); i++) {
+    ps[i] = exp(ws[i] - total_w);
+  }
+  return simulate_categorical_normalized(rng, xs, ps);
+}
+
+double importance(gsl_rng * rng, double obs, int particles) {
+  std::vector<double> xs = std::vector<double>(particles);
+  std::vector<double> ws = std::vector<double>(particles);
+  for (int i = 0; i < particles; i++) {
+    xs[i] = gsl_ran_gaussian(rng, sigma_1) + mu_1;
+    ws[i] = NormalDistributionLogLikelihood(obs, xs[i], sigma_2);
+  }
+  return simulate_log_categorical(rng, xs, ws);
 }
 
 double chain(gsl_rng * rng, double obs, int steps) {
@@ -65,6 +105,11 @@ int main(int argc, char** argv) {
   if (strcmp(mode, "rejection") == 0) {
     for (int i = 0; i < reps; i++) {
       std::cout << rejection(rng, obs) << std::endl;
+    }
+  }
+  if (strcmp(mode, "importance") == 0) {
+    for (int i = 0; i < reps; i++) {
+      std::cout << importance(rng, obs, steps) << std::endl;
     }
   }
   if (strcmp(mode, "mcmc") == 0) {
