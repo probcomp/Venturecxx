@@ -38,7 +38,8 @@ double rejection(gsl_rng * rng, double obs) {
 }
 
 template<typename T>
-T simulate_categorical_normalized(gsl_rng * rng, std::vector<T> xs, std::vector<double> ps) {
+T simulate_categorical_normalized(
+    gsl_rng * rng, const std::vector<T>& xs, const std::vector<double>& ps) {
   std::vector<unsigned int> ns(ps.size());
   gsl_ran_multinomial(rng, ps.size(), 1, &ps[0], &ns[0]);
   for (size_t i = 0; i < ns.size(); ++i) {
@@ -46,7 +47,7 @@ T simulate_categorical_normalized(gsl_rng * rng, std::vector<T> xs, std::vector<
   }
 }
 
-double logsumexp(std::vector<double> logs) {
+double logsumexp(const std::vector<double>& logs) {
   if (logs.empty()) { return log(0.0); }
   double max = *std::max_element(logs.begin(), logs.end());
   double sum = 0;
@@ -57,7 +58,8 @@ double logsumexp(std::vector<double> logs) {
 }
 
 template<typename T>
-T simulate_log_categorical(gsl_rng * rng, std::vector<T> xs, std::vector<double> ws) {
+T simulate_log_categorical(
+    gsl_rng * rng, const std::vector<T>& xs, const std::vector<double>& ws) {
   double total_w = logsumexp(ws);
   std::vector<double> ps = std::vector<double>(ws.size());
   for (int i = 0; i < ws.size(); i++) {
