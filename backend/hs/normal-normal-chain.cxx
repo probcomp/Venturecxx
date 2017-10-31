@@ -55,20 +55,21 @@ double chain(gsl_rng * rng, double obs, int steps) {
 }
 
 int main(int argc, char** argv) {
-  char* mode = argv[1];
-  int reps = atoi(argv[2]);
-  int steps = atoi(argv[3]);
+  double obs = atof(argv[1]);
+  char* mode = argv[2];
+  int reps = atoi(argv[3]);
+  int steps = atoi(argv[4]);
   gsl_rng * rng = gsl_rng_alloc(gsl_rng_mt19937);
   gsl_rng_set(rng, time(NULL));
   std::cerr << mode << " " << reps << " " << steps << std::endl;
   if (strcmp(mode, "rejection") == 0) {
     for (int i = 0; i < reps; i++) {
-      std::cout << rejection(rng, 2.0) << std::endl;
+      std::cout << rejection(rng, obs) << std::endl;
     }
   }
   if (strcmp(mode, "mcmc") == 0) {
     for (int i = 0; i < reps; i++) {
-      std::cout << chain(rng, 2.0, steps) << std::endl;
+      std::cout << chain(rng, obs, steps) << std::endl;
     }
   }
 }
