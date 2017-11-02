@@ -1,4 +1,4 @@
-FROM            ubuntu:14.04
+FROM            ubuntu:16.04
 MAINTAINER      MIT Probabilistic Computing Project
 
 RUN             apt-get update -qq
@@ -29,7 +29,7 @@ ADD             . /Venturecxx
 WORKDIR         /Venturecxx
 
 # Provisional kludge to disable nose-cov business, which is not in
-# Ubuntu 14.04.
+# Ubuntu 16.04.
 RUN             for x in *.cfg; do \
                   sed -e 's,^\([^#].*\)\?cov,#&,g' < "$x" > "$x".tmp && \
                   mv -f "$x".tmp "$x"; \
