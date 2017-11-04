@@ -1035,7 +1035,6 @@ x #213 (model prelude)
     structure learning."
 - #218 Make there be one standard satisfactory library of covariance
   function makers.  See:
-  - examples/tutorial-2015/gpexample_plugin.py
   - demos/jsripl/gp_server.py
   - matrixGP/covariance.py and plugins
   - Making a bunch of them be built-in constants is asking for

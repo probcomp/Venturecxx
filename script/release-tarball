@@ -57,8 +57,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=CMakeFiles \
     --exclude=CMakeLists.txt \
     --exclude=Venturecxx/dist \
-    --exclude=Venturecxx/examples/tutorial-2015/gauss_plot.png \
-    --exclude=Venturecxx/examples/tutorial-2015/reg-test.csv \
     --exclude=Venturecxx/test/integration/models \
     --exclude=build \
     --exclude=cmake \
@@ -68,9 +66,6 @@ tar --create --verbose --gzip --file ../venture-$release.tgz --directory .. \
     --exclude=doc/**/*.out \
     --exclude=doc/**/*.pdf \
     --exclude=env.d \
-    --exclude=examples/tutorial-2015/tutorial \
-    --exclude=examples/tutorial-2015/tutorial-smoke \
-    --exclude=examples/tutorial-2015/vis-*.png \
     --exclude=htmlcov \
     --exclude=python/lib/parser/church_prime/grammar.out \
     --exclude=python/lib/parser/church_prime/grammar.sha256 \

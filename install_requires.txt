@@ -4,9 +4,8 @@ scipy>=0.13
 # Matplotlib is used in several places
 # - The testing plots in lib/plots/p_p_plot.py.
 # - plotf is matplotlib-backed via ggplot.
-# - The 2015 Venture tutorial also uses matplotlib directly.
-# - As do several examples in the examples/ tree (Brownian motion,
-#   crp_2d_demo, dpmm).
+# - Several examples in the examples/ tree (Brownian motion,
+#   crp_2d_demo, dpmm) use matplotlib directly.
 
 matplotlib>=1.3.1
 
@@ -27,8 +26,7 @@ patsy>=0.2 # Transitive through included ggplot
 #   method.  Don't know why it might be useful to have dataset
 #   accumulation without plotf, but if so, could get rid of the
 #   dependency by dropping the asPandas method.
-# - The pipits example also uses pandas directly, as does the 2015
-#   Venture tutorial.
+# - The pipits example also uses pandas directly.
 
 pandas>=0.14, <0.19 # 0.19 requires cython to build.  Don't know why pip decides to build pandas.
 

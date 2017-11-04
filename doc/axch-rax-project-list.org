@@ -40,7 +40,6 @@ weeks of February 2016.
       - Kills off or much eases all of
         - #396 (non-lockstep parallel execution)
         - #228 (parallel custom Markov chains)
-        - #227 (tutorial's custom markov chain failed horribly)
         - #563 (is a model one estimate or many?)
         - #564 (replicates of SMC runs)
         - #271 (confusing stochastic errors in multiparticle programs)
@@ -173,8 +172,7 @@ weeks of February 2016.
   - Test suite architecture rethink.
     - e.g., "assert this is supposed to asymptotically approach that
       -- do some compute -- did it?"; etc
-    - inference quality testing of e.g. the tutorial is not unrelated
-      to this
+    - inference quality testing is not unrelated to this
     - Not unrelated to the assertion architecture
 - Demos I could probably write
   - DPM of logistic a la Yutian (using gradients and applying to UCI
@@ -238,7 +236,7 @@ weeks of February 2016.
   - Issue #172 (Gain confidence that our dependency version bounds are
     correct)
   - Maybe automatic nightly builds of release
-    tarball+tutorial+reference (maybe even publish them to our CSAIL
+    tarball+reference (maybe even publish them to our CSAIL
     web space?  The latter would need a Kerberos principal for
     Jenkins)
   - Do we want to actually resurrect the challenge problem solutions,

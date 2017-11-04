@@ -1,5 +1,6 @@
 Date: Summer 2015
-Status: The extant tutorial was inspired by some of these thoughts
+Status: The tutorial that existed between 2015 and 2017 was inspired
+by some of these thoughts
 
 Candidate outline with gaps, 6/10/15
 ------------------------------------

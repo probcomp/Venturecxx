@@ -102,9 +102,6 @@ Getting Started
 
         venture -f <file>.vnts
 
--   You might like to go through the [Venture
-    tutorial](http://probcomp.csail.mit.edu/venture/latest/tutorial/)
-
 -   Venture as a library in Python:
 
         python -i -c 'from venture import shortcuts; ripl = shortcuts.Puma().make_ripl()'
@@ -129,7 +126,6 @@ The interesting parts of the code are:
 - The test suite lives under `test/`.
 - The actual entry points are in `script/`, notably `script/venture`.
 - Advanced example programs live in `examples/`.
-- The sources for the tutorial live in `examples/tutorial-2015`.
 - There are some developer tools available in `tool/`.
 - The Javascript client and web demos are in `demos/jsripl` (which
   corresponds to the erstwile VentureJSRIPL repository).
