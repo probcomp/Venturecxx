@@ -133,9 +133,8 @@ The interesting parts of the code are:
 - There are some developer tools available in `tool/`.
 - The Javascript client and web demos are in `demos/`, subdivided by
   architecture into `demos/jsripl` (which corresponds to the erstwile
-  VentureJSRIPL repository), `demos/elm` (an attempt to do demos in
-  Elm), and `demos/hill-curve-fitting`, which is a single demo that
-  exemplifies web sockets.
+  VentureJSRIPL repository), and `demos/elm` (an attempt to do demos in
+  Elm).
 - There are language-level benchmarks (and correctness tests) in the
   [VentureBenchmarksAndTests](https://github.com/probcomp/VentureBenchmarksAndTests)
   repository, but they may have bit rotted by now.
