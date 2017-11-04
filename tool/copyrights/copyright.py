@@ -148,8 +148,6 @@ def _comment_syntax(filename):
     return repeated_character_comment_syntax(';', 1, 3)
   elif extension in [".c", ".cxx", ".h", ".hpp", ".js"]:
     return repeated_character_comment_syntax('/', 2, 2)
-  elif extension in [".elm"]:
-    return repeated_character_comment_syntax('-', 2, 2)
   elif extension in [".png", ".jpg", ".gif"]:
     return "skip"
   return None

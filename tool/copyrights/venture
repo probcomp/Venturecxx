@@ -48,7 +48,7 @@ def venture_comment_syntax_convention(filename):
   elif os.path.basename(filename) in ["README", ".gitignore", ".gitmodules", ".gitattributes",
                                       "Makefile", ".png", ".gdbinit", "Dockerfile", "LICENSE"]:
     return "skip"
-  elif extension in [".h", ".cxx", ".c", ".hpp", ".ipy", ".py", ".sh", ".scm", ".el", ".js", ".elm"]:
+  elif extension in [".h", ".cxx", ".c", ".hpp", ".ipy", ".py", ".sh", ".scm", ".el", ".js"]:
     return None # Explicitly defer to the default to avoid trying to read the file
   elif os.path.isfile(filename):
     with open(filename) as f:

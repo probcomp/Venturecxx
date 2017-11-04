@@ -478,12 +478,6 @@ include base.cfg
 include check.sh
 include crashes-base.cfg
 include crashes.cfg
-include demos/elm/Canvas.elm
-include demos/elm/Demo.elm
-include demos/elm/Directive.elm
-include demos/elm/Ripl.elm
-include demos/elm/TestDemo.elm
-include demos/elm/Utils.elm
 include demos/jsripl/README.md
 include demos/jsripl/cluster_crp_mixture.html
 include demos/jsripl/cmvn_crp_mixture.html
