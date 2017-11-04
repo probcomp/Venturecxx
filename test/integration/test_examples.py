@@ -45,7 +45,6 @@ def testVentureExamplesPumaComplete():
   lda_cmd = "'do(model(2, 2), data(3, 4), mh(default, one, 500))'"
   for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test",
              "venture puma -f examples/lda.vnt -e " + lda_cmd,
-             "cd examples/ppaml-talk && venture puma -f pipits.vnts -e 'do_sweeps(5)'",
   ]:
     yield checkVentureExample, ex
 
