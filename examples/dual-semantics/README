@@ -1,8 +1,0 @@
-trickiness-*.vnts are three models that were used for the
-VentureScript poster at the 2014 probabilistic programming workshop.
-
-The purpose they serve is to illustrate the difference between the
-"concrete" and the "ideal" semantics of VentureScript programs, or
-more practically, that if you want good answers you have to ask for
-inference (and the answers you get depend on the inference you ask
-for).

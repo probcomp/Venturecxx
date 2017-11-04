@@ -59,31 +59,6 @@ def temp_directory(suffix):
     if temp_dir is not None:
       shutil.rmtree(temp_dir)
 
-def checkVentureExampleRude(command):
-  with temp_directory("plotpen") as plotpen:
-    assert s.call(command, cwd=plotpen, shell=True) == 0
-
-@gen_in_backend("none")
-@gen_needs_backend("lite")
-@gen_needs_ggplot
-def testVentureExamplesLitePlot():
-  my_dir = os.path.abspath(os.path.dirname(__file__))
-  for ex in ["venture lite -f %s/../../examples/dual-semantics/trickiness-ideal.vnts" % (my_dir,),
-  ]:
-    yield checkVentureExampleRude, ex
-
-@gen_in_backend("none")
-@gen_needs_backend("puma")
-@gen_needs_ggplot
-def testVentureExamplesPumaPlot():
-  my_dir = os.path.abspath(os.path.dirname(__file__))
-  root = os.path.dirname(os.path.dirname(my_dir))
-  for ex in [
-    "venture puma -f %s/examples/dual-semantics/trickiness-concrete.vnts" % (root,),
-    "venture puma -f %s/examples/dual-semantics/trickiness-concrete-2.vnts" % (root,),
-  ]:
-    yield checkVentureExampleRude, ex
-
 @contextlib.contextmanager
 def extra_module_path(path):
   root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))

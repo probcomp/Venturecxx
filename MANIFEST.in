@@ -543,10 +543,6 @@ include examples/ppaml-talk/README
 include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts
 include examples/ppaml-talk/pipits2.csv
-include examples/dual-semantics/README
-include examples/dual-semantics/trickiness-concrete-2.vnts
-include examples/dual-semantics/trickiness-concrete.vnts
-include examples/dual-semantics/trickiness-ideal.vnts
 include external/README
 include external/lemonade/COPYING
 include external/lemonade/README
