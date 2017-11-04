@@ -539,10 +539,6 @@ include examples/crp_2d_demo.py
 include examples/hmm.vnt
 include examples/hmm_plugin.py
 include examples/lda.vnt
-include examples/plotting/README
-include examples/plotting/bimodal.vnt
-include examples/plotting/dice_plot.vnt
-include examples/plotting/normal_plot.vnt
 include examples/ppaml-talk/README
 include examples/ppaml-talk/pipits.csv
 include examples/ppaml-talk/pipits.vnts

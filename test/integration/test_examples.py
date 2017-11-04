@@ -79,9 +79,6 @@ def testVentureExamplesPumaPlot():
   my_dir = os.path.abspath(os.path.dirname(__file__))
   root = os.path.dirname(os.path.dirname(my_dir))
   for ex in [
-    "venture puma -f %s/examples/plotting/bimodal.vnt" % (root,),
-    "venture puma -f %s/examples/plotting/dice_plot.vnt" % (root,),
-    "venture puma -f %s/examples/plotting/normal_plot.vnt" % (root,),
     "venture puma -f %s/examples/dual-semantics/trickiness-concrete.vnts" % (root,),
     "venture puma -f %s/examples/dual-semantics/trickiness-concrete-2.vnts" % (root,),
   ]:
