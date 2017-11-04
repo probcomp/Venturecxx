@@ -746,7 +746,6 @@ include script/jenkins/venture-in-docker.sh
 include script/transcript.css
 include script/vendoc
 include script/venture
-include script/venture-transcript
 include setup.py
 include test/README.md
 include test/__init__.py

@@ -7,7 +7,6 @@ weeks of February 2016.
       notebooks (possibly by not relying on iPython)
     - Ditto testing them
     - Ditto maintaining them (at least at the level of examples)
-    - Resource: venture-transcript
     - What are use cases, user stories, etc?  I will have a hard time
       without dogfooding this.
   - Tensorflow integration.
