@@ -21,12 +21,12 @@ requirements:
     - matplotlib >=1.4,<2.1
     - networkx
     - numpy >=1.8
-    - pandas >=0.14,<0.19
+    - pandas >=0.14,<0.19.*
     - patsy >=0.2
     - python 2.7.*
     - requests >=1.2
     - six 1.10.*
-    - scipy >=0.13,<=0.19
+    - scipy >=0.13,<=0.19.*
 
 test:
   source_files:
