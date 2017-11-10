@@ -36,8 +36,6 @@ test:
     - matplotlib 1.4.*
     - markdown2 # For building the tutorial with venture-transcript. TODO Is markdown2 a real dependency?
     - nose >=1.3
-    - nose-cov >=1.6
-    - nose-testconfig >=0.9
     - pexpect
     - pytest 2.5.1.*
     - python 2.7.*
