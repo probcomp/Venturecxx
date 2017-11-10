@@ -78,8 +78,8 @@ def discrete_p_p_plot(expectedRates, observed, ax=None, show=False):
     ax = plt.axes()
   _p_p_plot(discrete_cdf(expectedRates), observed, ax)
   (counts, expCounts) = count_occurrences(expectedRates, observed)
-  (chisq, pval) = stats.chisquare(counts, np.array(expCounts))
-  ax.set_title("One-sided Chi^2 stat: %s\np-value: %s" % (chisq, pval), loc='right')
+  (chisq, pval) = stats.power_divergence(counts, np.array(expCounts), lambda_="log-likelihood")
+  ax.set_title("One-sided Psi stat: %s nats\np-value: %s" % (chisq / 2.0, pval), loc='right')
   if show:
     plt.show()
   return ax
