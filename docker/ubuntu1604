@@ -3,7 +3,7 @@ MAINTAINER      MIT Probabilistic Computing Project
 
 RUN             apt-get update -qq \
                 && apt-get upgrade -qq \
-                && apt-get install -y \
+                && apt-get install -qq -y \
                     build-essential \
                     ccache \
                     git \
