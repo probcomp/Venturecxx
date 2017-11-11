@@ -1,0 +1,38 @@
+FROM            ubuntu:16.04
+MAINTAINER      MIT Probabilistic Computing Project
+
+RUN             apt-get update -qq \
+                && apt-get upgrade -qq \
+                && apt-get install -y \
+                    build-essential \
+                    ccache \
+                    git \
+                    libboost-all-dev \
+                    libgsl0-dev \
+                    python-flask \
+                    python-matplotlib \
+                    python-nose \
+                    python-nose-testconfig \
+                    python-numpy \
+                    python-pandas \
+                    python-pexpect \
+                    python-requests \
+                    python-scipy
+
+RUN             mkdir -p ~/.config/matplotlib
+RUN             echo 'backend: agg' > ~/.config/matplotlib/matplotlibrc
+
+ADD             . /Venturecxx
+WORKDIR         /Venturecxx
+
+# Provisional kludge to disable nose-cov business, which is not in
+# Ubuntu 16.04.
+RUN             for x in *.cfg; do \
+                  sed -e 's,^\([^#].*\)\?cov,#&,g' < "$x" > "$x".tmp && \
+                  mv -f "$x".tmp "$x"; \
+                done
+RUN             grep -H cov *.cfg
+
+RUN             ./check.sh
+RUN             python setup.py sdist
+RUN             python setup.py bdist
