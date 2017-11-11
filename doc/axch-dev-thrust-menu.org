@@ -315,9 +315,6 @@ Specific micro-benchmarks:
 - long complicated Markov chain as a Python program.  Stresses:
   - jumping in and out of inference program interpretation; parsing
 
-My C program for the normal-normal benchmark is on the hs-venture
-branch, in the backend/hs directory.
-
 Can use any surprises from profiling the test corpus for more inspiration.
 *** Project: Simplicity and performance: Flush the Args struct
 in a way that simplifies the SP interface
