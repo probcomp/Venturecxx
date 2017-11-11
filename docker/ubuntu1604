@@ -20,10 +20,7 @@ RUN             apt-get install -qq python-requests
 RUN             apt-get install -qq python-scipy
 
 RUN             mkdir -p ~/.config/matplotlib
-RUN             mkdir -p ~/.matplotlib
 RUN             echo 'backend: agg' > ~/.config/matplotlib/matplotlibrc
-RUN             echo 'backend: agg' > ~/.matplotlib/matplotlibrc
-RUN             echo 'backend: agg' > ~/.matplotlibrc
 
 ADD             . /Venturecxx
 WORKDIR         /Venturecxx
