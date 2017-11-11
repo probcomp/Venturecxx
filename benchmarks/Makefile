@@ -79,3 +79,6 @@ lite-normal-normal-rejection.prof: Makefile
 	     infer rejection(default, all, 3000);"
 	@cat $@.time
 	python -c 'import pstats; s = pstats.Stats("$@"); s.sort_stats("cumtime"); s.print_stats(0.1)'
+
+normal-normal-chain: normal-normal-chain.cxx
+	g++ -O2 $^ -lgsl -lgslcblas -o $@

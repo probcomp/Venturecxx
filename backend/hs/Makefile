@@ -6,6 +6,3 @@
 
 %.iface: dist/build/benchmark/benchmark-tmp/%.p_hi
 	ghc --show-iface $^ > $@
-
-normal-normal-chain: normal-normal-chain.cxx
-	g++ -O2 $^ -lgsl -lgslcblas -o $@
