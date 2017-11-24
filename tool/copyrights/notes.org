@@ -1,11 +1,10 @@
 Third-party software:
 - backend/new_cxx/inc/Eigen
-- external/ (plex, lemonade)
+- external/ (plex, lemonade, ggplot)
 - silva_mvn.h silva_mvn.cxx
-- auto-compilation.scm
-- match.scm
-- Solution for the copyright processing tool itself: Exclude it from
-  the release.  Then it doesn't matter that it's third-party.
+- The copyright processing tool itself is owned by Alexey Radul and
+  licensed to probcomp under GPL v3.  It's excluded from the
+  tarball-based releases, so doesn't affect that licensing.
 - demos/jsripl/vendor
 - backend/new_cxx/cmake/Modules/FindGSL.cmake clearly came from the Internet
 - backend/new_cxx/valgrind-python.supp was seeded from the Internet, but we modified it
