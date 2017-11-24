@@ -804,10 +804,6 @@ Partial Answer: Choosing i weighted according to p(v_i|x) will produce
 that term in the acceptance ratio, but will not eliminate the
 prod_{v_i} p(v_i|x) term.
 *** Project: Develop intro Venture curriculum for new team members (notes circa mid-late 2014)
-Success condition: I have a series of lectures I can give to new (and
-existing) team members about how Venture works, and why.
-- And I have taught Taylor, David, and Ben (maybe Vlad and anyone else?)
-
 Item: evaluation model of the modeling language
 - always in the stochasticity monad
 - always have a sample
@@ -1100,17 +1096,6 @@ Longer-term problem:
     different inference strategies.
 
 ----------------------------------------------------------------------
-
-Software engineering issues in matrixGP:
-
-Gradients anecdotally seemed to work, but there are not plausible
-tests checked in.
-
-No crash suite yet.
-
-Does not object conceptually to having me and Taylor refactor
-matrixGP.
-
 
 
 axch
@@ -1781,7 +1766,7 @@ second.  Of that:
       instructions, possibly with conditionals (that depend on which
       control paths are active)
 *** Activity: Cull Asana, fix/complete or record those bugs/projects
-*** Cleanup projects I could potentially have Taylor do
+*** Cleanup projects that are relatively farm-out-able
 Selection criterion: feature-driven, fix-driven, or refactoring-driven?
 
 Issue #294 (Unparser for VentureScript)
@@ -2906,9 +2891,6 @@ What actions are reasonable in these cases?
   + could also define "clear" in the console to just stop continuous
     inference and construct a new RIPL (perhaps replaying the
     commandline arguments?)
-*** Research: Try a RandomDB-style v1 embedded in Haskell
-as a guide to conceptual issues.
-- Maybe use Liquid Haskell to keep track of data structure invariants?
 *** Research: Replicate BLOG in Venture (or come up with another open universe story)
 Skeletal plan for replicating BLOG in Venture:
 - First, figure out what inference algorithm(s) the actual BLOG
@@ -2983,14 +2965,6 @@ this operation is implemented, it becomes possible to put in the
 constraint of an observation first and then regenerate with the
 constraint already in place, thereby not calling the simulator (and
 not needing the simulator to exist, etc).
-*** Back burner: Get traces to actually read values from each other's nodes
-(proper nesting).
-
-Feels like this requires rewriting (or at least re-understanding) the
-core interpreter.
-*** Back burner: Pluggable traces (RandomDB, void, replay, weighted-trace-set)
-looks like it requires rewriting (or at least re-understanding) the
-core interpreter
 *** Reference: system architectural thoughts circa early March 2015
 Interesting features the current Venture architecture has
 - The ability to report something about the current model distribution
@@ -3250,15 +3224,3 @@ Some architectural rationales:
 - Does Puma need to be tweaked to make DeterministicMakerAAALKernel
   not the default, but explicitly named by all the examples?  In Lite
   this is another subclass.
-*** Reference: Sysadmining notes
-around May 2015
-
-Probcomp 2 exhibited 
-dkms: removing: openafs 1.6.11.1 (3.8.0-37-generic) (x86_64)
-
-Something on the probcomp machines leaks linux image and linux header
-packages, which tend to make the /boot partition run out of disk space
-and wedge apt.
-
-The latest Jenkins requires Java 7.  I have marked Jenkins as hold on
-both probcomps that have it for now.

@@ -1,6 +1,9 @@
 Aggregated "master" list of projects, compiled over the first two
 weeks of February 2016.
 
+Todo list convention: A '+' bullet means "done"; a "x" bullet means
+"will not do (for the immediate goal)".
+
 - Capability acquisition projects
   - iVenture notebooks
     - Prereq: Solve the problems associated with versioning iPython
