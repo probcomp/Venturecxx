@@ -19,6 +19,8 @@
 
 import cPickle as pkl
 
+from collections import OrderedDict
+
 from venture.lite.exception import VentureValueError
 from venture.lite.sp import SPType
 from venture.lite.sp_help import binaryPred
@@ -155,8 +157,10 @@ registerBuiltinSP("set_difference", deterministic_typed(lambda l1, l2: [v for v 
     descr="set_difference returns the elements in the first list that do not appear in the second"))
 
 def mk_dict(*entries):
-  return dict([(e.lookup(v.VentureNumber(0)), e.lookup(v.VentureNumber(1)))
-               for e in entries])
+  return OrderedDict([
+    (e.lookup(v.VentureNumber(0)), e.lookup(v.VentureNumber(1)))
+    for e in entries
+  ])
 
 registerBuiltinSP("dict",
     deterministic_typed(mk_dict,
