@@ -52,17 +52,9 @@ def extrapolation_inlier_mse(ripl):
     learned_params = {'a': learned_a, 'b': learned_b}
     return mse(target, predictions), learned_params
 
-@pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
-@pytest.mark.parametrize('inf_prog_name', [
-    'single_site_mh',
-    'lbfgs_with_gibbs',
-    'loop_explicitly_over_random_choices',
-    'hamiltonian_monte_carlo_with_gibbs'
-])
-@pytest.mark.parametrize('inf_iterations', range(11,31))
-@pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
-@pytest.mark.parametrize('seed', range(1, 11))
-def test_run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
+
+
+def run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
     """Run individual benchmark with pytest"""
     ripl = shortcuts.make_lite_ripl()
 
@@ -96,3 +88,23 @@ def test_run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
     mkdir(path_results_dir)
     dump_json(result, path_results_dir + 'result-%s.json' % (time_stamp,))
 
+
+@pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
+@pytest.mark.parametrize('inf_prog_name', [
+    'single_site_mh',
+    'lbfgs_with_gibbs',
+    'loop_explicitly_over_random_choices',
+    'hamiltonian_monte_carlo_with_gibbs'
+])
+@pytest.mark.parametrize('inf_iterations', range(11,31))
+@pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
+@pytest.mark.parametrize('seed', range(1, 11))
+def test_experiment_linear_regression(
+        benchmark,
+        inf_prog_name,
+        inf_iterations,
+        metric,
+        seed
+    ):
+    """Benchmark linear regression with outliers."""
+    run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed)
