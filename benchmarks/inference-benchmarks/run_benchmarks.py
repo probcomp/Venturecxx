@@ -53,6 +53,42 @@ def extrapolation_inlier_mse(ripl):
     return mse(target, predictions), learned_params
 
 
+PROBABILITIES_FROM_REJECTION_SAMPLING = [
+        0.03750426,
+        0.03724874,
+        0.9444865,
+        0.02869364,
+        0.02840974,
+        0.02780407
+]
+
+def compute_kl(estimated_p, true_p):
+    if estimated_p == 0.:
+        print "warning"
+        estimated_p = 0.00000001
+    elif estimated_p == 1.:
+        estimated_p = 1 - 0.00000001
+    return - estimated_p * np.log(true_p/estimated_p)
+
+def get_KL(samples):
+    samples = np.asarray(samples)
+    estimated_probabilities = [
+        np.mean(samples[:,i])
+        for i in range(samples.shape[1])
+    ]
+    print estimated_probabilities
+    kl = 0.
+    for i in range(samples.shape[1]):
+        kl+= compute_kl(
+            estimated_probabilities[i],
+            PROBABILITIES_FROM_REJECTION_SAMPLING[i]
+        )
+    return kl, {'parameters': 'none-recorded'}
+
+def noisy_or_kl(ripl):
+    diseases = [ripl.evaluate('get_diseases()') for _ in range(100)]
+    return get_KL(diseases)
+
 
 def run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
     """Run individual benchmark with pytest"""
@@ -100,6 +136,27 @@ def run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
 @pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
 @pytest.mark.parametrize('seed', range(1, 11))
 def test_experiment_linear_regression(
+        benchmark,
+        inf_prog_name,
+        inf_iterations,
+        metric,
+        seed
+    ):
+    """Benchmark linear regression with outliers."""
+    run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed)
+
+@pytest.mark.parametrize('benchmark', ['noisy-or'])
+@pytest.mark.parametrize('inf_prog_name', [
+    'resimulation_mh',
+    'single_site_mh',
+    'single_site_gibbs',
+    #'particle_gibbs',
+    'block_gibbs',
+])
+@pytest.mark.parametrize('inf_iterations', [10])
+@pytest.mark.parametrize('metric', [noisy_or_kl])
+@pytest.mark.parametrize('seed', range(1, 11))
+def test_experiment_noisy_or(
         benchmark,
         inf_prog_name,
         inf_iterations,
