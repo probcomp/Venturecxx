@@ -54,8 +54,12 @@ ideal_prior_weight_mar.png
 
 # XXX no idea where the function caching is coming from.
 .cache
+# Ignore pytest artefacts
+**/.pytest_cache/
 
 # Ignore temporary notebooks -- because versioning with notebooks is a pain.
 **/temp-notebook*
 # Ignore jupyter checkpoints
 **/.ipynb_checkpoints/
+# Ignore results from inference program benchmark.
+benchmarks/inference-benchmarks/*/results
