@@ -19,6 +19,7 @@ from collections import OrderedDict
 import json
 import os
 
+import numpy as np
 
 def read_json(path):
     """Read json from file."""
@@ -52,3 +53,9 @@ def get_code_cells_from_notebook(ipynb_dict):
                 elif cell['source'][1].strip().startswith('// INFERENCE'):
                     inf_prog =''.join(cell['source'][2:])
     return model_prog, obs_prog, inf_prog
+
+
+def mse(target, predictions):
+    """Compute mean square error."""
+    error = target - predictions
+    return np.mean(error**2)
