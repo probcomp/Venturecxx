@@ -62,6 +62,7 @@ PROBABILITIES_FROM_REJECTION_SAMPLING = [
         0.02780407
 ]
 
+
 def compute_kl(estimated_p, true_p):
     if estimated_p == 0.:
         print "warning"
@@ -69,6 +70,7 @@ def compute_kl(estimated_p, true_p):
     elif estimated_p == 1.:
         estimated_p = 1 - 0.00000001
     return - estimated_p * np.log(true_p/estimated_p)
+
 
 def get_KL(samples):
     samples = np.asarray(samples)
@@ -85,34 +87,76 @@ def get_KL(samples):
         )
     return kl, {'parameters': 'none-recorded'}
 
+
 def noisy_or_kl(ripl):
     diseases = [ripl.evaluate('get_diseases()') for _ in range(100)]
     return get_KL(diseases)
 
 
-def run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
-    """Run individual benchmark with pytest"""
+def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
-
     ipynb_dict = read_json(benchmark + '/demo.ipynb')
     model_prog, obs_prog, inf_prog = get_code_cells_from_notebook(ipynb_dict)
     ripl.execute_program(model_prog)
     ripl.execute_program(inf_prog)
     ripl.execute_program(obs_prog)
     ripl.define('chosen_inf_prog', inf_prog_name)
+    return ripl, model_prog, obs_prog, inf_prog
 
+
+def run_for_n_iterations(ripl, inf_iterations):
+    """Run inference for n iterations."""
     start_time = time.time()
     for _ in range(inf_iterations):
         ripl.execute_program('chosen_inf_prog()')
-    time_elaspsed = time.time() - start_time
+    return time.time() - start_time
+
+
+def run_for_t_seconds(ripl, stopping_time):
+    """Run inference for t seconds."""
+    iterations = 0
+    start_time = time.time()
+    while True:
+        ripl.execute_program('chosen_inf_prog()')
+        time_elapsed = time.time() - start_time
+        if (time_elapsed > stopping_time + 1.) and (iterations==0):
+            stopping_time = 0.
+            break
+        elif time_elapsed > stopping_time:
+            iterations += 1
+            break
+        iterations += 1
+    return iterations
+
+
+def run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        inf_iterations=None,
+        stopping_time=None
+    ):
+    """Run individual benchmark with pytest"""
+    ripl, model_prog, obs_prog, inf_prog = prep_ripl(benchmark, inf_prog_name)
+
+    if (inf_iterations is not None) and (stopping_time is None):
+        timing = run_for_n_iterations(ripl, inf_iterations)
+        iterations = inf_iterations
+    elif (inf_iterations is None) and (stopping_time is not None):
+        iterations = run_for_t_seconds(ripl, stopping_time)
+        timing = stopping_time
+    else:
+        raise ValueError('')
+
     time_stamp = datetime.datetime.now().isoformat()
     measurement, learned_parameters = metric(ripl)
     result = OrderedDict([
         ('inf-prog-name'     , inf_prog_name),
-        ('iterations'        , inf_iterations),
+        ('iterations'        , iterations),
         ('metric'            , metric.__name__),
         ('seed'              , seed),
-        ('timing'            , time_elaspsed),
+        ('timing'            , timing),
         ('measurement'       , measurement),
         ('time-stamp'        , time_stamp),
         ('model-prog'        , model_prog),
@@ -132,10 +176,10 @@ def run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed):
     'loop_explicitly_over_random_choices',
     'hamiltonian_monte_carlo_with_gibbs'
 ])
-@pytest.mark.parametrize('inf_iterations', range(11,31))
+@pytest.mark.parametrize('inf_iterations', range(1, 2))
 @pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
-@pytest.mark.parametrize('seed', range(1, 11))
-def test_experiment_linear_regression(
+@pytest.mark.parametrize('seed', range(1, 12))
+def test_experiment_linear_regression_iterations(
         benchmark,
         inf_prog_name,
         inf_iterations,
@@ -143,7 +187,41 @@ def test_experiment_linear_regression(
         seed
     ):
     """Benchmark linear regression with outliers."""
-    run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed)
+    run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        inf_iterations=inf_iterations,
+    )
+
+
+@pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
+@pytest.mark.parametrize('inf_prog_name', [
+    'single_site_mh',
+    'lbfgs_with_gibbs',
+    'loop_explicitly_over_random_choices',
+    'hamiltonian_monte_carlo_with_gibbs'
+])
+@pytest.mark.parametrize('stopping_time', [1, 5, 10, 20])
+@pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
+@pytest.mark.parametrize('seed', range(1, 5))
+def test_experiment_linear_regression_timing(
+        benchmark,
+        inf_prog_name,
+        stopping_time,
+        metric,
+        seed
+    ):
+    """Benchmark linear regression with outliers."""
+    run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        stopping_time=stopping_time,
+    )
+
 
 @pytest.mark.parametrize('benchmark', ['noisy-or'])
 @pytest.mark.parametrize('inf_prog_name', [
@@ -155,13 +233,13 @@ def test_experiment_linear_regression(
 ])
 @pytest.mark.parametrize('inf_iterations', [10])
 @pytest.mark.parametrize('metric', [noisy_or_kl])
-@pytest.mark.parametrize('seed', range(1, 11))
+@pytest.mark.parametrize('seed', range(1, 2))
 def test_experiment_noisy_or(
         benchmark,
         inf_prog_name,
         inf_iterations,
         metric,
-        seed
+        seed,
     ):
     """Benchmark linear regression with outliers."""
     run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed)
