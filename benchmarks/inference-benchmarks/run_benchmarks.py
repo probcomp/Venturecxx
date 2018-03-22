@@ -247,15 +247,21 @@ def test_experiment_linear_regression_timing(
     #'particle_gibbs',
     'block_gibbs',
 ])
-@pytest.mark.parametrize('inf_iterations', [10])
+@pytest.mark.parametrize('stopping_time', [15, 30, 60, 120, 180])
 @pytest.mark.parametrize('metric', [noisy_or_kl])
-@pytest.mark.parametrize('seed', range(1, 2))
-def test_experiment_noisy_or(
+@pytest.mark.parametrize('seed', range(1, 10))
+def test_experiment_noisy_or_timing(
         benchmark,
         inf_prog_name,
-        inf_iterations,
+        stopping_time,
+        metric,
+        seed
+    ):
+    """Benchmark noisy-or."""
+    run_experiment(
+        benchmark,
+        inf_prog_name,
         metric,
         seed,
-    ):
-    """Benchmark linear regression with outliers."""
-    run_experiment(benchmark, inf_prog_name, inf_iterations, metric, seed)
+        stopping_time=stopping_time,
+    )
