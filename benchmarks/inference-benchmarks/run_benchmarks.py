@@ -88,9 +88,12 @@ def get_KL(samples):
         )
     return kl, {'parameters': 'none-recorded'}
 
+def take_MC_step(ripl):
+    ripl.execute_program('chosen_inf_prog()')
+    return ripl.evaluate('get_diseases()')
 
 def noisy_or_kl(ripl):
-    diseases = [ripl.evaluate('get_diseases()') for _ in range(100)]
+    diseases = [take_MC_step(ripl) for _ in range(100)]
     return get_KL(diseases)
 
 
