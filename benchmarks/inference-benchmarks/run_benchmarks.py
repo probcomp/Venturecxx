@@ -17,6 +17,7 @@
 
 from collections import OrderedDict
 import datetime
+import os
 import pytest
 import time
 
@@ -97,9 +98,15 @@ def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
     ipynb_dict = read_json(benchmark + '/demo.ipynb')
     model_prog, obs_prog, inf_prog = get_code_cells_from_notebook(ipynb_dict)
+    # XXX convention: plugins need to be called plugins.py.
+    if os.path.isfile(benchmark + '/plugins.py'):
+        ripl.load_plugin(benchmark + '/plugins.py')
     ripl.execute_program(model_prog)
     ripl.execute_program(inf_prog)
-    ripl.execute_program(obs_prog)
+    # XXX convention: SMC inf progs have to containt the string SMC. If the
+    # inference program is doing SMC, then data is not observed at this stage.
+    if 'SMC' not in inf_prog_name:
+        ripl.execute_program(obs_prog)
     ripl.define('chosen_inf_prog', inf_prog_name)
     return ripl, model_prog, obs_prog, inf_prog
 
@@ -116,11 +123,13 @@ def run_for_t_seconds(ripl, stopping_time):
     """Run inference for t seconds."""
     iterations = 0
     start_time = time.time()
+    if stopping_time == 0:
+        return 0
     while True:
         ripl.execute_program('chosen_inf_prog()')
         time_elapsed = time.time() - start_time
         if (time_elapsed > stopping_time + 1.) and (iterations==0):
-            stopping_time = 0.
+            iterations = None
             break
         elif time_elapsed > stopping_time:
             iterations += 1
@@ -149,24 +158,25 @@ def run_experiment(
     else:
         raise ValueError('')
 
-    time_stamp = datetime.datetime.now().isoformat()
-    measurement, learned_parameters = metric(ripl)
-    result = OrderedDict([
-        ('inf-prog-name'     , inf_prog_name),
-        ('iterations'        , iterations),
-        ('metric'            , metric.__name__),
-        ('seed'              , seed),
-        ('timing'            , timing),
-        ('measurement'       , measurement),
-        ('time-stamp'        , time_stamp),
-        ('model-prog'        , model_prog),
-        ('obs-prog'          , obs_prog),
-        ('inf-prog'          , inf_prog),
-        ('learned-parameters', learned_parameters),
-    ])
-    path_results_dir = benchmark + '/results/'
-    mkdir(path_results_dir)
-    dump_json(result, path_results_dir + 'result-%s.json' % (time_stamp,))
+    if iterations is not None:
+        time_stamp = datetime.datetime.now().isoformat()
+        measurement, learned_parameters = metric(ripl)
+        result = OrderedDict([
+            ('inf-prog-name'     , inf_prog_name),
+            ('iterations'        , iterations),
+            ('metric'            , metric.__name__),
+            ('seed'              , seed),
+            ('timing'            , timing),
+            ('measurement'       , measurement),
+            ('time-stamp'        , time_stamp),
+            ('model-prog'        , model_prog),
+            ('obs-prog'          , obs_prog),
+            ('inf-prog'          , inf_prog),
+            ('learned-parameters', learned_parameters),
+        ])
+        path_results_dir = benchmark + '/results/'
+        mkdir(path_results_dir)
+        dump_json(result, path_results_dir + 'result-%s.json' % (time_stamp,))
 
 
 @pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
@@ -201,11 +211,14 @@ def test_experiment_linear_regression_iterations(
     'single_site_mh',
     'lbfgs_with_gibbs',
     'loop_explicitly_over_random_choices',
-    'hamiltonian_monte_carlo_with_gibbs'
+    'hamiltonian_monte_carlo_with_gibbs',
+    'SMC_SIR',
+    'SMC_HMC_rejuvenation',
+    'SMC_gradient_rejuvenation',
 ])
-@pytest.mark.parametrize('stopping_time', [1, 5, 10, 20])
+@pytest.mark.parametrize('stopping_time', [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 50, 100, 200])
 @pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
-@pytest.mark.parametrize('seed', range(1, 5))
+@pytest.mark.parametrize('seed', range(1, 51))
 def test_experiment_linear_regression_timing(
         benchmark,
         inf_prog_name,
