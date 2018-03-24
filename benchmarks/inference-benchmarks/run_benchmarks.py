@@ -96,6 +96,17 @@ def noisy_or_kl(ripl):
     diseases = [take_MC_step(ripl) for _ in range(100)]
     return get_KL(diseases)
 
+def MSE_airline(ripl):
+    ripl.execute_program('''
+        define gp_posterior_predictive = mapv(
+            (_) -> {run(sample(gp(${test_input})))},
+            arange(number_of_curves)
+        );
+    ''')
+    mse = ripl.evaluate('''
+        MSE(test_output, get_predictive_mean(gp_posterior_predictive))
+    ''')
+    return mse, {'parameters': 'none-recorded'}
 
 def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
@@ -251,6 +262,33 @@ def test_experiment_linear_regression_timing(
 @pytest.mark.parametrize('metric', [noisy_or_kl])
 @pytest.mark.parametrize('seed', range(1, 10))
 def test_experiment_noisy_or_timing(
+        benchmark,
+        inf_prog_name,
+        stopping_time,
+        metric,
+        seed
+    ):
+    """Benchmark noisy-or."""
+    run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        stopping_time=stopping_time,
+    )
+
+
+####### GP structure learning ########
+@pytest.mark.parametrize('benchmark', ['gp-structure-learning'])
+@pytest.mark.parametrize('inf_prog_name', [
+    'resimulation_mh',
+    'single_site_mh',
+])
+#@pytest.mark.parametrize('stopping_time', 60 * np.array([0, 2, 5, 10, 15, 30, 45, 60]))
+@pytest.mark.parametrize('stopping_time', 60 * np.array([75, 90]))
+@pytest.mark.parametrize('metric', [MSE_airline])
+@pytest.mark.parametrize('seed', range(1, 51))
+def test_experiment_gp_structure_learning_timing(
         benchmark,
         inf_prog_name,
         stopping_time,
