@@ -201,14 +201,11 @@ def run_experiment(
 
 @pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
 @pytest.mark.parametrize('inf_prog_name', [
-    'single_site_mh',
-    'lbfgs_with_gibbs',
-    'loop_explicitly_over_random_choices',
-    'hamiltonian_monte_carlo_with_gibbs'
+    'SMC_SIR',
 ])
-@pytest.mark.parametrize('inf_iterations', range(1, 2))
+@pytest.mark.parametrize('inf_iterations', [2])
 @pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
-@pytest.mark.parametrize('seed', range(1, 12))
+@pytest.mark.parametrize('seed', range(1, 2))
 def test_experiment_linear_regression_iterations(
         benchmark,
         inf_prog_name,
