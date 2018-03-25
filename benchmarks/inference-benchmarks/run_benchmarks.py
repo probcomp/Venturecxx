@@ -70,8 +70,11 @@ def compute_kl(estimated_p, true_p):
         estimated_p = 0.00000001
     elif estimated_p == 1.:
         estimated_p = 1 - 0.00000001
-    return - estimated_p * np.log(true_p/estimated_p)
-
+    #return - estimated_p * np.log(true_p/estimated_p)
+    not_estimated_p = 1 - estimated_p
+    not_true_p = 1 - true_p
+    return true_p * (np.log(true_p) - np.log(estimated_p)) +\
+        not_true_p * (np.log(not_true_p) - np.log(not_estimated_p))
 
 def get_KL(samples):
     samples = np.asarray(samples)
@@ -79,14 +82,14 @@ def get_KL(samples):
         np.mean(samples[:,i])
         for i in range(samples.shape[1])
     ]
-    print estimated_probabilities
     kl = 0.
     for i in range(samples.shape[1]):
         kl+= compute_kl(
             estimated_probabilities[i],
             PROBABILITIES_FROM_REJECTION_SAMPLING[i]
         )
-    return kl, {'parameters': 'none-recorded'}
+    return kl, {'Estimated-probabilities': estimated_probabilities}
+
 
 def take_MC_step(ripl):
     ripl.execute_program('chosen_inf_prog()')
