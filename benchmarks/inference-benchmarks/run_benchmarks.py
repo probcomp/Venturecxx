@@ -287,8 +287,9 @@ def test_experiment_noisy_or_timing(
     'resimulation_mh',
     'single_site_mh',
 ])
-#@pytest.mark.parametrize('stopping_time', 60 * np.array([0, 2, 5, 10, 15, 30, 45, 60]))
-@pytest.mark.parametrize('stopping_time', 60 * np.array([75, 90]))
+@pytest.mark.parametrize('stopping_time',
+    60 * np.array([0, 2, 5, 10, 15, 30, 45, 60, 75, 90])
+)
 @pytest.mark.parametrize('metric', [MSE_airline])
 @pytest.mark.parametrize('seed', range(1, 51))
 def test_experiment_gp_structure_learning_timing(
