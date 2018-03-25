@@ -122,7 +122,10 @@ def prep_ripl(benchmark, inf_prog_name):
     ripl.execute_program(inf_prog)
     # XXX convention: SMC inf progs have to containt the string SMC. If the
     # inference program is doing SMC, then data is not observed at this stage.
-    if 'SMC' not in inf_prog_name:
+    if 'SMC' in inf_prog_name:
+        ripl.execute_program('resample(number_particles);')
+        ripl.execute_program('reset_to_prior')
+    else:
         ripl.execute_program(obs_prog)
     ripl.define('chosen_inf_prog', inf_prog_name)
     return ripl, model_prog, obs_prog, inf_prog
