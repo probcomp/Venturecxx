@@ -253,17 +253,17 @@ def test_experiment_linear_regression_timing(
     )
 
 
+####### noisy-or ########
 @pytest.mark.parametrize('benchmark', ['noisy-or'])
 @pytest.mark.parametrize('inf_prog_name', [
     'resimulation_mh',
     'single_site_mh',
     'single_site_gibbs',
-    #'particle_gibbs',
     'block_gibbs',
 ])
-@pytest.mark.parametrize('stopping_time', [15, 30, 60, 120, 180])
+@pytest.mark.parametrize('stopping_time', [0, 30, 60, 120])
 @pytest.mark.parametrize('metric', [noisy_or_kl])
-@pytest.mark.parametrize('seed', range(1, 10))
+@pytest.mark.parametrize('seed', range(1, 51))
 def test_experiment_noisy_or_timing(
         benchmark,
         inf_prog_name,
