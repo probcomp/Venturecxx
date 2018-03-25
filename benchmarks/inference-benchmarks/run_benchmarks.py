@@ -111,6 +111,34 @@ def MSE_airline(ripl):
     ''')
     return mse, {'parameters': 'none-recorded'}
 
+
+def garch_held_out_likelihood(ripl):
+    """Compute held_out_likelihood."""
+    #Get current index.
+
+
+    # Load training data to assess the current index.
+    n = np.loadtxt('garch/training_data.csv').shape[0]
+    current_index = n
+    # Load held out data
+    test_data = np.loadtxt('garch/test_data.csv')
+    held_out_likelihood = 0
+    for test_datum in test_data:
+        held_out_likelihood += ripl.observe(
+            'epsilon(%d)' % (current_index,),
+            test_datum
+        )[0]
+        current_index += 1
+    recorded_parameters = {
+        'n-training'        : n,
+        'n-test'            : current_index,
+        'a0'                : ripl.sample('alpha_0'),
+        'a1'                : ripl.sample('alpha_1'),
+        'b1'                : ripl.sample('beta_1'),
+        'sigma_squared_0'   : ripl.sample('sigma_squared_0'),
+    }
+    return held_out_likelihood, recorded_parameters
+
 def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
     ipynb_dict = read_json(benchmark + '/demo.ipynb')
@@ -301,6 +329,36 @@ def test_experiment_gp_structure_learning_timing(
         seed
     ):
     """Benchmark GP structure learning."""
+    run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        stopping_time=stopping_time,
+    )
+
+
+####### GARCH ########
+@pytest.mark.parametrize('benchmark', ['garch'])
+@pytest.mark.parametrize('inf_prog_name', [
+    'single_site_mh',
+    'resimulation_mh',
+])
+@pytest.mark.parametrize('stopping_time',
+    #np.array([0])
+    np.array([0, 15, 30, 45, 60])
+)
+@pytest.mark.parametrize('metric', [garch_held_out_likelihood])
+#@pytest.mark.parametrize('seed', range(1, 2))
+@pytest.mark.parametrize('seed', range(1, 51))
+def test_experiment_garch_timing(
+        benchmark,
+        inf_prog_name,
+        stopping_time,
+        metric,
+        seed
+    ):
+    """Benchmark GARCH model."""
     run_experiment(
         benchmark,
         inf_prog_name,
