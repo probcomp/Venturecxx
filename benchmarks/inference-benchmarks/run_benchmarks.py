@@ -300,7 +300,7 @@ def test_experiment_gp_structure_learning_timing(
         metric,
         seed
     ):
-    """Benchmark noisy-or."""
+    """Benchmark GP structure learning."""
     run_experiment(
         benchmark,
         inf_prog_name,
