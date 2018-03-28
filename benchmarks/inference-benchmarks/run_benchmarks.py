@@ -351,11 +351,9 @@ def test_experiment_gp_structure_learning_timing(
     'resimulation_mh',
 ])
 @pytest.mark.parametrize('stopping_time',
-    #np.array([0, 15, 30, 45, 60])
-    60 * np.array([2, 5, 10, 15])
+    np.array([0, 15, 30, 45, 60])
 )
 @pytest.mark.parametrize('metric', [garch_held_out_likelihood])
-#@pytest.mark.parametrize('seed', range(1, 2))
 @pytest.mark.parametrize('seed', range(1, 51))
 def test_experiment_garch_timing(
         benchmark,
