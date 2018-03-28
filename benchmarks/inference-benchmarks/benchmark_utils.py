@@ -59,3 +59,10 @@ def mse(target, predictions):
     """Compute mean square error."""
     error = target - predictions
     return np.mean(error**2)
+
+def violates_pattern(result, pattern):
+    """Parse a results, check if it violates some assumptions."""
+    for key, value in pattern.iteritems():
+        if result[key] != value:
+            return True
+    return False
