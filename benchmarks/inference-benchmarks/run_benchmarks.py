@@ -150,10 +150,7 @@ def prep_ripl(benchmark, inf_prog_name):
     ripl.execute_program(inf_prog)
     # XXX convention: SMC inf progs have to containt the string SMC. If the
     # inference program is doing SMC, then data is not observed at this stage.
-    if 'SMC' in inf_prog_name:
-        ripl.execute_program('resample(number_particles);')
-        ripl.execute_program('reset_to_prior')
-    else:
+    if 'SMC' not in inf_prog_name:
         ripl.execute_program(obs_prog)
     ripl.define('chosen_inf_prog', inf_prog_name)
     return ripl, model_prog, obs_prog, inf_prog
@@ -167,12 +164,18 @@ def run_for_n_iterations(ripl, inf_iterations):
     return time.time() - start_time
 
 
-def run_for_t_seconds(ripl, stopping_time):
+def run_for_t_seconds(ripl, stopping_time, inf_prog_name):
     """Run inference for t seconds."""
     iterations = 0
     start_time = time.time()
     if stopping_time == 0:
         return 0
+    if 'SMC' in inf_prog_name:
+        ripl.execute_program('chosen_inf_prog()')
+        time_elapsed = time.time() - start_time
+        ripl.define('chosen_inf_prog', 'rejuvenation')
+        if (time_elapsed > stopping_time + 1.):
+            return None
     while True:
         ripl.execute_program('chosen_inf_prog()')
         time_elapsed = time.time() - start_time
@@ -201,7 +204,7 @@ def run_experiment(
         timing = run_for_n_iterations(ripl, inf_iterations)
         iterations = inf_iterations
     elif (inf_iterations is None) and (stopping_time is not None):
-        iterations = run_for_t_seconds(ripl, stopping_time)
+        iterations = run_for_t_seconds(ripl, stopping_time, inf_prog_name)
         timing = stopping_time
     else:
         raise ValueError('')
@@ -258,9 +261,10 @@ def test_experiment_linear_regression_iterations(
     'lbfgs_with_gibbs',
     'loop_explicitly_over_random_choices',
     'hamiltonian_monte_carlo_with_gibbs',
-    #'SMC_SIR',
-    #'SMC_HMC_rejuvenation',
-    #'SMC_gradient_rejuvenation',
+    #'SMC_single_site_single',
+    #'SMC_single_site_interleaved',
+    'SMC_single_site_interleaved2',
+    #'SMC_HMC_single',
 ])
 @pytest.mark.parametrize('stopping_time', [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 50, 100, 200])
 @pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
@@ -289,8 +293,10 @@ def test_experiment_linear_regression_timing(
     'single_site_mh',
     'single_site_gibbs',
     'block_gibbs',
+    'SMC_single_site_mh_ordered',
+    'SMC_single_site_mh_unordered'
 ])
-@pytest.mark.parametrize('stopping_time', [0, 30, 60, 120])
+@pytest.mark.parametrize('stopping_time', [0, 15, 30, 45, 60])
 @pytest.mark.parametrize('metric', [noisy_or_kl])
 @pytest.mark.parametrize('seed', range(1, 51))
 def test_experiment_noisy_or_timing(
@@ -345,8 +351,8 @@ def test_experiment_gp_structure_learning_timing(
     'resimulation_mh',
 ])
 @pytest.mark.parametrize('stopping_time',
-    #np.array([0])
-    np.array([0, 15, 30, 45, 60])
+    #np.array([0, 15, 30, 45, 60])
+    60 * np.array([2, 5, 10, 15])
 )
 @pytest.mark.parametrize('metric', [garch_held_out_likelihood])
 #@pytest.mark.parametrize('seed', range(1, 2))
