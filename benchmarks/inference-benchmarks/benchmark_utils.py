@@ -66,3 +66,13 @@ def violates_pattern(result, pattern):
         if result[key] != value:
             return True
     return False
+
+def get_traces_at_time(inf_prog, time, data):
+    indeces = []
+    values = []
+    for i,datum in enumerate(data):
+        if datum['timing'] == time:
+            if datum['inf-prog-name'] == inf_prog:
+                values.append(datum['measurement'])
+                indeces.append(i)
+    return values, indeces
