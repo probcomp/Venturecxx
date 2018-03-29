@@ -139,6 +139,22 @@ def garch_held_out_likelihood(ripl):
     }
     return held_out_likelihood, recorded_parameters
 
+def get_classification_accuracy(ripl, n_samples=100):
+    results = []
+    test_xs = ripl.evaluate('test_xs')
+    for i in range(len(test_xs)):
+        samples = []
+        for _ in range(n_samples):
+            ripl.execute_program('define test_image = test_xs[%d]' % (i,))
+            ripl.execute_program(
+                'define current_sample = sample(classifier(${test_image}))'
+            )
+            sample = ripl.evaluate('current_sample')
+            samples.append(sample)
+        label = ripl.evaluate('test_labels[%d]' % (i,))
+        results.append(1 - np.abs(np.round(np.mean(samples)) - label))
+    return np.mean(results)
+
 def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
     ipynb_dict = read_json(benchmark + '/demo.ipynb')
@@ -363,6 +379,35 @@ def test_experiment_garch_timing(
         seed
     ):
     """Benchmark GARCH model."""
+    run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        stopping_time=stopping_time,
+    )
+
+
+####### Logistic regression ########
+@pytest.mark.parametrize('benchmark', ['logistic-regression'])
+@pytest.mark.parametrize('inf_prog_name', [
+    #'single_site_mh',
+    'resimulation_mh',
+])
+@pytest.mark.parametrize('stopping_time',
+    np.array([0, 1])
+)
+@pytest.mark.parametrize('metric', [get_classification_accuracy])
+@pytest.mark.parametrize('seed', range(1, 2))
+# XXX: not tested/debugged.
+def test_experiment_garch_timing(
+        benchmark,
+        inf_prog_name,
+        stopping_time,
+        metric,
+        seed
+    ):
+    """Benchmark logistic regression model."""
     run_experiment(
         benchmark,
         inf_prog_name,

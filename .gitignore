@@ -63,3 +63,6 @@ ideal_prior_weight_mar.png
 **/.ipynb_checkpoints/
 # Ignore results from inference program benchmark.
 benchmarks/inference-benchmarks/*/results
+
+# Ignore MNIST data (because I am pretty sure we 're not allowed to publish it...
+benchmarks/inference-benchmarks/logistic-regression/mnist/
