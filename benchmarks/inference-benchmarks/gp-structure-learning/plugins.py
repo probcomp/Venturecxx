@@ -328,3 +328,16 @@ def __venture_start__(ripl):
             min_req_args=2
         )
     )
+    ripl.bind_foreign_inference_sp(
+        'subarray',
+        deterministic_typed(
+            lambda a, i: a[0:int(i)],
+            [
+                vt.ArrayUnboxedType(vt.NumberType()),
+                vt.NumberType(),
+                vt.NumberType(),
+            ],
+            vt.ArrayUnboxedType(vt.NumberType()),
+            min_req_args=1
+        )
+    )
