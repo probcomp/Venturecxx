@@ -337,6 +337,7 @@ def test_experiment_noisy_or_timing(
 @pytest.mark.parametrize('inf_prog_name', [
     'resimulation_mh',
     'single_site_mh',
+    'SMC_single_site',
 ])
 @pytest.mark.parametrize('stopping_time',
     60 * np.array([0, 2, 5, 10, 15, 30, 45, 60, 75, 90])
