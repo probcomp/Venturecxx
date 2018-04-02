@@ -285,14 +285,10 @@ def test_experiment_linear_regression_iterations(
 ####### Linear regresssion with outliers ########
 @pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
 @pytest.mark.parametrize('inf_prog_name', [
+    'resimulation_mh',
     'single_site_mh',
     'lbfgs_with_gibbs',
-    'loop_explicitly_over_random_choices',
     'hamiltonian_monte_carlo_with_gibbs',
-    #'SMC_single_site_single',
-    #'SMC_single_site_interleaved',
-    'SMC_single_site_interleaved2',
-    #'SMC_HMC_single',
 ])
 @pytest.mark.parametrize('stopping_time', [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 50, 100, 200])
 @pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
