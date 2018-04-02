@@ -142,18 +142,30 @@ def garch_held_out_likelihood(ripl):
 def get_classification_accuracy(ripl, n_samples=100):
     results = []
     test_xs = ripl.evaluate('test_xs')
+    recorded_parameters = {
+        'image-id'            : [],
+        'class-p'             : [],
+        'true-label'          : [],
+        'predicted-class'     : [],
+        'individual-accuracy' : [],
+    }
     for i in range(len(test_xs)):
-        samples = []
-        for _ in range(n_samples):
-            ripl.execute_program('define test_image = test_xs[%d]' % (i,))
-            ripl.execute_program(
-                'define current_sample = sample(classifier(${test_image}))'
-            )
-            sample = ripl.evaluate('current_sample')
-            samples.append(sample)
-        label = ripl.evaluate('test_labels[%d]' % (i,))
-        results.append(1 - np.abs(np.round(np.mean(samples)) - label))
-    return np.mean(results)
+        ripl.execute_program('define test_image = test_xs[%d]' % (i,))
+        ripl.execute_program(
+            'define current_class_p = sample(classifification_probability(${test_image}))'
+        )
+        class_p = ripl.evaluate('current_class_p')
+        label   = ripl.evaluate('test_labels[%d]' % (i,))
+        predicted_class = np.round(class_p)
+        recorded_parameters['image-id'].append(i)
+        recorded_parameters['class-p'].append(class_p)
+        recorded_parameters['true-label'].append(label)
+        recorded_parameters['predicted-class'].append(predicted_class)
+        recorded_parameters['individual-accuracy'].append(
+            1 - np.abs(predicted_class - label)
+        )
+    return np.mean(recorded_parameters['individual-accuracy']),\
+        recorded_parameters
 
 def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
@@ -392,16 +404,16 @@ def test_experiment_garch_timing(
 ####### Logistic regression ########
 @pytest.mark.parametrize('benchmark', ['logistic-regression'])
 @pytest.mark.parametrize('inf_prog_name', [
-    #'single_site_mh',
+    'single_site_mh',
     'resimulation_mh',
 ])
 @pytest.mark.parametrize('stopping_time',
-    np.array([0, 1])
+    60 * np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20])
 )
 @pytest.mark.parametrize('metric', [get_classification_accuracy])
-@pytest.mark.parametrize('seed', range(1, 2))
+@pytest.mark.parametrize('seed', range(1, 51))
 # XXX: not tested/debugged.
-def test_experiment_garch_timing(
+def test_experiment_log_reg_timing(
         benchmark,
         inf_prog_name,
         stopping_time,
