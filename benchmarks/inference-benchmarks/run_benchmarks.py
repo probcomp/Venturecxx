@@ -167,6 +167,24 @@ def get_classification_accuracy(ripl, n_samples=100):
     return np.mean(recorded_parameters['individual-accuracy']),\
         recorded_parameters
 
+
+def get_held_out_likelihood(ripl):
+    n_training = ripl.evaluate('size(training_data)')
+    test_data = np.loadtxt('dpmm/test_data.csv')
+    mc_samples = 100
+    ll_estimate = 0
+    for _ in range(mc_samples):
+        for i, value in enumerate(test_data):
+            weight = ripl.observe(
+                'component(z(atom(%d)), 1)()' % (i + n_training,),
+                value,
+                'label'
+            )
+            forgetting_weight = ripl.forget('label')
+            ll_estimate += weight[0]
+    return ll_estimate/mc_samples, {'number-mc-samples-ll': mc_samples}
+
+
 def prep_ripl(benchmark, inf_prog_name):
     ripl = shortcuts.make_lite_ripl()
     ipynb_dict = read_json(benchmark + '/demo.ipynb')
@@ -408,7 +426,6 @@ def test_experiment_garch_timing(
 )
 @pytest.mark.parametrize('metric', [get_classification_accuracy])
 @pytest.mark.parametrize('seed', range(1, 51))
-# XXX: not tested/debugged.
 def test_experiment_log_reg_timing(
         benchmark,
         inf_prog_name,
@@ -417,6 +434,35 @@ def test_experiment_log_reg_timing(
         seed
     ):
     """Benchmark logistic regression model."""
+    run_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        stopping_time=stopping_time,
+    )
+
+
+####### DPMM ########
+@pytest.mark.parametrize('benchmark', ['dpmm'])
+@pytest.mark.parametrize('inf_prog_name', [
+    'single_site_mh',
+    'resimulation_mh',
+])
+@pytest.mark.parametrize('stopping_time',
+    #60 * np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    [0, 5, 10, 15, 20, 25, 30]
+)
+@pytest.mark.parametrize('metric', [get_held_out_likelihood])
+@pytest.mark.parametrize('seed', range(1, 51))
+def test_experiment_dpmm_timing(
+        benchmark,
+        inf_prog_name,
+        stopping_time,
+        metric,
+        seed
+    ):
+    """Benchmark Dirichlet process mixture model."""
     run_experiment(
         benchmark,
         inf_prog_name,
