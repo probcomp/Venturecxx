@@ -167,22 +167,36 @@ def get_classification_accuracy(ripl, n_samples=100):
     return np.mean(recorded_parameters['individual-accuracy']),\
         recorded_parameters
 
+def get_all_existing_cluster_assignments(ripl):
+    return np.unique([
+        ripl.sample('z(atom(%d))' % (i,))
+        for i in range(ripl.evaluate('size(training_data)'))
+    ])
 
 def get_held_out_likelihood(ripl):
     n_training = ripl.evaluate('size(training_data)')
     test_data = np.loadtxt('dpmm/test_data.csv')
-    mc_samples = 100
-    ll_estimate = 0
-    for _ in range(mc_samples):
-        for i, value in enumerate(test_data):
-            weight = ripl.observe(
-                'component(z(atom(%d)), 1)()' % (i + n_training,),
-                value,
-                'label'
+    existing_clusters = get_all_existing_cluster_assignments(ripl)
+    ll = 0
+    for i, value in enumerate(test_data):
+        p_datapoint  = 0
+        ripl.observe(
+            'obs_func(%d)' % (i + n_training,),
+            value,
+            'label'
+        )
+        for cluster in range(existing_clusters.shape[0]):
+            ripl.evaluate(
+                'set_value_at2(quote(cluster_assignment), atom(%d), atom(%d))' \
+                    % (i + n_training, cluster,)
             )
-            forgetting_weight = ripl.forget('label')
-            ll_estimate += weight[0]
-    return ll_estimate/mc_samples, {'number-mc-samples-ll': mc_samples}
+            log_p = ripl.evaluate(
+                'log_joint_at(quote(component), %d)' % (i + n_training, )
+            )[0]
+            p_datapoint += np.exp(log_p)
+        ripl.forget('label')
+        ll =+ np.log(p_datapoint)
+    return ll, {'existing-clusters': existing_clusters.tolist()}
 
 
 def prep_ripl(benchmark, inf_prog_name):
@@ -450,8 +464,7 @@ def test_experiment_log_reg_timing(
     'resimulation_mh',
 ])
 @pytest.mark.parametrize('stopping_time',
-    #60 * np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-    [0, 5, 10, 15, 20, 25, 30]
+    np.array([0, 3, 5, 10, 15, 30, 45, 60, 150, 120, 180, 300, 600, 900])
 )
 @pytest.mark.parametrize('metric', [get_held_out_likelihood])
 @pytest.mark.parametrize('seed', range(1, 51))

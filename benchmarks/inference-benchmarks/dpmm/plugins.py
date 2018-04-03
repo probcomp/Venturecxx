@@ -23,8 +23,8 @@ def plot_data(data, label, title='', color='orange'):
     ax.set_ylabel('P(X)')
     fig.set_size_inches(3, 2)
     ax.set_title(title)
-    ax.set_xlim(-12, 13)
-    ax.set_ylim(0, 0.25)
+    ax.set_xlim(-1, 13)
+    ax.set_ylim(0, 0.5)
     return fig, ax
 
 def load_csv(path):
