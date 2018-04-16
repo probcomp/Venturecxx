@@ -464,7 +464,7 @@ def test_experiment_log_reg_timing(
     'resimulation_mh',
 ])
 @pytest.mark.parametrize('stopping_time',
-    np.array([0, 3, 5, 10, 15, 30, 45, 60, 150, 120, 180, 300, 600, 900])
+    [0, 1, 3, 5, 10, 15, 30, 45, 60, 150, 120, 180, 300, 600, 900]
 )
 @pytest.mark.parametrize('metric', [get_held_out_likelihood])
 @pytest.mark.parametrize('seed', range(1, 51))
