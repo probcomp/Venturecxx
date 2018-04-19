@@ -16,6 +16,7 @@
 import os
 
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 import numpy as np
 
 import venture.lite.types as vt
@@ -110,14 +111,17 @@ def plot_marginal(probabilities, title):
     # Rotate array; needed for imshow
     grid = np.rot90(probabilities)
     fig, ax = plt.subplots()
-    cax = ax.imshow(grid, cmap='RdBu_r', interpolation='nearest')
+    cax = ax.imshow(grid, cmap='Greys', interpolation='nearest')
     ax.set_xticks(range(grid.shape[1]))
     ax.set_yticklabels(
         reversed([''] + ['State = %d' % i for i in range(5)] + [''])
     )
     ax.set_xlabel('Time t')
     ax.set_title(title)
-    plt.colorbar(cax,fraction=0.026, pad=0.04)
+    cb = plt.colorbar(cax,fraction=0.0238, pad=0.04)
+    tick_locator = ticker.MaxNLocator(nbins=4)
+    cb.locator = tick_locator
+    cb.update_ticks()
     return fig, ax
 
 def get_grid(data):
