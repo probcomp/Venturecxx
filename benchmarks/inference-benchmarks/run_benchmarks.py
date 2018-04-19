@@ -109,26 +109,40 @@ def MSE_airline(ripl):
     mse = ripl.evaluate('''
         MSE(test_output, get_predictive_mean(gp_posterior_predictive))
     ''')
-    return mse, {'parameters': 'none-recorded'}
+    ripl.execute_program('''
+    define x_input = linspace(0.0001, 13, 100);
+    define gp_posterior_predictive = mapv(
+        (_) -> {run(sample(gp(${x_input})))},
+        arange(number_of_curves)
+    );
+    ''')
+    source = ripl.sample('source')
+    posterior_predictive = ripl.evaluate('gp_posterior_predictive')
+    # Transform to list of list and no numpy array for serializing:
+    posterior_predictive = [pred.tolist() for pred in posterior_predictive]
+    return mse, {'source': source, 'posterior-predictive': posterior_predictive}
 
 
 def garch_held_out_likelihood(ripl):
     """Compute held_out_likelihood."""
-    #Get current index.
-
-
     # Load training data to assess the current index.
     n = np.loadtxt('garch/training_data.csv').shape[0]
+    #Get current index.
     current_index = n
     # Load held out data
     test_data = np.loadtxt('garch/test_data.csv')
     held_out_likelihood = 0
+    obs_var = [
+        ripl.sample('sigma_squared(%d)' % (i,))
+        for i in range(n)
+    ]
     for test_datum in test_data:
         held_out_likelihood += ripl.observe(
             'epsilon(%d)' % (current_index,),
             test_datum
         )[0]
         current_index += 1
+        obs_var.append(ripl.sample('sigma_squared(%d)' % (current_index,)))
     recorded_parameters = {
         'n-training'        : n,
         'n-test'            : current_index,
@@ -136,6 +150,7 @@ def garch_held_out_likelihood(ripl):
         'a1'                : ripl.sample('alpha_1'),
         'b1'                : ripl.sample('beta_1'),
         'sigma_squared_0'   : ripl.sample('sigma_squared_0'),
+        'obs-var'           : obs_var,
     }
     return held_out_likelihood, recorded_parameters
 
@@ -199,8 +214,57 @@ def get_held_out_likelihood(ripl):
     return ll, {'existing-clusters': existing_clusters.tolist()}
 
 
-def prep_ripl(benchmark, inf_prog_name):
-    ripl = shortcuts.make_lite_ripl()
+def get_held_out_likelihood_uncollapsed(ripl):
+    n_training = ripl.evaluate('size(training_data)')
+    test_data = np.loadtxt('dpmm/test_data.csv')
+    existing_clusters = get_all_existing_cluster_assignments(ripl)
+    ll  = 0
+    obs = 0
+    data_log_joint = ripl.evaluate('log_joint_at(quote(component), all)')[0]
+    for i, value in enumerate(test_data):
+        current_obs = ripl.observe(
+            'obs_func(%d)' % (i + n_training,),
+            value,
+            'label'
+        )[0]
+        p_datapoint  = 0
+        for cluster in range(existing_clusters.shape[0]):
+                ripl.evaluate(
+                    'set_value_at2(quote(cluster_assignment), atom(%d), atom(%d))' \
+                        % (i + n_training, cluster,)
+                )
+                new_data_log_joint = ripl.evaluate(
+                    'log_joint_at(quote(component), all)'
+                )[0]
+                log_p = new_data_log_joint - data_log_joint
+                p_datapoint += np.exp(log_p)
+
+        ll =+ np.log(p_datapoint)
+        obs += current_obs
+        ripl.forget('label')
+    return obs, {
+        'existing-clusters': existing_clusters.tolist(), 'obs-likelihood': obs,
+        'held-out-ll': ll
+        }
+
+def get_log_joint_and_lin_reg(ripl):
+    log_joint = ripl.evaluate('log_joint_at(default, all)')[0]
+    parameters = {
+        'slope'             : ripl.sample('slope'),
+        'intercept'             : ripl.sample('intercept'),
+        'inlier_noise'   : ripl.sample('inlier_noise'),
+        'outlier_noise' : ripl.sample('outlier_noise'),
+        'outliers'      : ripl.evaluate('get_outlier_assignments()'),
+    }
+    return log_joint, parameters
+
+def get_log_joint(ripl):
+    log_joint = ripl.evaluate('log_joint_at(default, all)')[0]
+    latents = ripl.evaluate('get_diseases()')
+    return log_joint, {'latents': latents}
+
+def prep_ripl(seed, benchmark, inf_prog_name, smc_only=False):
+    ripl = shortcuts.make_lite_ripl(seed=seed)
     ipynb_dict = read_json(benchmark + '/demo.ipynb')
     model_prog, obs_prog, inf_prog = get_code_cells_from_notebook(ipynb_dict)
     # XXX convention: plugins need to be called plugins.py.
@@ -210,18 +274,42 @@ def prep_ripl(benchmark, inf_prog_name):
     ripl.execute_program(inf_prog)
     # XXX convention: SMC inf progs have to containt the string SMC. If the
     # inference program is doing SMC, then data is not observed at this stage.
-    if 'SMC' not in inf_prog_name:
+    if ('SMC' not in inf_prog_name) and (not smc_only):
+        print 'Run observations....'
         ripl.execute_program(obs_prog)
     ripl.define('chosen_inf_prog', inf_prog_name)
     return ripl, model_prog, obs_prog, inf_prog
 
 
-def run_for_n_iterations(ripl, inf_iterations):
+def run_for_n_iterations(ripl, inf_iterations, inf_prog):
     """Run inference for n iterations."""
-    start_time = time.time()
-    for _ in range(inf_iterations):
-        ripl.execute_program('chosen_inf_prog()')
-    return time.time() - start_time
+    if 'SMC' in inf_prog:
+        ripl.execute_program('''
+        for_each(arange(10),
+            (i) -> {
+            observe model(${shuffled_data_xs[i]}) = shuffled_data_ys[i]
+        });
+        ''')
+        start_time = time.time()
+        for _ in range(inf_iterations):
+            ripl.execute_program('chosen_inf_prog()')
+        time_elapsed_a = time.time() - start_time
+        ripl.execute_program('''
+        for_each(arange(10, size(shuffled_data_xs)),
+            (i) -> {
+            observe model(${shuffled_data_xs[i]}) = shuffled_data_ys[i]
+        });
+        ''')
+        start_time = time.time()
+        for _ in range(inf_iterations):
+            ripl.execute_program('chosen_inf_prog()')
+        time_elapsed_b = time.time() - start_time
+        return time_elapsed_a + time_elapsed_b
+    else:
+        start_time = time.time()
+        for _ in range(inf_iterations):
+            ripl.execute_program('chosen_inf_prog()')
+        return time.time() - start_time
 
 
 def run_for_t_seconds(ripl, stopping_time, inf_prog_name):
@@ -236,6 +324,7 @@ def run_for_t_seconds(ripl, stopping_time, inf_prog_name):
         ripl.define('chosen_inf_prog', 'rejuvenation')
         if (time_elapsed > stopping_time + 1.):
             return None
+    print 'Run inference....'
     while True:
         ripl.execute_program('chosen_inf_prog()')
         time_elapsed = time.time() - start_time
@@ -248,6 +337,50 @@ def run_for_t_seconds(ripl, stopping_time, inf_prog_name):
         iterations += 1
     return iterations
 
+def run_SMC_experiment(
+        benchmark,
+        inf_prog_name,
+        metric,
+        seed,
+        inf_iterations=None,
+    ):
+    """Run individual benchmark with pytest"""
+    ripl, model_prog, obs_prog, inf_prog = prep_ripl(
+        seed,
+        benchmark,
+        inf_prog_name,
+        smc_only=True
+    )
+    start = time.time()
+    if 'sequential_monte_carlo' in inf_prog_name:
+        ripl.execute_program('%s()' % (inf_prog_name))
+    elif inf_prog_name=='single_site_mh' or inf_prog_name=='resimulation_mh':
+        ripl.execute_program(obs_prog)
+        for _ in range(inf_iterations):
+            ripl.execute_program('%s()' % (inf_prog_name))
+    else:
+        raise ValueError
+    stopping_time = time.time() - start
+
+    time_stamp = datetime.datetime.now().isoformat()
+    measurement, learned_parameters = metric(ripl)
+    result = OrderedDict([
+        ('inf-prog-name'     , inf_prog_name),
+        ('iterations'        , inf_iterations),
+        ('metric'            , metric.__name__),
+        ('seed'              , seed),
+        ('timing'            , stopping_time),
+        ('measurement'       , measurement),
+        ('time-stamp'        , time_stamp),
+        ('model-prog'        , model_prog),
+        ('obs-prog'          , obs_prog),
+        ('inf-prog'          , inf_prog),
+        ('learned-parameters', learned_parameters),
+    ])
+    path_results_dir = benchmark + '/results/'
+    mkdir(path_results_dir)
+    dump_json(result, path_results_dir + 'result-%s.json' % (time_stamp,))
+
 
 def run_experiment(
         benchmark,
@@ -258,10 +391,10 @@ def run_experiment(
         stopping_time=None
     ):
     """Run individual benchmark with pytest"""
-    ripl, model_prog, obs_prog, inf_prog = prep_ripl(benchmark, inf_prog_name)
+    ripl, model_prog, obs_prog, inf_prog = prep_ripl(seed, benchmark, inf_prog_name)
 
     if (inf_iterations is not None) and (stopping_time is None):
-        timing = run_for_n_iterations(ripl, inf_iterations)
+        timing = run_for_n_iterations(ripl, inf_iterations, inf_prog_name)
         iterations = inf_iterations
     elif (inf_iterations is None) and (stopping_time is not None):
         iterations = run_for_t_seconds(ripl, stopping_time, inf_prog_name)
@@ -269,6 +402,9 @@ def run_experiment(
     else:
         raise ValueError('')
 
+    print 'iterations'
+    print iterations
+    print ''
     if iterations is not None:
         time_stamp = datetime.datetime.now().isoformat()
         measurement, learned_parameters = metric(ripl)
@@ -289,14 +425,15 @@ def run_experiment(
         mkdir(path_results_dir)
         dump_json(result, path_results_dir + 'result-%s.json' % (time_stamp,))
 
-
 @pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
 @pytest.mark.parametrize('inf_prog_name', [
-    'SMC_SIR',
+    'resimulation_mh',
+    'single_site_mh',
+    'sequential_monte_carlo_lbfgs_gibbs',
 ])
-@pytest.mark.parametrize('inf_iterations', [2])
-@pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
-@pytest.mark.parametrize('seed', range(1, 2))
+@pytest.mark.parametrize('inf_iterations', [0])
+@pytest.mark.parametrize('metric', [get_log_joint_and_lin_reg])
+@pytest.mark.parametrize('seed', range(1, 31))
 def test_experiment_linear_regression_iterations(
         benchmark,
         inf_prog_name,
@@ -305,41 +442,19 @@ def test_experiment_linear_regression_iterations(
         seed
     ):
     """Benchmark linear regression with outliers."""
-    run_experiment(
-        benchmark,
-        inf_prog_name,
-        metric,
-        seed,
-        inf_iterations=inf_iterations,
-    )
-
-
-####### Linear regresssion with outliers ########
-@pytest.mark.parametrize('benchmark', ['linear-regression-with-outliers'])
-@pytest.mark.parametrize('inf_prog_name', [
-    'resimulation_mh',
-    'single_site_mh',
-    'lbfgs_with_gibbs',
-    'hamiltonian_monte_carlo_with_gibbs',
-])
-@pytest.mark.parametrize('stopping_time', [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 50, 100, 200])
-@pytest.mark.parametrize('metric', [extrapolation_inlier_mse])
-@pytest.mark.parametrize('seed', range(1, 51))
-def test_experiment_linear_regression_timing(
-        benchmark,
-        inf_prog_name,
-        stopping_time,
-        metric,
-        seed
-    ):
-    """Benchmark linear regression with outliers."""
-    run_experiment(
-        benchmark,
-        inf_prog_name,
-        metric,
-        seed,
-        stopping_time=stopping_time,
-    )
+    inf_iterations_per_prog = {
+        'resimulation_mh':[20],
+        'single_site_mh':[240],
+        'sequential_monte_carlo_lbfgs_gibbs':[1],
+    }
+    if inf_iterations_per_prog[inf_prog_name][inf_iterations] is not None:
+        run_SMC_experiment(
+            benchmark,
+            inf_prog_name,
+            metric,
+            seed,
+            inf_iterations=inf_iterations_per_prog[inf_prog_name][inf_iterations]
+        )
 
 
 ####### noisy-or ########
@@ -347,28 +462,33 @@ def test_experiment_linear_regression_timing(
 @pytest.mark.parametrize('inf_prog_name', [
     'resimulation_mh',
     'single_site_mh',
-    'single_site_gibbs',
     'block_gibbs',
-    'SMC_single_site_mh_ordered',
-    'SMC_single_site_mh_unordered'
 ])
-@pytest.mark.parametrize('stopping_time', [0, 15, 30, 45, 60])
-@pytest.mark.parametrize('metric', [noisy_or_kl])
+@pytest.mark.parametrize('inf_iterations', range(5))
+@pytest.mark.parametrize('metric', [get_log_joint])
 @pytest.mark.parametrize('seed', range(1, 51))
-def test_experiment_noisy_or_timing(
+def test_experiment_noisy_or_iterations(
         benchmark,
         inf_prog_name,
-        stopping_time,
+        inf_iterations,
         metric,
         seed
     ):
+    inf_iterations_per_prog = {
+        'resimulation_mh':[0, 125, 250, 500, 750],
+        'single_site_mh':[0, 250, 500, 1000, 1500],
+        'single_site_gibbs':[0, 10, 50, 100, 150],
+        'block_gibbs': [0, 1, 3, 5, 7],
+        'global_gibbs': range(5),
+    }
+
     """Benchmark noisy-or."""
     run_experiment(
         benchmark,
         inf_prog_name,
         metric,
         seed,
-        stopping_time=stopping_time,
+        inf_iterations=inf_iterations_per_prog[inf_prog_name][inf_iterations],
     )
 
 
@@ -377,57 +497,32 @@ def test_experiment_noisy_or_timing(
 @pytest.mark.parametrize('inf_prog_name', [
     'resimulation_mh',
     'single_site_mh',
-    'SMC_single_site',
+    'lfbgs_mh',
 ])
-@pytest.mark.parametrize('stopping_time',
-    60 * np.array([0, 2, 5, 10, 15, 30, 45, 60, 75, 90])
-)
 @pytest.mark.parametrize('metric', [MSE_airline])
-@pytest.mark.parametrize('seed', range(1, 51))
-def test_experiment_gp_structure_learning_timing(
+@pytest.mark.parametrize('inf_iteration_index', range(4))
+#@pytest.mark.parametrize('seed', range(31, 61))
+@pytest.mark.parametrize('seed', range(1, 41))
+def test_experiment_gp_structure_learning_iterations(
         benchmark,
         inf_prog_name,
-        stopping_time,
         metric,
+        inf_iteration_index,
         seed
     ):
+    inf_iterations_per_prog = {
+        'resimulation_mh':      [0, 200, 400, 800],
+        'single_site_mh':       [0, 300, 600, 2000],
+        'lfbgs_mh':             [0, 50,  75,  100],
+    }
     """Benchmark GP structure learning."""
     run_experiment(
         benchmark,
         inf_prog_name,
         metric,
         seed,
-        stopping_time=stopping_time,
+        inf_iterations=inf_iterations_per_prog[inf_prog_name][inf_iteration_index],
     )
-
-
-####### GARCH ########
-@pytest.mark.parametrize('benchmark', ['garch'])
-@pytest.mark.parametrize('inf_prog_name', [
-    'single_site_mh',
-    'resimulation_mh',
-])
-@pytest.mark.parametrize('stopping_time',
-    np.array([0, 15, 30, 45, 60])
-)
-@pytest.mark.parametrize('metric', [garch_held_out_likelihood])
-@pytest.mark.parametrize('seed', range(1, 51))
-def test_experiment_garch_timing(
-        benchmark,
-        inf_prog_name,
-        stopping_time,
-        metric,
-        seed
-    ):
-    """Benchmark GARCH model."""
-    run_experiment(
-        benchmark,
-        inf_prog_name,
-        metric,
-        seed,
-        stopping_time=stopping_time,
-    )
-
 
 ####### Logistic regression ########
 @pytest.mark.parametrize('benchmark', ['logistic-regression'])
