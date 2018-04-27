@@ -42,8 +42,10 @@ from benchmark_utils import mkdir
     'sequential_monte_carlo_resampling_at_end_only',
     'sequential_monte_carlo_every_step',
     ])
-@pytest.mark.parametrize('number_traces_key', [0])
-@pytest.mark.parametrize('seed', range(1, 21))
+#@pytest.mark.parametrize('number_traces_key', range(5))
+@pytest.mark.parametrize('number_traces_key', [1])
+#@pytest.mark.parametrize('seed', range(2, 10))
+@pytest.mark.parametrize('seed', range(1, 101))
 def test_assess_inference(
         inf_prog_name,
         number_traces_key,
@@ -57,9 +59,9 @@ def test_assess_inference(
     )
 
     number_traces = {
-        'sequential_monte_carlo_after_step_5': [50],
-        'sequential_monte_carlo_resampling_at_end_only': [50],
-        'sequential_monte_carlo_every_step': [50],
+        'sequential_monte_carlo_after_step_5': [1, 7, 15, 35, 55, 70],
+        'sequential_monte_carlo_resampling_at_end_only': [1, 15, 30, 60, 80, 100],
+        'sequential_monte_carlo_every_step': [1, 3, 5, 8, 13, 16],
     }
     ripl.define('number_traces', number_traces[inf_prog_name][number_traces_key])
     start = time.time()

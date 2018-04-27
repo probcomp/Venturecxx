@@ -117,7 +117,7 @@ def plot_marginal(probabilities, title):
         reversed([''] + ['State = %d' % i for i in range(5)] + [''])
     )
     ax.set_xlabel('Time t')
-    ax.set_title(title)
+    #ax.set_title(title)
     cb = plt.colorbar(cax,fraction=0.0238, pad=0.04)
     tick_locator = ticker.MaxNLocator(nbins=4)
     cb.locator = tick_locator
