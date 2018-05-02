@@ -29,6 +29,7 @@ procedures_to_name = {
     'mh_with_slice' : 'MH with slice sampling',
     'global_gibbs' : 'Global Gibbs',
     'sequential_monte_carlo_after_step_5':'Filtering once only',
+    'sequential_monte_carlo_after_step_3':'Filtering once only',
     'sequential_monte_carlo_resampling_at_end_only':'Importance sampling',
     'sequential_monte_carlo_every_step':'Particle filter',
 }
@@ -60,6 +61,7 @@ colors = {
     'global_gibbs' : 'green',
     'SMC_lbfgs_with_gibbs': 'green',
     'sequential_monte_carlo_after_step_5':'green',
+    'sequential_monte_carlo_after_step_3':'green',
     'sequential_monte_carlo_resampling_at_end_only':'cyan',
     'sequential_monte_carlo_every_step':'magenta',
     'sequential_monte_carlo_lbfgs_gibbs':'green',
@@ -90,6 +92,7 @@ markers = {
     'hamiltionian_monte_carlo':'D',
     'mh_with_slice' : 'D',
     'global_gibbs' : 'v',
+    'sequential_monte_carlo_after_step_3':'D',
     'sequential_monte_carlo_after_step_5':'D',
     'sequential_monte_carlo_resampling_at_end_only':'D',
     'sequential_monte_carlo_every_step':'D',
