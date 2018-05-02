@@ -94,6 +94,9 @@ def plot_single_trace_grid(data, title, obs=False):
     ax.set_title(title)
     return fig, ax
 
+
+FONTSIZE = 16
+
 def plot_marginal_given_data(data, title):
     """Plot a distribution on the marginal latents given samples."""
     grid = np.zeros((5, len(data[0])))
@@ -111,17 +114,19 @@ def plot_marginal(probabilities, title):
     # Rotate array; needed for imshow
     grid = np.rot90(probabilities)
     fig, ax = plt.subplots()
-    cax = ax.imshow(grid, cmap='Greys', interpolation='nearest')
+    cax = ax.imshow(grid, cmap='plasma', interpolation='nearest')
     ax.set_xticks(range(grid.shape[1]))
     ax.set_yticklabels(
-        reversed([''] + ['State = %d' % i for i in range(5)] + [''])
+        reversed([''] + ['State = %d' % i for i in range(5)] + ['']),
+        fontsize=FONTSIZE
     )
-    ax.set_xlabel('Time t')
+    ax.set_xlabel('Time t', fontsize=FONTSIZE)
     #ax.set_title(title)
     cb = plt.colorbar(cax,fraction=0.0238, pad=0.04)
     tick_locator = ticker.MaxNLocator(nbins=4)
     cb.locator = tick_locator
     cb.update_ticks()
+    cb.ax.set_yticklabels(cb.ax.get_yticklabels(), fontsize=FONTSIZE)
     return fig, ax
 
 def get_grid(data):
