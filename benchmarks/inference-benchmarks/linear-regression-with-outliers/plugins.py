@@ -42,7 +42,7 @@ def plot_sampled_trace(data_xs, data_ys, outliers, a, b, std, outlier_std):
     fig, ax = plt.subplots()
     data_xs = np.asarray(data_xs)
     data_ys = np.asarray(data_ys)
-    outliers = np.asarray(outliers)
+    outliers = np.asarray(outliers).astype(bool)
     line_x = np.linspace(0, 15, 100)
     ax.plot(line_x, a * line_x + b, label='Sampled line', color='black')
     ax.plot(line_x, a * line_x + b - std, label='Inlier std', color='black', linestyle='--')
