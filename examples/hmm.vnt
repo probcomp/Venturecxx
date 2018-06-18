@@ -140,6 +140,6 @@
       (call_back hmm_smoothed_nw (mapv state (mapv int_to_float (arange 1 21))))
       (repeat niters
        (do ;(func_pgibbs (quote seq) ordered 5 (/ nsweeps 5))
-           (mh default one (* 20 nsweeps))
+           (resimulation_mh default one (* 20 nsweeps))
            (call_back hmm_smoothed_nw
              (mapv state (mapv int_to_float (arange 1 21))))))))]

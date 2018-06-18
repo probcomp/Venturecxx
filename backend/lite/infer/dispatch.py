@@ -129,7 +129,7 @@ def scaffolder_loop(scaffolders, operate):
 
 def primitive_infer(trace, exp):
   operator = exp[0]
-  if operator == "mh":
+  if operator == "resimulation_mh":
     (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
     def doit(scaffolder):
       return mixMH(trace, scaffolder, MHOperator())

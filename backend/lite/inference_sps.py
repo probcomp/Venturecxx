@@ -231,7 +231,7 @@ A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """))
 
-register_trace_method_sp("mh", transition_oper_type(), desc="""\
+register_trace_method_sp("resimulation_mh", transition_oper_type(), desc="""\
 Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
 
 The `transitions` argument specifies how many transitions of the chain

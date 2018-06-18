@@ -33,7 +33,7 @@ def testProfilerSmoke():
   """)
 
   ripl.profiler_enable()
-  ripl.infer('(mh default one 10)')
+  ripl.infer('(resimulation_mh default one 10)')
   ripl.infer("(gibbs 'tricky one 1)")
 
   data = ripl.profile_data()

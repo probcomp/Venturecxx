@@ -97,7 +97,7 @@ def testHyperparameterInferenceSmoke():
   [assume gp (make_gp mean cov)]
 """)
   ripl.observe("(gp (array 1 2 3))", array([1.1, 2.2, 3.3]))
-  ripl.infer("(mh (quote hypers) one 1)")
+  ripl.infer("(resimulation_mh (quote hypers) one 1)")
 
 @broken_in('puma', "Puma does not define the gaussian process builtins")
 @on_inf_prim('none')
@@ -250,7 +250,7 @@ def test_2d(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
   ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
-  ripl.infer('(mh default one 1)')
+  ripl.infer('(resimulation_mh default one 1)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")

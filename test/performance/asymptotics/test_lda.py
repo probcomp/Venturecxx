@@ -44,7 +44,7 @@ def sweep(ripl):
         if iters_done >= num_choices:
             break
         step = num_choices - iters_done
-        ripl.infer("(mh default one %d)" % (step,))
+        ripl.infer("(resimulation_mh default one %d)" % (step,))
         iters_done += step
 
 @attr('slow')

@@ -181,4 +181,4 @@ def testHMMResampleSmoke():
   ripl.observe("(f 1)","integer<0>")
   ripl.predict("(f 7)")
   ripl.infer("(resample 3)")
-  ripl.infer("(mh default one 10)")
+  ripl.infer("(resimulation_mh default one 10)")

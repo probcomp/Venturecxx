@@ -136,7 +136,7 @@ Test Suite Configuration
 - You can select the default inference program (used when the
   particular test doesn't specify) like this:
   `nosetests -c inference-quality.cfg --tc=infer:"(func_pgibbs default ordered 10 3)"`
-  The default is `(mh default one 100)`.
+  The default is `(resimulation_mh default one 100)`.
 
 - `all-inference-quality` checks inference quality in several generic
   inference programs.  This takes a while.

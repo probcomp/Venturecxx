@@ -73,18 +73,18 @@ def makeObserves(ripl, num_points):
     ripl.observe('(get_datapoint %d)' % i, data[i])
 
 def do_infer(ripl, iter):
-  ripl.infer("(mh default one 50)")
+  ripl.infer("(resimulation_mh default one 50)")
   # ripl.infer("""(repeat 3 (do
-  #   (mh 'hypers one 2)
-  #   (mh 'parameters one 3)
+  #   (resimulation_mh 'hypers one 2)
+  #   (resimulation_mh 'parameters one 3)
   #   (pgibbs 'clustering ordered 2 1)))""")
   # ripl.infer("""(repeat 1 (do
-  #   (mh 'hypers one 2)
-  #   (mh 'parameters one 3)
-  #   (mh 'clustering one 8)))""")
-  # ripl.infer('(mh 'hypers one %d)'%iter)
-  # ripl.infer('(mh 'clustering one %d)'%(iter))
-  # ripl.infer('(mh 'parameters one %d)'%(iter))
+  #   (resimulation_mh 'hypers one 2)
+  #   (resimulation_mh 'parameters one 3)
+  #   (resimulation_mh 'clustering one 8)))""")
+  # ripl.infer('(resimulation_mh 'hypers one %d)'%iter)
+  # ripl.infer('(resimulation_mh 'clustering one %d)'%(iter))
+  # ripl.infer('(resimulation_mh 'parameters one %d)'%(iter))
   # ripl.infer('(hmc 'parameters all %f %d %d)'%(eps, L, iter))
   # ripl.infer('(pgibbs 'clustering ordered 2 %d)'%iter)
 

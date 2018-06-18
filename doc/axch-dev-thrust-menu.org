@@ -186,7 +186,7 @@ Later:
 - Actually, it seems as though the program text is sufficient to
   implement global regeneration over an untrace (with only the top
   random choices of the directives for principal nodes).  Does this
-  mean I can do (mh default all ...)?  Or is detach (and
+  mean I can do (resimulation_mh default all ...)?  Or is detach (and
   unincorporate) a problem?
 
 [*] Crashing on lookups means can't
@@ -611,11 +611,11 @@ Initial state:
 - same pattern as strict SP.current but faster on cbeta-bernoulli; not
   affected by removing the strictness annotation.
   - scaling is worse than linear.  Why?
-- time venture puma -e '[infer (do (assume x (normal 0 1)) (assume y (normal x 1)) (observe y 2) (incorporate) (mh default one 100000))]'
+- time venture puma -e '[infer (do (assume x (normal 0 1)) (assume y (normal x 1)) (observe y 2) (incorporate) (resimulation_mh default one 100000))]'
   takes 0.5 seconds to start up
   after that, 100,000 transitions in 3 seconds
 - Lite, 10,000 in 8
-- time venture puma -e '[infer (do (assume coin (make_beta_bernoulli 1 1)) (assume f (coin)) (mh default one 200000))]'
+- time venture puma -e '[infer (do (assume coin (make_beta_bernoulli 1 1)) (assume f (coin)) (resimulation_mh default one 200000))]'
   100,000 transitions per second
 - Lite, a little under 10,000 transitions per second
 - A little C program for the normal-normal chain does 10,000,000
@@ -1475,7 +1475,7 @@ other principal node)?
 - Emit, in the documentation of each SP, a table
   describing its usability in each position (principal
   node, internal node, border node) for each inference method
-  (mh, gibbs, slice, hmc, rejection) in each backend
+  (resimulation_mh, gibbs, slice, hmc, rejection) in each backend
 - Also notes about which inference methods are available
   in which backend
 - Could potentially set Jenkins up to push an updated edge reference manual

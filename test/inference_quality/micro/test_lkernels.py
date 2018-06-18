@@ -34,6 +34,6 @@ def testMVNormalRandomWalkSoundness(seed):
   r.assume("mean", "(multivariate_normal (array 0) (id_matrix 1))")
   r.assume("y", "(multivariate_normal mean (id_matrix 1))")
   predictions = [c[0] for c in
-                 collectSamples(r, "y", infer="(mh default all 50)",
+                 collectSamples(r, "y", infer="(resimulation_mh default all 50)",
                                 num_samples=default_num_samples(10))]
   return reportKnownGaussian(0, math.sqrt(2), predictions)

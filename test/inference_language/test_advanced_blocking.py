@@ -47,7 +47,7 @@ def testSmoke():
   (get_current_values s))"""))
 
   # Inference should move its target but not other stuff
-  r.infer("(mh (minimal_subproblem (by_tag_value 0 1)) 1)")
+  r.infer("(resimulation_mh (minimal_subproblem (by_tag_value 0 1)) 1)")
   eq_(1, r.sample("a"))
   assert r.sample("b") != 2
 
@@ -94,12 +94,12 @@ def testSmoke2():
   # XXX This language interprets raw tags as touching arbitrary, not
   # necessarily random nodes.  As written, inference on a
   # deterministic node appears to be possible, but does nothing.
-  r.infer("(mh (minimal_subproblem (by_tag_value 0 1)) 1)")
+  r.infer("(resimulation_mh (minimal_subproblem (by_tag_value 0 1)) 1)")
   eq_(1, r.sample("a"))
   assert r.sample("b") == 2
 
   # However, adding by_extent does what we would expect
-  r.infer("(mh (minimal_subproblem (by_extent (by_tag_value 0 1))) 1)")
+  r.infer("(resimulation_mh (minimal_subproblem (by_extent (by_tag_value 0 1))) 1)")
   eq_(1, r.sample("a"))
   assert r.sample("b") != 2
 

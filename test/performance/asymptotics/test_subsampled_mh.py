@@ -37,7 +37,7 @@ def testMVNAsymptotics():
     ripl.assume("y", "(lambda () (multivariate_normal (f mu) (id_matrix 2)))")
     for _ in range(num_obs):
       ripl.observe("(y)", val.vector(scipy.stats.norm.rvs(0, 1.0, 2)))
-    ripl.infer("(mh default all 1)")
+    ripl.infer("(resimulation_mh default all 1)")
 
     def do_infer():
       ripl.infer("(subsampled_mh default all 10 3 %f false 0 false 10)" % epsilon)

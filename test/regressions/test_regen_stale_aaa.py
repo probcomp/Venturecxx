@@ -32,4 +32,4 @@ def testRegenStaleAAA():
   ripl.assume("a", "(normal 10.0 1.0)")
   ripl.assume("f", "(make_beta_bernoulli a a)")
   ripl.predict("(f)")
-  ripl.infer("(mh default all 1)")
+  ripl.infer("(resimulation_mh default all 1)")

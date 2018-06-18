@@ -349,12 +349,12 @@ if freeze was used, it's the prior of particle 0.
 
   is equivalent to
 
-    mh(default, one, k)
+    resimulation_mh(default, one, k)
 
   See `mh`.
 
 """,
-"(lambda (k) (mh default one k))"],
+"(lambda (k) (resimulation_mh default one k))"],
 
 ["regeneration_local_proposal", """\
 .. function:: regeneration_local_proposal(<list>)

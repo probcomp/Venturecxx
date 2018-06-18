@@ -27,7 +27,7 @@ def testPersistenceSmoke1():
   r.execute_program("""
 [define foo 5]
 [assume x (flip 0.1)]
-[infer (mh default one foo)]""")
+[infer (resimulation_mh default one foo)]""")
 
 @on_inf_prim("define")
 def testPersistenceSmoke2():
@@ -36,14 +36,14 @@ def testPersistenceSmoke2():
   r.execute_program("""
 define foo = 5;
 assume x = flip(0.1);
-infer mh(default, one, foo);""")
+infer resimulation_mh(default, one, foo);""")
 
 @on_inf_prim("define")
 def testPersistenceSmoke3():
   r = get_ripl(persistent_inference_trace=True)
   r.define("foo", "5")
   r.assume("x", "(flip 0.1)")
-  r.infer("(mh default one foo)")
+  r.infer("(resimulation_mh default one foo)")
 
 @on_inf_prim("observe")
 def testInferObserveSmoke1():
@@ -117,7 +117,7 @@ def testDirectivesInInfer2():
 def testForeignInfSPs():
   r = get_ripl(persistent_inference_trace = True)
   r.bind_foreign_inference_sp("my_mul", builtin.builtInSPs()["mul"])
-  r.infer("(mh default one (+ (my_mul 2 2) 1))")
+  r.infer("(resimulation_mh default one (+ (my_mul 2 2) 1))")
 
 @on_inf_prim("force")
 def testForceSmoke1():

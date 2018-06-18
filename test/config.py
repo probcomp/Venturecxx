@@ -87,7 +87,7 @@ except ImportError:
 
   config["seed"] = None
   config["global_reporting_threshold"] = 0.00001
-  config["infer"] = "(mh default one 100)"
+  config["infer"] = "(resimulation_mh default one 100)"
   config["ignore_inference_quality"] = True
 
 import venture.shortcuts as s

@@ -20,7 +20,7 @@ function InitializeDemo() {
 
     var demo_id = 2;
 
-    var inference_program = "(mh default one 10)"
+    var inference_program = "(resimulation_mh default one 10)"
 
     /* This is awkward because it looks like an array but requires some subtleties,
      * like calling .length() instead of .length. This is all because javascript
@@ -448,28 +448,28 @@ function InitializeDemo() {
 
         var old_inf_prog = inference_program;
         if ( getEnumRequested() &&  getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1))";
+            inference_program = "(do (resimulation_mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1))";
         }
         if (!getEnumRequested() &&  getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (slice params one 0.5 100 1))";
+            inference_program = "(do (resimulation_mh default one 5) (slice params one 0.5 100 1))";
         }
         if ( getEnumRequested() && !getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1))";
+            inference_program = "(do (resimulation_mh default one 5) (gibbs structure one 1))";
         }
         if (!getEnumRequested() && !getSliceRequested() && !getNesterovCycleRequested()) {
-            inference_program = "(mh default one 10)";
+            inference_program = "(resimulation_mh default one 10)";
         }
         if ( getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.01 5 1))";
+            inference_program = "(do (resimulation_mh default one 5) (gibbs structure one 1) (slice params one 0.5 100 1) (nesterov default all 0.01 5 1))";
         }
         if (!getEnumRequested() &&  getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.01 5 1))";
+            inference_program = "(do (resimulation_mh default one 5) (slice params one 0.5 100 1) (nesterov default all 0.01 5 1))";
         }
         if ( getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 5) (gibbs structure one 1) (nesterov default all 0.01 5 1))";
+            inference_program = "(do (resimulation_mh default one 5) (gibbs structure one 1) (nesterov default all 0.01 5 1))";
         }
         if (!getEnumRequested() && !getSliceRequested() && getNesterovCycleRequested()) {
-            inference_program = "(do (mh default one 10) (nesterov default all 0.01 5 1))";
+            inference_program = "(do (resimulation_mh default one 10) (nesterov default all 0.01 5 1))";
         }
         if (getNesterovOnlyRequested()) {
             inference_program = "(nesterov default all 0.01 5 1)"

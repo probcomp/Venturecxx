@@ -40,7 +40,7 @@ def testPlotfToFile1():
   prog = """
 (let ((d (empty)))
   (do (repeat 10
-       (do (mh default one 10)
+       (do (resimulation_mh default one 10)
            (bind (collect x) (curry into d))))
       (plotf_to_file (quote test1) (quote h0) d)))"""
   try:
@@ -63,7 +63,7 @@ def testPlotToFile1():
 [define d (empty)]
 [infer
   (do (repeat 10
-       (do (mh default one 10)
+       (do (resimulation_mh default one 10)
            (bind (collect x) (curry into d)))))]
 (plot_to_file (quote test1) (quote h0) d)"""
   try:
@@ -84,7 +84,7 @@ def testPlotfToFile2():
   prog = """
 (let ((d (empty)))
   (do (repeat 10
-       (do (mh default one 10)
+       (do (resimulation_mh default one 10)
            (bind (collect x) (curry into d))))
       (plotf_to_file (quote (test1 test2)) (quote (h0 lcd0d)) d)))"""
   try:
@@ -115,7 +115,7 @@ def checkPlotfToFileBadArgs(basenames, specs):
   infer = """
 (let ((d (empty)))
   (do (repeat 10
-       (do (mh default one 10)
+       (do (resimulation_mh default one 10)
            (bind (collect x) (curry into d))))
       (plotf_to_file (quote {0}) (quote {1}) d)))"""
   infer = infer.format(basenames, specs)
@@ -131,7 +131,7 @@ def testIteration():
   program = """[infer
 (let ((d (empty)))
   (repeat 5
-   (do (mh default one 10)
+   (do (resimulation_mh default one 10)
        (bind (collect x) (curry into d))
        (sweep d))))]"""
   res, captured = capture_output(ripl, program)
