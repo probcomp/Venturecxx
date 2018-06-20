@@ -250,7 +250,7 @@ def primitive_infer(trace, exp):
       return transloop(trace, transitions, lambda : \
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePMAPOperator(particles)))
-  elif operator == "grad_ascent":
+  elif operator == "gradient_ascent":
     (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
     def doit(scaffolder):
       return mixMH(trace, scaffolder, GradientAscentOperator(rate, int(steps)))

@@ -181,7 +181,7 @@ def propGradientOfSimulate(args_lists, name, sp):
   assert_gradients_close(numerical_gradient, computed_gradient)
 
 @broken_in("puma", "Puma doesn't have gradients")
-@on_inf_prim("grad_ascent")
+@on_inf_prim("gradient_ascent")
 def testGradientOfSimulateOfLookup():
   from venture.lite.sp_registry import builtInSPs
   sp = builtInSPs()["lookup"]
@@ -193,7 +193,7 @@ def testGradientOfSimulateOfLookup():
   assert grad[1] == 0
 
 @broken_in("puma", "Puma doesn't have gradients")
-@on_inf_prim("grad_ascent")
+@on_inf_prim("gradient_ascent")
 def testGradientOfSimulateOfLookup2():
   from venture.lite.sp_registry import builtInSPs
   sp = builtInSPs()["lookup"]
@@ -205,7 +205,7 @@ def testGradientOfSimulateOfLookup2():
   assert grad[1] == 0
 
 @gen_broken_in("puma", "Puma doesn't have gradients")
-@gen_on_inf_prim("grad_ascent")
+@gen_on_inf_prim("gradient_ascent")
 def testGradientOfLogDensityOfDataSmoke():
   models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
             ("(make_suff_stat_normal a 1)", [2]),
@@ -225,6 +225,6 @@ def checkGradientExists(expr, vals):
   ripl.assume("f", expr)
   for val in vals:
     ripl.observe("(f)", val)
-  ripl.infer("(grad_ascent default all 0.01 1 1)")
+  ripl.infer("(gradient_ascent default all 0.01 1 1)")
   new_value = ripl.sample("a")
   assert value != new_value, "Gradient was not transmitted to prior"
