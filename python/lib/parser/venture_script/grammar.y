@@ -53,8 +53,10 @@ directive(observe)	::= K_OBSERVE(k) expression(e)
 				T_EQDEF(eq) expression(e1).
 directive(predict)	::= K_PREDICT(k) expression(e).
 
+
+directive(infer)    ::= K_INFER(k) expression(e).
+
 command(define)		::= K_DEFINE(k) L_NAME(n) T_EQDEF(eq) expression(e).
-command(infer)		::= K_INFER(k) expression(e).
 command(load)		::= K_LOAD(k) L_STRING(pathname).
 
 body(do)		::= statements(ss) T_SEMI(semi) expression_opt(e).
