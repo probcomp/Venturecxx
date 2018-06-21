@@ -251,7 +251,14 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePMAPOperator(particles)))
   elif operator == "gradient_ascent":
-    (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
+    if len(exp) == 4:
+        exp += [v.VentureNumber(1.0), v.VentureNumber(1.0)]
+    elif len(exp) == 5:
+        exp += [v.VentureNumber(1.0)]
+    elif len(exp) < 4:
+        raise ValueError('Not enough args for gradient_ascent')
+    (scaffolders, transitions, extra) = dispatch_arguments(trace, exp)
+    (rate, steps) = extra
     def doit(scaffolder):
       return mixMH(trace, scaffolder, GradientAscentOperator(rate, int(steps)))
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))

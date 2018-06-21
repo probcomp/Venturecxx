@@ -18,9 +18,10 @@
 import math
 import random
 
+from nose.tools import assert_almost_equal
 from numpy.testing import assert_allclose
-from venture.test.flaky import flaky
 
+from venture.test.flaky import flaky
 from venture.test.config import broken_in
 from venture.test.config import gen_broken_in
 from venture.test.config import gen_in_backend
@@ -228,3 +229,18 @@ def checkGradientExists(expr, vals):
   ripl.infer("(gradient_ascent default all 0.01 1 1)")
   new_value = ripl.sample("a")
   assert value != new_value, "Gradient was not transmitted to prior"
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("gradient_ascent")
+def test_gradient_with_default_args():
+  """Test whether default args for gradients work."""
+  ripl = get_ripl()
+  ripl.assume("weight", "(beta 1 1)")
+  ripl.force("weight", 0.5)
+  ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
+  ripl.observe("(coin)", True)
+  ripl.observe("(coin)", True)
+  # Assuming steps=1 and transistions=1 by default.
+  ripl.infer("(gradient_ascent default all 0.03)")
+  # Test wether the above is equivalent to taking exactly one step.
+  assert_almost_equal(ripl.sample("weight"), 0.62)
