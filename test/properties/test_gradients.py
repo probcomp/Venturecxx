@@ -230,17 +230,34 @@ def checkGradientExists(expr, vals):
   new_value = ripl.sample("a")
   assert value != new_value, "Gradient was not transmitted to prior"
 
-@broken_in('puma', "Gradients only implemented in Lite.")
-@on_inf_prim("gradient_ascent")
-def test_gradient_with_default_args():
-  """Test whether default args for gradients work."""
+
+def prep_coin_flipping_ripl():
+  """Prepare the ripl for the two gradient tests below."""
   ripl = get_ripl()
   ripl.assume("weight", "(beta 1 1)")
   ripl.force("weight", 0.5)
   ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
   ripl.observe("(coin)", True)
   ripl.observe("(coin)", True)
+  return ripl
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("gradient_ascent")
+def test_gradient_with_default_args():
+  """Test whether default args for gradients work using old inf syntax."""
+  ripl = prep_coin_flipping_ripl()
   # Assuming steps=1 and transistions=1 by default.
   ripl.infer("(gradient_ascent default all 0.03)")
+  # Test wether the above is equivalent to taking exactly one step.
+  assert_almost_equal(ripl.sample("weight"), 0.62)
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("gradient_ascent")
+def test_gradient_with_default_args_subproblem_syntax():
+  """Test whether default args for gradients work using subproblem syntax."""
+  ripl = prep_coin_flipping_ripl()
+  # Assuming steps=1 and transistions=1 by default.
+  ripl.set_mode('venture_script')
+  ripl.infer('gradient_ascent(minimal_subproblem(/*), 0.03)')
   # Test wether the above is equivalent to taking exactly one step.
   assert_almost_equal(ripl.sample("weight"), 0.62)

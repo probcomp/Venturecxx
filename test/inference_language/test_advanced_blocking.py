@@ -147,8 +147,24 @@ def testSugarySmoke():
   s <- select(minimal_subproblem(/?total));
   get_current_values(s)}"""))
   one(r.infer("""{
-  s <- select(minimal_subproblem(random_singleton(/ *)));
+  s <- select(minimal_subproblem(random_singleton(/*)));
   get_current_values(s)}"""))
+
+@broken_in("puma", "Puma does not implement subproblem selection")
+def testSugarySmoke():
+  # The sugared version of testSmoke3
+  r = get_ripl()
+  r.set_mode("venture_script")
+  r.set_mode("venture_script")
+  r.assume('x', 'normal(0, 1)')
+  r.assume('y', 'normal(x, 1)')
+  r.observe('y', 3.)
+  x1 = r.sample('x')
+  r.execute_program(
+    'infer gradient_ascent(minimal_subproblem(random_singleton(/*)), 0.1)'
+  )
+  x2 = r.sample('x')
+  assert  x1 != x2
 
 @broken_in("puma", "Puma does not implement subproblem selection")
 def testPoster():
