@@ -152,7 +152,7 @@ def _coerce_to_stack_dict(val):
 
 def _expToDict(exp):
   if isinstance(exp, int):
-    return {"kernel":"mh", "scope":"default", "block":"one", "transitions": exp}
+    return {"kernel":"resimulation_mh", "scope":"default", "block":"one", "transitions": exp}
 
   scope = _ensure_stack_dict(exp[1])
   block = _ensure_stack_dict(exp[2])
@@ -162,15 +162,15 @@ def _expToDict(exp):
   tag = exp[0]
   # Silly pylint, I intentionally write x <= (foo) and (foo) <= y below.
   # pylint:disable=misplaced-comparison-constant
-  if tag == "mh":
+  if tag == "resimulation_mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":scope,"block":block,"transitions":int(exp[3])}
+    return {"kernel":"resimulation_mh","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "bogo_possibilize":
     assert len(exp) == 4
     return {"kernel":"bogo_possibilize","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "func_mh":
     assert len(exp) == 4
-    return {"kernel":"mh","scope":scope,"block":block,"transitions":int(exp[3])}
+    return {"kernel":"resimulation_mh","scope":scope,"block":block,"transitions":int(exp[3])}
   elif tag == "gibbs":
     assert 4 <= len(exp) and len(exp) <= 5
     ans = {"kernel":"gibbs","scope":scope,"block":block,"transitions":int(exp[3])}

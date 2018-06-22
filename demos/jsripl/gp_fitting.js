@@ -20,7 +20,7 @@ function InitializeDemo() {
 
     var demo_id = 3;
 
-    var inference_program = "(mh default one 1)"
+    var inference_program = "(resimulation_mh default one 1)"
 
     /* This is awkward because it looks like an array but requires some subtleties,
      * like calling .length() instead of .length. This is all because javascript

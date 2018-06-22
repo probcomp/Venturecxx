@@ -110,3 +110,14 @@ return(value_at(/?foo==1)) }"""))
 @broken_in("puma", "Puma does not support select")
 def testValueAt2():
   eq_(7, get_ripl().infer("(do (assume x (tag 'foo 1 (normal 0 1))) (set_value_at2 'foo 1 7) (return (value_at2 'foo 1)))"))
+
+
+def test_resetting_to_prior():
+    ripl = get_ripl()
+    ripl.set_mode('venture_script')
+    ripl.assume('x', 'normal(0, 1)')
+    x1 = ripl.sample('x')
+    ripl.execute_program('reset_to_prior()')
+    x2 = ripl.sample('x')
+    assert x1 != x2
+

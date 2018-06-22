@@ -32,5 +32,5 @@ def checkBernoulli(maker):
     ripl.assume("coin", maker)
     for _ in range(num_obs):
       ripl.observe("(coin)", True)
-    return lambda: ripl.infer("(mh default one 10)")
+    return lambda: ripl.infer("(resimulation_mh default one 10)")
   timing.assertConstantTime(test_fun)

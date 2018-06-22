@@ -42,7 +42,7 @@ def testVentureExamplesLite():
 @gen_in_backend("none")
 @gen_needs_backend("puma")
 def testVentureExamplesPumaComplete():
-  lda_cmd = "'do(model(2, 2), data(3, 4), mh(default, one, 500))'"
+  lda_cmd = "'do(model(2, 2), data(3, 4), resimulation_mh(default, one, 500))'"
   for ex in ["venture puma -f examples/crosscat.vnt -e smoke_test",
              "venture puma -f examples/lda.vnt -e " + lda_cmd,
   ]:

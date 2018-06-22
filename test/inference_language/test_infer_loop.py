@@ -50,7 +50,7 @@ def testInferLoopSmoke():
   assertNotInferring(ripl)
 
   try:
-    ripl.infer("(loop (mh default one 1))")
+    ripl.infer("(loop (resimulation_mh default one 1))")
     assertInferring(ripl)
   finally:
     ripl.stop_continuous_inference() # Don't want to leave active threads lying around
@@ -66,7 +66,7 @@ def testStartStopInferLoop():
   eq_(numthreads, threading.active_count())
   eq_(False, ripl.continuous_inference_status()['running'])
   try:
-    ripl.infer("(loop (mh default one 1))")
+    ripl.infer("(loop (resimulation_mh default one 1))")
     assertInferring(ripl)
     eq_(numthreads+1, threading.active_count())
     eq_(True, ripl.continuous_inference_status()['running'])
@@ -90,7 +90,7 @@ def testStartCISmoke():
   assertNotInferring(ripl)
 
   try:
-    ripl.start_continuous_inference("(mh default one 1)")
+    ripl.start_continuous_inference("(resimulation_mh default one 1)")
     assertInferring(ripl)
     ripl.infer("(endloop)")
     assertNotInferring(ripl)

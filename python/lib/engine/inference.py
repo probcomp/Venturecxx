@@ -445,7 +445,7 @@ Example::
     define d = empty()
     assume x = normal(0, 1)
     infer accumulate_dataset(1000,
-              do(mh(default, one, 1),
+              do(resimulation_mh(default, one, 1),
                  collect(x)))
     plot("c0s", d)
 

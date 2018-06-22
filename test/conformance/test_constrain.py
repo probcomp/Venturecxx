@@ -84,7 +84,7 @@ def testConstrainAVar3a():
   ripl.predict("x", label="pid")
   ripl.observe("(if (f) x y)", 3.0)
   ripl.observe("(f)","true")
-  ripl.infer("(mh default one 50)")
+  ripl.infer("(resimulation_mh default one 50)")
   eq_(ripl.report("pid"), 3)
 
 # @raises(Exception)
@@ -98,7 +98,7 @@ def testConstrainAVar3b():
   ripl.observe("(if (f) x y)", 3.0)
   ripl.predict("x", label="pid")
   ripl.observe("(f)","true")
-  ripl.infer("(mh default one 50)")
+  ripl.infer("(resimulation_mh default one 50)")
   eq_(ripl.report("pid"), 3)
 
 def checkConstrainAVar4a(program):
@@ -193,7 +193,7 @@ def checkConstrainAVar6b(program):
 @gen_on_inf_prim("all") # TODO Segregate generated tests by inference method
 def testConstrainWithAPredict1():
   if backend_name() != "lite": raise SkipTest("assert(false) crashes NoseTests")
-  for p in ["(mh default one 50)",
+  for p in ["(resimulation_mh default one 50)",
             "(rejection default all 50)",
             "(func_pgibbs default ordered 3 50 false)",
             "(pgibbs default ordered 3 50 false)",
@@ -241,7 +241,7 @@ def testConstrainInAScope1():
   ripl.observe("x","1")
   ripl.predict("(normal x 1)")
 
-  ripl.infer("(mh 0 0 10)")
+  ripl.infer("(resimulation_mh 0 0 10)")
 
 @on_inf_prim("mh")
 def testConstrainInAScope2brush():
@@ -252,7 +252,7 @@ def testConstrainInAScope2brush():
   ripl.observe("x","1")
   ripl.predict("(+ x 1)")
 
-  ripl.infer("(mh 0 0 20)")
+  ripl.infer("(resimulation_mh 0 0 20)")
 
 @on_inf_prim("pgibbs")
 def testConstrainInAScope2particles():
@@ -272,7 +272,7 @@ def testMHConstrains():
             checkConstrainAVar4a, checkConstrainAVar4b, checkConstrainAVar4c,
             checkConstrainAVar5a, checkConstrainAVar5b,
             checkConstrainAVar6a, checkConstrainAVar6b]:
-    yield t, "(mh 0 0 50)"
+    yield t, "(resimulation_mh 0 0 50)"
 
 @gen_on_inf_prim("func_pgibbs")
 def testFuncPGibbsConstrains():

@@ -48,7 +48,7 @@ notes on venture and stats :
 [assume x (uniform_discrete -100 100)]
 [assume y (normal x .01)]
 
-1. if you get [observe (normal x epsilon) 50.], then do [infer (mh scope_xy all transitions)] you will infer that y is close to 50. this is true as the noise *epsilon* on *x* tends to zero. But if you do an observe with no noise, [observe x 50], then you get an exception. (Currently not a helpful exception). 
+1. if you get [observe (normal x epsilon) 50.], then do [infer (resimulation_mh scope_xy all transitions)] you will infer that y is close to 50. this is true as the noise *epsilon* on *x* tends to zero. But if you do an observe with no noise, [observe x 50], then you get an exception. (Currently not a helpful exception). 
 
 suppose you do observe the value of *x* directly. in venture you'd have to model this by re-writing the model. this is reasonable but goes against the use of venture for online inference on heterogenous expressions. (suppose you want to update your model in response to a series of observations of unknown expressions in your model. then there are discontinuities in the kinds of expressions you can observe.)
 

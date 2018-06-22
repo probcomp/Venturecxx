@@ -222,7 +222,7 @@ def testEnumerativeGibbsBrushRandomness(seed):
       if backend_name() == 'lite':
         return "(rejection default all 1)"
       else:
-        return "(mh default one %d)" % (default_num_transitions_per_sample(),)
+        return "(resimulation_mh default one %d)" % (default_num_transitions_per_sample(),)
     ans = collectSamples(ripl, "pid", infer=posterior_inference_action())
     gibbs_inference_action = "(do %s (gibbs 'z 0 1))" % \
                              (posterior_inference_action(),)

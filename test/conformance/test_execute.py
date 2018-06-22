@@ -37,7 +37,7 @@ def testExecuteSmoke(seed):
     ripl.execute_program("""[assume x (normal 0 1)]
 ;; An observation
 [observe (normal x 1) 2] ; with an end-of-line comment
-[infer (mh default one %s)]""" % default_num_transitions_per_sample())
+[infer (resimulation_mh default one %s)]""" % default_num_transitions_per_sample())
     predictions.append(ripl.sample("x"))
   return reportKnownGaussian(1, math.sqrt(0.5), predictions)
 
@@ -64,7 +64,7 @@ def testCollectFunction():
   # Make sure that calling collect on a function evaluation doesn't break
   ripl = get_ripl()
   ripl.assume('x', '(lambda() 2)')
-  _ = ripl.infer('(do (mh default one 1) (collect (x)))')
+  _ = ripl.infer('(do (resimulation_mh default one 1) (collect (x)))')
 
 def programString(infer):
   prog = '''

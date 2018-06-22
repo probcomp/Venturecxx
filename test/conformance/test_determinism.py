@@ -45,7 +45,7 @@ def testDeterminismSmoke():
                "(sample (normal 0 1))"]:
     yield checkDeterminismSmoke, prog, True
 
-  for prog in [on_one_cont_var("(mh default one 1)"),
+  for prog in [on_one_cont_var("(resimulation_mh default one 1)"),
                on_one_cont_var("(func_mh default one 1)"),
                on_one_cont_var("(slice default one 0.2 10 1)"),
                on_one_cont_var("(slice_doubling default one 0.2 10 1)"),
@@ -60,9 +60,9 @@ def testDeterminismSmoke():
   two_var_mh = """(do
     (assume x (normal 0 1))
     (assume y (normal 0 1))
-    (mh default one 5)
+    (resimulation_mh default one 5)
     (sample x))"""
-  for prog in [on_one_disc_var("(mh default one 1)"),
+  for prog in [on_one_disc_var("(resimulation_mh default one 1)"),
                on_one_disc_var("(gibbs default one 1)"),
                on_one_disc_var("(func_pgibbs default ordered 3 2)"),
                on_one_disc_var("(rejection default one)"),
@@ -101,7 +101,7 @@ def testForEachParticleDeterminism():
 (do (resample 10)
     (assume x (normal 0 1))
     (for_each_particle
-     (do pass (if (flip) (mh default one 1) pass)))
+     (do pass (if (flip) (resimulation_mh default one 1) pass)))
     (sample_all x))"""
   yield checkDeterminismSmoke, for_each_particle_prog2, False, 1, list
 

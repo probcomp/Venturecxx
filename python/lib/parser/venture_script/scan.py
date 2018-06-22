@@ -228,7 +228,7 @@ class Scanner(Plex.Scanner):
         (real,          scan_real),
         (Plex.Str('"'), scan_string),
         (Plex.Str('@{') + name, scan_language),
-        (Plex.Str('/*'), scan_comment_open),
+        (Plex.Str('/**'), scan_comment_open),
         (Plex.AnyChar,  -1),    # Invalid -- error.
         Plex.State('STRING', [
             (Plex.Str('"'),                     scan_string_end),
@@ -242,8 +242,8 @@ class Scanner(Plex.Scanner):
             (Plex.AnyChar,      scan_language_char),
         ]),
         Plex.State('BLOCK_COMMENT', [
-            (Plex.Str('/*'),    scan_comment_open),
-            (Plex.Str('*/'),    scan_comment_close),
+            (Plex.Str('/**'),    scan_comment_open),
+            (Plex.Str('**/'),    scan_comment_close),
             (Plex.AnyChar,      Plex.IGNORE),
         ]),
     ])

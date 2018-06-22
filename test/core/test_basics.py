@@ -86,11 +86,11 @@ def testModelString():
 
 @on_inf_prim("none")
 def testInlineComment():
-  eq_(1, get_ripl(init_mode="venture_script").predict("if (true) {/* inline comment */ 1} else {2}"))
-  eq_(2, get_ripl(init_mode="venture_script").predict("if (false) {/* inline /* nested */ comment */ 1} else {2}"))
+  eq_(1, get_ripl(init_mode="venture_script").predict("if (true) {/** inline comment **/ 1} else {2}"))
+  eq_(2, get_ripl(init_mode="venture_script").predict("if (false) {/** inline /** nested **/ comment **/ 1} else {2}"))
   eq_(3, get_ripl(init_mode="venture_script").sample("""if (false) {
-  /* inline /* nested
- multiline */
- comment */
+  /** inline /** nested
+ multiline **/
+ comment **/
   1} else {3}
 """))

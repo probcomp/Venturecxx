@@ -231,7 +231,7 @@ A helper function for implementing the eponymous inference macro.
 
 Calling it directly is likely to be difficult and unproductive. """))
 
-register_trace_method_sp("mh", transition_oper_type(), desc="""\
+register_trace_method_sp("resimulation_mh", transition_oper_type(), desc="""\
 Run a Metropolis-Hastings kernel, proposing by resimulating the prior.
 
 The `transitions` argument specifies how many transitions of the chain
@@ -386,7 +386,7 @@ transition, not across transitions.
 Returns the average number of nodes touched per transition in each particle.
 """)
 
-register_trace_method_sp("grad_ascent",
+register_trace_method_sp("gradient_ascent",
                   transition_oper_type([t.NumberType("step_size : number"), t.IntegerType("steps : int")]),
                   desc="""\
 Move deterministically toward the maximum of the local conditional by

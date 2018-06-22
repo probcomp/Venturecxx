@@ -23,6 +23,6 @@ def testRepeatZeroTimes():
   r = get_ripl()
   r.assume("x", "(normal 0 1)")
   x_old = r.sample("x")
-  r.infer("(repeat 0 (mh default one 1))")
+  r.infer("(repeat 0 (resimulation_mh default one 1))")
   x_new = r.sample("x")
   assert x_old == x_new, "Repeat zero times did it anyway."

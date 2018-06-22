@@ -125,7 +125,7 @@ def testBasicParticleFilter1(seed):
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)
-      ripl.infer("(mh 0 %d 5)" % t)
+      ripl.infer("(resimulation_mh 0 %d 5)" % t)
       ripl.observe("(g %d)" % t,val)
 
     ripl.infer("(resample 1)")
@@ -169,7 +169,7 @@ def testBasicParticleFilter2(seed):
     for t,val in os:
       ripl.infer("(resample %d)" % P)
       ripl.predict("(f %d)" % t)
-      ripl.infer("(mh 0 %d 5)" % t)
+      ripl.infer("(resimulation_mh 0 %d 5)" % t)
       ripl.observe("(g %d)" % t,val)
 
     ripl.infer("(resample 1)")

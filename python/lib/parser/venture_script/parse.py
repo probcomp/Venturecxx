@@ -170,6 +170,13 @@ class Semantics(object):
         i = ast.update_value(k, val.symbol('predict'))
         app = [i, e]
         return ast.locmerge(i, e, app)
+    # XXX: hack to actually make the infer keyword a null-op.
+    def p_directive_infer(self, k, e):
+        assert ast.isloc(e)
+        i = ast.update_value(k, val.symbol('do'))
+        app = [i, e]
+        return ast.locmerge(i, e, app)
+
 
     # command: Return located { 'instruction': located(..., 'foo'), ... }.
     def p_command_define(self, k, n, eq, e):
@@ -178,10 +185,7 @@ class Semantics(object):
         s = ast.map_value(val.symbol, n)
         instruction = {'instruction': i, 'symbol': s, 'expression': e}
         return ast.locmerge(i, e, instruction)
-    def p_command_infer(self, k, e):
-        assert ast.isloc(e)
-        i = ast.update_value(k, 'infer')
-        return ast.locmerge(i, e, {'instruction': i, 'expression': e})
+
     def p_command_load(self, k, pathname):
         i = ast.update_value(k, 'load')
         return ast.locmerge(i, pathname, {'instruction': i, 'file': pathname})

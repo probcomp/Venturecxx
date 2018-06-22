@@ -22,7 +22,7 @@
 [observe (obs_fun 5) 5]
 [observe (obs_fun 6) 6]
 [observe (obs_fun 7) 7]
-[infer (mh default one 50)]
+[infer (resimulation_mh default one 50)]
 ;[infer (hmc exp all 0.1 10 5)]
 ;[infer (rejection default all 1)]
 [infer (bind (collect (position 8) (position 9)) (curry3 plotf_to_file (quote brown) (quote p0d1dr)))]

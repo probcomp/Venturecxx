@@ -40,7 +40,7 @@ def test_profiling1():
   """)
 
   ripl.profiler_enable()
-  ripl.infer('(mh default one 10)')
+  ripl.infer('(resimulation_mh default one 10)')
   ripl.infer("(gibbs 'tricky one 1)")
 
   def printAddr((did, index)):
@@ -68,6 +68,6 @@ def test_profiling_likelihoodfree():
   ripl.bind_foreign_sp('test', tester)
   prog = '''
   [ASSUME x (test 0)]
-  [INFER (mh default one 10)]'''
+  [INFER (resimulation_mh default one 10)]'''
   ripl.profiler_enable()
   ripl.execute_program(prog)

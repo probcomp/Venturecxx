@@ -73,7 +73,7 @@ Implementation
   This operation is appropriate to do automatically after inference
   has moved the particles to the posterior, but of course we never
   know whether that happened (except for global rejection).  However,
-  a user can manually ask that such be done after `mh(default one 100000)`.
+  a user can manually ask that such be done after `resimulation_mh(default one 100000)`.
 
 Benefits
 --------

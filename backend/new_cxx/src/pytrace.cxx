@@ -150,7 +150,7 @@ struct Inferer
     : trace(trace), scaffoldIndexers(0)
   {
     string kernel = boost::python::extract<string>(params["kernel"]);
-    if (kernel == "mh") {
+    if (kernel == "resimulation_mh") {
       gKernel = boost::shared_ptr<GKernel>(new MHGKernel);
     } else if (kernel == "bogo_possibilize") {
       gKernel = boost::shared_ptr<GKernel>(new BogoPossibilizeGKernel);

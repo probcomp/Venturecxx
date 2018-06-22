@@ -141,7 +141,7 @@ resampled, choices that can report likelihoods may be resampled or may
 be kept, contributing to the acceptance ratio, etc).  VentureScript
 currently provides one operation to convert a selection of random
 choices into a subproblem, namely `minimal_subproblem`.  That
-subproblem may then be passed to an inference operation like `mh` to
+subproblem may then be passed to an inference operation like `resimulation_mh` to
 actually operate on those choices.
 
 Randomized proposal targets may be obtained with the
@@ -153,7 +153,7 @@ Putting it all together, the inference tactic `default_markov_chain`
 might be defined as::
 
     define default_markov_chain = (n) -> {
-      repeat(n, mh(minimal_subproblem(random_singleton(by_extent(by_top())))))}
+      repeat(n, resimulation_mh(minimal_subproblem(random_singleton(by_extent(by_top())))))}
 
 For compatibility with previous versions of VentureScript, all the
 inference operators will also accept a tag and a tag value as two

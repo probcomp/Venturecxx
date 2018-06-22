@@ -26,9 +26,9 @@ from venture.test.config import get_ripl
 from venture.test.config import on_inf_prim
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
-@gen_on_inf_prim("grad_ascent")
+@gen_on_inf_prim("gradient_ascent")
 def testGradientMethodsBasicMap():
-  yield checkGradientMethodsBasic, "grad_ascent"
+  yield checkGradientMethodsBasic, "gradient_ascent"
 
 @gen_broken_in('puma', "Gradient climbers only implemented in Lite.")
 @gen_on_inf_prim("nesterov")
@@ -57,7 +57,7 @@ def testNesterovWithInt():
   ripl.infer('(nesterov default one 0.1 10 20)')
 
 @broken_in('puma', "Gradients only implemented in Lite.")
-@on_inf_prim("grad_ascent")
+@on_inf_prim("gradient_ascent")
 def testGradientThroughAAA():
   ripl = get_ripl()
   ripl.assume("weight", "(beta 1 1)")
@@ -65,13 +65,13 @@ def testGradientThroughAAA():
   ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
   ripl.observe("(coin)", True)
   ripl.observe("(coin)", True)
-  ripl.infer("(grad_ascent default all 0.03 1 1)")
+  ripl.infer("(gradient_ascent default all 0.03 1 1)")
   assert_almost_equal(ripl.sample("weight"), 0.62)
 
 @broken_in('puma', "Gradients only implemented in Lite.")
-@on_inf_prim("grad_ascent")
+@on_inf_prim("gradient_ascent")
 def testNullaryFlipRegression():
   r = get_ripl()
   r.assume("x", "(flip)")
   # Should not crash
-  r.infer("(grad_ascent default all 0.01 1 1)")
+  r.infer("(gradient_ascent default all 0.01 1 1)")

@@ -813,9 +813,9 @@ Open issues:
                 return "rejection(default, all, 1)"
         elif isinstance(program, int):
             if self.mode == 'church_prime':
-                return "(mh default one %d)" % program
+                return "(resimulation_mh default one %d)" % program
             if self.mode == 'venture_script':
-                return "mh(default, one, %d)" % program
+                return "resimulation_mh(default, one, %d)" % program
         else:
             return program
 

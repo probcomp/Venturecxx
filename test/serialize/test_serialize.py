@@ -72,7 +72,7 @@ def _test_serialize_program(v, label, action):
     else:
         assert False
 
-    infer = "(mh default one %s)" % default_num_transitions_per_sample()
+    infer = "(resimulation_mh default one %s)" % default_num_transitions_per_sample()
     engine.model.create_trace_pool([trace2])
     r2 = collectStateSequence(v, label, infer=infer)
 
@@ -252,7 +252,7 @@ def test_serialize_forget(seed):
 
         v2.predict('is_tricky', label='pid')
 
-        infer = "(mh default one %s)" % default_num_transitions_per_sample()
+        infer = "(resimulation_mh default one %s)" % default_num_transitions_per_sample()
         samples = collectStateSequence(v2, 'pid', infer=infer)
         ans = [(False, 0.8), (True, 0.2)]
         return reportKnownDiscrete(ans, samples)

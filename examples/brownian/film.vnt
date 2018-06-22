@@ -22,5 +22,5 @@
 [infer (call_back draw_to_disk (quote converging_trajectories))]
 [infer (nesterov exp all 0.01 20 1)]
 [infer (call_back draw_to_disk (quote optimal_trajectories))]
-[infer (mh default one 20)]
+[infer (resimulation_mh default one 20)]
 [infer (call_back draw_to_disk (quote subsequent_trajectories))]

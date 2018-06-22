@@ -44,7 +44,7 @@ def testBlockingExample0(seed):
 
   # If inference only frobnicates b, then the distribution on a
   # remains the prior.
-  predictions = collectSamples(ripl,"pid",infer="(mh 1 1 10)")
+  predictions = collectSamples(ripl,"pid",infer="(resimulation_mh 1 1 10)")
   return reportKnownGaussian(10, 1.0, predictions)
 
 @stochasticTest
@@ -56,7 +56,7 @@ def testBlockingExample1(seed):
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
-  ripl.infer("(mh 0 0 1)")
+  ripl.infer("(resimulation_mh 0 0 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   assert olda != newa
@@ -75,7 +75,7 @@ def testBlockingExample2(seed):
   oldc = ripl.report("c")
   oldd = ripl.report("d")
   # Should change everything in one or the other block
-  ripl.infer("(mh 0 one 1)")
+  ripl.infer("(resimulation_mh 0 one 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   newc = ripl.report("c")
@@ -98,7 +98,7 @@ def testBlockingExample3(seed):
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
-  ripl.infer("(mh 0 all 1)")
+  ripl.infer("(resimulation_mh 0 all 1)")
   newa = ripl.report("a")
   newb = ripl.report("b")
   assert olda != newa
@@ -114,7 +114,7 @@ def testBlockingExample4(seed):
     olda = ripl.report("a")
     oldb = ripl.report("b")
     # A deterministic sweep should touch each relevant block.
-    ripl.infer("(mh 0 each 1)")
+    ripl.infer("(resimulation_mh 0 each 1)")
     newa = ripl.report("a")
     newb = ripl.report("b")
     assert olda != newa
@@ -131,7 +131,7 @@ def testBlockingExample5(seed):
     olda = ripl.report("a")
     oldb = ripl.report("b")
     # A deterministic sweep should touch each relevant block.
-    ripl.infer("(mh 0 each_reverse 1)")
+    ripl.infer("(resimulation_mh 0 each_reverse 1)")
     newa = ripl.report("a")
     newb = ripl.report("b")
     assert olda != newa
@@ -180,7 +180,7 @@ def testCycleKernel(seed):
   ripl.assume("b", "(tag 1 1 (normal a 1.0))")
   ripl.observe("(normal b 1.0)", 14.0)
 
-  infer = "(repeat %s (do (mh 0 0 1) (mh 1 1 1)))" % \
+  infer = "(repeat %s (do (resimulation_mh 0 0 1) (resimulation_mh 1 1 1)))" % \
           default_num_transitions_per_sample()
 
   predictions = collectSamples(ripl,"pid",infer=infer)
@@ -195,7 +195,7 @@ def testStringScopes(seed):
   olda = ripl.report("a")
   oldb = ripl.report("b")
   # The point of block proposals is that both things change at once.
-  ripl.infer('(mh "foo" "bar" 1)')
+  ripl.infer('(resimulation_mh "foo" "bar" 1)')
   newa = ripl.report("a")
   newb = ripl.report("b")
   assert olda != newa
