@@ -251,11 +251,18 @@ def primitive_infer(trace, exp):
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePMAPOperator(particles)))
   elif operator == "gradient_ascent":
-    if len(exp) == 4:
+    # XXX, in order to mak default args work here, I need to check the lenght of
+    # the args to `gradient_ascent` conditioned on whether the second arg is a
+    # VentureSymbol.
+    if isinstance(exp[1], v.VentureSymbol):
+        expected_arg_length = 6
+    else:
+        expected_arg_length = 5
+    if len(exp) == expected_arg_length - 2:
         exp += [v.VentureNumber(1.0), v.VentureNumber(1.0)]
-    elif len(exp) == 5:
+    elif len(exp) == expected_arg_length - 1:
         exp += [v.VentureNumber(1.0)]
-    elif len(exp) < 4:
+    elif len(exp) < expected_arg_length - 2:
         raise ValueError('Not enough args for gradient_ascent')
     (scaffolders, transitions, extra) = dispatch_arguments(trace, exp)
     (rate, steps) = extra
