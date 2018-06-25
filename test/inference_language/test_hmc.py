@@ -181,7 +181,7 @@ def testMoveMatrix():
 
   preds_mh = collectSamples(ripl, "pid", infer="(resimulation_mh default one 30)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
-  preds_hmc = collectSamples(ripl, "pid", infer="(hmc default all 0.1 20 10)")
+  preds_hmc = collectSamples(ripl, "pid", infer="(hmc default all 0.01 5 5)")
   # TODO Figure out either how to compare distributions on matrices,
   # or how to extract a real number whose distribution to compare.
   #   return reportSameContinuous(preds_mh, preds_hmc)
