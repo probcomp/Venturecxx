@@ -19,6 +19,7 @@ import os
 
 from nose.plugins.attrib import attr
 
+from venture.test.config import gen_broken_in
 from venture.test.config import gen_on_inf_prim
 from venture.test.config import get_ripl
 import venture.test.timing as timing
@@ -49,6 +50,8 @@ def sweep(ripl):
 
 @attr('slow')
 @gen_on_inf_prim('mh')
+@gen_broken_in("lite", "Broken on Travis; measuring assumptotics on Travis seems dubious")
+@gen_broken_in("puma", "Broken on Travis; measuring assumptotics on Travis seems dubious")
 def test_time_vs_dimension():
     for d in ["n_topics", "vocab_size", "n_docs", "n_words_per_doc"]:
         yield check_time_vs_dimension, d
