@@ -41,4 +41,4 @@
           (observe (word ,doc_id ,pos) integer<0>))))))]
 
 ; Smoke test with
-; venture -f lda.vnt -e 'do(model(2, 2), data(3, 4), mh(default, one, 500))'
+; venture -f lda.vnt -e 'do(model(2, 2), data(3, 4), resimulation_mh(default, one, 500))'

@@ -62,6 +62,6 @@
 [define smoke_test
   (do (model 2)
       (observe_square 2 4 4)
-      (mh default one 1000))]
+      (resimulation_mh default one 1000))]
 
 ; Runs with venture -f crosscat.vnt -e 'smoke_test'

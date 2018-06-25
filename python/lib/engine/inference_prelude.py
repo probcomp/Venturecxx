@@ -278,13 +278,13 @@ prelude = [
         (return d))))"""],
 
 ["reset_to_prior", """\
-.. _reset_to_prior:
-.. object:: reset_to_prior <inference action returning ()>
+.. function:: reset_to_prior()
+  :rtype: <inference action returning ()>
 
   Reset all particles to the prior.  Also reset their weights to the likelihood.
 
   This is equivalent to ``likelihood_weight()``.""",
-"(likelihood_weight)"],
+"likelihood_weight"],
 
 
 ["duplicate_particle", """\
@@ -310,7 +310,7 @@ Add a new particle, sampled from the prior and weighted by its likelihood.
 In case different extant particles have different priors, as can happen
 if freeze was used, it's the prior of particle 0.
 """,
-"(do (duplicate_particle 0) (on_particle 1 reset_to_prior))"],
+"(do (duplicate_particle 0) (on_particle 1 (reset_to_prior)))"],
 
 ["run", """\
 .. function:: run(<inference action returning a>)
@@ -349,12 +349,12 @@ if freeze was used, it's the prior of particle 0.
 
   is equivalent to
 
-    mh(default, one, k)
+    resimulation_mh(default, one, k)
 
   See `mh`.
 
 """,
-"(lambda (k) (mh default one k))"],
+"(lambda (k) (resimulation_mh default one k))"],
 
 ["regeneration_local_proposal", """\
 .. function:: regeneration_local_proposal(<list>)

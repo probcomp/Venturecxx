@@ -87,7 +87,7 @@ except ImportError:
 
   config["seed"] = None
   config["global_reporting_threshold"] = 0.00001
-  config["infer"] = "(mh default one 100)"
+  config["infer"] = "(resimulation_mh default one 100)"
   config["ignore_inference_quality"] = True
 
 import venture.shortcuts as s
@@ -384,7 +384,7 @@ non-generator tests---use gen_on_inf_prim for generators.  Possible
 values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "gradient_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for a primitive-independent test (i.e., does not test inference meaningfully)
@@ -434,7 +434,7 @@ works for generator tests---use on_inf_prim for non-generators.
 Possible values are:
 
   "mh", "func_mh", "gibbs", "emap", "pgibbs", "func_pgibbs",
-  "meanfield", "hmc", "grad_ascent", "nesterov", "rejection", "slice", or
+  "meanfield", "hmc", "gradient_ascent", "nesterov", "rejection", "slice", or
   "slice_doubling", "resample", "peek", "plotf"
          for that inference primitive
   "none" for primitive-independent tests (i.e., do not test inference meaningfully)

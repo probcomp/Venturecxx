@@ -71,6 +71,7 @@ def loadReferencesProgram(K):
 @attr('slow')
 @on_inf_prim("mh")
 @broken_in("puma", "Need to port records to Puma for references to work.  Issue #224")
+@broken_in("lite", "Broken on Travis; measuring assumptotics on Travis seems dubious")
 def testReferencesProgram1():
 
   def refify(K):

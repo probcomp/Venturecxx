@@ -122,7 +122,7 @@ def testModelSwitchingSmoke(seed):
           (do (assume x (normal 0 ,(* (sqrt 2) sigma)))
               (assume y (normal x ,(* (sqrt 2) sigma)))
               (observe y (* 2 mu))
-              (mh default one %s)
+              (resimulation_mh default one %s)
               (sample x))))
         (return (first res))))]
   """ % default_num_transitions_per_sample())
@@ -256,7 +256,7 @@ def testBackendSwitchingSmoke():
   (do (assume x (normal 0 1))
       (observe (normal x 1) 2)
       (predict (+ x 1))
-      (mh default one 5))]
+      (resimulation_mh default one 5))]
 
 [infer
   (do (m1 <- (new_model 'lite))
@@ -278,7 +278,7 @@ def testModelForkingSmoke(seed):
         (res <- (in_model m
           (do (repeat (- a 1) (observe (flip p) true))
               (repeat (- b 1) (observe (flip p) false))
-              (mh default one %s)
+              (resimulation_mh default one %s)
               (sample p))))
         (return (first res))))]
   """ % default_num_transitions_per_sample())
@@ -296,7 +296,7 @@ def testBackendForkingSmoke():
 [observe (normal x 1) 2]
 
 [define something
-  (do (mh default one 5)
+  (do (resimulation_mh default one 5)
       (predict (+ x 1)))]
 
 [infer
@@ -341,7 +341,7 @@ def testReportObserveInferActionSmoke():
   vals = get_ripl().execute_program("""\
 [assume x (normal 0 1)]
 foo : [observe (normal x 1) 0.2]
-[infer (mh default one 1)]
+[infer (resimulation_mh default one 1)]
 (report 'foo)
 """)
   eq_(0.2, u.strip_types(vals[3]['value']))
@@ -352,7 +352,7 @@ def testReportObserveListInferActionSmoke():
 [assume m (array 0. 0.)]
 [assume s (matrix (array (array 1. 0.) (array 0. 1.)))]
 foo : [observe (multivariate_normal m s) (array 0.1 -0.1)]
-[infer (mh default one 1)]
+[infer (resimulation_mh default one 1)]
 (report 'foo)
 """)
   eq_([0.1, -0.1], u.strip_types(vals[4]['value']))
@@ -378,11 +378,11 @@ def testSampleSugar():
 @on_inf_prim("mh")
 def testInferenceWorkCounting():
   r = get_ripl()
-  eq_([0], r.infer("(mh default one 1)"))
+  eq_([0], r.infer("(resimulation_mh default one 1)"))
   r.assume("x", "(normal 0 1)")
-  eq_([1], r.infer("(mh default one 1)"))
+  eq_([1], r.infer("(resimulation_mh default one 1)"))
   r.observe("(normal x 1)", 2)
-  eq_([2], r.infer("(mh default one 1)"))
+  eq_([2], r.infer("(resimulation_mh default one 1)"))
 
 def testLetrecSugar():
   r = get_ripl()

@@ -10,7 +10,7 @@ puma-normal-normal-mh.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m yep -o $@ -- ../script/venture puma -e \
 	    "assume x = normal(0, 1); \
 	     observe normal(x, 1) = 2; \
-	     infer mh(default, one, 300000);"
+	     infer resimulation_mh(default, one, 300000);"
 	@cat $@.time
 	@echo "View with, e.g."
 	@echo "google-pprof --cum --evince /usr/bin/python $@"
@@ -40,7 +40,7 @@ lite-normal-normal-mh.prof: Makefile
 	time -o $@.time ../pythenv.sh python -m cProfile -o $@ -- ../script/venture lite -e \
 	    "assume x = normal(0, 1); \
 	     observe normal(x, 1) = 2; \
-	     infer mh(default, one, 10000);"
+	     infer resimulation_mh(default, one, 10000);"
 	@cat $@.time
 	python -c 'import pstats; s = pstats.Stats("$@"); s.sort_stats("cumtime"); s.print_stats(0.1)'
 

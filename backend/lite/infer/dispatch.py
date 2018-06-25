@@ -129,7 +129,7 @@ def scaffolder_loop(scaffolders, operate):
 
 def primitive_infer(trace, exp):
   operator = exp[0]
-  if operator == "mh":
+  if operator == "resimulation_mh":
     (scaffolders, transitions, _) = dispatch_arguments(trace, exp)
     def doit(scaffolder):
       return mixMH(trace, scaffolder, MHOperator())
@@ -250,8 +250,22 @@ def primitive_infer(trace, exp):
       return transloop(trace, transitions, lambda : \
         mixMH(trace, BlockScaffoldIndexer(scope, block),
               ParticlePMAPOperator(particles)))
-  elif operator == "grad_ascent":
-    (scaffolders, transitions, (rate, steps)) = dispatch_arguments(trace, exp)
+  elif operator == "gradient_ascent":
+    # XXX, in order to mak default args work here, I need to check the lenght of
+    # the args to `gradient_ascent` conditioned on whether the second arg is a
+    # VentureSymbol.
+    if isinstance(exp[1], v.VentureSymbol):
+        expected_arg_length = 6
+    else:
+        expected_arg_length = 5
+    if len(exp) == expected_arg_length - 2:
+        exp += [v.VentureNumber(1.0), v.VentureNumber(1.0)]
+    elif len(exp) == expected_arg_length - 1:
+        exp += [v.VentureNumber(1.0)]
+    elif len(exp) < expected_arg_length - 2:
+        raise ValueError('Not enough args for gradient_ascent')
+    (scaffolders, transitions, extra) = dispatch_arguments(trace, exp)
+    (rate, steps) = extra
     def doit(scaffolder):
       return mixMH(trace, scaffolder, GradientAscentOperator(rate, int(steps)))
     return transloop(trace, transitions, scaffolder_loop(scaffolders, doit))

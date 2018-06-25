@@ -41,7 +41,7 @@ def testCollectSmoke1(seed):
   prog = """
 (let ((d (empty)))
   (do (repeat %s
-       (do (mh default one 1)
+       (do (resimulation_mh default one 1)
            (bind (collect x) (curry into d))))
       (return d)))""" % default_num_samples()
   predictions = extract_from_dataset(ripl.infer(prog), 'x')
@@ -80,7 +80,7 @@ def testCollectSmoke4(seed):
   out = ripl.infer("""
 (let ((d (empty)))
   (do (repeat 3
-       (do (mh default all 1)
+       (do (resimulation_mh default all 1)
            (bind (collect x y (abs (- y x)) (labelled (abs x) abs_x)) (curry into d))))
       (return d)))""")
   result = out.asPandas()
@@ -102,7 +102,7 @@ def testPrintf():
   old_stdout = sys.stdout
   result = StringIO()
   sys.stdout = result
-  ripl.infer('(repeat 2 (do (mh default one 1) (bind (collect x (labelled 3.1 foo)) printf)))')
+  ripl.infer('(repeat 2 (do (resimulation_mh default one 1) (bind (collect x (labelled 3.1 foo)) printf)))')
   sys.stdout = old_stdout
   res = result.getvalue()
   assert pattern.match(res) is not None
@@ -117,7 +117,7 @@ def testPrintf2():
   old_stdout = sys.stdout
   result = StringIO()
   sys.stdout = result
-  ripl.infer('(repeat 2 (do (mh default one 1) (printf (run (collect x (labelled 3.1 foo))))))')
+  ripl.infer('(repeat 2 (do (resimulation_mh default one 1) (printf (run (collect x (labelled 3.1 foo))))))')
   sys.stdout = old_stdout
   res = result.getvalue()
   assert pattern.match(res) is not None

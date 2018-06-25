@@ -23,7 +23,7 @@ def testKeywordSmoke():
   r = get_ripl()
   r.execute_program("""
 (assume x (normal loc: 0 scale: 1))
-(mh scope: default block: one 10)""")
+(resimulation_mh scope: default block: one 10)""")
 
 @on_inf_prim("none")
 def testKeywordSmokeVS():
@@ -31,4 +31,4 @@ def testKeywordSmokeVS():
   r.set_mode("venture_script")
   r.execute_program("""
 assume x = normal(loc: 0, scale: 1);
-mh(scope: default, block: one, 10);""")
+resimulation_mh(scope: default, block: one, 10);""")

@@ -57,7 +57,7 @@ def testAnnotateErrorTriggeredByInference():
 (if control 1 badness)
               ^^^^^^^
 """,
-  ripl.infer, "(mh default one 50)")
+  ripl.infer, "(resimulation_mh default one 50)")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")
@@ -89,7 +89,7 @@ def testAnnotateErrorTriggeredByInferenceOverProgrammaticAssume():
 ((biplex control (make_csp (quote ()) (quote 1.0)) (make_csp (quote ()) (quote badness))))
                                                                                ^^^^^^^
 """,
-  ripl.infer, "(mh default one 50)")
+  ripl.infer, "(resimulation_mh default one 50)")
 
 @broken_in("puma", "Puma does not report error addresses")
 @on_inf_prim("none")

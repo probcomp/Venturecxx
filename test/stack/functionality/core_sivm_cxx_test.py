@@ -153,7 +153,7 @@ class TestCoreSivm(unittest.TestCase):
     def test_infer(self):
         inst = {
                 'instruction':'infer',
-                'expression': [v.sym("mh"), v.sym("default"), v.sym("one"), v.num(2)]
+                'expression': [v.sym("resimulation_mh"), v.sym("default"), v.sym("one"), v.num(2)]
                 }
         self.sivm.execute_instruction(inst)
 

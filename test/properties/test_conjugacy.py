@@ -346,8 +346,8 @@ def checkUCKernel(name, params, seed):
                              num_samples=default_num_samples(),
                              infer=infer)
   prior = samples("pass")
-  geweke = """(repeat %d (do (mh 'latent one 1)
-    (mh 'data all 1)))""" % default_num_transitions_per_sample()
+  geweke = """(repeat %d (do (resimulation_mh 'latent one 1)
+    (resimulation_mh 'data all 1)))""" % default_num_transitions_per_sample()
   geweke_result = samples(geweke)
   return report(prior, geweke_result)
 

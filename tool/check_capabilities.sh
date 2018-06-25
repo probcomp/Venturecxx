@@ -45,7 +45,7 @@ venture $backend --abstract-syntax -e "
 [infer
  (let ((d (empty)))
    (do (repeat 100
-        (do (mh default all 1)
+        (do (resimulation_mh default all 1)
             (bind (collect x y (abs (- y x))) (curry into d))))
        (plotf_to_file \"$plot_file\" (quote p0d1d2) d)))]"
 rm -rf $plot_file

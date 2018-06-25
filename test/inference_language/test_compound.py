@@ -67,7 +67,7 @@ def test_compound_assume_nonduplication():
     engine = ripl.sivm.core_sivm.engine
     eq_(engine.get_entropy_info()["unconstrained_random_choices"],1)
     for _ in range(30):
-        ripl.infer("(mh default one 1)")
+        ripl.infer("(resimulation_mh default one 1)")
         assert ripl.sample("a") != ripl.sample("b")
 
 # Testing observations
@@ -124,11 +124,11 @@ def test_compound_assume_inf_happening():
     previous_value = ripl.sample("b")
 
     ripl.observe("(obs_1)", np.random.normal(5, 0.1))
-    ripl.infer("(mh (quote a_scope) 0 50)")
+    ripl.infer("(resimulation_mh (quote a_scope) 0 50)")
     assert ripl.sample("b") == previous_value, "inferred to wrong part of the compound"
 
     ripl.observe("(obs_2)", np.random.normal(-15, 0.1))
-    ripl.infer("(mh (quote b_scope) 0 50)")
+    ripl.infer("(resimulation_mh (quote b_scope) 0 50)")
     assert ripl.sample("b") != previous_value, "inferred for second part didn't work"
 
 @broken_in("puma", "Does not have refs: Issue #224.")

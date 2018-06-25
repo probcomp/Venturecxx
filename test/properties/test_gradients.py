@@ -18,9 +18,10 @@
 import math
 import random
 
+from nose.tools import assert_almost_equal
 from numpy.testing import assert_allclose
-from venture.test.flaky import flaky
 
+from venture.test.flaky import flaky
 from venture.test.config import broken_in
 from venture.test.config import gen_broken_in
 from venture.test.config import gen_in_backend
@@ -181,7 +182,7 @@ def propGradientOfSimulate(args_lists, name, sp):
   assert_gradients_close(numerical_gradient, computed_gradient)
 
 @broken_in("puma", "Puma doesn't have gradients")
-@on_inf_prim("grad_ascent")
+@on_inf_prim("gradient_ascent")
 def testGradientOfSimulateOfLookup():
   from venture.lite.sp_registry import builtInSPs
   sp = builtInSPs()["lookup"]
@@ -193,7 +194,7 @@ def testGradientOfSimulateOfLookup():
   assert grad[1] == 0
 
 @broken_in("puma", "Puma doesn't have gradients")
-@on_inf_prim("grad_ascent")
+@on_inf_prim("gradient_ascent")
 def testGradientOfSimulateOfLookup2():
   from venture.lite.sp_registry import builtInSPs
   sp = builtInSPs()["lookup"]
@@ -205,7 +206,7 @@ def testGradientOfSimulateOfLookup2():
   assert grad[1] == 0
 
 @gen_broken_in("puma", "Puma doesn't have gradients")
-@gen_on_inf_prim("grad_ascent")
+@gen_on_inf_prim("gradient_ascent")
 def testGradientOfLogDensityOfDataSmoke():
   models = [("(make_crp a)", ["atom<1>", "atom<2>"]),
             ("(make_suff_stat_normal a 1)", [2]),
@@ -225,6 +226,38 @@ def checkGradientExists(expr, vals):
   ripl.assume("f", expr)
   for val in vals:
     ripl.observe("(f)", val)
-  ripl.infer("(grad_ascent default all 0.01 1 1)")
+  ripl.infer("(gradient_ascent default all 0.01 1 1)")
   new_value = ripl.sample("a")
   assert value != new_value, "Gradient was not transmitted to prior"
+
+
+def prep_coin_flipping_ripl():
+  """Prepare the ripl for the two gradient tests below."""
+  ripl = get_ripl()
+  ripl.assume("weight", "(beta 1 1)")
+  ripl.force("weight", 0.5)
+  ripl.assume("coin", "(make_suff_stat_bernoulli weight)")
+  ripl.observe("(coin)", True)
+  ripl.observe("(coin)", True)
+  return ripl
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("gradient_ascent")
+def test_gradient_with_default_args():
+  """Test whether default args for gradients work using old inf syntax."""
+  ripl = prep_coin_flipping_ripl()
+  # Assuming steps=1 and transistions=1 by default.
+  ripl.infer("(gradient_ascent default all 0.03)")
+  # Test wether the above is equivalent to taking exactly one step.
+  assert_almost_equal(ripl.sample("weight"), 0.62)
+
+@broken_in('puma', "Gradients only implemented in Lite.")
+@on_inf_prim("gradient_ascent")
+def test_gradient_with_default_args_subproblem_syntax():
+  """Test whether default args for gradients work using subproblem syntax."""
+  ripl = prep_coin_flipping_ripl()
+  # Assuming steps=1 and transistions=1 by default.
+  ripl.set_mode('venture_script')
+  ripl.infer('gradient_ascent(minimal_subproblem(/*), 0.03)')
+  # Test wether the above is equivalent to taking exactly one step.
+  assert_almost_equal(ripl.sample("weight"), 0.62)

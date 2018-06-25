@@ -38,7 +38,7 @@ function test_inference_program_in_lite() {
     abort_on_error "$infer in Lite"
 }
 
-test_inference_program_in_lite "(mh default one 50)"
+test_inference_program_in_lite "(resimulation_mh default one 50)"
 test_inference_program_in_lite "(rejection default all 1)"
 test_inference_program_in_lite "(func_pgibbs default ordered 2 2)"
 # test_inference_program_in_lite "(pgibbs default ordered 10 3)"

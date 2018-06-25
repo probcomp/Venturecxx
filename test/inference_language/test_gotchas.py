@@ -65,7 +65,7 @@ def testHiddenDeterminism1():
   c1 = ripl.report("c1")
   # TODO Expand collectSamples to accept a list of indices and report all of them
   # TODO Expand collectSamples to accept the inference command as a string
-  predictions = collectStateSequence(ripl, "c1", infer="(mh default one 20)")
+  predictions = collectStateSequence(ripl, "c1", infer="(resimulation_mh default one 20)")
   # Single-site MH can't move on this problem
   for pred in predictions:
     eq_(pred, c1)
@@ -75,7 +75,7 @@ def testHiddenDeterminism2():
   # Makes sure that blocking can avoid proposing impossible things.
   ripl = progHiddenDeterminism()
   # TODO enumerative gibbs triggers the log(0) bug even when blocked.
-  predictions = collectStateSequence(ripl, "c2", infer="(mh default all 50)")
+  predictions = collectStateSequence(ripl, "c2", infer="(resimulation_mh default all 50)")
   # Block MH should explore the posterior
   ans = [(True,.5), (False,.5)]
   return reportKnownDiscrete(ans, predictions)

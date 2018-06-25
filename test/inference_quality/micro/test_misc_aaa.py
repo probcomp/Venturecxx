@@ -204,7 +204,7 @@ def checkAAAResampleSmoke(sp):
   get_ripl().execute_program("""
 (assume foo %s)
 (resample 4)
-(mh default one 1)
+(resimulation_mh default one 1)
 """ % sp)
 
 @on_inf_prim("block mh")
@@ -215,7 +215,7 @@ def testAAAHyperInference(seed):
     r.assume("mu", "(normal 0 1)")
     r.assume("obs", "(%s mu 1 1 1)" % maker)
     r.observe("(obs)", 5)
-    infer = "(mh default all %d)" % default_num_transitions_per_sample()
+    infer = "(resimulation_mh default all %d)" % default_num_transitions_per_sample()
     return collectSamples(r, "mu", infer=infer,
                           num_samples=default_num_samples(2))
   collapsed = try_at_five("make_nig_normal")

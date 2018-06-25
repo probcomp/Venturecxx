@@ -122,7 +122,7 @@ def testArrayBlock():
 
   ripl.predict('(tag 1 (array 1 1) (flip))')
 
-  ripl.infer('(mh 1 (array 1 1) 1)')
+  ripl.infer('(resimulation_mh 1 (array 1 1) 1)')
 
 @gen_on_inf_prim("none")
 def testCompoundBlockSerializing():
@@ -135,7 +135,7 @@ def checkCompoundBlockSerializing(cons):
   ripl.assume('x', '(tag 1 (%s 1 1) (flip))' % cons)
   old_x = ripl.sample("x")
   for _ in range(20):
-    ripl.infer('(mh 1 (%s 1 1) 1)' % cons)
+    ripl.infer('(resimulation_mh 1 (%s 1 1) 1)' % cons)
     if ripl.sample("x") == old_x:
       continue
     else:
@@ -153,7 +153,7 @@ def testRandomBlockIdSmoke():
   r.execute_program("""
   (predict (tag "frob" (flip) (flip)))
   (repeat 50
-    (do (mh default one 1)
+    (do (resimulation_mh default one 1)
         (checkInvariants)))""")
 
 @on_inf_prim("none")
@@ -167,7 +167,7 @@ def testRandomScopeIdSmoke():
   r.execute_program("""
   (predict (tag (flip) "frob" (flip)))
   (repeat 50
-    (do (mh default one 1)
+    (do (resimulation_mh default one 1)
         (checkInvariants)))""")
 
 def count_nodes_2(ripl, scope_str):
@@ -195,5 +195,5 @@ def testRandomScopeIdExclusionSmoke():
     bob = count_nodes_2(r, "bob")
     eq_(1, alice + bob)
     r.infer("""
-    (do (mh default one 1)
+    (do (resimulation_mh default one 1)
         (checkInvariants))""")

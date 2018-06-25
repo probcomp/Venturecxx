@@ -49,7 +49,7 @@ def testNormalWithObserve1(seed):
 
 @gen_on_inf_prim("mh")
 def testMVGaussSmokeMH():
-  yield checkMVGaussSmoke, "(mh default one 1)"
+  yield checkMVGaussSmoke, "(resimulation_mh default one 1)"
 
 @gen_broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @gen_on_inf_prim("hmc")
@@ -68,7 +68,7 @@ def checkMVGaussSmoke(infer, seed):
 
 @gen_on_inf_prim("mh")
 def testForceBrush1MH():
-  yield checkForceBrush1, "(mh default one 2)"
+  yield checkForceBrush1, "(resimulation_mh default one 2)"
 
 @gen_broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @gen_on_inf_prim("hmc")
@@ -85,7 +85,7 @@ def checkForceBrush1(infer, seed):
 
 @gen_on_inf_prim("mh")
 def testForceBrush2MH():
-  yield checkForceBrush2, "(mh default one 5)"
+  yield checkForceBrush2, "(resimulation_mh default one 5)"
 
 @gen_broken_in('puma', "HMC only implemented in Lite.  Issue: https://app.asana.com/0/11192551635048/9277449877754")
 @gen_on_inf_prim("hmc")
@@ -108,7 +108,7 @@ def testForceBrush3(seed):
   ripl = get_ripl(seed=seed)
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))", label="pid")
-  preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
+  preds_mh = collectSamples(ripl, "pid", infer="(resimulation_mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
@@ -121,7 +121,7 @@ def testForceBrush4(seed):
   ripl.assume("x", "(normal 0 1)")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   ripl.predict("(normal y 1)", label="pid")
-  preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
+  preds_mh = collectSamples(ripl, "pid", infer="(resimulation_mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
@@ -134,7 +134,7 @@ def testForceBrush5(seed):
   ripl.assume("x", "(normal 0 1)", label="pid")
   ripl.assume("y", "(if (< x 0) (normal x 1) (normal (+ x 10) 1))")
   ripl.observe("y", 8)
-  preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
+  preds_mh = collectSamples(ripl, "pid", infer="(resimulation_mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc default one 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
@@ -164,7 +164,7 @@ def testMoreElaborate(seed):
   # ripl.observe("out", [0, 0])
   ripl.observe("out", val.list([val.real(0), val.real(0)]))
 
-  preds_mh = collectSamples(ripl, "pid", infer="(mh default one 10)")
+  preds_mh = collectSamples(ripl, "pid", infer="(resimulation_mh default one 10)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
   preds_hmc = collectSamples(ripl, "pid", infer="(hmc 'param all 0.1 20 10)")
   return reportSameContinuous(preds_mh, preds_hmc)
@@ -179,9 +179,9 @@ def testMoveMatrix():
   ripl.assume("out", "(multivariate_normal mu sigma)")
   ripl.observe("out", val.list([val.real(1), val.real(1)]))
 
-  preds_mh = collectSamples(ripl, "pid", infer="(mh default one 30)")
+  preds_mh = collectSamples(ripl, "pid", infer="(resimulation_mh default one 30)")
   ripl.sivm.core_sivm.engine.reinit_inference_problem()
-  preds_hmc = collectSamples(ripl, "pid", infer="(hmc default all 0.1 20 10)")
+  preds_hmc = collectSamples(ripl, "pid", infer="(hmc default all 0.01 5 5)")
   # TODO Figure out either how to compare distributions on matrices,
   # or how to extract a real number whose distribution to compare.
   #   return reportSameContinuous(preds_mh, preds_hmc)

@@ -32,7 +32,7 @@
       <command>#!/bin/bash -xe
 
 source ~/env/bin/activate
-nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:&quot;(mh default one 50)&quot; --eval-attr=&quot;(not backend or backend in [&apos;lite&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;mh&apos;, &apos;any&apos;])&quot;</command>
+nosetests -c inference-quality.cfg --tc=get_ripl:lite --tc=infer:&quot;(resimulation_mh default one 50)&quot; --eval-attr=&quot;(not backend or backend in [&apos;lite&apos;, &apos;any&apos;]) and (not inf_prim or inf_prim in [&apos;mh&apos;, &apos;any&apos;])&quot;</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

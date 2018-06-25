@@ -54,11 +54,11 @@ function test_inference_program_in_puma() {
 # worker processes blowing up.
 echo nosetests -c crashes.cfg --tc=get_ripl:puma
 nosetests -c crashes.cfg --tc=get_ripl:puma
-abort_on_error "(mh default one 3) in Puma"
+abort_on_error "(resimulation_mh default one 3) in Puma"
 
 echo nosetests $lite_multiprocess -c crashes-base.cfg --tc=get_ripl:lite --eval-attr="\"not slow and (not backend or backend in ['lite', 'any'])\""
 nosetests $lite_multiprocess -c crashes-base.cfg --tc=get_ripl:lite --eval-attr="not slow and (not backend or backend in ['lite', 'any'])"
-abort_on_error "(mh default one 3) in Lite"
+abort_on_error "(resimulation_mh default one 3) in Lite"
 
 test_inference_program_in_lite "(rejection default all 1)"
 test_inference_program_in_lite "(func_pgibbs default ordered 3 3)"
