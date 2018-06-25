@@ -235,7 +235,7 @@ def test_gradients(seed):
   ripl.observe('(gp 1)', '2')
   ripl.observe('(gp 2)', '4')
   ripl.observe('(gp 3)', '8')
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
 @stochasticTest
@@ -268,7 +268,7 @@ def test_2d_gradients(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
   ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -286,7 +286,7 @@ def test_arglebargle(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.assume('foo', '(lookup (gp (array 1)) 0)')
   ripl.observe('(normal foo 1)', 1.2)
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array 2 3))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -308,7 +308,7 @@ def test_2d_arglebargle(seed):
   ripl.observe('(normal bar 1)', -0.2)
   ripl.assume('baz', '(lookup (gp (array (array 5 -1))) 0)')
   ripl.observe('(normal baz 1)', -7)
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -332,7 +332,7 @@ def test_deltoid_gradient(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
   ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -361,7 +361,7 @@ def test_deltoid_gradient_simulate(seed):
   ripl.observe('(log_odds_bernoulli bar)', 0)
   ripl.assume('baz', '(lookup (gp (array (array 5 -1))) 0)')
   ripl.observe('(log_odds_bernoulli baz)', 1)
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -385,7 +385,7 @@ def test_bump_gradient(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.observe('(gp (array (array 0 1) (array 2 3)))', array([4, -4]))
   ripl.observe('(gp (array (array 5 6) (array 7 8)))', array([9, -9]))
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -414,7 +414,7 @@ def test_bump_gradient_simulate(seed):
   ripl.observe('(log_odds_bernoulli bar)', 0)
   ripl.assume('baz', '(lookup (gp (array (array 5 -1))) 0)')
   ripl.observe('(log_odds_bernoulli baz)', 1)
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -432,7 +432,7 @@ def test_linear_gradient(seed):
   ripl.assume('gp', '(make_gp mean cov)')
   ripl.assume('foo', '(lookup (gp (array 1)) 0)')
   ripl.observe('(normal foo 1)', 1.2)
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array 2 3))')
 
 @broken_in('puma', "Puma does not interpret the GP mean and covariance function objects.")
@@ -454,5 +454,5 @@ def test_linear_gradient_2d(seed):
   ripl.observe('(normal bar 1)', -0.2)
   ripl.assume('baz', '(lookup (gp (array (array 5 -1))) 0)')
   ripl.observe('(normal baz 1)', -7)
-  ripl.infer('(gradient_ascent default one 0.1 10 10)')
+  ripl.infer('(gradient_ascent default one 0.01 5 5)')
   ripl.sample('(gp (array (array 2 3) (array 5 7)))')
