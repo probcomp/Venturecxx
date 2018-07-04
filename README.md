@@ -111,7 +111,7 @@ Getting Started
 
 -   You can find several examples in the `examples/` directory.
 
--   There is a [reference manual](http://probcomp.csail.mit.edu/venture/latest/reference/)
+-   There is a [reference manual](http://probcomp.csail.mit.edu/dev/venture/latest/reference/index.html)
 
 Developing Venture
 ==================
