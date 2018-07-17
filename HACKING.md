@@ -220,7 +220,7 @@ to one's `~/.gdbinit`.  With that ready, just run `gdb`.
 Checking C++ with Valgrind
 --------------------------
 
-We have a Valgrind suppressions file for problems that are (apprently)
+We have a Valgrind suppressions file for problems that are (apparently)
 caused by Python rather than our code: `backend/new_cxx/valgrind-python.supp`.
 
 Check out the `tool/grind` script for an example of how to use it.
@@ -270,7 +270,7 @@ Fuller Guide
 
 - Work on that branch with whatever workflow suits you best
 
-    - I presonally like many small commits, each containing one
+    - I personally like many small commits, each containing one
       "semantic change"
 
     - I am not strict about keeping the test suite passing on every
