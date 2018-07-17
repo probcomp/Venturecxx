@@ -79,7 +79,7 @@ For a more thorough check, you can run our development test suite.
 
 This requires installing the test dependencies:
 
-    pip intall --find-links /path/to/tarball/directory venture[tests]
+    pip install --find-links /path/to/tarball/directory venture[tests]
 
 and then
 
@@ -111,12 +111,12 @@ Getting Started
 
 -   You can find several examples in the `examples/` directory.
 
--   There is a [reference manual](http://probcomp.csail.mit.edu/venture/latest/reference/)
+-   There is a [reference manual](http://probcomp.csail.mit.edu/dev/venture/latest/reference/index.html)
 
 Developing Venture
 ==================
 
-You can build a local version of the refence manual from the `refman/`
+You can build a local version of the reference manual from the `refman/`
 directory.  This requires Sphinx; see instructions in the README there.
 
 The interesting parts of the code are:
