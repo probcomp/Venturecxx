@@ -16,6 +16,7 @@ requirements:
     - git
     - python 2.7.*
   run:
+    - nomkl
     - flask >=0.10
     - jsonschema
     - matplotlib 1.5.*
