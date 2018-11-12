@@ -17,6 +17,6 @@ in the Venture source the documentation strings are extracted from.
 To upload to the CSAIL web space
 --------------------------------
 
-- `scp -r _build/html/* login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/venture/edge/reference/`
+- `scp -r _build/html/* login.csail.mit.edu:/afs/csail.mit.edu/proj/probcomp/www/data/dev/venture/edge/reference/`
 
 N.B. Can also use rsync
